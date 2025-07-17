@@ -20,6 +20,10 @@
       "persistent": true,
       "cache": false
     },
+    "dev:docs": {
+      "persistent": true,
+      "cache": false
+    },
     "format": {
       "outputs": [".cache/.prettiercache"],
       "outputLogs": "new-only"

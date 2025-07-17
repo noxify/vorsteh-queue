@@ -11,8 +11,8 @@
     "url": "https://github.com/noxify"
   },
   "scripts": {
-    "dev": "turbo dev --parallel",
-    "preview": "turbo run start -F backend...",
+    "dev:docs": "turbo dev --filter docs",
+    "preview": "turbo run start -F docs...",
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
     "clean:workspaces": "turbo clean",
