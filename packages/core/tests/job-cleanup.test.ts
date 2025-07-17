@@ -8,7 +8,8 @@ describe("Job Cleanup", () => {
 
   beforeEach(() => {
     adapter = new MemoryQueueAdapter("test-queue")
-    vi.spyOn(adapter, "clearJobs")
+    vi.spyOn(adapter, "clearJobs").mockResolvedValue(0)
+    vi.spyOn(adapter, "cleanupJobs").mockResolvedValue(0)
   })
 
   describe("removeOnComplete", () => {
@@ -18,7 +19,7 @@ describe("Job Cleanup", () => {
         removeOnComplete: true,
       })
 
-      queue.register("test-job", async () => ({ success: true }))
+      queue.register("test-job", () => Promise.resolve({ success: true }))
 
       await queue.connect()
       await queue.add("test-job", { data: "test" })
@@ -26,11 +27,11 @@ describe("Job Cleanup", () => {
       queue.start()
 
       // Wait for job to complete
-      await new Promise((resolve) => {
-        queue.on("job:completed", () => resolve(undefined))
+      await new Promise<void>((resolve) => {
+        queue.on("job:completed", () => resolve())
       })
 
-      expect(adapter.clearJobs).toHaveBeenCalledWith("completed")
+      expect(vi.mocked(adapter.clearJobs)).toHaveBeenCalledWith("completed")
     })
 
     it("should keep all completed jobs when false", async () => {

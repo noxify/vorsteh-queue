@@ -356,7 +356,7 @@ export class Queue {
       this.emit("job:completed", { ...job, status: "completed", completedAt: new Date() })
 
       // Handle job cleanup
-      await this.cleanupCompletedJob(job)
+      await this.cleanupCompletedJob()
 
       // Handle recurring jobs
       this.handleRecurringJob(job).catch(() => {
@@ -398,10 +398,10 @@ export class Queue {
     } as Simplify<BaseJob & { error: string }>)
 
     // Handle job cleanup
-    await this.cleanupFailedJob(job)
+    await this.cleanupFailedJob()
   }
 
-  private async cleanupCompletedJob(job: BaseJob): Promise<void> {
+  private async cleanupCompletedJob(): Promise<void> {
     const { removeOnComplete } = this.config
 
     if (removeOnComplete === true) {
@@ -416,7 +416,7 @@ export class Queue {
     }
   }
 
-  private async cleanupFailedJob(job: BaseJob): Promise<void> {
+  private async cleanupFailedJob(): Promise<void> {
     const { removeOnFail } = this.config
 
     if (removeOnFail === true) {
