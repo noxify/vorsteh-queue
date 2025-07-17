@@ -16,5 +16,5 @@
     "module": "esnext"
   },
   "include": [".", ".next/types/**/*.ts", "dist/types/**/*.ts", "types"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "out"]
 }

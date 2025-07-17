@@ -21,6 +21,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   abstract incrementJobAttempts(id: string): Promise<void>
   abstract getQueueStats(): Promise<QueueStats>
   abstract clearJobs(status?: JobStatus): Promise<number>
+  abstract cleanupJobs(status: JobStatus, keepCount: number): Promise<number>
   abstract size(): Promise<number>
   abstract transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult>
 
