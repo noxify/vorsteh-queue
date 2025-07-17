@@ -1,0 +1,37 @@
+{
+  "name": "@vorsteh-queue/eslint-config",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./base": "./base.js",
+    "./react": "./react.js",
+    "./nextjs": "./nextjs.js"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@eslint/compat": "1.3.1",
+    "@next/eslint-plugin-next": "15.4.1",
+    "eslint-config-turbo": "2.5.5",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-package-json": "0.44.1",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "jsonc-eslint-parser": "2.4.0",
+    "typescript-eslint": "8.37.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.31.0",
+    "@vorsteh-queue/prettier-config": "workspace:*",
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "eslint": "9.31.0",
+    "prettier": "3.6.2",
+    "typescript": "5.8.3"
+  },
+  "prettier": "@vorsteh-queue/prettier-config"
+}

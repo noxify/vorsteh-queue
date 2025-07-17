@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-cream-50: #fefcf7;
+  --color-cream-100: #f8f4e6;
+  --color-cream-200: #e8dcc6;
+  --color-cream-300: #d4c4a0;
+
+  --color-fur-100: #d4915a;
+  --color-fur-200: #b8713f;
+  --color-fur-300: #8b5a2b;
+  --color-fur-400: #6b4520;
+  --color-fur-500: #4a2f16;
+
+  --color-dark-50: #6b4520;
+  --color-dark-100: #2d1b0f;
+  --color-dark-200: #1a0f08;
+  --color-dark-300: #0f0804;
+  --color-dark-800: #f5f1e8;
+  --color-dark-900: #fefcf7;
+
+  --color-orange-primary: #e85a2b;
+  --color-orange-secondary: #d4471f;
+  --color-orange-light: #f2a081;
+  --color-orange-dark: #b8381a;
+  --color-orange-darker: #8b2a14;
+  --color-orange-accessible: #a0301a;
+
+  --color-badge-bg: #fff4f0;
+  --color-badge-text: #8b2a14;
+  --color-badge-dark-bg: #2d1b0f;
+  --color-badge-dark-text: #f2a081;
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@layer base {
+  :root {
+    /* Shadcn/UI variables mapped to our custom palette */
+    --background: 40 75% 98%; /* cream-50 */
+    --foreground: 28 55% 19%; /* fur-500 */
+
+    --card: 40 75% 98%; /* cream-50 */
+    --card-foreground: 28 55% 19%; /* fur-500 */
+
+    --popover: 40 75% 98%; /* cream-50 */
+    --popover-foreground: 28 55% 19%; /* fur-500 */
+
+    --primary: 12 75% 31%; /* orange-darker */
+    --primary-foreground: 0 0% 100%; /* white */
+
+    --secondary: 28 55% 27%; /* fur-400 or dark-50 */
+    --secondary-foreground: 40 75% 98%; /* cream-50 */
+
+    --muted: 40 38% 85%; /* cream-200 */
+    --muted-foreground: 28 55% 19%; /* fur-500 */
+
+    --accent: 15 77% 54%; /* orange-primary */
+    --accent-foreground: 0 0% 100%; /* white */
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 40 38% 85%; /* cream-200 */
+    --input: 40 38% 85%; /* cream-200 */
+    --ring: 12 75% 31%; /* orange-darker */
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Shadcn/UI variables mapped to our custom palette for dark mode */
+    --background: 28 48% 7%; /* dark-200 */
+    --foreground: 40 75% 98%; /* dark-900 */
+
+    --card: 28 48% 7%; /* dark-200 */
+    --card-foreground: 40 75% 98%; /* dark-900 */
+
+    --popover: 28 48% 7%; /* dark-200 */
+    --popover-foreground: 40 75% 98%; /* dark-900 */
+
+    --primary: 12 75% 36%; /* orange-accessible */
+    --primary-foreground: 0 0% 100%; /* white */
+
+    --secondary: 28 48% 12%; /* dark-100 */
+    --secondary-foreground: 40 75% 98%; /* dark-900 */
+
+    --muted: 28 48% 12%; /* dark-100 */
+    --muted-foreground: 40 38% 94%; /* dark-800 */
+
+    --accent: 15 77% 54%; /* orange-primary */
+    --accent-foreground: 0 0% 100%; /* white */
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 28 48% 12%; /* dark-100 */
+    --input: 28 48% 12%; /* dark-100 */
+    --ring: 12 75% 36%; /* orange-accessible */
+  }
+}

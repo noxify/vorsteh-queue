@@ -1,0 +1,76 @@
+{
+  "name": "@vorsteh-queue/adapter-drizzle",
+  "version": "0.0.0",
+  "keywords": [
+    "queue",
+    "job-queue",
+    "drizzle",
+    "drizzle-orm",
+    "postgresql",
+    "postgres",
+    "database",
+    "adapter",
+    "typescript",
+    "background-jobs",
+    "task-queue",
+    "worker",
+    "pg",
+    "pglite",
+    "postgres-js",
+    "node-postgres",
+    "sql",
+    "orm"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/adapter-drizzle"
+  },
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "db:generate": "drizzle-kit generate",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint .",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "prettier": "@vorsteh-queue/prettier-config",
+  "dependencies": {
+    "@vorsteh-queue/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.5",
+    "@vorsteh-queue/eslint-config": "workspace:*",
+    "@vorsteh-queue/prettier-config": "workspace:*",
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "drizzle-kit": "0.31.4",
+    "drizzle-orm": "0.44.3",
+    "eslint": "9.31.0",
+    "postgres": "3.4.7",
+    "prettier": "3.6.2",
+    "typescript": "5.8.3",
+    "vitest": "3.2.4"
+  },
+  "peerDependencies": {
+    "drizzle-orm": ">=0.44.3"
+  },
+  "peerDependenciesMeta": {
+    "@types/pg": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "postgres": {
+      "optional": true
+    }
+  }
+}

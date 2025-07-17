@@ -1,0 +1,30 @@
+{
+  "name": "pm2-workers-example",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm with-env tsx src/producer.ts",
+    "start": "pnpm with-env pm2 start ecosystem.config.cjs",
+    "stop": "pnpm with-env pm2 stop ecosystem.config.cjs",
+    "restart": "pnpm with-env pm2 restart ecosystem.config.cjs",
+    "delete": "pnpm with-env pm2 delete ecosystem.config.cjs",
+    "list-apps": "pnpm with-env pm2 list ecosystem.config.cjs",
+    "logs": "pnpm with-env pm2 logs",
+    "monit": "pnpm with-env pm2 monit",
+    "db:push": "pnpm with-env drizzle-kit push",
+    "with-env": "dotenv -e .env --"
+  },
+  "dependencies": {
+    "@vorsteh-queue/adapter-drizzle": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "drizzle-orm": "0.44.3",
+    "postgres": "3.4.7"
+  },
+  "devDependencies": {
+    "dotenv-cli": "8.0.0",
+    "drizzle-kit": "0.31.4",
+    "pm2": "6.0.8",
+    "tsx": "4.20.3",
+    "typescript": "5.8.3"
+  }
+}

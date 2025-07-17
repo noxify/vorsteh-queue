@@ -1,0 +1,21 @@
+{
+  "name": "drizzle-pg-example",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@vorsteh-queue/adapter-drizzle": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "drizzle-orm": "0.44.3",
+    "pg": "8.16.3"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.4",
+    "drizzle-kit": "0.31.4",
+    "tsx": "4.20.3",
+    "typescript": "5.8.3"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "name": "@vorsteh-queue/core",
+  "version": "0.0.0",
+  "keywords": [
+    "queue",
+    "job-queue",
+    "background-jobs",
+    "task-queue",
+    "typescript",
+    "cron",
+    "scheduler",
+    "worker",
+    "async",
+    "redis-alternative",
+    "bull-alternative",
+    "agenda-alternative",
+    "timezone",
+    "progress-tracking",
+    "event-driven",
+    "database-backed",
+    "reliable",
+    "retry",
+    "priority-queue",
+    "delayed-jobs"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/core"
+  },
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "prettier": "@vorsteh-queue/prettier-config",
+  "dependencies": {
+    "@date-fns/tz": "1.2.0",
+    "croner": "9.1.0",
+    "date-fns": "4.1.0",
+    "type-fest": "4.41.0"
+  },
+  "devDependencies": {
+    "@vorsteh-queue/eslint-config": "workspace:*",
+    "@vorsteh-queue/prettier-config": "workspace:*",
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "eslint": "9.31.0",
+    "prettier": "3.6.2",
+    "typescript": "5.8.3",
+    "vitest": "3.2.4"
+  }
+}

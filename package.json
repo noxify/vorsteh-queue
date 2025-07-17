@@ -1,0 +1,48 @@
+{
+  "name": "vorsteh-queue",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.13.1",
+  "author": {
+    "name": "Marcus Reinhardt",
+    "url": "https://github.com/noxify"
+  },
+  "scripts": {
+    "dev": "turbo dev --parallel",
+    "preview": "turbo run start -F backend...",
+    "build": "turbo build",
+    "clean": "git clean -xdf node_modules",
+    "clean:workspaces": "turbo clean",
+    "format": "turbo format --continue -- --cache --cache-location .cache/.prettiercache",
+    "format:fix": "turbo format --continue -- --write --cache --cache-location .cache/.prettiercache",
+    "lint": "turbo lint --continue -- --cache --cache-location .cache/.eslintcache",
+    "lint:fix": "turbo lint --continue -- --fix --cache --cache-location .cache/.eslintcache",
+    "lint:ws": "sherif",
+    "postinstall": "pnpm lint:ws",
+    "typecheck": "turbo typecheck",
+    "deps:check": "pnpm outdated -r",
+    "deps:update": "pnpm update -i -L -r",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "prune": "turbo prune --docker",
+    "cs": "changeset",
+    "cs:version": "changeset version",
+    "cs:status": "changeset status --since=main"
+  },
+  "devDependencies": {
+    "@changesets/cli": "2.29.5",
+    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/ui": "3.2.4",
+    "@vorsteh-queue/prettier-config": "workspace:*",
+    "prettier": "3.6.2",
+    "sherif": "1.6.1",
+    "turbo": "2.5.5",
+    "typescript": "5.8.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "3.2.4"
+  },
+  "prettier": "@vorsteh-queue/prettier-config"
+}

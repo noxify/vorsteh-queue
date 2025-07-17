@@ -1,0 +1,2 @@
+turbo/generators/scaffold/templates/**/*.hbs
+**/.cache
