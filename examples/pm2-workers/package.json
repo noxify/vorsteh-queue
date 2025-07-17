@@ -2,6 +2,7 @@
   "name": "pm2-workers-example",
   "version": "1.0.0",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "pnpm with-env tsx src/producer.ts",
     "start": "pnpm with-env pm2 start ecosystem.config.cjs",

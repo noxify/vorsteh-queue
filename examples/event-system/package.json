@@ -2,6 +2,7 @@
   "name": "event-system-example",
   "version": "1.0.0",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "tsx src/index.ts",
     "db:push": "drizzle-kit push"
