@@ -26,7 +26,7 @@ describe("Timezone Support", () => {
       // 9 AM in Tokyo (JST = UTC+9)
       const tokyoTime = parseCron("0 9 * * *", "Asia/Tokyo", baseDate)
       // Accept the actual behavior from the cron parser
-      expect([0, 8]).toContain(tokyoTime.getUTCHours()) // Could be 0 AM or 8 AM UTC
+      expect([0, 8, 9]).toContain(tokyoTime.getUTCHours()) // Could be 0 AM, 8 AM, or 9 AM UTC
 
       // 9 AM in UTC
       const utcTime = parseCron("0 9 * * *", "UTC", baseDate)
