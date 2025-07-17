@@ -31,7 +31,8 @@ describe("Job Cleanup", () => {
         queue.on("job:completed", () => resolve())
       })
 
-      expect(vi.mocked(adapter.clearJobs)).toHaveBeenCalledWith("completed")
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(adapter.clearJobs).toHaveBeenCalledWith("completed")
     })
 
     it("should keep all completed jobs when false", async () => {
@@ -40,7 +41,7 @@ describe("Job Cleanup", () => {
         removeOnComplete: false,
       })
 
-      queue.register("test-job", async () => ({ success: true }))
+      queue.register("test-job", () => Promise.resolve({ success: true }))
 
       await queue.connect()
       await queue.add("test-job", { data: "test" })
@@ -48,10 +49,11 @@ describe("Job Cleanup", () => {
       queue.start()
 
       // Wait for job to complete
-      await new Promise((resolve) => {
-        queue.on("job:completed", () => resolve(undefined))
+      await new Promise<void>((resolve) => {
+        queue.on("job:completed", () => resolve())
       })
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(adapter.clearJobs).not.toHaveBeenCalled()
     })
 
@@ -61,7 +63,7 @@ describe("Job Cleanup", () => {
         removeOnComplete: 100,
       })
 
-      queue.register("test-job", async () => ({ success: true }))
+      queue.register("test-job", () => Promise.resolve({ success: true }))
 
       await queue.connect()
       await queue.add("test-job", { data: "test" })
@@ -69,12 +71,13 @@ describe("Job Cleanup", () => {
       queue.start()
 
       // Wait for job to complete
-      await new Promise((resolve) => {
-        queue.on("job:completed", () => resolve(undefined))
+      await new Promise<void>((resolve) => {
+        queue.on("job:completed", () => resolve())
       })
 
       // Number cleanup logic would need adapter support
       // For now, just verify it doesn't crash
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(adapter.clearJobs).not.toHaveBeenCalled()
     })
   })
@@ -86,7 +89,7 @@ describe("Job Cleanup", () => {
         removeOnFail: true,
       })
 
-      queue.register("failing-job", async () => {
+      queue.register("failing-job", () => {
         throw new Error("Test failure")
       })
 
@@ -96,10 +99,11 @@ describe("Job Cleanup", () => {
       queue.start()
 
       // Wait for job to fail
-      await new Promise((resolve) => {
-        queue.on("job:failed", () => resolve(undefined))
+      await new Promise<void>((resolve) => {
+        queue.on("job:failed", () => resolve())
       })
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(adapter.clearJobs).toHaveBeenCalledWith("failed")
     })
 
@@ -109,7 +113,7 @@ describe("Job Cleanup", () => {
         removeOnFail: false,
       })
 
-      queue.register("failing-job", async () => {
+      queue.register("failing-job", () => {
         throw new Error("Test failure")
       })
 
@@ -119,10 +123,11 @@ describe("Job Cleanup", () => {
       queue.start()
 
       // Wait for job to fail
-      await new Promise((resolve) => {
-        queue.on("job:failed", () => resolve(undefined))
+      await new Promise<void>((resolve) => {
+        queue.on("job:failed", () => resolve())
       })
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(adapter.clearJobs).not.toHaveBeenCalled()
     })
 
@@ -132,7 +137,7 @@ describe("Job Cleanup", () => {
         removeOnFail: 50,
       })
 
-      queue.register("failing-job", async () => {
+      queue.register("failing-job", () => {
         throw new Error("Test failure")
       })
 
@@ -142,12 +147,13 @@ describe("Job Cleanup", () => {
       queue.start()
 
       // Wait for job to fail
-      await new Promise((resolve) => {
-        queue.on("job:failed", () => resolve(undefined))
+      await new Promise<void>((resolve) => {
+        queue.on("job:failed", () => resolve())
       })
 
       // Number cleanup logic would need adapter support
       // For now, just verify it doesn't crash
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(adapter.clearJobs).not.toHaveBeenCalled()
     })
   })
@@ -160,8 +166,8 @@ describe("Job Cleanup", () => {
         removeOnFail: false, // Keep all failed jobs
       })
 
-      queue.register("success-job", async () => ({ success: true }))
-      queue.register("failing-job", async () => {
+      queue.register("success-job", () => Promise.resolve({ success: true }))
+      queue.register("failing-job", () => {
         throw new Error("Test failure")
       })
 
@@ -173,19 +179,21 @@ describe("Job Cleanup", () => {
 
       // Wait for both jobs to complete
       let completedCount = 0
-      await new Promise((resolve) => {
+      await new Promise<void>((resolve) => {
         queue.on("job:completed", () => {
           completedCount++
-          if (completedCount === 1) resolve(undefined)
+          if (completedCount === 1) resolve()
         })
         queue.on("job:failed", () => {
           completedCount++
-          if (completedCount === 1) resolve(undefined)
+          if (completedCount === 1) resolve()
         })
       })
 
       // Should clean completed but not failed
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(adapter.clearJobs).toHaveBeenCalledWith("completed")
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(adapter.clearJobs).not.toHaveBeenCalledWith("failed")
     })
   })
@@ -194,7 +202,7 @@ describe("Job Cleanup", () => {
     it("should use default number values when not specified", async () => {
       queue = new Queue(adapter, { name: "test-queue" })
 
-      queue.register("test-job", async () => ({ success: true }))
+      queue.register("test-job", () => Promise.resolve({ success: true }))
 
       await queue.connect()
       await queue.add("test-job", { data: "test" })
@@ -202,19 +210,18 @@ describe("Job Cleanup", () => {
       queue.start()
 
       // Wait for job to complete
-      await new Promise((resolve) => {
-        queue.on("job:completed", () => resolve(undefined))
+      await new Promise<void>((resolve) => {
+        queue.on("job:completed", () => resolve())
       })
 
       // Default behavior (number) shouldn't call clearJobs immediately
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(adapter.clearJobs).not.toHaveBeenCalled()
     })
   })
 
   afterEach(async () => {
-    if (queue) {
-      await queue.stop()
-      await queue.disconnect()
-    }
+    await queue.stop()
+    await queue.disconnect()
   })
 })
