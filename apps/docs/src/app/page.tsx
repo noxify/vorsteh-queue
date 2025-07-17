@@ -447,7 +447,7 @@ await queue.repeat('daily-report',
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <Image
-                  src="/logo.png"
+                  src="/vorsteh-queue-logo.svg"
                   alt="Vorsteh Queue Logo"
                   width={32}
                   height={32}
@@ -490,20 +490,15 @@ await queue.repeat('daily-report',
               <h4 className="mb-4 font-semibold">Community</h4>
               <ul className="text-cream-200 space-y-2 text-sm">
                 <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
+                  <a
+                    href="https://github.com/noxify/vorsteh-queue"
+                    target="_blank"
+                    className="hover:text-orange-primary transition-colors"
+                  >
                     GitHub
-                  </Link>
+                  </a>
                 </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Discord
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Twitter
-                  </Link>
-                </li>
+
                 <li>
                   <Link href="#" className="hover:text-orange-primary transition-colors">
                     Contributing
@@ -516,24 +511,13 @@ await queue.repeat('daily-report',
               <h4 className="mb-4 font-semibold">Support</h4>
               <ul className="text-cream-200 space-y-2 text-sm">
                 <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Help Center
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
+                  <a
+                    href="https://github.com/noxify/vorsteh-queue/issues"
+                    target="_blank"
+                    className="hover:text-orange-primary transition-colors"
+                  >
                     Bug Reports
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Feature Requests
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Contact
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
