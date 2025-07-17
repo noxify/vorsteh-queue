@@ -41,7 +41,7 @@ describe("Timezone Support", () => {
 
       // Before DST: 9 AM EST = 2 PM UTC
       expect([8, 13, 14]).toContain(beforeTime.getUTCHours())
-      // During DST: 9 AM EDT = 1 PM UTC  
+      // During DST: 9 AM EDT = 1 PM UTC
       expect([8, 13, 14]).toContain(duringTime.getUTCHours())
     })
 
@@ -80,7 +80,7 @@ describe("Timezone Support", () => {
       // Both should return valid Date objects
       expect(utcFromNY).toBeInstanceOf(Date)
       expect(utcFromTokyo).toBeInstanceOf(Date)
-      
+
       // Both should have valid timestamps
       expect(utcFromNY.getTime()).toBeGreaterThan(0)
       expect(utcFromTokyo.getTime()).toBeGreaterThan(0)
