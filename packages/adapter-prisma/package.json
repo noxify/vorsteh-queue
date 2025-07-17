@@ -33,11 +33,11 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "_lint": "eslint .",
+    "_typecheck": "tsc --noEmit",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "format": "prettier --check . --ignore-path ../../.gitignore"
   },
   "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
