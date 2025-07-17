@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from "vitest"
 import { TZDate } from "@date-fns/tz"
+import { beforeEach, describe, expect, it } from "vitest"
 
 import { MemoryQueueAdapter, Queue } from "../src"
 import { calculateNextRun, nowUtc, parseCron, toUtcDate } from "../src/utils/scheduler"
