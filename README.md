@@ -108,25 +108,34 @@ await queue.add("health-check", payload, {
 
 ## Timezone Support
 
+Vorsteh Queue uses a **UTC-first approach** for reliable timezone handling:
+
 ```typescript
-// Schedule job for 9 AM New York time
+// Schedule job for 9 AM New York time - converted to UTC immediately
 await queue.add("daily-report", payload, {
   cron: "0 9 * * *",
-  timezone: "America/New_York"
+  timezone: "America/New_York"  // Timezone used for conversion only
 })
 
-// Schedule job for specific time in Tokyo
+// Schedule job for specific time in Tokyo - stored as UTC
 await queue.add("notification", payload, {
   runAt: new Date("2024-01-15T10:00:00"),
-  timezone: "Asia/Tokyo"
+  timezone: "Asia/Tokyo"  // Interprets runAt in Tokyo time
 })
 
-// Complex cron with timezone (every 15 min during business hours)
+// Complex cron with timezone - result always UTC
 await queue.add("business-task", payload, {
   cron: "*/15 9-17 * * 1-5",
-  timezone: "Europe/London"
+  timezone: "Europe/London"  // Business hours in London time
 })
 ```
+
+### How It Works
+
+1. **Timezone conversion happens at job creation** - not at execution
+2. **All timestamps stored in database are UTC** - no timezone ambiguity
+3. **Recurring jobs recalculate using original timezone** - maintains accuracy
+4. **Simple and predictable** - no runtime timezone complexity
 
 ## Progress Tracking
 

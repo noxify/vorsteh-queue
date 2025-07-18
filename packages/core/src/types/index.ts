@@ -48,8 +48,6 @@ export interface BaseJob<TJobPayload = unknown> {
   readonly repeatLimit?: number
   /** Current repetition count for recurring jobs */
   readonly repeatCount?: number
-  /** Timezone for job scheduling (default: UTC) */
-  readonly timezone?: string
 }
 
 /**

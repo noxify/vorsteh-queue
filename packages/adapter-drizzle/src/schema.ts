@@ -19,7 +19,6 @@ export const queueJobs = pgTable(
     processedAt: timestamp("processed_at", { withTimezone: true }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     failedAt: timestamp("failed_at", { withTimezone: true }),
-    timezone: varchar("timezone", { length: 50 }).default("UTC").notNull(),
     error: jsonb("error"),
     progress: integer("progress").default(0),
     cron: varchar("cron", { length: 255 }),

@@ -11,7 +11,7 @@ import type {
   QueueStats,
 } from "../types"
 import { calculateDelay, waitFor } from "../utils/helpers"
-import { calculateNextRun, nowUtc, toUtcDate } from "../utils/scheduler"
+import { calculateNextRun, nowUtc, parseCron, toUtcDate } from "../utils/scheduler"
 import { createJobWrapper } from "./job-wrapper"
 
 type EventListener<TEventData> = (data: TEventData) => void | Promise<void>
@@ -126,10 +126,15 @@ export class Queue {
     let status: JobStatus = "pending"
 
     if (jobOptions.runAt) {
+      // Convert user-provided time to UTC using timezone context
       processAt = toUtcDate(jobOptions.runAt, timezone)
       status = processAt > now ? "delayed" : "pending"
     } else if (jobOptions.delay) {
       processAt = new Date(now.getTime() + jobOptions.delay)
+      status = "delayed"
+    } else if (jobOptions.cron) {
+      // Parse cron in timezone, get UTC result
+      processAt = parseCron(jobOptions.cron, timezone, now)
       status = "delayed"
     } else {
       processAt = now
@@ -147,7 +152,6 @@ export class Queue {
       repeatEvery: jobOptions.repeat?.every,
       repeatLimit: jobOptions.repeat?.limit,
       repeatCount: 0,
-      timezone,
     })
 
     this.emit("job:added", job)
@@ -431,7 +435,7 @@ export class Queue {
     }
   }
 
-  private async handleRecurringJob(job: BaseJob): Promise<void> {
+  private async handleRecurringJob(job: BaseJob, originalTimezone?: string): Promise<void> {
     if (!job.cron && !job.repeatEvery) return
 
     const nextCount = (job.repeatCount ?? 0) + 1
@@ -443,7 +447,7 @@ export class Queue {
       const nextRun = calculateNextRun({
         cron: job.cron,
         repeatEvery: job.repeatEvery,
-        timezone: job.timezone,
+        timezone: originalTimezone ?? "UTC",
         lastRun: new Date(),
       })
 

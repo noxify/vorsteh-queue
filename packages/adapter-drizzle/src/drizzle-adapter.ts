@@ -67,7 +67,6 @@ export class DrizzleQueueAdapter extends BaseQueueAdapter {
         repeatEvery: job.repeatEvery,
         repeatLimit: job.repeatLimit,
         repeatCount: job.repeatCount,
-        timezone: job.timezone ?? "UTC",
       })
       .returning()
 
@@ -250,7 +249,6 @@ export class DrizzleQueueAdapter extends BaseQueueAdapter {
       repeatEvery: job.repeatEvery ?? undefined,
       repeatLimit: job.repeatLimit ?? undefined,
       repeatCount: job.repeatCount ?? 0,
-      timezone: job.timezone,
     }
   }
 }
