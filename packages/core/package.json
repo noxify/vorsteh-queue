@@ -40,6 +40,7 @@
     "clean:cache": "git clean -xdf .cache",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint .",
+    "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@vorsteh-queue/prettier-config",

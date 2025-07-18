@@ -27,10 +27,9 @@
     "deps:update": "pnpm update -i -L -r",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:core": "turbo test --filter=@vorsteh-queue/core",
-    "test:drizzle-postgres": "turbo test:postgres",
-    "test:drizzle-mariadb": "turbo test:mariadb",
-    "prune": "turbo prune --docker",
+    "test:core": "pnpm -F core test",
+    "test:drizzle-postgres": "pnpm -F adapter-drizzle test:postgres",
+    "test:drizzle-mariadb": "pnpm -F adapter-drizzle test:mariadb",
     "cs": "changeset",
     "ci:publish": "pnpm build && pnpm publish -r --access public --publish-branch main && pnpm changeset tag",
     "ci:version": "pnpm changeset version && pnpm install --no-frozen-lockfile && git add ."

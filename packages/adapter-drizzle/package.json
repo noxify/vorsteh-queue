@@ -44,7 +44,6 @@
     "lint": "eslint .",
     "test": "vitest",
     "test:mariadb": "vitest --run tests/mariadb-adapter.test.ts",
-    "test:mariadb:mock": "vitest --run tests/mariadb-mock.test.ts",
     "test:postgres": "vitest --run tests/drizzle-adapter.test.ts tests/utc-storage.test.ts tests/timezone-edge-cases.test.ts tests/progress.test.ts",
     "test:watch": "vitest --watch",
     "typecheck": "tsc --noEmit"
