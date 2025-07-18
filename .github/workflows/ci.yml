@@ -58,8 +58,17 @@ jobs:
       - name: Setup
         uses: ./.github/setup
 
-      - name: Unittest
-        run: pnpm test
+      - name: Test Core Package
+        run: turbo test --filter=@vorsteh-queue/core
+
+      - name: Test Drizzle PostgreSQL (PGlite)
+        run: pnpm test:drizzle-postgres
+
+      - name: Test Drizzle MariaDB (Testcontainers)
+        run: pnpm test:drizzle-mariadb
+        env:
+          # Ensure Docker is available for Testcontainers
+          TESTCONTAINERS_RYUK_DISABLED: true
 
   pkg-new-release:
     needs: [lint, format, typecheck, unittest]

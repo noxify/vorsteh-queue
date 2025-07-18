@@ -1,13 +1,13 @@
 <div align="center">
   <img src="./assets/vorsteh-queue-logo-nobg.png" alt="Vorsteh Queue" height="200" />
   <h1>Vorsteh Queue</h1>
-  <p>A TypeScript-first job queue system with multiple database adapters, built for reliability and developer experience.</p>
+  <p>A powerful, ORM-agnostic queue engine that works with any orm. Handle background jobs, scheduled tasks, and recurring processes with ease.</p>
 </div>
 
 ## Features
 
 - **Type-safe**: Full TypeScript support with generic job payloads
-- **Multiple adapters**: Drizzle ORM and in-memory implementations (Prisma coming soon)
+- **Multiple adapters**: Drizzle ORM (PostgreSQL + MariaDB/MySQL) and in-memory implementations
 - **Priority queues**: Numeric priority system (lower = higher priority)
 - **Delayed jobs**: Schedule jobs for future execution
 - **Recurring jobs**: Cron expressions and interval-based repetition
@@ -22,7 +22,7 @@
 .
 ├── packages/
 │   ├── core/                # Core queue logic and interfaces
-│   ├── adapter-drizzle/     # Drizzle ORM adapter
+│   ├── adapter-drizzle/     # Drizzle ORM adapter (PostgreSQL + MariaDB/MySQL)
 │   └── adapter-prisma/      # Prisma adapter (coming soon)
 ├── examples/                # Standalone usage examples
 │   ├── drizzle-pg/         # Drizzle + node-postgres
@@ -46,16 +46,30 @@ pnpm add @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
 ### Basic Usage
 
 ```typescript
+// PostgreSQL
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
-
-import { DrizzleQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 
-// Setup database and queue
 const pool = new Pool({ connectionString: "postgresql://..." })
 const db = drizzle(pool)
-const adapter = new DrizzleQueueAdapter(db, "my-queue")
+const adapter = new PostgresQueueAdapter(db, "my-queue")
+const queue = new Queue(adapter, { name: "my-queue" })
+
+// MariaDB/MySQL
+import { drizzle } from "drizzle-orm/mysql2"
+import mysql from "mysql2/promise"
+import { MariaDBQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+
+const connection = await mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "password",
+  database: "queue_db"
+})
+const db = drizzle(connection, { mode: "default" })
+const adapter = new MariaDBQueueAdapter(db, "my-queue")
 const queue = new Queue(adapter, { name: "my-queue" })
 
 // Register job handlers
@@ -241,8 +255,13 @@ queue.on("queue:resumed", () => {
 # Install dependencies
 pnpm install
 
-# Run tests
+# Run all tests
 pnpm test
+
+# Run specific test suites
+pnpm test:core                # Core package tests
+pnpm test:drizzle-postgres    # PostgreSQL adapter tests
+pnpm test:drizzle-mariadb     # MariaDB adapter tests
 
 # Type check
 pnpm typecheck

@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "next build",
+    "build": "renoun next build",
     "clean": "git clean -xdf .cache .turbo dist node_modules .next",
     "clean:cache": "git clean -xdf .cache",
-    "dev": "next dev",
+    "dev": "renoun next dev",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint .",
     "start": "next start",
@@ -15,6 +15,7 @@
   },
   "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
+    "@next/mdx": "15.4.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
@@ -23,7 +24,9 @@
     "next": "15.4.1",
     "next-themes": "latest",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "renoun": "8.14.0",
+    "ts-morph": "26.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.11",

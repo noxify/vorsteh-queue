@@ -2,15 +2,15 @@ import { PGlite } from "@electric-sql/pglite"
 import { drizzle } from "drizzle-orm/pglite"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
-import { DrizzleQueueAdapter } from "~/index"
-import * as schema from "~/schema"
+import { PostgresQueueAdapter } from "~/index"
+import * as schema from "~/postgres-schema"
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports
 const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
 
 describe("UTC Storage Verification", () => {
   let db: ReturnType<typeof drizzle<typeof schema>>
-  let adapter: DrizzleQueueAdapter
+  let adapter: PostgresQueueAdapter
   let client: PGlite
 
   beforeEach(async () => {
@@ -20,7 +20,7 @@ describe("UTC Storage Verification", () => {
     const { apply } = await pushSchema(schema, db as never)
     await apply()
 
-    adapter = new DrizzleQueueAdapter(db, "utc-test-queue")
+    adapter = new PostgresQueueAdapter(db, "utc-test-queue")
     await adapter.connect()
   })
 
@@ -30,8 +30,6 @@ describe("UTC Storage Verification", () => {
   })
 
   it("should store all timestamps as UTC in database", async () => {
-    const now = new Date()
-
     // Add job with timezone context
     const job = await adapter.addJob({
       name: "timezone-test",

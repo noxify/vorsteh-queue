@@ -2,15 +2,15 @@ import { PGlite } from "@electric-sql/pglite"
 import { drizzle } from "drizzle-orm/pglite"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
-import { DrizzleQueueAdapter } from "~/index"
-import * as schema from "~/schema"
+import { PostgresQueueAdapter } from "~/index"
+import * as schema from "~/postgres-schema"
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports
 const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
 
 describe("Timezone Edge Cases", () => {
   let db: ReturnType<typeof drizzle<typeof schema>>
-  let adapter: DrizzleQueueAdapter
+  let adapter: PostgresQueueAdapter
   let client: PGlite
 
   beforeEach(async () => {
@@ -20,7 +20,7 @@ describe("Timezone Edge Cases", () => {
     const { apply } = await pushSchema(schema, db as never)
     await apply()
 
-    adapter = new DrizzleQueueAdapter(db, "timezone-edge-test")
+    adapter = new PostgresQueueAdapter(db, "timezone-edge-test")
     await adapter.connect()
   })
 
@@ -196,7 +196,7 @@ describe("Timezone Edge Cases", () => {
     const originalTimestamp = 1705327200000 // 2024-01-15T14:00:00Z
     const originalDate = new Date(originalTimestamp)
 
-    const job = await adapter.addJob({
+    await adapter.addJob({
       name: "consistency-test",
       payload: { test: "data" },
       status: "pending",

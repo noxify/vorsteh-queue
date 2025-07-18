@@ -3,16 +3,16 @@ import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/pglite"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
-import { DrizzleQueueAdapter } from "~/index"
-import * as schema from "~/schema"
+import { PostgresQueueAdapter } from "~/index"
+import * as schema from "~/postgres-schema"
 
 // Import pushSchema from drizzle-kit/api
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports
 const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
 
-describe("DrizzleQueueAdapter Progress", () => {
+describe("PostgresQueueAdapter Progress", () => {
   let db: ReturnType<typeof drizzle<typeof schema>>
-  let adapter: DrizzleQueueAdapter
+  let adapter: PostgresQueueAdapter
   let client: PGlite
 
   beforeEach(async () => {
@@ -23,7 +23,7 @@ describe("DrizzleQueueAdapter Progress", () => {
     const { apply } = await pushSchema(schema, db as never)
     await apply()
 
-    adapter = new DrizzleQueueAdapter(db, "test-queue")
+    adapter = new PostgresQueueAdapter(db, "test-queue")
     await adapter.connect()
   })
 

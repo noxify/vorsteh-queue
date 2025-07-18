@@ -18,6 +18,9 @@
     "pglite",
     "postgres-js",
     "node-postgres",
+    "mariadb",
+    "mysql",
+    "mysql2",
     "sql",
     "orm"
   ],
@@ -40,6 +43,10 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint .",
     "test": "vitest",
+    "test:mariadb": "vitest --run tests/mariadb-adapter.test.ts",
+    "test:mariadb:mock": "vitest --run tests/mariadb-mock.test.ts",
+    "test:postgres": "vitest --run tests/drizzle-adapter.test.ts tests/utc-storage.test.ts tests/timezone-edge-cases.test.ts tests/progress.test.ts",
+    "test:watch": "vitest --watch",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@vorsteh-queue/prettier-config",
@@ -54,8 +61,10 @@
     "drizzle-kit": "0.31.4",
     "drizzle-orm": "0.44.3",
     "eslint": "9.31.0",
+    "mysql2": "^3.11.4",
     "postgres": "3.4.7",
     "prettier": "3.6.2",
+    "testcontainers": "^10.17.0",
     "typescript": "5.8.3",
     "vitest": "3.2.4"
   },

@@ -6,7 +6,7 @@ import { and, asc, count, eq, lte, sql } from "drizzle-orm"
 import type { BaseJob, JobStatus, QueueStats } from "@vorsteh-queue/core"
 import { BaseQueueAdapter } from "@vorsteh-queue/core"
 
-import * as schema from "./schema"
+import * as schema from "./postgres-schema"
 
 type DrizzleDatabase =
   | NodePgDatabase<typeof schema>
@@ -14,7 +14,7 @@ type DrizzleDatabase =
   | PgliteDatabase<typeof schema>
 
 /**
- * Drizzle ORM adapter for the queue system.
+ * PostgreSQL adapter for the queue system using Drizzle ORM.
  * Supports PostgreSQL databases through Drizzle ORM with node-postgres, postgres.js, or PGlite.
  *
  * @example
@@ -24,14 +24,14 @@ type DrizzleDatabase =
  *
  * const pool = new Pool({ connectionString: "postgresql://..." })
  * const db = drizzle(pool)
- * const adapter = new DrizzleQueueAdapter(db, "my-queue")
+ * const adapter = new PostgresQueueAdapter(db, "my-queue")
  * ```
  */
-export class DrizzleQueueAdapter extends BaseQueueAdapter {
+export class PostgresQueueAdapter extends BaseQueueAdapter {
   /**
-   * Create a new Drizzle queue adapter.
+   * Create a new PostgreSQL queue adapter.
    *
-   * @param db - Drizzle database instance
+   * @param db - Drizzle PostgreSQL database instance
    * @param queueName - Name of the queue (used for job isolation)
    */
   constructor(
