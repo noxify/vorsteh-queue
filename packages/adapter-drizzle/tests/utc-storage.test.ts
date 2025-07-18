@@ -31,7 +31,7 @@ describe("UTC Storage Verification", () => {
 
   it("should store all timestamps as UTC in database", async () => {
     const now = new Date()
-    
+
     // Add job with timezone context
     const job = await adapter.addJob({
       name: "timezone-test",
@@ -50,13 +50,13 @@ describe("UTC Storage Verification", () => {
 
     // Verify the job was stored
     expect(job.processAt).toBeInstanceOf(Date)
-    
+
     // The key test: processAt should be the exact UTC time we provided
     expect(job.processAt.toISOString()).toBe("2024-01-15T14:00:00.000Z")
-    
+
     // Verify no timezone field exists
     expect(job).not.toHaveProperty("timezone")
-    
+
     // Verify createdAt is also UTC
     expect(job.createdAt.getTimezoneOffset()).toBe(new Date().getTimezoneOffset()) // Should be system UTC
   })
@@ -64,9 +64,9 @@ describe("UTC Storage Verification", () => {
   it("should handle cron jobs with timezone conversion at creation", async () => {
     // This simulates what happens when user adds a cron job with timezone
     const processAt = new Date("2024-01-15T14:00:00Z") // Pre-converted to UTC
-    
+
     const job = await adapter.addJob({
-      name: "cron-timezone-test", 
+      name: "cron-timezone-test",
       payload: { timezone: "America/New_York" }, // Timezone info in payload only
       status: "delayed",
       priority: 2,
@@ -91,7 +91,7 @@ describe("UTC Storage Verification", () => {
     await adapter.addJob({
       name: "retrieval-test",
       payload: { test: "data" },
-      status: "pending", 
+      status: "pending",
       priority: 2,
       attempts: 0,
       maxAttempts: 3,
@@ -102,7 +102,7 @@ describe("UTC Storage Verification", () => {
 
     // Retrieve the job
     const job = await adapter.getNextJob()
-    
+
     expect(job).toBeTruthy()
     expect(job?.processAt.toISOString()).toBe("2024-01-15T14:00:00.000Z")
     expect(job).not.toHaveProperty("timezone")
@@ -110,12 +110,12 @@ describe("UTC Storage Verification", () => {
 
   it("should handle delayed jobs with UTC timestamps", async () => {
     const futureUTC = new Date(Date.now() + 3600000) // 1 hour from now in UTC
-    
+
     const job = await adapter.addJob({
       name: "delayed-test",
       payload: { test: "data" },
       status: "delayed",
-      priority: 2, 
+      priority: 2,
       attempts: 0,
       maxAttempts: 3,
       processAt: futureUTC,
@@ -135,7 +135,7 @@ describe("UTC Storage Verification", () => {
       payload: { test: "data" },
       status: "pending",
       priority: 2,
-      attempts: 0, 
+      attempts: 0,
       maxAttempts: 3,
       processAt: new Date(),
       progress: 0,
@@ -145,11 +145,11 @@ describe("UTC Storage Verification", () => {
     // Verify the job object structure
     const jobKeys = Object.keys(job)
     expect(jobKeys).not.toContain("timezone")
-    
+
     // Verify required UTC fields exist
     expect(jobKeys).toContain("createdAt")
     expect(jobKeys).toContain("processAt")
-    
+
     // All date fields should be Date objects (UTC)
     expect(job.createdAt).toBeInstanceOf(Date)
     expect(job.processAt).toBeInstanceOf(Date)

@@ -32,7 +32,7 @@ describe("Timezone Edge Cases", () => {
   it("should handle dates with explicit timezone offsets", async () => {
     // User passes date with timezone offset
     const dateWithOffset = new Date("2024-01-15T14:00:00+02:00") // 2 PM in +2 timezone = 12 PM UTC
-    
+
     const job = await adapter.addJob({
       name: "offset-test",
       payload: { test: "data" },
@@ -53,7 +53,7 @@ describe("Timezone Edge Cases", () => {
   it("should handle negative timezone offsets", async () => {
     // User passes date with negative timezone offset
     const dateWithNegativeOffset = new Date("2024-01-15T14:00:00-05:00") // 2 PM EST = 7 PM UTC
-    
+
     const job = await adapter.addJob({
       name: "negative-offset-test",
       payload: { test: "data" },
@@ -75,7 +75,7 @@ describe("Timezone Edge Cases", () => {
     // Simulate server running in different timezone by creating dates in different ways
     const utcDate = new Date("2024-01-15T14:00:00Z") // Explicit UTC
     const localDate = new Date("2024-01-15T14:00:00") // Local time (depends on server timezone)
-    
+
     const utcJob = await adapter.addJob({
       name: "utc-job",
       payload: { type: "utc" },
@@ -89,7 +89,7 @@ describe("Timezone Edge Cases", () => {
     })
 
     const localJob = await adapter.addJob({
-      name: "local-job", 
+      name: "local-job",
       payload: { type: "local" },
       status: "pending",
       priority: 2,
@@ -102,7 +102,7 @@ describe("Timezone Edge Cases", () => {
 
     // UTC date should be stored exactly as provided
     expect(utcJob.processAt.toISOString()).toBe("2024-01-15T14:00:00.000Z")
-    
+
     // Local date gets stored as whatever the server interprets it as
     // This is the key test - we store whatever Date object represents in UTC
     expect(localJob.processAt).toBeInstanceOf(Date)
@@ -112,8 +112,8 @@ describe("Timezone Edge Cases", () => {
   it("should handle daylight saving time transitions", async () => {
     // Spring forward: March 10, 2024 in America/New_York
     const springForwardDate = new Date("2024-03-10T07:00:00Z") // 2 AM EST becomes 3 AM EDT
-    
-    // Fall back: November 3, 2024 in America/New_York  
+
+    // Fall back: November 3, 2024 in America/New_York
     const fallBackDate = new Date("2024-11-03T06:00:00Z") // 2 AM EDT becomes 1 AM EST
 
     const springJob = await adapter.addJob({
@@ -131,7 +131,7 @@ describe("Timezone Edge Cases", () => {
     const fallJob = await adapter.addJob({
       name: "fall-job",
       payload: { dst: "fall" },
-      status: "pending", 
+      status: "pending",
       priority: 2,
       attempts: 0,
       maxAttempts: 3,
@@ -150,28 +150,28 @@ describe("Timezone Edge Cases", () => {
       {
         name: "ISO with Z",
         date: new Date("2024-01-15T14:00:00Z"),
-        expected: "2024-01-15T14:00:00.000Z"
+        expected: "2024-01-15T14:00:00.000Z",
       },
       {
         name: "ISO with +00:00",
         date: new Date("2024-01-15T14:00:00+00:00"),
-        expected: "2024-01-15T14:00:00.000Z"
+        expected: "2024-01-15T14:00:00.000Z",
       },
       {
         name: "ISO with +02:00",
         date: new Date("2024-01-15T14:00:00+02:00"),
-        expected: "2024-01-15T12:00:00.000Z" // 2 hours earlier in UTC
+        expected: "2024-01-15T12:00:00.000Z", // 2 hours earlier in UTC
       },
       {
         name: "ISO with -05:00",
         date: new Date("2024-01-15T14:00:00-05:00"),
-        expected: "2024-01-15T19:00:00.000Z" // 5 hours later in UTC
+        expected: "2024-01-15T19:00:00.000Z", // 5 hours later in UTC
       },
       {
         name: "Timestamp",
         date: new Date(1705327200000), // 2024-01-15T14:00:00Z
-        expected: "2024-01-15T14:00:00.000Z"
-      }
+        expected: "2024-01-15T14:00:00.000Z",
+      },
     ]
 
     for (const testCase of testCases) {
@@ -195,7 +195,7 @@ describe("Timezone Edge Cases", () => {
     // Test that what goes in comes out exactly the same
     const originalTimestamp = 1705327200000 // 2024-01-15T14:00:00Z
     const originalDate = new Date(originalTimestamp)
-    
+
     const job = await adapter.addJob({
       name: "consistency-test",
       payload: { test: "data" },
@@ -210,7 +210,7 @@ describe("Timezone Edge Cases", () => {
 
     // Retrieve the job
     const retrievedJob = await adapter.getNextJob()
-    
+
     expect(retrievedJob).toBeTruthy()
     expect(retrievedJob?.processAt.getTime()).toBe(originalTimestamp)
     expect(retrievedJob?.processAt.toISOString()).toBe(originalDate.toISOString())
