@@ -1,15 +1,17 @@
-# Vorsteh Queue
-
-A TypeScript-first job queue system with multiple database adapters, built for reliability and developer experience.
+<div align="center">
+  <img src="./assets/vorsteh-queue-logo-nobg.png" alt="Vorsteh Queue" width="200" height="200" />
+  <h1>Vorsteh Queue</h1>
+  <p>A TypeScript-first job queue system with multiple database adapters, built for reliability and developer experience.</p>
+</div>
 
 ## Features
 
 - **Type-safe**: Full TypeScript support with generic job payloads
-- **Multiple adapters**: Drizzle ORM, Prisma, and in-memory implementations
+- **Multiple adapters**: Drizzle ORM and in-memory implementations (Prisma coming soon)
 - **Priority queues**: Numeric priority system (lower = higher priority)
 - **Delayed jobs**: Schedule jobs for future execution
 - **Recurring jobs**: Cron expressions and interval-based repetition
-- **Timezone support**: Schedule jobs in any timezone with DST handling (powered by date-fns)
+- **UTC-first timezone support**: Reliable timezone handling with UTC storage
 - **Progress tracking**: Real-time job progress updates
 - **Event system**: Listen to job lifecycle events
 - **Graceful shutdown**: Clean job processing termination
@@ -21,7 +23,7 @@ A TypeScript-first job queue system with multiple database adapters, built for r
 ├── packages/
 │   ├── core/                # Core queue logic and interfaces
 │   ├── adapter-drizzle/     # Drizzle ORM adapter
-│   └── adapter-prisma/      # Prisma adapter
+│   └── adapter-prisma/      # Prisma adapter (coming soon)
 ├── examples/                # Standalone usage examples
 │   ├── drizzle-pg/         # Drizzle + node-postgres
 │   ├── drizzle-postgres/   # Drizzle + postgres.js
@@ -82,6 +84,8 @@ Check out the [examples directory](./examples/) for complete, runnable examples:
 - **[event-system](./examples/event-system/)**: Comprehensive event monitoring and statistics
 - **[pm2-workers](./examples/pm2-workers/)**: Production deployment with PM2 process manager
 
+> **Note**: All examples demonstrate the UTC-first timezone approach and automatic job cleanup features.
+
 ## Priority System
 
 Jobs are processed by priority (lower number = higher priority):
@@ -103,6 +107,20 @@ await queue.add("daily-report", payload, {
 // Interval with limit
 await queue.add("health-check", payload, {
   repeat: { every: 30000, limit: 10 }  // Every 30s, 10 times
+})
+```
+
+## Job Cleanup
+
+```typescript
+// Automatic cleanup configuration
+const queue = new Queue(adapter, {
+  name: "my-queue",
+  removeOnComplete: true,  // Remove completed jobs immediately
+  removeOnFail: false,     // Keep failed jobs for debugging
+  // Or use numbers to keep N jobs
+  removeOnComplete: 100,   // Keep last 100 completed jobs
+  removeOnFail: 50,        // Keep last 50 failed jobs
 })
 ```
 
@@ -136,6 +154,7 @@ await queue.add("business-task", payload, {
 2. **All timestamps stored in database are UTC** - no timezone ambiguity
 3. **Recurring jobs recalculate using original timezone** - maintains accuracy
 4. **Simple and predictable** - no runtime timezone complexity
+5. **Server timezone independent** - works consistently across environments
 
 ## Progress Tracking
 
@@ -196,6 +215,21 @@ queue.on("queue:resumed", () => {
 })
 ```
 
+## Architecture
+
+### UTC-First Design
+
+- **Database storage**: All timestamps stored as UTC
+- **Timezone conversion**: Happens at job creation time
+- **No timezone fields**: Database schema contains no timezone columns
+- **Predictable behavior**: Same results across different server timezones
+
+### Adapter Pattern
+
+- **Pluggable storage**: Easy to add new database adapters
+- **Consistent interface**: Same API across all adapters
+- **Type safety**: Full TypeScript support throughout
+
 ## Development
 
 ```bash
@@ -210,4 +244,15 @@ pnpm typecheck
 
 # Lint
 pnpm lint
+
+# Build packages
+pnpm build
 ```
+
+## Contributing
+
+Contributions are welcome! Please read our contributing guidelines and submit pull requests to our repository.
+
+## License
+
+MIT License - see LICENSE file for details.
