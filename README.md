@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./assets/vorsteh-queue-logo-nobg.png" alt="Vorsteh Queue" width="200" height="200" />
+  <img src="./assets/vorsteh-queue-logo-nobg.png" alt="Vorsteh Queue" height="200" />
   <h1>Vorsteh Queue</h1>
   <p>A TypeScript-first job queue system with multiple database adapters, built for reliability and developer experience.</p>
 </div>
@@ -48,6 +48,7 @@ pnpm add @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
 ```typescript
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
+
 import { DrizzleQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 
@@ -65,10 +66,14 @@ queue.register("send-email", async (payload: { to: string; subject: string }) =>
 
 // Add jobs
 await queue.add("send-email", { to: "user@example.com", subject: "Welcome!" })
-await queue.add("send-email", { to: "admin@example.com", subject: "Report" }, {
-  priority: 1,    // Higher priority
-  delay: 5000     // Delay 5 seconds
-})
+await queue.add(
+  "send-email",
+  { to: "admin@example.com", subject: "Report" },
+  {
+    priority: 1, // Higher priority
+    delay: 5000, // Delay 5 seconds
+  },
+)
 
 // Start processing
 queue.start()
@@ -91,9 +96,9 @@ Check out the [examples directory](./examples/) for complete, runnable examples:
 Jobs are processed by priority (lower number = higher priority):
 
 ```typescript
-await queue.add("urgent-task", payload, { priority: 1 })    // Processed first
-await queue.add("normal-task", payload, { priority: 2 })    // Default priority
-await queue.add("low-task", payload, { priority: 3 })       // Processed last
+await queue.add("urgent-task", payload, { priority: 1 }) // Processed first
+await queue.add("normal-task", payload, { priority: 2 }) // Default priority
+await queue.add("low-task", payload, { priority: 3 }) // Processed last
 ```
 
 ## Recurring Jobs
@@ -101,12 +106,12 @@ await queue.add("low-task", payload, { priority: 3 })       // Processed last
 ```typescript
 // Cron expression
 await queue.add("daily-report", payload, {
-  cron: "0 9 * * *"  // Every day at 9 AM
+  cron: "0 9 * * *", // Every day at 9 AM
 })
 
 // Interval with limit
 await queue.add("health-check", payload, {
-  repeat: { every: 30000, limit: 10 }  // Every 30s, 10 times
+  repeat: { every: 30000, limit: 10 }, // Every 30s, 10 times
 })
 ```
 
@@ -116,11 +121,11 @@ await queue.add("health-check", payload, {
 // Automatic cleanup configuration
 const queue = new Queue(adapter, {
   name: "my-queue",
-  removeOnComplete: true,  // Remove completed jobs immediately
-  removeOnFail: false,     // Keep failed jobs for debugging
+  removeOnComplete: true, // Remove completed jobs immediately
+  removeOnFail: false, // Keep failed jobs for debugging
   // Or use numbers to keep N jobs
-  removeOnComplete: 100,   // Keep last 100 completed jobs
-  removeOnFail: 50,        // Keep last 50 failed jobs
+  removeOnComplete: 100, // Keep last 100 completed jobs
+  removeOnFail: 50, // Keep last 50 failed jobs
 })
 ```
 
@@ -132,19 +137,19 @@ Vorsteh Queue uses a **UTC-first approach** for reliable timezone handling:
 // Schedule job for 9 AM New York time - converted to UTC immediately
 await queue.add("daily-report", payload, {
   cron: "0 9 * * *",
-  timezone: "America/New_York"  // Timezone used for conversion only
+  timezone: "America/New_York", // Timezone used for conversion only
 })
 
 // Schedule job for specific time in Tokyo - stored as UTC
 await queue.add("notification", payload, {
   runAt: new Date("2024-01-15T10:00:00"),
-  timezone: "Asia/Tokyo"  // Interprets runAt in Tokyo time
+  timezone: "Asia/Tokyo", // Interprets runAt in Tokyo time
 })
 
 // Complex cron with timezone - result always UTC
 await queue.add("business-task", payload, {
   cron: "*/15 9-17 * * 1-5",
-  timezone: "Europe/London"  // Business hours in London time
+  timezone: "Europe/London", // Business hours in London time
 })
 ```
 
@@ -162,16 +167,16 @@ await queue.add("business-task", payload, {
 // Register a job that reports progress
 queue.register("process-data", async (job) => {
   const items = job.payload.items
-  
+
   for (let i = 0; i < items.length; i++) {
     // Process item
     await processItem(items[i])
-    
+
     // Update progress (0-100)
     const progress = Math.round(((i + 1) / items.length) * 100)
     await job.updateProgress(progress)
   }
-  
+
   return { processed: items.length }
 })
 
