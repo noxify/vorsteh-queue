@@ -1,7 +1,11 @@
 {
-  "projects": {
-    "apps/docs": {
-      "outputDirectory": "out"
+  "builds": [
+    {
+      "src": "apps/docs/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "distDir": "out"
+      }
     }
-  }
+  ]
 }
