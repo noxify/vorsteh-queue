@@ -4,16 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "next-env.d.ts",
-        ".expo/**",
-        ".output/**",
-        ".vercel/output/**",
-        ".cache/tsbuildinfo.json",
-        "dist/**"
-      ]
+      "outputs": ["out/**", ".cache/tsbuildinfo.json"]
     },
     "test": {},
     "dev": {

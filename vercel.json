@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "apps/docs": {
+      "outputDirectory": "out"
+    }
+  }
+}
