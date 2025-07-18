@@ -59,7 +59,7 @@ jobs:
         uses: ./.github/setup
 
       - name: Test Core Package
-        run: turbo test --filter=@vorsteh-queue/core
+        run: pnpm test:core
 
       - name: Test Drizzle PostgreSQL (PGlite)
         run: pnpm test:drizzle-postgres
