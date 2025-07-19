@@ -85,6 +85,9 @@ jobs:
       - shell: bash
         run: pnpm install
 
+      - name: Build packages
+        run: pnpm --filter "./packages/*" build
+
       - name: Test Core Package
         run: pnpm test:core
 
