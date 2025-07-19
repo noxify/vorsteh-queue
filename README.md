@@ -104,11 +104,12 @@ queue.start()
 
 Check out the [examples directory](./examples/) for complete, runnable examples:
 
-- **[drizzle-pg](./examples/drizzle-pg/)**: Basic usage with Drizzle + node-postgres
-- **[drizzle-postgres](./examples/drizzle-postgres/)**: Advanced features with Drizzle + postgres.js
-- **[progress-tracking](./examples/progress-tracking/)**: Real-time job progress updates
-- **[event-system](./examples/event-system/)**: Comprehensive event monitoring and statistics
-- **[pm2-workers](./examples/pm2-workers/)**: Production deployment with PM2 process manager
+- **[drizzle-pg](./examples/drizzle-pg/)** - Basic example using Drizzle ORM with node-postgres (pg)
+- **[drizzle-pglite](./examples/drizzle-pglite/)** - Zero-setup example using Drizzle ORM with PGlite (embedded PostgreSQL)
+- **[drizzle-postgres](./examples/drizzle-postgres/)** - Advanced example using Drizzle ORM with postgres.js and recurring jobs
+- **[event-system](./examples/event-system/)** - Comprehensive event monitoring and statistics using Drizzle ORM with postgres.js
+- **[pm2-workers](./examples/pm2-workers/)** - Manage multiple Vorsteh Queues with PM2 using Drizzle ORM with postgres.js
+- **[progress-tracking](./examples/progress-tracking/)** - Real-time job progress tracking using Drizzle ORM with postgres.js
 
 > **Note**: All examples demonstrate the UTC-first timezone approach and automatic job cleanup features.
 
