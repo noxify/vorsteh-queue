@@ -65,11 +65,23 @@ jobs:
 
   unittest:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    name: Test (Node.js ${{ matrix.node-version }})
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup
-        uses: ./.github/setup
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: true
 
       - name: Test Core Package
         run: pnpm test:core

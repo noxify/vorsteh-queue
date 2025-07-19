@@ -35,6 +35,11 @@
 
 ## Quick Start
 
+### Requirements
+
+- **Node.js 20+**
+- **ESM only** - This package is ESM-only and cannot be imported with `require()`
+
 ### Installation
 
 ```bash
@@ -42,6 +47,8 @@ npm install @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
 # or
 pnpm add @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
 ```
+
+> **Note**: Make sure your project has `"type": "module"` in package.json or use `.mjs` file extensions.
 
 ### Basic Usage
 

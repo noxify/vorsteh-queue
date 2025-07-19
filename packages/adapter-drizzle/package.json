@@ -34,9 +34,18 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "pkgroll",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "db:generate": "drizzle-kit generate",
@@ -63,9 +72,10 @@
     "mysql2": "^3.11.4",
     "postgres": "3.4.7",
     "prettier": "3.6.2",
-    "testcontainers": "^10.17.0",
+    "testcontainers": "^11.3.0",
     "typescript": "5.8.3",
-    "vitest": "3.2.4"
+    "vitest": "3.2.4",
+    "pkgroll": "^2.5.0"
   },
   "peerDependencies": {
     "drizzle-orm": ">=0.44.3"

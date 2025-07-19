@@ -1,5 +1,5 @@
 {
-  "extends": "@vorsteh-queue/tsconfig/base.json",
+  "extends": "@vorsteh-queue/tsconfig/external-package.json",
   "compilerOptions": {
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
     "baseUrl": ".",
@@ -7,6 +7,6 @@
       "~/*": ["src/*"]
     }
   },
-  "include": ["*.ts", "src", "tests"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }
