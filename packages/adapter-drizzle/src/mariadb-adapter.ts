@@ -82,7 +82,7 @@ export class MariaDBQueueAdapter extends BaseQueueAdapter {
       throw new Error("Failed to create job")
     }
 
-    return this.mapDbJobToBaseJob(insertedJob) as BaseJob<TJobPayload>
+    return this.transformJob(insertedJob) as BaseJob<TJobPayload>
   }
 
   async updateJobStatus(id: string, status: JobStatus, error?: string): Promise<void> {
@@ -208,7 +208,7 @@ export class MariaDBQueueAdapter extends BaseQueueAdapter {
       .limit(1)
       .for("update", { skipLocked: true }) // MariaDB 10.6+ supports SKIP LOCKED
 
-    return job ? this.mapDbJobToBaseJob(job) : null
+    return job ? this.transformJob(job) : null
   }
 
   protected async getPendingJobByPriority(): Promise<BaseJob | null> {
@@ -222,10 +222,10 @@ export class MariaDBQueueAdapter extends BaseQueueAdapter {
       .limit(1)
       .for("update", { skipLocked: true }) // MariaDB 10.6+ supports SKIP LOCKED
 
-    return job ? this.mapDbJobToBaseJob(job) : null
+    return job ? this.transformJob(job) : null
   }
 
-  private mapDbJobToBaseJob(job: schema.QueueJob): BaseJob {
+  private transformJob(job: schema.QueueJob): BaseJob {
     return {
       id: job.id,
       name: job.name,

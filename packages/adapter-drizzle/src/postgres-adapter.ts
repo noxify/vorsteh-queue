@@ -74,7 +74,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       throw new Error("Failed to create job")
     }
 
-    return this.mapDbJobToBaseJob(result) as BaseJob<TJobPayload>
+    return this.transformJob(result) as BaseJob<TJobPayload>
   }
 
   async updateJobStatus(id: string, status: JobStatus, error?: string): Promise<void> {
@@ -212,7 +212,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       .limit(1)
       .for("update", { skipLocked: true })
 
-    return job ? this.mapDbJobToBaseJob(job) : null
+    return job ? this.transformJob(job) : null
   }
 
   protected async getPendingJobByPriority(): Promise<BaseJob | null> {
@@ -226,10 +226,10 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       .limit(1)
       .for("update", { skipLocked: true })
 
-    return job ? this.mapDbJobToBaseJob(job) : null
+    return job ? this.transformJob(job) : null
   }
 
-  private mapDbJobToBaseJob(job: schema.QueueJob): BaseJob {
+  private transformJob(job: schema.QueueJob): BaseJob {
     return {
       id: job.id,
       name: job.name,
