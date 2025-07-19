@@ -1,6 +1,5 @@
 ---
 "@vorsteh-queue/adapter-drizzle": minor
-"@vorsteh-queue/adapter-prisma": minor
 "@vorsteh-queue/core": minor
 "create-vorsteh-queue": minor
 ---
