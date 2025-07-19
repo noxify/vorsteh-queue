@@ -1,23 +1,26 @@
-import { defineConfig } from 'rolldown'
-import del from 'rollup-plugin-delete'
+import { defineConfig } from "rolldown"
+import del from "rollup-plugin-delete"
 
 export default defineConfig({
-  input: 'src/index.ts',
-  output: {
-    dir: 'dist',
-    format: 'esm',
-    entryFileNames: '[name].js'
+  input: {
+    index: "src/index.ts",
+    "mariadb-adapter": "src/mariadb-adapter.ts",
+    "mariadb-schema": "src/mariadb-schema.ts",
+    "postgres-adapter": "src/postgres-adapter.ts",
+    "postgres-schema": "src/postgres-schema.ts",
   },
-  plugins: [
-    del({ targets: 'dist/*' })
-  ],
+  output: {
+    dir: "dist",
+    format: "esm",
+    entryFileNames: "[name].js",
+  },
+  plugins: [del({ targets: "dist/*" })],
   external: [
-    '@vorsteh-queue/core',
-    'drizzle-orm',
-    'drizzle-orm/mysql2',
-    'drizzle-orm/node-postgres',
-    'drizzle-orm/pglite',
-    'drizzle-orm/postgres-js'
+    "@vorsteh-queue/core",
+    "drizzle-orm",
+    "drizzle-orm/mysql2",
+    "drizzle-orm/node-postgres",
+    "drizzle-orm/pglite",
+    "drizzle-orm/postgres-js",
   ],
-  declaration: true
 })

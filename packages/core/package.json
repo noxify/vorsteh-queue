@@ -33,16 +33,25 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./adapters/memory": {
+      "types": "./dist/adapters/memory.d.ts",
+      "import": "./dist/adapters/memory.js",
+      "default": "./src/adapters/memory.ts"
+    }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "types"
   ],
   "scripts": {
-    "build": "rolldown -c rolldown.config.ts",
+    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "format": "prettier --check . --ignore-path ../../.gitignore",
@@ -54,8 +63,7 @@
   "dependencies": {
     "@date-fns/tz": "^1.2.0",
     "croner": "^9.1.0",
-    "date-fns": "^4.1.0",
-    "type-fest": "^4.41.0"
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
     "@vorsteh-queue/eslint-config": "workspace:*",
@@ -63,7 +71,7 @@
     "@vorsteh-queue/tsconfig": "workspace:*",
     "eslint": "^9.31.0",
     "rolldown": "^1.0.0-beta.1",
-    "rollup-plugin-delete": "^2.1.0",
+    "rollup-plugin-delete": "^3.0.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   },

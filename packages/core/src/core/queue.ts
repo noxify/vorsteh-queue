@@ -9,7 +9,7 @@ import type {
   QueueConfig,
   QueueEvents,
   QueueStats,
-} from "../types"
+} from "../../types"
 import { calculateDelay, waitFor } from "../utils/helpers"
 import { calculateNextRun, nowUtc, parseCron, toUtcDate } from "../utils/scheduler"
 import { createJobWrapper } from "./job-wrapper"

@@ -37,6 +37,22 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./mariadb-adapter": {
+      "types": "./dist/mariadb-adapter.d.ts",
+      "default": "./dist/mariadb-adapter.js"
+    },
+    "./mariadb-schema": {
+      "types": "./dist/mariadb-schema.d.ts",
+      "default": "./dist/mariadb-schema.js"
+    },
+    "./postgres-adapter": {
+      "types": "./dist/postgres-adapter.d.ts",
+      "default": "./dist/postgres-adapter.js"
+    },
+    "./postgres-schema": {
+      "types": "./dist/postgres-schema.d.ts",
+      "default": "./dist/postgres-schema.js"
     }
   },
   "main": "./dist/index.js",
@@ -45,7 +61,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rolldown -c rolldown.config.ts",
+    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "db:generate": "drizzle-kit generate",
@@ -73,7 +89,7 @@
     "postgres": "^3.4.7",
     "prettier": "^3.6.2",
     "rolldown": "^1.0.0-beta.1",
-    "rollup-plugin-delete": "^2.1.0",
+    "rollup-plugin-delete": "^3.0.1",
     "testcontainers": "^11.3.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"

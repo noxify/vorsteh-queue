@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { JobWithProgress } from "../src/types"
+import type { JobWithProgress } from "../types"
 import { MemoryQueueAdapter, Queue } from "../src"
 import { waitFor } from "../src/utils/helpers"
 

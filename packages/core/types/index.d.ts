@@ -1,4 +1,5 @@
-import type { Simplify } from "type-fest"
+// Using built-in TypeScript utility instead of type-fest
+type Simplify<T> = { [K in keyof T]: T[K] } & {}
 
 /** Job processing status */
 export type JobStatus = "pending" | "processing" | "completed" | "failed" | "delayed"

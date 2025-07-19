@@ -25,7 +25,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rolldown -c rolldown.config.ts",
+    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "dev": "tsx src/index.ts",
@@ -50,7 +50,7 @@
     "eslint": "^9.31.0",
     "prettier": "^3.6.2",
     "rolldown": "^1.0.0-beta.1",
-    "rollup-plugin-delete": "^2.1.0",
+    "rollup-plugin-delete": "^3.0.1",
     "tsx": "4.20.3",
     "typescript": "^5.8.3"
   },

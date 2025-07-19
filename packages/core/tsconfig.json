@@ -7,6 +7,6 @@
       "~/*": ["./src/*"]
     }
   },
-  "include": ["src", "tests", "*.config.ts"],
+  "include": ["src", "tests", "*.config.ts", "types"],
   "exclude": ["node_modules"]
 }
