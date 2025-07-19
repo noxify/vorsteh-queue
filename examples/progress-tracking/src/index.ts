@@ -1,20 +1,15 @@
-import { drizzle } from "drizzle-orm/postgres-js"
-import postgres from "postgres"
-
-import { DrizzleQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 
-import * as schema from "./schema"
-
-// Database setup
-const client = postgres(
-  process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/queue_tracking",
-)
-const db = drizzle(client, { schema })
+import { db, client } from "./database"
 
 // Queue setup
-const adapter = new DrizzleQueueAdapter(db, "progress-queue")
-const queue = new Queue(adapter, { name: "progress-queue" })
+const adapter = new PostgresQueueAdapter(db, "progress-queue")
+const queue = new Queue(adapter, { 
+  name: "progress-queue",
+  removeOnComplete: 5,
+  removeOnFail: 3
+})
 
 interface ProcessDatasetPayload {
   items: string[]
@@ -87,48 +82,85 @@ queue.register<UploadFilesPayload, UploadFilesResult>("upload-files", async (job
   }
 })
 
-// Progress event listeners
+// Enhanced event listeners
+queue.on("job:added", (job) => {
+  console.log(`✅ Job added: ${job.name} (${job.id})`)
+})
+
+queue.on("job:processing", (job) => {
+  console.log(`⚡ Started processing: ${job.name} (${job.id})`)
+})
+
 queue.on("job:progress", (job) => {
-  console.log(`📈 Progress Update: ${job.name} is ${job.progress}% complete`)
+  const progressBar = '█'.repeat(Math.floor(job.progress / 5)) + '░'.repeat(20 - Math.floor(job.progress / 5))
+  console.log(`📈 Progress: ${job.name} [${progressBar}] ${job.progress}%`)
 })
 
 queue.on("job:completed", (job) => {
-  console.log(`🎉 Job completed: ${job.name}`)
+  console.log(`🎉 Completed: ${job.name} (${job.id}) - Duration: ${Date.now() - job.createdAt.getTime()}ms`)
+})
+
+queue.on("job:failed", (job) => {
+  console.error(`❌ Failed: ${job.name} (${job.id}) - ${job.error}`)
 })
 
 async function main() {
-  await queue.connect()
+  console.log("🚀 Starting Progress Tracking Example")
+  console.log("Watch the real-time progress bars and updates!\n")
 
-  // Add dataset processing job
-  await queue.add("process-dataset", {
+  // Add multiple dataset processing jobs
+  await queue.add<ProcessDatasetPayload>("process-dataset", {
     items: ["user-data.csv", "transactions.json", "analytics.log", "reports.xlsx", "backup.sql"],
-    processingTime: 200,
+    processingTime: 300,
   })
 
-  // Add file upload job
-  await queue.add("upload-files", {
+  await queue.add<ProcessDatasetPayload>("process-dataset", {
+    items: Array.from({ length: 15 }, (_, i) => `batch-${i + 1}.json`),
+    processingTime: 150,
+  }, { priority: 1 })
+
+  // Add file upload jobs with different sizes
+  await queue.add<UploadFilesPayload>("upload-files", {
     files: [
       { name: "document.pdf", size: 2048 },
       { name: "image.jpg", size: 1536 },
-      { name: "video.mp4", size: 4096 },
-      { name: "archive.zip", size: 3072 },
+      { name: "video.mp4", size: 8192 },
+      { name: "archive.zip", size: 4096 },
     ],
   })
 
+  await queue.add<UploadFilesPayload>("upload-files", {
+    files: [
+      { name: "large-dataset.csv", size: 12288 },
+      { name: "backup.tar.gz", size: 16384 },
+    ],
+  }, { delay: 3000 })
+
   // Start processing
   queue.start()
+  console.log("🔄 Queue processing started with progress tracking!")
+  console.log("Press Ctrl+C to stop.\n")
 
-  console.log("🚀 Progress tracking example started. Watch the progress updates!")
-  console.log("Press Ctrl+C to stop.")
+  // Show queue stats with progress info
+  const statsInterval = setInterval(async () => {
+    const stats = await queue.getStats()
+    if (stats.processing > 0) {
+      console.log(`📊 Active jobs: ${stats.processing} processing, ${stats.pending} pending`)
+    }
+  }, 5000)
 
   // Graceful shutdown
   process.on("SIGINT", async () => {
-    console.log("Shutting down...")
+    console.log("\n🛑 Shutting down progress tracking...")
+    clearInterval(statsInterval)
     await queue.stop()
-    await queue.disconnect()
     await client.end()
+    console.log("✅ Progress tracking shutdown complete")
     process.exit(0)
   })
 }
 
-main().catch(console.error)
+main().catch((error) => {
+  console.error("❌ Progress tracking error:", error)
+  process.exit(1)
+})

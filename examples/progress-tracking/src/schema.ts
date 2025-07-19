@@ -1,1 +1,3 @@
-export { queueJobs } from "@vorsteh-queue/adapter-drizzle"
+import { postgresSchema } from "@vorsteh-queue/adapter-drizzle"
+
+export const { queueJobs } = postgresSchema

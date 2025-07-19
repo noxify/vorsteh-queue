@@ -1,74 +1,159 @@
-import { drizzle } from "drizzle-orm/postgres-js"
-import postgres from "postgres"
-
-import { DrizzleQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 
-import * as schema from "./schema"
+import { db, client } from "./database"
 
-// Database setup
-const client = postgres(process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/queue_db")
-const db = drizzle(client, { schema })
+// Job payload types
+interface ReportJob {
+  userId: string
+  type: 'daily' | 'weekly' | 'monthly'
+  includeCharts?: boolean
+}
+
+interface CleanupJob {
+  olderThan: string
+  fileTypes?: string[]
+}
+
+// Job result types
+interface ReportResult {
+  reportId: string
+  status: 'completed' | 'failed'
+  fileSize?: number
+}
+
+interface CleanupResult {
+  deletedCount: number
+  freedSpace: number
+}
 
 // Queue setup
-const adapter = new DrizzleQueueAdapter(db, "example-queue")
-const queue = new Queue(adapter, { name: "example-queue" })
-
-// Job handlers
-queue.register("generate-report", async (payload: { userId: string; type: string }) => {
-  console.log(`Generating ${payload.type} report for user ${payload.userId}`)
-  await new Promise(resolve => setTimeout(resolve, 3000)) // Simulate work
-  return { reportId: `report_${Date.now()}`, status: "completed" }
+const adapter = new PostgresQueueAdapter(db, "advanced-queue")
+const queue = new Queue(adapter, { 
+  name: "advanced-queue",
+  removeOnComplete: 20,
+  removeOnFail: 10
 })
 
-queue.register("cleanup-files", async (payload: { olderThan: string }) => {
-  console.log(`Cleaning up files older than ${payload.olderThan}`)
-  await new Promise(resolve => setTimeout(resolve, 1500)) // Simulate work
-  return { deletedCount: Math.floor(Math.random() * 10) }
+// Job handlers with proper types
+queue.register<ReportJob, ReportResult>("generate-report", async (job) => {
+  const { userId, type, includeCharts = false } = job.payload
+  console.log(`📈 Generating ${type} report for user ${userId}${includeCharts ? ' with charts' : ''}`)
+  
+  // Simulate report generation with progress
+  const steps = ['Collecting data', 'Processing metrics', 'Generating charts', 'Finalizing report']
+  for (let i = 0; i < steps.length; i++) {
+    console.log(`   ${steps[i]}...`)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await job.updateProgress(Math.round(((i + 1) / steps.length) * 100))
+  }
+  
+  return { 
+    reportId: `report_${Date.now()}`, 
+    status: "completed",
+    fileSize: Math.floor(Math.random() * 1000000) + 100000
+  }
+})
+
+queue.register<CleanupJob, CleanupResult>("cleanup-files", async (job) => {
+  const { olderThan, fileTypes = ['tmp', 'log'] } = job.payload
+  console.log(`🧽 Cleaning up ${fileTypes.join(', ')} files older than ${olderThan}`)
+  
+  await new Promise((resolve) => setTimeout(resolve, 1500))
+  const deletedCount = Math.floor(Math.random() * 50) + 10
+  const freedSpace = deletedCount * Math.floor(Math.random() * 1000000)
+  
+  return { deletedCount, freedSpace }
 })
 
 // Event listeners
+queue.on("job:added", (job) => {
+  console.log(`✅ Job added: ${job.name} (${job.id})`)
+})
+
+queue.on("job:processing", (job) => {
+  console.log(`⚡ Processing: ${job.name} (${job.id})`)
+})
+
 queue.on("job:completed", (job) => {
-  console.log(`✅ Job ${job.name} completed successfully`)
+  console.log(`🎉 Completed: ${job.name} (${job.id})`)
 })
 
 queue.on("job:failed", (job) => {
-  console.log(`❌ Job ${job.name} failed: ${job.error}`)
+  console.error(`❌ Failed: ${job.name} (${job.id}) - ${job.error}`)
+})
+
+queue.on("job:progress", (job) => {
+  console.log(`📈 Progress: ${job.name} - ${job.progress}%`)
+})
+
+queue.on("job:retried", (job) => {
+  console.log(`🔄 Retrying: ${job.name} (attempt ${job.attempts})`)
 })
 
 async function main() {
-  await queue.connect()
-  
-  // Add jobs with different priorities
-  await queue.add("generate-report", { userId: "user123", type: "monthly" }, { priority: 1 })
-  await queue.add("cleanup-files", { olderThan: "30d" }, { priority: 3 })
-  await queue.add("generate-report", { userId: "user456", type: "weekly" }, { priority: 2 })
+  console.log("🚀 Starting Advanced Drizzle PostgreSQL Queue Example")
 
-  // Add recurring job
-  await queue.add("cleanup-files", { olderThan: "7d" }, { 
-    repeat: { every: 60000, limit: 5 } // Every minute, 5 times
-  })
+  // Add jobs with different priorities and features
+  await queue.add<ReportJob>("generate-report", { 
+    userId: "user123", 
+    type: "monthly",
+    includeCharts: true
+  }, { priority: 1 })
+  
+  await queue.add<CleanupJob>("cleanup-files", { 
+    olderThan: "30d",
+    fileTypes: ['tmp', 'log', 'cache']
+  }, { priority: 3 })
+  
+  await queue.add<ReportJob>("generate-report", { 
+    userId: "user456", 
+    type: "weekly"
+  }, { priority: 2, delay: 5000 })
+
+  // Add recurring cleanup job
+  await queue.add<CleanupJob>(
+    "cleanup-files",
+    { olderThan: "7d" },
+    {
+      repeat: { every: 30000, limit: 3 }, // Every 30 seconds, 3 times
+    },
+  )
+
+  // Add cron job
+  await queue.add<ReportJob>(
+    "generate-report",
+    { userId: "system", type: "daily" },
+    {
+      cron: "0 9 * * *", // Every day at 9 AM
+    }
+  )
 
   // Start processing
   queue.start()
-  
-  console.log("Queue started. Press Ctrl+C to stop.")
-  
-  // Show stats every 10 seconds
+  console.log("🔄 Advanced queue processing started. Press Ctrl+C to stop.")
+
+  // Show detailed stats every 15 seconds
   const statsInterval = setInterval(async () => {
     const stats = await queue.getStats()
-    console.log("📊 Queue stats:", stats)
-  }, 10000)
-  
+    console.log("📊 Detailed Queue Stats:", {
+      ...stats,
+      total: Object.values(stats).reduce((sum, count) => sum + count, 0)
+    })
+  }, 15000)
+
   // Graceful shutdown
   process.on("SIGINT", async () => {
-    console.log("Shutting down...")
+    console.log("\n🛑 Shutting down advanced queue...")
     clearInterval(statsInterval)
     await queue.stop()
-    await queue.disconnect()
     await client.end()
+    console.log("✅ Advanced queue shutdown complete")
     process.exit(0)
   })
 }
 
-main().catch(console.error)
+main().catch((error) => {
+  console.error("❌ Advanced queue error:", error)
+  process.exit(1)
+})

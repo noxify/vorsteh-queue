@@ -1,19 +1,10 @@
-import { drizzle } from "drizzle-orm/postgres-js"
-import postgres from "postgres"
-
-import { DrizzleQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 
-import * as schema from "./schema"
-
-// Database setup
-const client = postgres(
-  process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/queue_event",
-)
-const db = drizzle(client, { schema })
+import { client, db } from "./database"
 
 // Queue setup
-const adapter = new DrizzleQueueAdapter(db, "event-queue")
+const adapter = new PostgresQueueAdapter(db, "event-queue")
 const queue = new Queue(adapter, { name: "event-queue" })
 
 // Job statistics tracking
