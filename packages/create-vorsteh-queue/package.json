@@ -1,0 +1,58 @@
+{
+  "name": "create-vorsteh-queue",
+  "version": "0.0.0",
+  "description": "Create Vorsteh Queue applications with one command",
+  "keywords": [
+    "vorsteh-queue",
+    "queue",
+    "jobs",
+    "cli",
+    "create"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/create-vorsteh-queue"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "create-vorsteh-queue": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "dev": "tsx src/index.ts",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "prettier": "@vorsteh-queue/prettier-config",
+  "dependencies": {
+    "@antfu/install-pkg": "1.1.0",
+    "@clack/prompts": "0.11.0",
+    "giget": "2.0.0",
+    "picocolors": "1.1.1",
+    "read-pkg": "9.0.1",
+    "terminal-link": "4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.16.5",
+    "@vorsteh-queue/eslint-config": "workspace:*",
+    "@vorsteh-queue/prettier-config": "workspace:*",
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "eslint": "9.31.0",
+    "prettier": "3.6.2",
+    "tsx": "4.20.3",
+    "typescript": "5.8.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
