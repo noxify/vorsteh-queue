@@ -73,7 +73,7 @@ const connection = await mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "password",
-  database: "queue_db"
+  database: "queue_db",
 })
 const db = drizzle(connection, { mode: "default" })
 const adapter = new MariaDBQueueAdapter(db, "my-queue")
@@ -284,8 +284,8 @@ pnpm build
 
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines and submit pull requests to our repository.
+Contributions are welcome! Please read our [contributing guidelines](./CONTRIBUTING.md) and submit pull requests to our repository.
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENSE](./LICENSE) file for details.
