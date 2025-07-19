@@ -52,11 +52,11 @@ npx create-vorsteh-queue my-app -t=drizzle-pglite -pm=pnpm --quiet
 
 Templates are **dynamically discovered** from the GitHub repository:
 
-- **drizzle-postgres** - Drizzle ORM + postgres.js (Production ready)
-- **drizzle-pg** - Drizzle ORM + node-postgres (Simple setup)
-- **drizzle-pglite** - Drizzle ORM + PGlite (Embedded, zero setup)
-- **progress-tracking** - Advanced progress tracking with real-time updates
-- **event-system** - Comprehensive event monitoring and statistics
+- **drizzle-postgres-example** - Advanced example using Drizzle ORM with postgres.js and recurring jobs
+- **drizzle-pg-example** - Basic example using Drizzle ORM with node-postgres (pg)
+- **drizzle-pglite-example** - Zero-setup example using Drizzle ORM with PGlite (embedded PostgreSQL)
+- **progress-tracking-example** - Real-time job progress tracking using Drizzle ORM with postgres.js
+- **event-system-example** - Comprehensive event monitoring and statistics using Drizzle ORM with postgres.js
 
 > Templates are automatically fetched from the examples directory, so new examples are immediately available!
 

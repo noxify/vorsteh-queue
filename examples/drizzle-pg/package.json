@@ -1,6 +1,7 @@
 {
   "name": "drizzle-pg-example",
   "version": "1.0.0",
+  "description": "Basic Vorsteh Queue example using Drizzle ORM with node-postgres (pg)",
   "type": "module",
   "private": true,
   "scripts": {

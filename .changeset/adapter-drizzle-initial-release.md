@@ -4,7 +4,7 @@
 
 # 🚀 Initial Release - Drizzle ORM Adapter
 
-Production-ready database adapter supporting PostgreSQL and MariaDB/MySQL via Drizzle ORM.
+Database adapter supporting PostgreSQL and MariaDB/MySQL via Drizzle ORM.
 
 ## 🗄️ Database Support
 
@@ -48,7 +48,7 @@ const db = drizzle(connection, { schema: mariadbSchema })
 const adapter = new MariaDBQueueAdapter(db, "my-queue")
 ```
 
-## 🛡️ Production Ready
+## 🛡️ Enterprise Features
 
 - **Connection pooling** support for high-throughput applications
 - **Transaction support** for atomic job operations

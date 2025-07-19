@@ -1,6 +1,7 @@
 {
   "name": "drizzle-postgres-example",
   "version": "1.0.0",
+  "description": "Advanced Vorsteh Queue example using Drizzle ORM with postgres.js and recurring jobs",
   "type": "module",
   "private": true,
   "scripts": {

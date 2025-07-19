@@ -1,6 +1,7 @@
 {
   "name": "progress-tracking-example",
   "version": "1.0.0",
+  "description": "Real-time job progress tracking example using Drizzle ORM with postgres.js",
   "type": "module",
   "private": true,
   "scripts": {

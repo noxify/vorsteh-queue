@@ -1,6 +1,7 @@
 {
   "name": "drizzle-pglite-example",
   "version": "0.0.0",
+  "description": "Zero-setup Vorsteh Queue example using Drizzle ORM with PGlite (embedded PostgreSQL)",
   "private": true,
   "type": "module",
   "scripts": {

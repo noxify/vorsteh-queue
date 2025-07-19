@@ -1,6 +1,7 @@
 {
   "name": "event-system-example",
   "version": "1.0.0",
+  "description": "Comprehensive event monitoring and statistics example using Drizzle ORM with postgres.js",
   "type": "module",
   "private": true,
   "scripts": {
