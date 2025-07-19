@@ -3,17 +3,13 @@ name: CI
 on:
   pull_request:
     branches: ["*"]
-    types: [opened, synchronize, reopened, ready_for_review]
-  pull_request_target:
-    branches: ["*"]
-    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: ["main"]
   merge_group:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number to run CI for'
+        description: "PR number to run CI for"
         required: false
         type: string
 
@@ -68,11 +64,29 @@ jobs:
 
   unittest:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    name: Test (Node.js ${{ matrix.node-version }})
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup
-        uses: ./.github/setup
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - shell: bash
+        run: pnpm install
+
+      - name: Build packages
+        run: pnpm --filter "./packages/*" build
 
       - name: Test Core Package
         run: pnpm test:core

@@ -13,4 +13,4 @@ export type {
   QueueConfig,
   QueueEvents,
   QueueStats,
-} from "./types"
+} from "../types"

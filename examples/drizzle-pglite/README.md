@@ -14,25 +14,37 @@ A complete example using Vorsteh Queue with Drizzle ORM and PGlite (embedded Pos
 - ✅ **Queue statistics** - Monitor queue health
 - ✅ **Graceful shutdown** - Clean termination
 
-## Quick Start
+## Setup
+
+1. Install dependencies:
 
 ```bash
-# Install dependencies
 pnpm install
+```
 
-# Run the example
+2. Push database schema:
+
+```bash
+pnpm db:push
+```
+
+3. Run the example:
+
+```bash
 pnpm dev
 ```
+
+> **Note**: PGlite creates an embedded PostgreSQL database automatically, but the schema still needs to be initialized.
 
 ## What It Does
 
 1. **Creates embedded database** - PGlite starts with empty database
-2. **Sets up schema** - Creates queue tables automatically
-3. **Registers job handlers** - Email and data processing jobs
-4. **Adds various jobs** - Immediate, delayed, priority, and recurring
+2. **Initializes schema** - Uses drizzle-kit pushSchema to create tables
+3. **Registers job handlers** - Email and data processing jobs with TypeScript types
+4. **Adds sample jobs** - Immediate, delayed, and priority jobs
 5. **Processes jobs** - Shows real-time progress and events
-6. **Displays stats** - Queue statistics every 5 seconds
-7. **Graceful shutdown** - Stops after 30 seconds
+6. **Displays stats** - Queue statistics every 10 seconds
+7. **Graceful shutdown** - Press Ctrl+C to stop cleanly
 
 ## Perfect for Bug Reports
 
@@ -47,38 +59,51 @@ This example is ideal for reproducing bugs because:
 ## Example Output
 
 ```
-🚀 Starting PGlite Queue Example
-
-📝 Adding jobs to queue...
+🚀 Starting PGlite Queue Example (Embedded PostgreSQL)
+📋 Initializing database schema...
+✅ Database schema initialized
 ✅ Job added: send-email (abc123...)
-✅ Job added: send-email (def456...)
-✅ Job added: process-data (ghi789...)
-
-🔄 Starting queue processing...
+✅ Job added: process-data (def456...)
+✅ Job added: send-email (ghi789...)
+🔄 Queue processing started. Press Ctrl+C to stop.
 ⚡ Processing: send-email (abc123...)
-📧 Sending email to user@example.com
-   Subject: Welcome to Vorsteh Queue!
+📧 Sending email to user@example.com: Welcome!
 🎉 Completed: send-email (abc123...)
-
-📊 Queue Stats: { pending: 2, processing: 0, completed: 1, failed: 0, delayed: 1 }
+⚡ Processing: process-data (def456...)
+📊 Processing 20 items in batches of 5
+📈 Progress: process-data - 25%
+📈 Progress: process-data - 50%
+📊 Queue Stats: { pending: 1, processing: 1, completed: 1, failed: 0, delayed: 1 }
 ```
 
 ## Job Types
 
 ### Email Job
+
 ```typescript
 interface EmailJob {
   to: string
-  subject: string  
-  body: string
+  subject: string
+  body?: string
+}
+
+interface EmailResult {
+  sent: boolean
+  messageId: string
 }
 ```
 
 ### Data Processing Job
+
 ```typescript
 interface DataProcessingJob {
-  items: string[]
-  batchSize: number
+  data: unknown[]
+  batchSize?: number
+}
+
+interface DataProcessingResult {
+  processed: number
+  results: unknown[]
 }
 ```
 

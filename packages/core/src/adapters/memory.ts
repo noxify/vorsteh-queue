@@ -1,4 +1,4 @@
-import type { BaseJob, JobStatus, QueueStats } from "../types"
+import type { BaseJob, JobStatus, QueueStats } from "../../types"
 import { BaseQueueAdapter } from "./base"
 
 export class MemoryQueueAdapter extends BaseQueueAdapter {

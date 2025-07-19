@@ -4,9 +4,9 @@
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["src/*"]
     }
   },
-  "include": ["src", "tests", "*.config.ts", "types"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }

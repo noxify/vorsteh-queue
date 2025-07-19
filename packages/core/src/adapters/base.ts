@@ -1,4 +1,4 @@
-import type { BaseJob, JobStatus, QueueAdapter, QueueStats } from "../types"
+import type { BaseJob, JobStatus, QueueAdapter, QueueStats } from "../../types"
 
 /**
  * Base class for queue adapters providing common functionality.
