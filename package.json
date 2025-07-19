@@ -3,7 +3,7 @@
   "license": "MIT",
   "private": true,
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "packageManager": "pnpm@10.13.1",
   "author": {
@@ -15,6 +15,7 @@
     "preview": "turbo run start -F docs...",
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
+    "clean:cache": "turbo clean:cache",
     "clean:workspaces": "turbo clean",
     "format": "turbo format --continue -- --cache --cache-location .cache/.prettiercache",
     "format:fix": "turbo format --continue -- --write --cache --cache-location .cache/.prettiercache",
@@ -39,12 +40,12 @@
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "3.2.4",
     "@vorsteh-queue/prettier-config": "workspace:*",
-    "prettier": "3.6.2",
+    "prettier": "^3.6.2",
     "sherif": "1.6.1",
     "turbo": "2.5.5",
-    "typescript": "5.8.3",
+    "typescript": "^5.8.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "3.2.4"
+    "vitest": "^3.2.4"
   },
   "prettier": "@vorsteh-queue/prettier-config"
 }

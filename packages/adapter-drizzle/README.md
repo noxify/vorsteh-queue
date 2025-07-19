@@ -11,6 +11,11 @@ Drizzle ORM adapter for Vorsteh Queue supporting PostgreSQL and MariaDB/MySQL da
 - **JSON Payloads**: Complex data structures with proper serialization
 - **UTC-First**: All timestamps stored as UTC for reliable timezone handling
 
+## Requirements
+
+- **Node.js 20+**
+- **ESM only** - This package is ESM-only and cannot be imported with `require()`
+
 ## Installation
 
 ```bash
@@ -18,6 +23,8 @@ npm install @vorsteh-queue/adapter-drizzle drizzle-orm
 # or
 pnpm add @vorsteh-queue/adapter-drizzle drizzle-orm
 ```
+
+> **Note**: Make sure your project has `"type": "module"` in package.json or use `.mjs` file extensions.
 
 ## PostgreSQL Usage
 

@@ -13,11 +13,18 @@ A TypeScript-first, ORM-agnostic queue system with adapter pattern support for P
 - **Concurrency control**: Configure how many jobs run simultaneously
 - **Memory adapter**: Built-in memory adapter for testing
 
+## Requirements
+
+- **Node.js 20+**
+- **ESM only** - This package is ESM-only and cannot be imported with `require()`
+
 ## Installation
 
 ```bash
-npm install @your-org/queue
+npm install @vorsteh-queue/core
 ```
+
+> **Note**: Make sure your project has `"type": "module"` in package.json or use `.mjs` file extensions.
 
 ## Quick Start
 

@@ -35,6 +35,11 @@
 
 ## Quick Start
 
+### Requirements
+
+- **Node.js 20+**
+- **ESM only** - This package is ESM-only and cannot be imported with `require()`
+
 ### Installation
 
 ```bash
@@ -42,6 +47,8 @@ npm install @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
 # or
 pnpm add @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
 ```
+
+> **Note**: Make sure your project has `"type": "module"` in package.json or use `.mjs` file extensions.
 
 ### Basic Usage
 
@@ -250,6 +257,8 @@ queue.on("queue:resumed", () => {
 - **Type safety**: Full TypeScript support throughout
 
 ## Development
+
+This project was developed with AI assistance, combining human expertise with AI-powered code generation to accelerate development while maintaining high code quality standards.
 
 ```bash
 # Install dependencies
