@@ -111,6 +111,6 @@ jobs:
         uses: ./.github/setup
 
       - name: Build
-        run: pnpm build
+        run: pnpm --filter "./packages/*" build
 
       - run: pnpx pkg-pr-new publish ./packages/*
