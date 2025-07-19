@@ -1,16 +1,8 @@
 ---
-"docs": minor
-"drizzle-pg-example": minor
-"drizzle-postgres-example": minor
-"event-system-example": minor
-"pm2-workers-example": minor
-"progress-tracking-example": minor
 "@vorsteh-queue/adapter-drizzle": minor
 "@vorsteh-queue/adapter-prisma": minor
 "@vorsteh-queue/core": minor
-"@vorsteh-queue/eslint-config": minor
-"@vorsteh-queue/prettier-config": minor
-"@vorsteh-queue/tsconfig": minor
+"create-vorsteh-queue": minor
 ---
 
 # 🚀 Initial Release of Vorsteh Queue
