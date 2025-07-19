@@ -48,7 +48,21 @@ describe("MariaDBQueueAdapter", () => {
       typeof drizzle<typeof schema>
     >
 
-    // Apply schema manually
+    // @TODO Check later how to switch to `pushSchema`
+    /*
+      Old code ( check the postgres adapter tests to see how to implement it):
+
+        // Import pushSchema from drizzle-kit/api
+        // Source: https://github.com/drizzle-team/drizzle-orm/issues/4205
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports
+        const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
+
+        // ...
+
+        const { apply } = await pushSchema(schema, db as never)
+        await apply()
+    */
+    // Apply schema manually (pushSchema has compatibility issues with MariaDB)
     // eslint-disable-next-line no-console
     console.log("📋 Creating tables...")
     await connection.execute(`

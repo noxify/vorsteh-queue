@@ -11,7 +11,7 @@ import * as schema from "~/postgres-schema"
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports
 const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
 
-describe("DrizzleQueueAdapter", () => {
+describe("PostgresQueueAdapter", () => {
   let db: ReturnType<typeof drizzle<typeof schema>>
   let adapter: PostgresQueueAdapter
 
