@@ -1,0 +1,3 @@
+{
+  "extends": "@vorsteh-queue/tsconfig/build.json"
+}
