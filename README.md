@@ -251,6 +251,8 @@ queue.on("queue:resumed", () => {
 
 ## Development
 
+This project was developed with AI assistance, combining human expertise with AI-powered code generation to accelerate development while maintaining high code quality standards.
+
 ```bash
 # Install dependencies
 pnpm install
