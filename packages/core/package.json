@@ -33,18 +33,16 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+    ".": "./src/index.ts"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
-    "build": "pkgroll",
+    "build": "rolldown -c rolldown.config.ts",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "format": "prettier --check . --ignore-path ../../.gitignore",
@@ -54,19 +52,27 @@
   },
   "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
-    "@date-fns/tz": "1.2.0",
-    "croner": "9.1.0",
-    "date-fns": "4.1.0",
-    "type-fest": "4.41.0"
+    "@date-fns/tz": "^1.2.0",
+    "croner": "^9.1.0",
+    "date-fns": "^4.1.0",
+    "type-fest": "^4.41.0"
   },
   "devDependencies": {
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "9.31.0",
-    "prettier": "3.6.2",
-    "typescript": "5.8.3",
-    "vitest": "3.2.4",
-    "pkgroll": "^2.5.0"
+    "eslint": "^9.31.0",
+    "rolldown": "^1.0.0-beta.1",
+    "rollup-plugin-delete": "^2.1.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
   }
 }

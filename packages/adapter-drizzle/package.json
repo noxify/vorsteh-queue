@@ -45,7 +45,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "pkgroll",
+    "build": "rolldown -c rolldown.config.ts",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "db:generate": "drizzle-kit generate",
@@ -62,20 +62,21 @@
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.3.5",
+    "@electric-sql/pglite": "^0.3.5",
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "drizzle-kit": "0.31.4",
-    "drizzle-orm": "0.44.3",
-    "eslint": "9.31.0",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.3",
+    "eslint": "^9.31.0",
     "mysql2": "^3.11.4",
-    "postgres": "3.4.7",
-    "prettier": "3.6.2",
+    "postgres": "^3.4.7",
+    "prettier": "^3.6.2",
+    "rolldown": "^1.0.0-beta.1",
+    "rollup-plugin-delete": "^2.1.0",
     "testcontainers": "^11.3.0",
-    "typescript": "5.8.3",
-    "vitest": "3.2.4",
-    "pkgroll": "^2.5.0"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "drizzle-orm": ">=0.44.3"
