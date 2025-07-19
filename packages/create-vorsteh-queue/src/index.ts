@@ -38,7 +38,7 @@ async function fetchTemplates(): Promise<Template[]> {
   try {
     // Fetch examples directory contents
     const response = await fetch(
-      "https://api.github.com/repos/vorsteh-queue/vorsteh-queue/contents/examples",
+      "https://api.github.com/repos/noxify/vorsteh-queue/contents/examples",
     )
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
@@ -51,7 +51,7 @@ async function fetchTemplates(): Promise<Template[]> {
         try {
           // Fetch package.json for each example
           const pkgResponse = await fetch(
-            `https://api.github.com/repos/vorsteh-queue/vorsteh-queue/contents/examples/${item.name}/package.json`,
+            `https://api.github.com/repos/noxify/vorsteh-queue/contents/examples/${item.name}/package.json`,
           )
           if (pkgResponse.ok) {
             const pkgData = (await pkgResponse.json()) as GitHubFile
@@ -112,7 +112,7 @@ async function downloadTemplate(template: Template, targetDir: string): Promise<
   s.start("Downloading template...")
 
   try {
-    await download(`github:vorsteh-queue/vorsteh-queue/${template.path}`, {
+    await download(`github:noxify/vorsteh-queue/${template.path}`, {
       dir: targetDir,
       offline: false,
     })
