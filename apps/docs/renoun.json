@@ -1,0 +1,32 @@
+{
+  "$schema": "https://renoun.dev/schema.json",
+  "git": {
+    "source": "https://github.com/noxify/vorsteh-queue",
+    "branch": "main",
+    "provider": "github"
+  },
+  "siteUrl": "https://vorsteh-queue.dev",
+
+  "theme": {
+    "dark": "github-dark-default",
+    "light": "github-light-default"
+  },
+  "languages": [
+    "css",
+    "javascript",
+    "jsx",
+    "typescript",
+    "tsx",
+    "markdown",
+    "mdx",
+    "shellscript",
+    "json",
+    "html",
+    "python",
+    "graphql",
+    "yaml",
+    "sql",
+    "xml",
+    "docker"
+  ]
+}
