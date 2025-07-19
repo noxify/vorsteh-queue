@@ -9,12 +9,14 @@ Database adapter supporting PostgreSQL and MariaDB/MySQL via Drizzle ORM.
 ## 🗄️ Database Support
 
 ### PostgreSQL
+
 - **PostgreSQL 12+** with SKIP LOCKED support for concurrent processing
 - **Multiple drivers**: node-postgres, postgres.js, PGlite
 - **Full feature support**: JSONB payloads, UUID primary keys, timezone-aware timestamps
 - **Connection pooling** and transaction support
 
-### MariaDB/MySQL  
+### MariaDB/MySQL
+
 - **MariaDB 10.6+** and **MySQL 8.0+** with SKIP LOCKED functionality
 - **mysql2 driver** with promise support and connection pooling
 - **JSON payloads** with proper serialization/deserialization
@@ -36,21 +38,21 @@ Database adapter supporting PostgreSQL and MariaDB/MySQL via Drizzle ORM.
 
 ## 📦 Easy Integration
 
+**with PostgreSQL:**
+
 ```typescript
 // PostgreSQL
 import { PostgresQueueAdapter, postgresSchema } from "@vorsteh-queue/adapter-drizzle"
+
 const db = drizzle(pool, { schema: postgresSchema })
 const adapter = new PostgresQueueAdapter(db, "my-queue")
+```
 
+**with MariaDB/MySQL:**
+
+```
 // MariaDB/MySQL
 import { MariaDBQueueAdapter, mariadbSchema } from "@vorsteh-queue/adapter-drizzle"
 const db = drizzle(connection, { schema: mariadbSchema })
 const adapter = new MariaDBQueueAdapter(db, "my-queue")
 ```
-
-## 🛡️ Enterprise Features
-
-- **Connection pooling** support for high-throughput applications
-- **Transaction support** for atomic job operations
-- **Error handling** with proper database-specific error types
-- **Schema validation** and type safety throughout

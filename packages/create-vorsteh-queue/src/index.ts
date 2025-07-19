@@ -175,6 +175,7 @@ async function main() {
   const pmFlag = args.find((arg) => arg.startsWith("--package-manager=") || arg.startsWith("-pm="))
   const templateFlag = args.find((arg) => arg.startsWith("--template=") || arg.startsWith("-t="))
   const quietMode = args.includes("--quiet") || args.includes("-q")
+  const noInstall = args.includes("--no-install")
   const cliPackageManager = pmFlag?.split("=")[1]
   const cliTemplate = templateFlag?.split("=")[1]
 
@@ -255,14 +256,20 @@ async function main() {
     }
   }
 
-  const installDeps = await confirm({
-    message: "Install dependencies?",
-    initialValue: true,
-  })
+  // Skip dependency prompt if all CLI args provided (full automation) or --no-install flag
+  let installDeps = !noInstall
+  if (!noInstall && (!cliTemplate || !cliPackageManager)) {
+    const result = await confirm({
+      message: "Install dependencies?",
+      initialValue: true,
+    })
 
-  if (isCancel(installDeps)) {
-    cancel("Operation cancelled")
-    return process.exit(0)
+    if (isCancel(result)) {
+      cancel("Operation cancelled")
+      return process.exit(0)
+    }
+
+    installDeps = result
   }
 
   let packageManager = "npm"

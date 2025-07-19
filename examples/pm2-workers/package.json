@@ -1,6 +1,7 @@
 {
   "name": "pm2-workers-example",
   "version": "1.0.0",
+  "description": "Manage multiple Vorsteh Queues with PM2 using Drizzle ORM with postgres.js",
   "type": "module",
   "private": true,
   "scripts": {
