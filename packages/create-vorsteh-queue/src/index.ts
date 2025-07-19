@@ -73,6 +73,7 @@ async function fetchTemplates(): Promise<Template[]> {
 
     s.stop(`Found ${templates.length} templates`)
     return templates
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     s.stop("Failed to fetch templates")
     // Fallback to hardcoded templates
