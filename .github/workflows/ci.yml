@@ -3,14 +3,13 @@ name: CI
 on:
   pull_request:
     branches: ["*"]
-    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: ["main"]
   merge_group:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number to run CI for'
+        description: "PR number to run CI for"
         required: false
         type: string
 
@@ -81,7 +80,10 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 10.13.1
-          run_install: true
+          run_install: false
+
+      - shell: bash
+        run: pnpm install
 
       - name: Test Core Package
         run: pnpm test:core
