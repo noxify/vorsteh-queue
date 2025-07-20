@@ -8,9 +8,6 @@ import type { QueueJobModel as QueueJob } from "./generated/prisma/models"
  * PostgreSQL adapter for the queue system using Prisma ORM.
  * Uses raw SQL with SKIP LOCKED for critical job selection methods to prevent race conditions.
  *
- * Inspired by better-auth's Prisma adapter approach:
- * https://github.com/better-auth/better-auth/blob/main/packages/better-auth/src/adapters/prisma-adapter/prisma-adapter.ts
- *
  * @example
  * ```typescript
  * import { PrismaClient } from '@prisma/client'
