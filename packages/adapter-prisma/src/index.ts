@@ -1,1 +1,2 @@
-export { PrismaQueueAdapter } from "./prisma-adapter"
+export { PostgresPrismaQueueAdapter } from "./postgres-adapter"
+export { MySQLPrismaQueueAdapter } from "./mysql-adapter"

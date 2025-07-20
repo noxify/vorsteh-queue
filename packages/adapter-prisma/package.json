@@ -16,10 +16,7 @@
     "orm",
     "postgresql",
     "mysql",
-    "sqlite",
-    "mongodb",
-    "sql",
-    "nosql"
+    "mariadb"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
@@ -31,28 +28,52 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./mariadb-adapter": {
+      "types": "./dist/mariadb-adapter.d.ts",
+      "default": "./dist/mariadb-adapter.js"
+    },
+    "./postgres-adapter": {
+      "types": "./dist/postgres-adapter.d.ts",
+      "default": "./dist/postgres-adapter.js"
+    }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "_lint": "eslint .",
-    "_typecheck": "tsc --noEmit",
+    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "format": "prettier --check . --ignore-path ../../.gitignore"
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint .",
+    "prisma:generate:mysql": "prisma generate --schema=prisma/mysql-schema.prisma",
+    "prisma:generate:postgres": "prisma generate --schema=prisma/postgres-schema.prisma",
+    "typecheck": "tsc --noEmit"
   },
   "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
+    "@prisma/client": "^6.12.0",
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "eslint": "^9.31.0",
     "prettier": "^3.6.2",
+    "prisma": "^6.12.0",
+    "rolldown": "^1.0.0-beta.1",
+    "rollup-plugin-delete": "^3.0.1",
+    "testcontainers": "^11.3.0",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@prisma/client": ">=5.0.0"
+    "@prisma/client": ">=6.1.0"
   }
 }

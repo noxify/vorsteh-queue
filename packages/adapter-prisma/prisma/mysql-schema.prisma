@@ -1,0 +1,42 @@
+generator client {
+  // Required
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+
+  // Optional
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model QueueJob {
+  id           String    @id @default(dbgenerated("(UUID())")) @db.VarChar(36)
+  queueName    String    @map("queue_name") @db.VarChar(255)
+  name         String    @db.VarChar(255)
+  payload      Json      @db.Json
+  status       String    @db.VarChar(50)
+  priority     Int
+  attempts     Int       @default(0)
+  maxAttempts  Int       @map("max_attempts")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  processAt    DateTime  @map("process_at") @db.Timestamp(0)
+  processedAt  DateTime? @map("processed_at") @db.Timestamp(0)
+  completedAt  DateTime? @map("completed_at") @db.Timestamp(0)
+  failedAt     DateTime? @map("failed_at") @db.Timestamp(0)
+  error        Json?     @db.Json
+  progress     Int?      @default(0)
+  cron         String?   @db.VarChar(255)
+  repeatEvery  Int?      @map("repeat_every")
+  repeatLimit  Int?      @map("repeat_limit")
+  repeatCount  Int?      @default(0) @map("repeat_count")
+
+  @@index([queueName, status, priority, createdAt], map: "idx_queue_jobs_status_priority")
+  @@index([processAt], map: "idx_queue_jobs_process_at")
+  @@map("queue_jobs")
+}
