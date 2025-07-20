@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./assets/vorsteh-queue-logo-nobg.png" alt="Vorsteh Queue" height="200" />
   <h1>Vorsteh Queue</h1>
-  <p>A powerful, ORM-agnostic queue engine that works with any orm. Handle background jobs, scheduled tasks, and recurring processes with ease.</p>
+  <p>A powerful, ORM-agnostic queue engine for PostgreSQL 12+, MariaDB, and MySQL. Handle background jobs, scheduled tasks, and recurring processes with ease.</p>
 </div>
 
 ## Features
