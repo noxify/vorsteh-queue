@@ -9,7 +9,9 @@ import type {
   QueueConfig,
   QueueEvents,
   QueueStats,
+  SerializedError,
 } from "../../types"
+import { serializeError } from "../utils/error"
 import { calculateDelay, waitFor } from "../utils/helpers"
 import { calculateNextRun, nowUtc, parseCron, toUtcDate } from "../utils/scheduler"
 import { createJobWrapper } from "./job-wrapper"
@@ -347,7 +349,10 @@ export class Queue {
   private async processJob(job: BaseJob): Promise<void> {
     const handler = this.handlers.get(job.name)
     if (!handler) {
-      await this.failJob(job, `No handler registered for job: ${job.name}`)
+      await this.failJob(
+        job,
+        serializeError(new Error(`No handler registered for job: ${job.name}`)),
+      )
       return
     }
 
@@ -377,16 +382,16 @@ export class Queue {
   }
 
   private async handleJobError(job: BaseJob, error: unknown): Promise<void> {
-    const errorMessage = error instanceof Error ? error.message : String(error)
+    const serializedError = serializeError(error)
 
     if (job.attempts + 1 < job.maxAttempts) {
-      await this.retryJob(job, errorMessage)
+      await this.retryJob(job, serializedError)
     } else {
-      await this.failJob(job, errorMessage)
+      await this.failJob(job, serializedError)
     }
   }
 
-  private async retryJob(job: BaseJob, _error: string): Promise<void> {
+  private async retryJob(job: BaseJob, _error: unknown): Promise<void> {
     await this.adapter.incrementJobAttempts(job.id)
 
     const delay = Math.min(calculateDelay(job.attempts), this.config.maxRetryDelay)
@@ -397,14 +402,14 @@ export class Queue {
     this.emit("job:retried", { ...job, attempts: job.attempts + 1, processAt })
   }
 
-  private async failJob(job: BaseJob, error: string): Promise<void> {
+  private async failJob(job: BaseJob, error: unknown): Promise<void> {
     await this.adapter.updateJobStatus(job.id, "failed", error)
     this.emit("job:failed", {
       ...job,
       status: "failed",
       error,
       failedAt: new Date(),
-    } as Simplify<BaseJob & { error: string }>)
+    } as Simplify<BaseJob & { error: SerializedError }>)
 
     // Handle job cleanup
     await this.cleanupFailedJob()

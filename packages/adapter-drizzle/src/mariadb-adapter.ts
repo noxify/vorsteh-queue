@@ -2,8 +2,8 @@ import type { MySql2Database } from "drizzle-orm/mysql2"
 import type { Connection, Pool } from "mysql2/promise"
 import { and, asc, count, eq, lte, sql } from "drizzle-orm"
 
-import type { BaseJob, JobStatus, QueueStats } from "@vorsteh-queue/core"
-import { BaseQueueAdapter } from "@vorsteh-queue/core"
+import type { BaseJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import { BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import * as schema from "./mariadb-schema"
 
@@ -81,11 +81,11 @@ export class MariaDBQueueAdapter extends BaseQueueAdapter {
     return this.transformJob(insertedJob) as BaseJob<TJobPayload>
   }
 
-  async updateJobStatus(id: string, status: JobStatus, error?: string): Promise<void> {
+  async updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void> {
     const now = new Date()
     const updates: Record<string, unknown> = { status }
 
-    if (error) updates.error = error
+    if (error) updates.error = serializeError(error)
     if (status === "processing") updates.processedAt = now
     if (status === "completed") updates.completedAt = now
     if (status === "failed") updates.failedAt = now
@@ -235,11 +235,7 @@ export class MariaDBQueueAdapter extends BaseQueueAdapter {
       processedAt: job.processedAt ?? undefined,
       completedAt: job.completedAt ?? undefined,
       failedAt: job.failedAt ?? undefined,
-      error: job.error
-        ? typeof job.error === "string"
-          ? JSON.stringify(JSON.parse(job.error))
-          : JSON.stringify(job.error)
-        : undefined,
+      error: job.error as SerializedError | undefined,
       progress: job.progress ?? 0,
       cron: job.cron ?? undefined,
       repeatEvery: job.repeatEvery ?? undefined,

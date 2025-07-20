@@ -1,6 +1,7 @@
 export { Queue } from "./core/queue"
 export { BaseQueueAdapter } from "./adapters/base"
 export { MemoryQueueAdapter } from "./adapters/memory"
+export { serializeError } from "./utils/error"
 
 export type {
   BaseJob,
@@ -13,4 +14,5 @@ export type {
   QueueConfig,
   QueueEvents,
   QueueStats,
+  SerializedError,
 } from "../types"

@@ -1,4 +1,5 @@
 import type { BaseJob, JobStatus, QueueStats } from "../../types"
+import { serializeError } from "../utils/error"
 import { BaseQueueAdapter } from "./base"
 
 export class MemoryQueueAdapter extends BaseQueueAdapter {
@@ -36,7 +37,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     return Promise.resolve(newJob)
   }
 
-  updateJobStatus(id: string, status: JobStatus, error?: string): Promise<void> {
+  updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void> {
     const job = this.jobs.get(id)
     if (!job) return Promise.resolve()
 
@@ -44,7 +45,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     const updatedJob: BaseJob = {
       ...job,
       status,
-      error,
+      error: error ? serializeError(error) : undefined,
       processedAt: status === "processing" ? now : job.processedAt,
       completedAt: status === "completed" ? now : job.completedAt,
       failedAt: status === "failed" ? now : job.failedAt,

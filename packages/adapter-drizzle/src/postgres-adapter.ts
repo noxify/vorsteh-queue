@@ -3,8 +3,8 @@ import type { PgliteDatabase } from "drizzle-orm/pglite"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { and, asc, count, eq, lte, sql } from "drizzle-orm"
 
-import type { BaseJob, JobStatus, QueueStats } from "@vorsteh-queue/core"
-import { BaseQueueAdapter } from "@vorsteh-queue/core"
+import type { BaseJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import { BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import * as schema from "./postgres-schema"
 
@@ -73,11 +73,11 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     return this.transformJob(result) as BaseJob<TJobPayload>
   }
 
-  async updateJobStatus(id: string, status: JobStatus, error?: string): Promise<void> {
+  async updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void> {
     const now = new Date()
     const updates: Record<string, unknown> = { status }
 
-    if (error) updates.error = error
+    if (error) updates.error = serializeError(error)
     if (status === "processing") updates.processedAt = now
     if (status === "completed") updates.completedAt = now
     if (status === "failed") updates.failedAt = now
@@ -239,7 +239,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       processedAt: job.processedAt ?? undefined,
       completedAt: job.completedAt ?? undefined,
       failedAt: job.failedAt ?? undefined,
-      error: job.error ? (job.error as string) : undefined,
+      error: job.error as SerializedError | undefined,
       progress: job.progress ?? 0,
       cron: job.cron ?? undefined,
       repeatEvery: job.repeatEvery ?? undefined,

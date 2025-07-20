@@ -20,7 +20,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   abstract addJob<TJobPayload>(
     job: Omit<BaseJob<TJobPayload>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload>>
-  abstract updateJobStatus(id: string, status: JobStatus, error?: string): Promise<void>
+  abstract updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void>
   abstract updateJobProgress(id: string, progress: number): Promise<void>
   abstract incrementJobAttempts(id: string): Promise<void>
   abstract getQueueStats(): Promise<QueueStats>
