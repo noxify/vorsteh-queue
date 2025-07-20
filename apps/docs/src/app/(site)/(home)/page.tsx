@@ -1,5 +1,3 @@
-import Image from "next/image"
-import Link from "next/link"
 import { SiGithub as GithubIcon } from "@icons-pack/react-simple-icons"
 import {
   Calendar,
@@ -18,12 +16,11 @@ import {
 } from "lucide-react"
 import { CodeBlock } from "renoun/components"
 
-import { ThemeToggle } from "~/components/theme-toggle"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
 
 const example_snippet = `
-import { InMemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
 
 interface TEmailPayload {
   to: string
@@ -34,7 +31,7 @@ interface TEmailResult {
   sent: boolean
 }
 
-const queue = new Queue(new InMemoryQueueAdapter(), { name: "email-queue" })
+const queue = new Queue(new MemoryQueueAdapter(), { name: "email-queue" })
 
 queue.register<TEmailPayload, TEmailResult>("send-email", async ({ payload }) => {
   // Send email logic here
@@ -47,55 +44,7 @@ queue.start()
 
 export default function Home() {
   return (
-    <div className="bg-cream-50 dark:bg-dark-200 min-h-screen">
-      {/* Header */}
-      <header className="border-cream-200 dark:border-dark-100 bg-cream-50/80 dark:bg-dark-200/80 sticky top-0 z-50 border-b backdrop-blur-sm">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center space-x-3">
-            <Image
-              src="/vorsteh-queue-logo.svg"
-              alt="Vorsteh Queue Logo"
-              width={40}
-              height={40}
-              className="rounded-lg"
-            />
-            <span className="text-dark-200 dark:text-dark-900 text-xl font-bold">
-              Vorsteh Queue
-            </span>
-          </div>
-          <nav className="hidden items-center space-x-6 md:flex">
-            <Link
-              href="#features"
-              className="text-dark-200 dark:text-dark-900 hover:text-orange-primary transition-colors"
-            >
-              Features
-            </Link>
-            <Link
-              href="#why"
-              className="text-dark-200 dark:text-dark-900 hover:text-orange-primary transition-colors"
-            >
-              Why Choose Us
-            </Link>
-            <Link
-              href="#about" // New link for About section
-              className="text-dark-200 dark:text-dark-900 hover:text-orange-primary transition-colors"
-            >
-              About
-            </Link>
-            <Link
-              href="#opensource"
-              className="text-dark-200 dark:text-dark-900 hover:text-orange-primary transition-colors"
-            >
-              Open Source
-            </Link>
-            <ThemeToggle />
-            <Button className="bg-orange-darker hover:bg-orange-accessible text-white">
-              Get Started
-            </Button>
-          </nav>
-        </div>
-      </header>
-
+    <>
       {/* Hero Section */}
       <section className="px-4 py-20">
         <div className="container mx-auto">
@@ -433,93 +382,6 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-dark-100 dark:bg-dark-300 text-cream-50 dark:border-dark-100 border-t px-4 py-12">
-        <div className="container mx-auto">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <Image
-                  src="/vorsteh-queue-logo.svg"
-                  alt="Vorsteh Queue Logo"
-                  width={32}
-                  height={32}
-                  className="rounded"
-                />
-                <span className="text-lg font-bold">Vorsteh Queue</span>
-              </div>
-              <p className="text-cream-200 text-sm">
-                The reliable, database-agnostic queue engine for modern applications.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="mb-4 font-semibold">Product</h4>
-              <ul className="text-cream-200 space-y-2 text-sm">
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Documentation
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Examples
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Changelog
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 font-semibold">Community</h4>
-              <ul className="text-cream-200 space-y-2 text-sm">
-                <li>
-                  <a
-                    href="https://github.com/noxify/vorsteh-queue"
-                    target="_blank"
-                    className="hover:text-orange-primary transition-colors"
-                  >
-                    GitHub
-                  </a>
-                </li>
-
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Contributing
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 font-semibold">Support</h4>
-              <ul className="text-cream-200 space-y-2 text-sm">
-                <li>
-                  <a
-                    href="https://github.com/noxify/vorsteh-queue/issues"
-                    target="_blank"
-                    className="hover:text-orange-primary transition-colors"
-                  >
-                    Bug Reports
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-fur-400 dark:border-dark-100 text-cream-200 mt-8 border-t pt-8 text-center text-sm">
-            <p>&copy; {new Date().getFullYear()} Vorsteh Queue. Released under the MIT License.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   )
 }

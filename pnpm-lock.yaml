@@ -191,7 +191,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)
+        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.12.0(typescript@5.8.3))
       pg:
         specifier: 8.16.3
         version: 8.16.3
@@ -222,7 +222,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)
+        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.12.0(typescript@5.8.3))
     devDependencies:
       '@types/node':
         specifier: 22.16.5
@@ -244,7 +244,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)
+        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.12.0(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -269,7 +269,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)
+        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.12.0(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -294,7 +294,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)
+        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.12.0(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -325,7 +325,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)
+        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.12.0(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -363,7 +363,7 @@ importers:
         version: 0.31.4
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)
+        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.12.0(typescript@5.8.3))
       eslint:
         specifier: ^9.31.0
         version: 9.31.0(jiti@2.4.2)
@@ -394,13 +394,13 @@ importers:
 
   packages/adapter-prisma:
     dependencies:
-      '@prisma/client':
-        specifier: '>=5.0.0'
-        version: 6.12.0(typescript@5.8.3)
       '@vorsteh-queue/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@prisma/client':
+        specifier: ^6.1.0
+        version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
       '@vorsteh-queue/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
@@ -416,6 +416,18 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
+      prisma:
+        specifier: ^6.1.0
+        version: 6.12.0(typescript@5.8.3)
+      rolldown:
+        specifier: ^1.0.0-beta.1
+        version: 1.0.0-beta.28
+      rollup-plugin-delete:
+        specifier: ^3.0.1
+        version: 3.0.1(rollup@4.43.0)
+      testcontainers:
+        specifier: ^11.3.0
+        version: 11.3.0
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -1548,6 +1560,24 @@ packages:
         optional: true
       typescript:
         optional: true
+
+  '@prisma/config@6.12.0':
+    resolution: {integrity: sha512-HovZWzhWEMedHxmjefQBRZa40P81N7/+74khKFz9e1AFjakcIQdXgMWKgt20HaACzY+d1LRBC+L4tiz71t9fkg==}
+
+  '@prisma/debug@6.12.0':
+    resolution: {integrity: sha512-plbz6z72orcqr0eeio7zgUrZj5EudZUpAeWkFTA/DDdXEj28YHDXuiakvR6S7sD6tZi+jiwQEJAPeV6J6m/tEQ==}
+
+  '@prisma/engines-version@6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc':
+    resolution: {integrity: sha512-70vhecxBJlRr06VfahDzk9ow4k1HIaSfVUT3X0/kZoHCMl9zbabut4gEXAyzJZxaCGi5igAA7SyyfBI//mmkbQ==}
+
+  '@prisma/engines@6.12.0':
+    resolution: {integrity: sha512-4BRZZUaAuB4p0XhTauxelvFs7IllhPmNLvmla0bO1nkECs8n/o1pUvAVbQ/VOrZR5DnF4HED0PrGai+rIOVePA==}
+
+  '@prisma/fetch-engine@6.12.0':
+    resolution: {integrity: sha512-EamoiwrK46rpWaEbLX9aqKDPOd8IyLnZAkiYXFNuq0YsU0Z8K09/rH8S7feOWAVJ3xzeSgcEJtBlVDrajM9Sag==}
+
+  '@prisma/get-platform@6.12.0':
+    resolution: {integrity: sha512-nRerTGhTlgyvcBlyWgt8OLNIV7QgJS2XYXMJD1hysorMCuLAjuDDuoxmVt7C2nLxbuxbWPp7OuFRHC23HqD9dA==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -4839,6 +4869,16 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
+  prisma@6.12.0:
+    resolution: {integrity: sha512-pmV7NEqQej9WjizN6RSNIwf7Y+jeh9mY1JEX2WjGxJi4YZWexClhde1yz/FuvAM+cTwzchcMytu2m4I6wPkIzg==}
+    engines: {node: '>=18.18'}
+    hasBin: true
+    peerDependencies:
+      typescript: '>=5.1.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   process-nextick-args@2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
 
@@ -7085,9 +7125,35 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@prisma/client@6.12.0(typescript@5.8.3)':
+  '@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)':
     optionalDependencies:
+      prisma: 6.12.0(typescript@5.8.3)
       typescript: 5.8.3
+
+  '@prisma/config@6.12.0':
+    dependencies:
+      jiti: 2.4.2
+
+  '@prisma/debug@6.12.0': {}
+
+  '@prisma/engines-version@6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc': {}
+
+  '@prisma/engines@6.12.0':
+    dependencies:
+      '@prisma/debug': 6.12.0
+      '@prisma/engines-version': 6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc
+      '@prisma/fetch-engine': 6.12.0
+      '@prisma/get-platform': 6.12.0
+
+  '@prisma/fetch-engine@6.12.0':
+    dependencies:
+      '@prisma/debug': 6.12.0
+      '@prisma/engines-version': 6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc
+      '@prisma/get-platform': 6.12.0
+
+  '@prisma/get-platform@6.12.0':
+    dependencies:
+      '@prisma/debug': 6.12.0
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -8478,14 +8544,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7):
+  drizzle-orm@0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.12.0(typescript@5.8.3)):
     optionalDependencies:
       '@electric-sql/pglite': 0.3.5
-      '@prisma/client': 6.12.0(typescript@5.8.3)
+      '@prisma/client': 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
       '@types/pg': 8.15.4
       mysql2: 3.14.2
       pg: 8.16.3
       postgres: 3.4.7
+      prisma: 6.12.0(typescript@5.8.3)
 
   dunder-proto@1.0.1:
     dependencies:
@@ -10825,6 +10892,13 @@ snapshots:
   prettier@2.8.8: {}
 
   prettier@3.6.2: {}
+
+  prisma@6.12.0(typescript@5.8.3):
+    dependencies:
+      '@prisma/config': 6.12.0
+      '@prisma/engines': 6.12.0
+    optionalDependencies:
+      typescript: 5.8.3
 
   process-nextick-args@2.0.1: {}
 
