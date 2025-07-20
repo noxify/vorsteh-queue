@@ -13,7 +13,7 @@ import type {
 } from "../../types"
 import { serializeError } from "../utils/error"
 import { calculateDelay, waitFor } from "../utils/helpers"
-import { calculateNextRun, nowUtc, parseCron, toUtcDate } from "../utils/scheduler"
+import { asUtc, calculateNextRun, parseCron, toUtcDate } from "../utils/scheduler"
 import { createJobWrapper } from "./job-wrapper"
 
 type EventListener<TEventData> = (data: TEventData) => void | Promise<void>
@@ -127,7 +127,7 @@ export class Queue {
   ): Promise<BaseJob<TJobPayload>> {
     const jobOptions = { ...this.config.defaultJobOptions, ...options }
     const timezone = jobOptions.timezone ?? "UTC"
-    const now = nowUtc()
+    const now = new Date()
 
     let processAt: Date
     let status: JobStatus = "pending"
@@ -137,14 +137,14 @@ export class Queue {
       processAt = toUtcDate(jobOptions.runAt, timezone)
       status = processAt > now ? "delayed" : "pending"
     } else if (jobOptions.delay) {
-      processAt = new Date(now.getTime() + jobOptions.delay)
+      processAt = asUtc(new Date(now.getTime() + jobOptions.delay))
       status = "delayed"
     } else if (jobOptions.cron) {
       // Parse cron in timezone, get UTC result
       processAt = parseCron(jobOptions.cron, timezone, now)
       status = "delayed"
     } else {
-      processAt = now
+      processAt = asUtc(now)
     }
 
     const job = await this.adapter.addJob({
@@ -310,6 +310,7 @@ export class Queue {
       }
 
       let queueSize = await this.adapter.size()
+
       if (queueSize === 0) {
         await waitFor(processingInterval)
         continue

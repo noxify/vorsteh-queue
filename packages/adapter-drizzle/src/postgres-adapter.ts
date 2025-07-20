@@ -4,7 +4,7 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { and, asc, count, eq, lte, sql } from "drizzle-orm"
 
 import type { BaseJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
-import { BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
+import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import * as schema from "./postgres-schema"
 
@@ -58,7 +58,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
         priority: job.priority,
         attempts: job.attempts,
         maxAttempts: job.maxAttempts,
-        processAt: job.processAt,
+        processAt: sql`${job.processAt.toISOString()}::timestamptz`,
         cron: job.cron,
         repeatEvery: job.repeatEvery,
         repeatLimit: job.repeatLimit,
@@ -78,9 +78,9 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     const updates: Record<string, unknown> = { status }
 
     if (error) updates.error = serializeError(error)
-    if (status === "processing") updates.processedAt = now
-    if (status === "completed") updates.completedAt = now
-    if (status === "failed") updates.failedAt = now
+    if (status === "processing") updates.processedAt = asUtc(now)
+    if (status === "completed") updates.completedAt = asUtc(now)
+    if (status === "failed") updates.failedAt = asUtc(now)
 
     await this.db.update(schema.queueJobs).set(updates).where(eq(schema.queueJobs.id, id))
   }

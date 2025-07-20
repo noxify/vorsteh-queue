@@ -176,11 +176,11 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   protected async getDelayedJobReady(now: Date): Promise<BaseJob | null> {
     // Use raw SQL with SKIP LOCKED for race condition prevention
     const result = await this.db.$queryRaw<QueueJob[]>`
-      SELECT * FROM "QueueJob"
-      WHERE "queueName" = ${this.queueName}
-        AND "status" = 'delayed'
-        AND "processAt" <= ${now}
-      ORDER BY "priority" ASC, "createdAt" ASC
+      SELECT * FROM queue_jobs
+      WHERE queue_name = ${this.queueName}
+        AND status = 'delayed'
+        AND process_at <= ${now}
+      ORDER BY priority ASC, created_at ASC
       LIMIT 1
       FOR UPDATE SKIP LOCKED
     `
@@ -192,10 +192,10 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   protected async getPendingJobByPriority(): Promise<BaseJob | null> {
     // Use raw SQL with SKIP LOCKED for race condition prevention
     const result = await this.db.$queryRaw<QueueJob[]>`
-      SELECT * FROM "QueueJob"
-      WHERE "queueName" = ${this.queueName}
-        AND "status" = 'pending'
-      ORDER BY "priority" ASC, "createdAt" ASC
+      SELECT * FROM queue_jobs
+      WHERE queue_name = ${this.queueName}
+        AND status = 'pending'
+      ORDER BY priority ASC, created_at ASC
       LIMIT 1
       FOR UPDATE SKIP LOCKED
     `

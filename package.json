@@ -11,6 +11,7 @@
     "url": "https://github.com/noxify"
   },
   "scripts": {
+    "dev": "turbo dev --filter='@vorsteh-queue/*'",
     "dev:docs": "turbo dev --filter docs",
     "preview": "turbo run start -F docs...",
     "build": "turbo build",

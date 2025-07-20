@@ -5,8 +5,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "db:push": "drizzle-kit push"
+    "dev": "pnpm with-env tsx src/index.ts",
+    "db:push": "pnpm with-env drizzle-kit push",
+    "with-env": "dotenv -e .env --"
   },
   "dependencies": {
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
@@ -15,6 +16,7 @@
     "postgres": "^3.4.7"
   },
   "devDependencies": {
+    "dotenv-cli": "8.0.0",
     "drizzle-kit": "^0.31.4",
     "tsx": "4.20.3",
     "typescript": "^5.8.3"

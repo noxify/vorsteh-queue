@@ -14,11 +14,13 @@ export const queueJobs = pgTable(
     priority: integer("priority").notNull(),
     attempts: integer("attempts").default(0).notNull(),
     maxAttempts: integer("max_attempts").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    processAt: timestamp("process_at", { withTimezone: true }).notNull(),
-    processedAt: timestamp("processed_at", { withTimezone: true }),
-    completedAt: timestamp("completed_at", { withTimezone: true }),
-    failedAt: timestamp("failed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .default(sql`timezone('utc', now())`),
+    processAt: timestamp("process_at", { withTimezone: true, mode: "date" }).notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true, mode: "date" }),
+    completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
+    failedAt: timestamp("failed_at", { withTimezone: true, mode: "date" }),
     error: jsonb("error"),
     progress: integer("progress").default(0),
     cron: varchar("cron", { length: 255 }),

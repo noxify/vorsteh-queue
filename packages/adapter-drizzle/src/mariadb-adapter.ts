@@ -59,7 +59,7 @@ export class MariaDBQueueAdapter extends BaseQueueAdapter {
       priority: job.priority,
       attempts: job.attempts,
       maxAttempts: job.maxAttempts,
-      processAt: job.processAt,
+      processAt: sql`${job.processAt.toISOString()}`,
       cron: job.cron,
       repeatEvery: job.repeatEvery,
       repeatLimit: job.repeatLimit,
@@ -86,9 +86,9 @@ export class MariaDBQueueAdapter extends BaseQueueAdapter {
     const updates: Record<string, unknown> = { status }
 
     if (error) updates.error = serializeError(error)
-    if (status === "processing") updates.processedAt = now
-    if (status === "completed") updates.completedAt = now
-    if (status === "failed") updates.failedAt = now
+    if (status === "processing") updates.processedAt = sql`${now.toISOString()}`
+    if (status === "completed") updates.completedAt = sql`${now.toISOString()}`
+    if (status === "failed") updates.failedAt = sql`${now.toISOString()}`
 
     await this.db.update(schema.queueJobs).set(updates).where(eq(schema.queueJobs.id, id))
   }

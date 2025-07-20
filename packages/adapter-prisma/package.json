@@ -48,6 +48,7 @@
   ],
   "scripts": {
     "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "format": "prettier --check . --ignore-path ../../.gitignore",

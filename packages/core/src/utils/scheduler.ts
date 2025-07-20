@@ -111,16 +111,12 @@ export const calculateNextRun = (options: {
 export const toUtcDate = (date: Date, timezone = "UTC"): Date => {
   if (timezone === "UTC") return date
 
+  // Create a TZDate in the specified timezone and return as UTC
   const tzDate = new TZDate(date, timezone)
+  // Return the UTC equivalent
   return new Date(tzDate.getTime())
 }
 
-/**
- * Get current UTC time.
- * Part of our UTC-first approach - everything is UTC.
- *
- * @returns Current UTC Date
- */
-export const nowUtc = (): Date => {
-  return new Date()
+export function asUtc(input: Date) {
+  return new TZDate(input, "UTC")
 }

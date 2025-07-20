@@ -23,7 +23,7 @@ model QueueJob {
   priority     Int
   attempts     Int       @default(0)
   maxAttempts  Int       @map("max_attempts")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(dbgenerated("timezone('utc', now())")) @map("created_at") @db.Timestamptz(6)
   processAt    DateTime  @map("process_at") @db.Timestamptz(6)
   processedAt  DateTime? @map("processed_at") @db.Timestamptz(6)
   completedAt  DateTime? @map("completed_at") @db.Timestamptz(6)

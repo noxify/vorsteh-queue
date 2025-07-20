@@ -16,3 +16,5 @@ export type {
   QueueStats,
   SerializedError,
 } from "../types"
+
+export { asUtc } from "./utils/scheduler"

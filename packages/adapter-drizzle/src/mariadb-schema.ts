@@ -14,7 +14,7 @@ export const queueJobs = mysqlTable(
     priority: int("priority").notNull(),
     attempts: int("attempts").default(0).notNull(),
     maxAttempts: int("max_attempts").notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at").notNull().default(sql`UTC_TIMESTAMP()`),
     processAt: timestamp("process_at").notNull(),
     processedAt: timestamp("processed_at"),
     completedAt: timestamp("completed_at"),
