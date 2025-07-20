@@ -27,7 +27,7 @@ type MariaDBDatabase =
  *   database: "queue_db"
  * })
  * const db = drizzle(connection)
- * const adapter = new MariaDBQueueAdapter(db, "my-queue")
+ * const adapter = new MariaDBQueueAdapter(db)
  * ```
  */
 export class MariaDBQueueAdapter extends BaseQueueAdapter {
@@ -35,13 +35,9 @@ export class MariaDBQueueAdapter extends BaseQueueAdapter {
    * Create a new MariaDB queue adapter.
    *
    * @param db - Drizzle MariaDB database instance
-   * @param queueName - Name of the queue (used for job isolation)
    */
-  constructor(
-    private readonly db: MariaDBDatabase,
-    queueName: string,
-  ) {
-    super(queueName)
+  constructor(private readonly db: MariaDBDatabase) {
+    super()
   }
 
   async connect(): Promise<void> {

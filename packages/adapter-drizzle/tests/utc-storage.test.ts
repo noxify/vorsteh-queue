@@ -20,7 +20,8 @@ describe("UTC Storage Verification", () => {
     const { apply } = await pushSchema(schema, db as never)
     await apply()
 
-    adapter = new PostgresQueueAdapter(db, "utc-test-queue")
+    adapter = new PostgresQueueAdapter(db)
+    adapter.setQueueName("utc-test-queue")
     await adapter.connect()
   })
 

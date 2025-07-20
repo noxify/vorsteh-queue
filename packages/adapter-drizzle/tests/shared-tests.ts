@@ -14,6 +14,7 @@ export function createSharedTests(
     describe("Progress Tracking", () => {
       it("should update job progress", async () => {
         const adapter = await getAdapter()
+        adapter.setQueueName("progress-test-queue")
 
         const job = await adapter.addJob({
           name: "progress-test",
@@ -37,6 +38,7 @@ export function createSharedTests(
 
       it("should normalize progress values", async () => {
         const adapter = await getAdapter()
+        adapter.setQueueName("progress-normalize-test-queue")
 
         const job = await adapter.addJob({
           name: "progress-normalize-test",
@@ -61,6 +63,7 @@ export function createSharedTests(
     describe("UTC Storage", () => {
       it("should store all timestamps as UTC", async () => {
         const adapter = await getAdapter()
+        adapter.setQueueName("utc-test-queue")
 
         const job = await adapter.addJob({
           name: "utc-test",
@@ -81,6 +84,7 @@ export function createSharedTests(
 
       it("should handle timezone offsets correctly", async () => {
         const adapter = await getAdapter()
+        adapter.setQueueName("offset-test-queue")
 
         const dateWithOffset = new Date("2024-01-15T14:00:00+02:00") // 2 PM +2 = 12 PM UTC
 
@@ -103,6 +107,7 @@ export function createSharedTests(
 
       it("should maintain timestamp consistency", async () => {
         const adapter = await getAdapter()
+        adapter.setQueueName("consistency-test-queue")
 
         const originalTimestamp = 1705327200000 // 2024-01-15T14:00:00Z
         const originalDate = new Date(originalTimestamp)
@@ -130,6 +135,7 @@ export function createSharedTests(
     describe("Timezone Edge Cases", () => {
       it("should handle various date formats", async () => {
         const adapter = await getAdapter()
+        adapter.setQueueName("format-test-queue")
 
         const testCases = [
           {
@@ -168,6 +174,7 @@ export function createSharedTests(
 
       it("should handle DST transitions", async () => {
         const adapter = await getAdapter()
+        adapter.setQueueName("dst-test-queue")
 
         // Spring forward and fall back dates
         const springDate = new Date("2024-03-10T07:00:00Z")

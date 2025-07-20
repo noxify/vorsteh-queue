@@ -61,8 +61,7 @@ import { Queue } from "@vorsteh-queue/core"
 
 const pool = new Pool({ connectionString: "postgresql://..." })
 const db = drizzle(pool)
-const adapter = new PostgresQueueAdapter(db, "my-queue")
-const queue = new Queue(adapter, { name: "my-queue" })
+const queue = new Queue(new PostgresQueueAdapter(db), { name: "my-queue" })
 
 // MariaDB/MySQL
 import { drizzle } from "drizzle-orm/mysql2"
@@ -76,8 +75,7 @@ const connection = await mysql.createConnection({
   database: "queue_db",
 })
 const db = drizzle(connection, { mode: "default" })
-const adapter = new MariaDBQueueAdapter(db, "my-queue")
-const queue = new Queue(adapter, { name: "my-queue" })
+const queue = new Queue(new MariaDBQueueAdapter(db), { name: "my-queue" })
 
 // Register job handlers
 queue.register("send-email", async (payload: { to: string; subject: string }) => {

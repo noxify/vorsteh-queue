@@ -24,7 +24,7 @@ type DrizzleDatabase =
  *
  * const pool = new Pool({ connectionString: "postgresql://..." })
  * const db = drizzle(pool)
- * const adapter = new PostgresQueueAdapter(db, "my-queue")
+ * const adapter = new PostgresQueueAdapter(db)
  * ```
  */
 export class PostgresQueueAdapter extends BaseQueueAdapter {
@@ -32,13 +32,9 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
    * Create a new PostgreSQL queue adapter.
    *
    * @param db - Drizzle PostgreSQL database instance
-   * @param queueName - Name of the queue (used for job isolation)
    */
-  constructor(
-    private readonly db: DrizzleDatabase,
-    queueName: string,
-  ) {
-    super(queueName)
+  constructor(private readonly db: DrizzleDatabase) {
+    super()
   }
 
   async connect(): Promise<void> {

@@ -4,8 +4,7 @@ import { Queue } from "@vorsteh-queue/core"
 import { db, client } from "./database"
 
 // Queue setup
-const adapter = new PostgresQueueAdapter(db, "progress-queue")
-const queue = new Queue(adapter, { 
+const queue = new Queue(new PostgresQueueAdapter(db), { 
   name: "progress-queue",
   removeOnComplete: 5,
   removeOnFail: 3

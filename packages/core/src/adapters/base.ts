@@ -5,9 +5,13 @@ import type { BaseJob, JobStatus, QueueAdapter, QueueStats } from "../../types"
  * Extend this class to create custom queue adapters for different databases.
  */
 export abstract class BaseQueueAdapter implements QueueAdapter {
-  protected readonly queueName: string
+  protected queueName = ""
 
-  constructor(queueName: string) {
+  /**
+   * Set the queue name. Called by the Queue class during initialization.
+   * @internal
+   */
+  setQueueName(queueName: string): void {
     this.queueName = queueName
   }
 

@@ -4,8 +4,7 @@ import { Queue } from "@vorsteh-queue/core"
 import { client, db } from "./database"
 
 // Queue setup
-const adapter = new PostgresQueueAdapter(db, "event-queue")
-const queue = new Queue(adapter, { name: "event-queue" })
+const queue = new Queue(new PostgresQueueAdapter(db), { name: "event-queue" })
 
 // Job statistics tracking
 const stats = {

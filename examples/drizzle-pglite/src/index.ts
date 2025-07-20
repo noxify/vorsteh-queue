@@ -33,8 +33,7 @@ interface DataProcessingResult {
 }
 
 // Queue setup
-const adapter = new PostgresQueueAdapter(db, "example-queue")
-const queue = new Queue(adapter, { 
+const queue = new Queue(new PostgresQueueAdapter(db), { 
   name: "example-queue",
   removeOnComplete: 10,
   removeOnFail: 5

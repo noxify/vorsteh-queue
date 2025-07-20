@@ -25,7 +25,8 @@ describe("PostgresQueueAdapter", () => {
     const { apply } = await pushSchema(schema, db as never)
     await apply()
 
-    adapter = new PostgresQueueAdapter(db, "test-queue")
+    adapter = new PostgresQueueAdapter(db)
+    adapter.setQueueName("test-queue")
     await adapter.connect()
   })
 

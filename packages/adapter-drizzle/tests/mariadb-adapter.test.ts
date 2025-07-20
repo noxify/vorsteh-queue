@@ -98,7 +98,8 @@ describe("MariaDBQueueAdapter", () => {
     // Clean up before each test
     await db.delete(schema.queueJobs)
 
-    adapter = new MariaDBQueueAdapter(db, "test-queue")
+    adapter = new MariaDBQueueAdapter(db)
+    adapter.setQueueName("test-queue")
     await adapter.connect()
   })
 

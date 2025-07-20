@@ -56,6 +56,11 @@ export class Queue {
       jobInterval: 10,
       ...config,
     }
+
+    // Set the queue name on the adapter
+    if ("setQueueName" in adapter && typeof adapter.setQueueName === "function") {
+      adapter.setQueueName(this.config.name)
+    }
   }
 
   async connect(): Promise<void> {
