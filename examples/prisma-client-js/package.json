@@ -1,0 +1,22 @@
+{
+  "name": "prisma-client-js-example",
+  "version": "1.0.0",
+  "description": "Vorsteh Queue example using Prisma with traditional prisma-client-js provider and PostgreSQL",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.1.0",
+    "@vorsteh-queue/adapter-prisma": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*"
+  },
+  "devDependencies": {
+    "prisma": "^6.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
+  }
+}
