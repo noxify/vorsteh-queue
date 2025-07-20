@@ -1,12 +1,12 @@
 import Image from "next/image"
 import Link from "next/link"
+import { SiGithub as GithubIcon } from "@icons-pack/react-simple-icons"
 import {
   Calendar,
   CheckCircle,
   Clock,
   Code,
   Database,
-  Github,
   Heart,
   Info,
   Play,
@@ -16,11 +16,34 @@ import {
   Users,
   Zap,
 } from "lucide-react"
+import { CodeBlock } from "renoun/components"
 
 import { ThemeToggle } from "~/components/theme-toggle"
-import { Badge } from "~/components/ui/badge"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
+
+const example_snippet = `
+import { InMemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+interface TEmailPayload {
+  to: string
+  subject: string
+}
+
+interface TEmailResult {
+  sent: boolean
+}
+
+const queue = new Queue(new InMemoryQueueAdapter(), { name: "email-queue" })
+
+queue.register<TEmailPayload, TEmailResult>("send-email", async ({ payload }) => {
+  // Send email logic here
+  return { sent: true }
+})
+
+await queue.add("send-email", { to: "user@example.com", subject: "Welcome!" })
+queue.start()
+`
 
 export default function Home() {
   return (
@@ -78,14 +101,11 @@ export default function Home() {
         <div className="container mx-auto">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="space-y-6">
-              <Badge className="bg-badge-bg dark:bg-badge-dark-bg text-badge-text dark:text-badge-dark-text border-orange-primary/20">
-                Database Agnostic Queue Engine
-              </Badge>
               <h1 className="text-dark-200 dark:text-dark-900 text-4xl font-bold leading-tight md:text-6xl">
                 Reliable Job Queue for Modern Applications
               </h1>
               <p className="text-fur-500 dark:text-dark-800 text-xl leading-relaxed">
-                A powerful, ORM-agnostic queue engine that works with any database. Handle
+                A powerful, ORM-agnostic queue engine for PostgreSQL 12+, MariaDB, and MySQL. Handle
                 background jobs, scheduled tasks, and recurring processes with ease.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
@@ -101,49 +121,21 @@ export default function Home() {
                   variant="outline"
                   className="border-orange-darker dark:border-orange-light text-orange-darker dark:text-orange-light hover:bg-orange-darker dark:hover:bg-orange-light dark:hover:text-dark-200 border-2 bg-transparent hover:text-white"
                 >
-                  <Github className="mr-2 h-5 w-5" />
+                  <GithubIcon className="mr-2 h-5 w-5" />
                   View on GitHub
                 </Button>
               </div>
             </div>
 
             {/* Code Example */}
-            <div className="bg-dark-100 text-cream-50 overflow-x-auto rounded-lg border p-6 font-mono text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+            <CodeBlock language="ts">{example_snippet}</CodeBlock>
+            <div className="overflow-x-auto rounded-lg border p-6 font-mono text-sm shadow-lg dark:border-slate-700">
               <div className="mb-4 flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-red-500"></div>
                 <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
                 <div className="h-3 w-3 rounded-full bg-green-500"></div>
                 <span className="text-cream-200 ml-2 dark:text-slate-300">queue-example.ts</span>
               </div>
-              <pre className="text-cream-50 dark:text-slate-100">
-                {`import { VorstehQueue } from 'vorsteh-queue';
-
-// Initialize with any database
-const queue = new VorstehQueue({
-  adapter: 'prisma', // or 'drizzle', 'typeorm'
-  connection: prisma
-});
-
-// Add a job
-await queue.add('send-email', {
-  to: 'user@example.com',
-  subject: 'Welcome!'
-}, {
-  delay: 5000,
-  attempts: 3
-});
-
-// Process jobs
-queue.process('send-email', async (job) => {
-  await sendEmail(job.data);
-});
-
-// Schedule recurring jobs
-await queue.repeat('daily-report', 
-  { type: 'summary' }, 
-  { cron: '0 9 * * *' }
-);`}
-              </pre>
             </div>
           </div>
         </div>
@@ -424,7 +416,7 @@ await queue.repeat('daily-report',
             </div>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Button size="lg" className="bg-orange-darker hover:bg-orange-accessible text-white">
-                <Github className="mr-2 h-5 w-5" />
+                <GithubIcon className="mr-2 h-5 w-5" />
                 Star on GitHub
               </Button>
               <Button
