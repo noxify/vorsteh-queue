@@ -1,5 +1,5 @@
 ---
-"@vorsteh-queue/drizzle-adapter": minor
+"@vorsteh-queue/adapter-drizzle": minor
 ---
 
 - `PostgresQueueAdapter`: Constructor simplified
