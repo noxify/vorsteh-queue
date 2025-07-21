@@ -1,12 +1,12 @@
 import path from "path"
 import type { StartedTestContainer } from "testcontainers"
-import { PrismaClient } from "@prisma/client"
 import PrismaInternals from "@prisma/internals"
 import PrismaMigrate from "@prisma/migrate"
 import { GenericContainer } from "testcontainers"
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { PostgresPrismaQueueAdapter } from "~/index"
+import { PrismaClient } from "../src/generated/prisma/client"
 
 // based on
 // https://github.com/prisma/prisma/issues/13549#issuecomment-1987343945
