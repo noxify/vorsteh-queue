@@ -48,6 +48,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint .",
     "prisma:generate": "prisma generate --schema=prisma/postgres-schema.prisma",
+    "test:postgres": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@vorsteh-queue/prettier-config",
@@ -56,6 +57,8 @@
   },
   "devDependencies": {
     "@prisma/client": "^6.12.0",
+    "@prisma/internals": "^6.12.0",
+    "@prisma/migrate": "^6.12.0",
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
@@ -65,7 +68,8 @@
     "rolldown": "^1.0.0-beta.1",
     "rollup-plugin-delete": "^3.0.1",
     "testcontainers": "^11.3.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "@prisma/client": ">=6.1.0"

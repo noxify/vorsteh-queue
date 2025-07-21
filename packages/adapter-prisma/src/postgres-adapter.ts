@@ -49,7 +49,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       data: {
         queueName: this.queueName,
         name: job.name,
-        payload: job.payload,
+        payload: JSON.stringify(job.payload),
         status: job.status,
         priority: job.priority,
         attempts: job.attempts,
@@ -208,7 +208,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     return {
       id: job.id,
       name: job.name,
-      payload: job.payload,
+      payload: typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       status: job.status as JobStatus,
       priority: job.priority,
       attempts: job.attempts,
