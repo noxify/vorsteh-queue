@@ -216,4 +216,93 @@ describe("Queue", () => {
       expect(stats.completed).toBe(1)
     })
   })
+
+  describe("result handling", () => {
+    it("should store job result when job completes successfully", async () => {
+      const result = { success: true, data: "processed" }
+      const handler = vi.fn().mockResolvedValue(result)
+      const completedSpy = vi.fn()
+
+      queue.register("test-job", handler)
+      queue.on("job:completed", completedSpy)
+
+      await queue.connect()
+      await queue.add("test-job", { input: "test" })
+      queue.start()
+
+      await waitFor(100)
+
+      expect(handler).toHaveBeenCalled()
+      expect(completedSpy).toHaveBeenCalled()
+
+      const completedJob = completedSpy.mock.calls[0]?.[0] as { result: unknown }
+      expect(completedJob.result).toEqual(result)
+
+      await queue.stop()
+    })
+
+    it("should handle null/undefined results", async () => {
+      const handler = vi.fn().mockResolvedValue(null)
+      const completedSpy = vi.fn()
+
+      queue.register("test-job", handler)
+      queue.on("job:completed", completedSpy)
+
+      await queue.connect()
+      await queue.add("test-job", { input: "test" })
+      queue.start()
+
+      await waitFor(100)
+
+      const completedJob = completedSpy.mock.calls[0]?.[0] as { result: unknown }
+      expect(completedJob.result).toBeNull()
+
+      await queue.stop()
+    })
+
+    it("should handle complex result objects", async () => {
+      const result = {
+        processed: 100,
+        errors: [],
+        metadata: { timestamp: new Date().toISOString() },
+        nested: { deep: { value: "test" } },
+      }
+      const handler = vi.fn().mockResolvedValue(result)
+      const completedSpy = vi.fn()
+
+      queue.register("test-job", handler)
+      queue.on("job:completed", completedSpy)
+
+      await queue.connect()
+      await queue.add("test-job", { input: "test" })
+      queue.start()
+
+      await waitFor(100)
+
+      const completedJob = completedSpy.mock.calls[0]?.[0] as { result: unknown }
+      expect(completedJob.result).toEqual(result)
+
+      await queue.stop()
+    })
+
+    it("should not store result when job fails", async () => {
+      const handler = vi.fn().mockRejectedValue(new Error("Test error"))
+      const failedSpy = vi.fn()
+
+      queue.register("test-job", handler)
+      queue.on("job:failed", failedSpy)
+
+      await queue.connect()
+      await queue.add("test-job", { input: "test" }, { maxAttempts: 1 })
+      queue.start()
+
+      await waitFor(100)
+
+      const failedJob = failedSpy.mock.calls[0]?.[0] as { result?: unknown; error: unknown }
+      expect(failedJob.result).toBeUndefined()
+      expect(failedJob.error).toBeDefined()
+
+      await queue.stop()
+    })
+  })
 })

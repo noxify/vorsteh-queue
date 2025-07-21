@@ -22,6 +22,7 @@ export const queueJobs = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
     failedAt: timestamp("failed_at", { withTimezone: true, mode: "date" }),
     error: jsonb("error"),
+    result: jsonb("result"),
     progress: integer("progress").default(0),
     cron: varchar("cron", { length: 255 }),
     repeatEvery: integer("repeat_every"),

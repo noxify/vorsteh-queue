@@ -88,6 +88,7 @@ queue.register<EmailPayload, EmailResult>("send-email", async (job) => {
   // Send email logic here
   await sendEmail(job.payload)
   
+  // Return result - will be stored in job.result field
   return { 
     messageId: "msg_123", 
     sent: true 
@@ -196,6 +197,49 @@ await queue.add("business-task", payload, {
 4. **Simple and predictable** - no runtime timezone complexity
 5. **Server timezone independent** - works consistently across environments
 
+## Job Results
+
+Job handlers can return results that are automatically stored and made available:
+
+```typescript
+interface ProcessResult {
+  processed: number
+  errors: string[]
+  duration: number
+}
+
+queue.register<{ items: string[] }, ProcessResult>("process-data", async (job) => {
+  const startTime = Date.now()
+  const errors: string[] = []
+  let processed = 0
+
+  for (const item of job.payload.items) {
+    try {
+      await processItem(item)
+      processed++
+    } catch (error) {
+      errors.push(`Failed to process ${item}: ${error.message}`)
+    }
+  }
+
+  // Return result - automatically stored in job.result field
+  return {
+    processed,
+    errors,
+    duration: Date.now() - startTime
+  }
+})
+
+// Access results in events
+queue.on("job:completed", (job) => {
+  const result = job.result as ProcessResult
+  console.log(`Processed ${result.processed} items in ${result.duration}ms`)
+  if (result.errors.length > 0) {
+    console.warn(`Errors: ${result.errors.join(", ")}`)
+  }
+})
+```
+
 ## Progress Tracking
 
 ```typescript
@@ -235,6 +279,7 @@ queue.on("job:processing", (job) => {
 
 queue.on("job:completed", (job) => {
   console.log(`🎉 Job ${job.name} completed successfully`)
+  console.log(`📊 Result:`, job.result) // Access job result
 })
 
 queue.on("job:failed", (job) => {

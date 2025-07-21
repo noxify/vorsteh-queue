@@ -17,10 +17,15 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
 
   abstract connect(): Promise<void>
   abstract disconnect(): Promise<void>
-  abstract addJob<TJobPayload>(
-    job: Omit<BaseJob<TJobPayload>, "id" | "createdAt">,
-  ): Promise<BaseJob<TJobPayload>>
-  abstract updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void>
+  abstract addJob<TJobPayload, TJobResult = unknown>(
+    job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
+  ): Promise<BaseJob<TJobPayload, TJobResult>>
+  abstract updateJobStatus(
+    id: string,
+    status: JobStatus,
+    error?: unknown,
+    result?: unknown,
+  ): Promise<void>
   abstract updateJobProgress(id: string, progress: number): Promise<void>
   abstract incrementJobAttempts(id: string): Promise<void>
   abstract getQueueStats(): Promise<QueueStats>

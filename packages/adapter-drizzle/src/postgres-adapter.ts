@@ -45,9 +45,9 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     // Drizzle doesn't require explicit disconnection
   }
 
-  async addJob<TJobPayload>(
-    job: Omit<BaseJob<TJobPayload>, "id" | "createdAt">,
-  ): Promise<BaseJob<TJobPayload>> {
+  async addJob<TJobPayload, TJobResult = unknown>(
+    job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
+  ): Promise<BaseJob<TJobPayload, TJobResult>> {
     const [result] = await this.db
       .insert(schema.queueJobs)
       .values({
@@ -70,14 +70,20 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       throw new Error("Failed to create job")
     }
 
-    return this.transformJob(result) as BaseJob<TJobPayload>
+    return this.transformJob(result) as BaseJob<TJobPayload, TJobResult>
   }
 
-  async updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void> {
+  async updateJobStatus(
+    id: string,
+    status: JobStatus,
+    error?: unknown,
+    result?: unknown,
+  ): Promise<void> {
     const now = new Date()
     const updates: Record<string, unknown> = { status }
 
     if (error) updates.error = serializeError(error)
+    if (result !== undefined) updates.result = result
     if (status === "processing") updates.processedAt = asUtc(now)
     if (status === "completed") updates.completedAt = asUtc(now)
     if (status === "failed") updates.failedAt = asUtc(now)
@@ -240,6 +246,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       completedAt: job.completedAt ?? undefined,
       failedAt: job.failedAt ?? undefined,
       error: job.error as SerializedError | undefined,
+      result: job.result,
       progress: job.progress ?? 0,
       cron: job.cron ?? undefined,
       repeatEvery: job.repeatEvery ?? undefined,

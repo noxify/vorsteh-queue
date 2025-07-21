@@ -362,13 +362,13 @@ export class Queue {
 
     try {
       const timeout = this.config.defaultJobOptions.timeout ?? 30000
-      await Promise.race([
+      const result = await Promise.race([
         handler(createJobWrapper(job, this)),
         new Promise((_, reject) => setTimeout(() => reject(new Error("Job timeout")), timeout)),
       ])
 
-      await this.adapter.updateJobStatus(job.id, "completed")
-      this.emit("job:completed", { ...job, status: "completed", completedAt: new Date() })
+      await this.adapter.updateJobStatus(job.id, "completed", undefined, result)
+      this.emit("job:completed", { ...job, status: "completed", completedAt: new Date(), result })
 
       // Handle job cleanup
       await this.cleanupCompletedJob()
