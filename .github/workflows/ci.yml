@@ -120,6 +120,9 @@ jobs:
       - name: Setup
         uses: ./.github/setup
 
+      - name: Generate prisma client
+        run: pnpm -F adapter-prisma prisma:generate
+
       - name: Build
         run: pnpm build:pkg
 
