@@ -37,6 +37,9 @@ jobs:
       - name: Setup
         uses: ./.github/setup
 
+      - name: Generate prisma client
+        run: pnpm -F adapter-prisma prisma:generate
+
       - name: Lint
         run: pnpm lint
 
@@ -58,6 +61,9 @@ jobs:
 
       - name: Setup
         uses: ./.github/setup
+
+      - name: Generate prisma client
+        run: pnpm -F adapter-prisma prisma:generate
 
       - name: Typecheck
         run: pnpm typecheck
