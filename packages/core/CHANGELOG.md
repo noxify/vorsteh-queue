@@ -1,5 +1,14 @@
 # @vorsteh-queue/core
 
+## 0.2.0
+
+### Minor Changes
+
+- 51f5968: - Updated `BaseQueueAdapter` to use `setQueueName()` method
+  - Updated `Queue` class to automatically set queue name on adapter
+  - Updated `QueueAdapter` interface with optional `setQueueName()` method
+  - Updated all core tests
+
 ## 0.1.0
 
 ### Minor Changes
