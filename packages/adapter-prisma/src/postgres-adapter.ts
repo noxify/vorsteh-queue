@@ -7,6 +7,7 @@ import type { QueueJobModel as QueueJob } from "./generated/prisma/models"
 /**
  * PostgreSQL adapter for the queue system using Prisma ORM.
  * Uses raw SQL with SKIP LOCKED for critical job selection methods to prevent race conditions.
+ * Provides persistent job storage with type-safe database operations and automatic migrations.
  *
  * @example
  * ```typescript
@@ -14,7 +15,8 @@ import type { QueueJobModel as QueueJob } from "./generated/prisma/models"
  * import { PostgresPrismaQueueAdapter } from '@vorsteh-queue/adapter-prisma'
  *
  * const prisma = new PrismaClient()
- * const queue = new Queue(new PostgresPrismaQueueAdapter(prisma), { name: "my-queue" })
+ * const adapter = new PostgresPrismaQueueAdapter(prisma)
+ * const queue = new Queue(adapter, { name: "my-queue" })
  * ```
  */
 export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {

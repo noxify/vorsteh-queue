@@ -2,6 +2,16 @@ import type { BaseJob, JobStatus, QueueStats } from "../../types"
 import { serializeError } from "../utils/error"
 import { BaseQueueAdapter } from "./base"
 
+/**
+ * In-memory queue adapter for testing and development.
+ * Stores all job data in memory - data is lost when the process exits.
+ * 
+ * @example
+ * ```typescript
+ * const adapter = new MemoryQueueAdapter()
+ * const queue = new Queue(adapter, { name: "test-queue" })
+ * ```
+ */
 export class MemoryQueueAdapter extends BaseQueueAdapter {
   private jobs = new Map<string, BaseJob>()
   private connected = false

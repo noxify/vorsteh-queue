@@ -16,6 +16,7 @@ type DrizzleDatabase =
 /**
  * PostgreSQL adapter for the queue system using Drizzle ORM.
  * Supports PostgreSQL databases through Drizzle ORM with node-postgres, postgres.js, or PGlite.
+ * Provides persistent job storage with ACID transactions and optimized job selection.
  *
  * @example
  * ```typescript
@@ -25,6 +26,7 @@ type DrizzleDatabase =
  * const pool = new Pool({ connectionString: "postgresql://..." })
  * const db = drizzle(pool)
  * const adapter = new PostgresQueueAdapter(db)
+ * const queue = new Queue(adapter, { name: "my-queue" })
  * ```
  */
 export class PostgresQueueAdapter extends BaseQueueAdapter {

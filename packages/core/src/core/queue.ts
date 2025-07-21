@@ -165,6 +165,23 @@ export class Queue {
     return job
   }
 
+  /**
+   * Alias for the `add()` method. Add a new job to the queue.
+   *
+   * @param name - The job type name (must be registered)
+   * @param payload - Job data to process
+   * @param options - Job configuration options
+   * @returns Promise resolving to the created job
+   *
+   * @example
+   * ```typescript
+   * // Basic job
+   * await queue.enqueue("send-email", { to: "user@example.com" })
+   *
+   * // Priority job
+   * await queue.enqueue("urgent-task", { data: "important" }, { priority: 1 })
+   * ```
+   */
   async enqueue<TJobPayload>(
     name: string,
     payload: TJobPayload,
@@ -247,14 +264,60 @@ export class Queue {
     return { ...this.config }
   }
 
+  /**
+   * Clear jobs from the queue.
+   *
+   * @param status - Optional job status filter to clear only jobs with specific status
+   * @returns Promise resolving to number of jobs cleared
+   *
+   * @example
+   * ```typescript
+   * // Clear all jobs
+   * const cleared = await queue.clear()
+   *
+   * // Clear only failed jobs
+   * const clearedFailed = await queue.clear("failed")
+   * ```
+   */
   async clear(status?: Parameters<QueueAdapter["clearJobs"]>[0]): Promise<number> {
     return this.adapter.clearJobs(status)
   }
 
+  /**
+   * Update the progress of a specific job.
+   *
+   * @param id - The job ID to update progress for
+   * @param progress - Progress percentage (0-100)
+   * @returns Promise that resolves when progress is updated
+   *
+   * @example
+   * ```typescript
+   * // Update job progress to 50%
+   * await queue.updateJobProgress(jobId, 50)
+   *
+   * // Update job progress to completion
+   * await queue.updateJobProgress(jobId, 100)
+   * ```
+   */
   async updateJobProgress(id: string, progress: number): Promise<void> {
     await this.adapter.updateJobProgress(id, progress)
   }
 
+  /**
+   * Manually dequeue and mark the next job as completed without processing.
+   * This is primarily used for testing or manual job management.
+   *
+   * @returns Promise resolving to the dequeued job or null if no jobs available
+   *
+   * @example
+   * ```typescript
+   * // Manually dequeue next job
+   * const job = await queue.dequeue()
+   * if (job) {
+   *   console.log(`Dequeued job: ${job.name}`)
+   * }
+   * ```
+   */
   async dequeue(): Promise<BaseJob | null> {
     const job = await this.adapter.getNextJob()
     if (job) {
@@ -262,7 +325,6 @@ export class Queue {
     }
     return job
   }
-
   /**
    * Listen to queue events.
    *
@@ -290,6 +352,19 @@ export class Queue {
     this.listeners.get(event)?.push(listener)
   }
 
+  /**
+   * Internal method to emit queue events to registered listeners.
+   *
+   * @param event - Event name to emit
+   * @param data - Event data to pass to listeners
+   * @private
+   *
+   * @example
+   * ```typescript
+   * this.emit("job:completed", completedJobData)
+   * this.emit("queue:error", errorData)
+   * ```
+   */
   private emit<TEventName extends keyof QueueEvents>(
     event: TEventName,
     data: QueueEvents[TEventName],
@@ -300,6 +375,13 @@ export class Queue {
     }
   }
 
+  /**
+   * Internal polling method that continuously checks for and processes jobs.
+   * Handles concurrency limits and processing intervals.
+   *
+   * @returns Promise that resolves when polling is stopped
+   * @private
+   */
   private async poll(): Promise<void> {
     const { concurrency, processingInterval, jobInterval } = this.config
 
@@ -339,6 +421,12 @@ export class Queue {
     }
   }
 
+  /**
+   * Internal method to dequeue and process a single job.
+   *
+   * @returns Promise resolving to boolean indicating if job was processed
+   * @private
+   */
   private async dequeueAndProcess(): Promise<boolean> {
     const job = await this.adapter.getNextJob()
     if (!job) return false
@@ -347,6 +435,14 @@ export class Queue {
     return true
   }
 
+  /**
+   * Internal method to process a job using its registered handler.
+   * Handles job timeouts, completion, cleanup and recurring job scheduling.
+   *
+   * @param job - The job to process
+   * @returns Promise that resolves when job processing is complete
+   * @private
+   */
   private async processJob(job: BaseJob): Promise<void> {
     const handler = this.handlers.get(job.name)
     if (!handler) {
@@ -382,6 +478,15 @@ export class Queue {
     }
   }
 
+  /**
+   * Internal method to handle job errors.
+   * Determines whether to retry or fail the job based on attempt count.
+   *
+   * @param job - The failed job
+   * @param error - The error that occurred
+   * @returns Promise that resolves when error handling is complete
+   * @private
+   */
   private async handleJobError(job: BaseJob, error: unknown): Promise<void> {
     const serializedError = serializeError(error)
 
@@ -392,6 +497,15 @@ export class Queue {
     }
   }
 
+  /**
+   * Internal method to retry a failed job.
+   * Increments attempt count and schedules next attempt with backoff delay.
+   *
+   * @param job - The job to retry
+   * @param _error - The error from the failed attempt
+   * @returns Promise that resolves when job is scheduled for retry
+   * @private
+   */
   private async retryJob(job: BaseJob, _error: unknown): Promise<void> {
     await this.adapter.incrementJobAttempts(job.id)
 
@@ -403,6 +517,15 @@ export class Queue {
     this.emit("job:retried", { ...job, attempts: job.attempts + 1, processAt })
   }
 
+  /**
+   * Internal method to mark a job as permanently failed.
+   * Updates job status and triggers cleanup of failed jobs.
+   *
+   * @param job - The job to fail
+   * @param error - The error that caused the failure
+   * @returns Promise that resolves when job is marked as failed
+   * @private
+   */
   private async failJob(job: BaseJob, error: unknown): Promise<void> {
     await this.adapter.updateJobStatus(job.id, "failed", error)
     this.emit("job:failed", {
@@ -416,6 +539,13 @@ export class Queue {
     await this.cleanupFailedJob()
   }
 
+  /**
+   * Internal method to clean up completed jobs based on queue configuration.
+   * Can remove jobs immediately, keep all jobs, or maintain a fixed number of completed jobs.
+   *
+   * @returns Promise that resolves when cleanup is complete
+   * @private
+   */
   private async cleanupCompletedJob(): Promise<void> {
     const { removeOnComplete } = this.config
 
@@ -431,6 +561,13 @@ export class Queue {
     }
   }
 
+  /**
+   * Internal method to clean up failed jobs based on queue configuration.
+   * Can remove jobs immediately, keep all jobs, or maintain a fixed number of failed jobs.
+   *
+   * @returns Promise that resolves when cleanup is complete
+   * @private
+   */
   private async cleanupFailedJob(): Promise<void> {
     const { removeOnFail } = this.config
 
@@ -446,6 +583,15 @@ export class Queue {
     }
   }
 
+  /**
+   * Internal method to handle recurring job scheduling.
+   * Creates the next occurrence of recurring jobs based on cron or repeat interval.
+   *
+   * @param job - The completed job that may need to be rescheduled
+   * @param originalTimezone - Optional timezone for cron scheduling
+   * @returns Promise that resolves when next job is scheduled
+   * @private
+   */
   private async handleRecurringJob(job: BaseJob, originalTimezone?: string): Promise<void> {
     if (!job.cron && !job.repeatEvery) return
 
