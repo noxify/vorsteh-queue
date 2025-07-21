@@ -5,7 +5,7 @@ import { BaseQueueAdapter } from "./base"
 /**
  * In-memory queue adapter for testing and development.
  * Stores all job data in memory - data is lost when the process exits.
- * 
+ *
  * @example
  * ```typescript
  * const adapter = new MemoryQueueAdapter()
