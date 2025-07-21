@@ -39,6 +39,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
 
     // First try to get delayed jobs that are ready
     const delayedJob = await this.getDelayedJobReady(now)
+
     if (delayedJob) {
       await this.updateJobStatus(delayedJob.id, "pending")
       return { ...delayedJob, status: "pending" }

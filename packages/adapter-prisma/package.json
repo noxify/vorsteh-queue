@@ -1,7 +1,6 @@
 {
   "name": "@vorsteh-queue/adapter-prisma",
   "version": "0.0.0",
-  "private": true,
   "keywords": [
     "queue",
     "job-queue",
@@ -14,9 +13,7 @@
     "task-queue",
     "worker",
     "orm",
-    "postgresql",
-    "mysql",
-    "mariadb"
+    "postgresql"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
@@ -32,10 +29,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./mariadb-adapter": {
-      "types": "./dist/mariadb-adapter.d.ts",
-      "default": "./dist/mariadb-adapter.js"
-    },
     "./postgres-adapter": {
       "types": "./dist/postgres-adapter.d.ts",
       "default": "./dist/postgres-adapter.js"
@@ -44,17 +37,17 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "types"
   ],
   "scripts": {
     "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
-    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
+    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint .",
-    "prisma:generate:mysql": "prisma generate --schema=prisma/mysql-schema.prisma",
-    "prisma:generate:postgres": "prisma generate --schema=prisma/postgres-schema.prisma",
+    "prisma:generate": "prisma generate --schema=prisma/postgres-schema.prisma",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@vorsteh-queue/prettier-config",

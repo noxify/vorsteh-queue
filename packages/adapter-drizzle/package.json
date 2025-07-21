@@ -18,9 +18,6 @@
     "pglite",
     "postgres-js",
     "node-postgres",
-    "mariadb",
-    "mysql",
-    "mysql2",
     "sql",
     "orm"
   ],
@@ -38,14 +35,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./mariadb-adapter": {
-      "types": "./dist/mariadb-adapter.d.ts",
-      "default": "./dist/mariadb-adapter.js"
-    },
-    "./mariadb-schema": {
-      "types": "./dist/mariadb-schema.d.ts",
-      "default": "./dist/mariadb-schema.js"
-    },
     "./postgres-adapter": {
       "types": "./dist/postgres-adapter.d.ts",
       "default": "./dist/postgres-adapter.js"
@@ -62,14 +51,13 @@
   ],
   "scripts": {
     "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
-    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "db:generate": "drizzle-kit generate",
+    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint .",
     "test": "vitest",
-    "test:mariadb": "vitest --run tests/mariadb-adapter.test.ts",
     "test:postgres": "vitest --run tests/drizzle-adapter.test.ts tests/utc-storage.test.ts tests/timezone-edge-cases.test.ts tests/progress.test.ts",
     "test:watch": "vitest --watch",
     "typecheck": "tsc --noEmit"
@@ -86,12 +74,10 @@
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.3",
     "eslint": "^9.31.0",
-    "mysql2": "^3.11.4",
     "postgres": "^3.4.7",
     "prettier": "^3.6.2",
     "rolldown": "^1.0.0-beta.1",
     "rollup-plugin-delete": "^3.0.1",
-    "testcontainers": "^11.3.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   },

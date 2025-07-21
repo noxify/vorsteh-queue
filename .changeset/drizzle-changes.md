@@ -3,24 +3,26 @@
 ---
 
 - `PostgresQueueAdapter`: Constructor simplified
-- `MariaDBQueueAdapter`: Constructor simplified
+- **BREAKING**: Removed MariaDB/MySQL support due to timezone handling complexities
+  - I tried my best to make it work, but failed successfully
+- **BREAKING**: Fixed UTC-first timezone handling - all timestamps now stored as UTC
 
 **Before (duplicate queue name)**
 
 ```ts
-const adapter1 = new PostgresQueueAdapter(db, "my-queue")
-const queue1 = new Queue(adapter1, { name: "my-queue" })
-
-const adapter2 = new MariaDBQueueAdapter(db, "my-queue")
-const queue2 = new Queue(adapter2, { name: "my-queue" })
+const adapter = new PostgresQueueAdapter(db, "my-queue")
+const queue = new Queue(adapter, { name: "my-queue" })
 ```
 
 **After (single queue name):**
 
 ```ts
-const adapter1 = new PostgresQueueAdapter(db)
-const queue1 = new Queue(adapter1, { name: "my-queue" })
-
-const adapter2 = new MariaDBQueueAdapter(db)
-const queue2 = new Queue(adapter2, { name: "my-queue" })
+const adapter = new PostgresQueueAdapter(db)
+const queue = new Queue(adapter, { name: "my-queue" })
 ```
+
+**Timezone Changes:**
+
+- Database schema now uses UTC defaults: `timezone('utc', now())` for PostgreSQL
+- Application timestamps stored as UTC using `toISOString()::timestamptz`
+- Consistent UTC-first behavior for reliable timezone handling

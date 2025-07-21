@@ -15,6 +15,8 @@
     "dev:docs": "turbo dev --filter docs",
     "preview": "turbo run start -F docs...",
     "build": "turbo build",
+    "build:docs": "turbo build --filter docs",
+    "build:pkg": "turbo build --filter='@vorsteh-queue/*'",
     "clean": "git clean -xdf node_modules",
     "clean:cache": "turbo clean:cache",
     "clean:workspaces": "turbo clean",

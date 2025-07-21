@@ -1,55 +1,32 @@
 # @vorsteh-queue/adapter-prisma
 
-Prisma adapter for Vorsteh Queue with support for PostgreSQL and MySQL/MariaDB.
+Prisma ORM adapter for Vorsteh Queue supporting PostgreSQL databases.
 
 ## Features
 
-- **Database-agnostic**: Separate adapters for PostgreSQL and MySQL/MariaDB
-- **Minimal interface**: Uses a minimal Prisma client interface for better type safety
-- **SKIP LOCKED support**: Efficient job locking using database-specific raw SQL
-- **Type-safe**: Full TypeScript support with generic job payloads
+- **PostgreSQL Support**: Full PostgreSQL compatibility with Prisma ORM
+- **Type Safety**: Full TypeScript support with Prisma Client
+- **SKIP LOCKED**: Concurrent job processing without lock contention using raw SQL
+- **JSON Payloads**: Complex data structures with proper serialization
+- **UTC-First**: All timestamps stored as UTC for reliable timezone handling
+
+## Requirements
+
+- **Node.js 20+**
+- **PostgreSQL 12+** (for SKIP LOCKED support)
+- **ESM only** - This package is ESM-only and cannot be imported with `require()`
 
 ## Installation
 
 ```bash
-npm install @vorsteh-queue/adapter-prisma @vorsteh-queue/core
+npm install @vorsteh-queue/adapter-prisma @prisma/client
+# or
+pnpm add @vorsteh-queue/adapter-prisma @prisma/client
 ```
 
-## Database Schema
-
-Add this model to your `schema.prisma` file:
-
-```prisma
-model QueueJob {
-  id           String    @id @default(cuid())
-  queueName    String    @map("queue_name")
-  name         String
-  payload      String    // JSON string
-  status       String
-  priority     Int
-  attempts     Int       @default(0)
-  maxAttempts  Int       @map("max_attempts")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  processAt    DateTime  @map("process_at")
-  processedAt  DateTime? @map("processed_at")
-  completedAt  DateTime? @map("completed_at")
-  failedAt     DateTime? @map("failed_at")
-  error        String?
-  progress     Int?      @default(0)
-  cron         String?
-  repeatEvery  Int?      @map("repeat_every")
-  repeatLimit  Int?      @map("repeat_limit")
-  repeatCount  Int?      @default(0) @map("repeat_count")
-
-  @@index([queueName, status, priority, createdAt])
-  @@index([processAt])
-  @@map("queue_jobs")
-}
-```
+> **Note**: Make sure your project has `"type": "module"` in package.json or use `.mjs` file extensions.
 
 ## Usage
-
-### PostgreSQL
 
 ```typescript
 import { PrismaClient } from "@prisma/client"
@@ -57,74 +34,116 @@ import { PrismaClient } from "@prisma/client"
 import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
 import { Queue } from "@vorsteh-queue/core"
 
+// Setup Prisma client
 const prisma = new PrismaClient()
-const queue = new Queue(new PostgresPrismaQueueAdapter(prisma), {
-  name: "my-queue",
-})
+
+interface EmailPayload {
+  to: string
+  subject: string
+  body: string
+}
+
+interface EmailResult {
+  messageId: string
+  sent: boolean
+}
+
+// Create adapter and queue
+const adapter = new PostgresPrismaQueueAdapter(prisma)
+const queue = new Queue(adapter, { name: "my-queue" })
 
 // Register job handlers
-queue.register("send-email", async ({ payload }) => {
-  // Send email logic
-  return { sent: true }
+queue.register<EmailPayload, EmailResult>("send-email", async (job) => {
+  console.log(`Sending email to ${job.payload.to}`)
+
+  // Send email logic here
+  // await sendEmail(job.payload)
+
+  return {
+    messageId: "msg_123",
+    sent: true,
+  }
 })
 
 // Add jobs
-await queue.add("send-email", { to: "user@example.com", subject: "Welcome!" })
+await queue.add("send-email", {
+  to: "user@example.com",
+  subject: "Welcome!",
+  body: "Welcome to our service!",
+})
 
 // Start processing
 queue.start()
 ```
 
-### MySQL/MariaDB
+## Schema Setup
 
-```typescript
-import { PrismaClient } from "@prisma/client"
+Add the queue jobs table to your Prisma schema:
 
-import { MySQLPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
-import { Queue } from "@vorsteh-queue/core"
+```prisma
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
 
-const prisma = new PrismaClient()
-const queue = new Queue(new MySQLPrismaQueueAdapter(prisma), {
-  name: "my-queue",
-})
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-// Same API as PostgreSQL
+// Your existing models
+model User {
+  id   Int    @id @default(autoincrement())
+  name String
+  // ... your fields
+}
+
+// Queue jobs table
+model QueueJob {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  queueName    String    @map("queue_name") @db.VarChar(255)
+  name         String    @db.VarChar(255)
+  payload      Json
+  status       String    @db.VarChar(50)
+  priority     Int
+  attempts     Int       @default(0)
+  maxAttempts  Int       @map("max_attempts")
+  createdAt    DateTime  @default(dbgenerated("timezone('utc', now())")) @map("created_at") @db.Timestamptz
+  processAt    DateTime  @map("process_at") @db.Timestamptz
+  processedAt  DateTime? @map("processed_at") @db.Timestamptz
+  completedAt  DateTime? @map("completed_at") @db.Timestamptz
+  failedAt     DateTime? @map("failed_at") @db.Timestamptz
+  error        Json?
+  progress     Int?      @default(0)
+  cron         String?   @db.VarChar(255)
+  repeatEvery  Int?      @map("repeat_every")
+  repeatLimit  Int?      @map("repeat_limit")
+  repeatCount  Int       @default(0) @map("repeat_count")
+
+  @@index([queueName, status, priority, createdAt], map: "idx_queue_jobs_status_priority")
+  @@index([processAt], map: "idx_queue_jobs_process_at")
+  @@map("queue_jobs")
+}
 ```
 
-## Requirements
-
-- **PostgreSQL**: Any version supported by Prisma
-- **MySQL**: Any version supported by Prisma
-- **MariaDB**: Any version supported by Prisma
-
-> **Note**: This adapter uses Prisma's built-in methods instead of raw SQL for maximum compatibility across database versions.
-
-## Type Safety
-
-The adapter uses a generic approach inspired by [better-auth](https://github.com/better-auth/better-auth/blob/main/packages/better-auth/src/adapters/prisma-adapter/prisma-adapter.ts) that accepts any PrismaClient without requiring specific types:
-
-```typescript
-import { PrismaClient } from "@prisma/client"
-
-import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
-
-// Any PrismaClient works automatically
-const prisma = new PrismaClient()
-const adapter = new PostgresPrismaQueueAdapter(prisma)
-// Optional: Configure model name if different from default
-// const adapter = new PostgresPrismaQueueAdapter(prisma, {
-//  modelName: "CustomQueueJob",
-// })
+```bash
+# Generate Prisma client and run migrations
+npx prisma generate
+npx prisma db push
+# or
+npx prisma migrate dev
 ```
 
-## Differences from Drizzle Adapter
+## Performance Notes
 
-- Uses Prisma ORM instead of Drizzle
-- Requires manual schema definition in `schema.prisma`
-- Uses Prisma's built-in methods for maximum compatibility
-- Separate adapters for PostgreSQL and MySQL/MariaDB
-- No database version restrictions (works with any Prisma-supported version)
+This adapter uses raw SQL with `SKIP LOCKED` for critical job selection operations to prevent race conditions in concurrent processing scenarios. Regular Prisma operations are used for other database interactions.
+
+## Testing
+
+```bash
+pnpm test
+```
 
 ## License
 
-MIT
+MIT License - see LICENSE file for details.
