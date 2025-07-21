@@ -47,7 +47,7 @@
     "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint .",
-    "prisma:generate": "prisma generate --schema=prisma/postgres-schema.prisma",
+    "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
     "test:postgres": "vitest",
     "typecheck": "tsc --noEmit"
   },
