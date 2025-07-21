@@ -1,5 +1,6 @@
 import path from "path"
 import type { StartedTestContainer } from "testcontainers"
+import { PrismaPg } from "@prisma/adapter-pg"
 import PrismaInternals from "@prisma/internals"
 import PrismaMigrate from "@prisma/migrate"
 import { GenericContainer } from "testcontainers"
@@ -23,7 +24,10 @@ async function prepareTable() {
 
     const migrationsDirPath = path.join(schemaPathResult.schemaRootDir, "migrations")
     const schemaContext = { schemaFiles: schemaPathResult.schemas } as PrismaInternals.SchemaContext
-    migrate = await PrismaMigrate.Migrate.setup({ migrationsDirPath, schemaContext })
+    migrate = await PrismaMigrate.Migrate.setup({
+      migrationsDirPath,
+      schemaContext,
+    })
 
     await migrate.push({ force: true })
 
@@ -57,51 +61,10 @@ describe("PostgresPrismaQueueAdapter", () => {
 
     vi.stubEnv("DATABASE_URL", databaseUrl)
 
-    prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: databaseUrl,
-        },
-      },
-    })
+    const prismaAdapter = new PrismaPg({ connectionString: databaseUrl })
+    prisma = new PrismaClient({ adapter: prismaAdapter })
 
     await prepareTable()
-
-    // Create the queue_jobs table
-    await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS queue_jobs (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        queue_name VARCHAR(255) NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        payload JSONB NOT NULL,
-        status VARCHAR(50) NOT NULL,
-        priority INTEGER NOT NULL,
-        attempts INTEGER NOT NULL DEFAULT 0,
-        max_attempts INTEGER NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
-        process_at TIMESTAMPTZ NOT NULL,
-        processed_at TIMESTAMPTZ,
-        completed_at TIMESTAMPTZ,
-        failed_at TIMESTAMPTZ,
-        error JSONB,
-        progress INTEGER DEFAULT 0,
-        cron VARCHAR(255),
-        repeat_every INTEGER,
-        repeat_limit INTEGER,
-        repeat_count INTEGER DEFAULT 0
-      )
-    `
-
-    // Create indexes
-    await prisma.$executeRaw`
-      CREATE INDEX IF NOT EXISTS idx_queue_jobs_status_priority 
-      ON queue_jobs (queue_name, status, priority, created_at)
-    `
-
-    await prisma.$executeRaw`
-      CREATE INDEX IF NOT EXISTS idx_queue_jobs_process_at 
-      ON queue_jobs (process_at)
-    `
   }, 120000)
 
   beforeEach(async () => {
@@ -309,51 +272,10 @@ describe("PostgresPrismaQueueAdapter - Timezone Handling", () => {
 
     vi.stubEnv("DATABASE_URL", databaseUrl)
 
-    prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: databaseUrl,
-        },
-      },
-    })
+    const prismaAdapter = new PrismaPg({ connectionString: databaseUrl })
+    prisma = new PrismaClient({ adapter: prismaAdapter })
 
     await prepareTable()
-
-    // Create the queue_jobs table
-    await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS queue_jobs (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        queue_name VARCHAR(255) NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        payload JSONB NOT NULL,
-        status VARCHAR(50) NOT NULL,
-        priority INTEGER NOT NULL,
-        attempts INTEGER NOT NULL DEFAULT 0,
-        max_attempts INTEGER NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
-        process_at TIMESTAMPTZ NOT NULL,
-        processed_at TIMESTAMPTZ,
-        completed_at TIMESTAMPTZ,
-        failed_at TIMESTAMPTZ,
-        error JSONB,
-        progress INTEGER DEFAULT 0,
-        cron VARCHAR(255),
-        repeat_every INTEGER,
-        repeat_limit INTEGER,
-        repeat_count INTEGER DEFAULT 0
-      )
-    `
-
-    // Create indexes
-    await prisma.$executeRaw`
-      CREATE INDEX IF NOT EXISTS idx_queue_jobs_status_priority 
-      ON queue_jobs (queue_name, status, priority, created_at)
-    `
-
-    await prisma.$executeRaw`
-      CREATE INDEX IF NOT EXISTS idx_queue_jobs_process_at 
-      ON queue_jobs (process_at)
-    `
   }, 120000)
 
   beforeEach(async () => {

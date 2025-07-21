@@ -56,6 +56,7 @@
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
+    "@prisma/adapter-pg": "^6.12.0",
     "@prisma/client": "^6.12.0",
     "@prisma/internals": "^6.12.0",
     "@prisma/migrate": "^6.12.0",

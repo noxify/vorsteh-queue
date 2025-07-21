@@ -448,6 +448,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@prisma/adapter-pg':
+        specifier: ^6.12.0
+        version: 6.12.0
       '@prisma/client':
         specifier: ^6.12.0
         version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
