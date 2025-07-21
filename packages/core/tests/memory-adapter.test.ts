@@ -6,7 +6,8 @@ describe("MemoryQueueAdapter", () => {
   let adapter: MemoryQueueAdapter
 
   beforeEach(() => {
-    adapter = new MemoryQueueAdapter("test-queue")
+    adapter = new MemoryQueueAdapter()
+    adapter.setQueueName("test-queue")
   })
 
   it("should connect and disconnect", async () => {

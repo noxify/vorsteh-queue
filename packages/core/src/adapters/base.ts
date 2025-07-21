@@ -5,9 +5,13 @@ import type { BaseJob, JobStatus, QueueAdapter, QueueStats } from "../../types"
  * Extend this class to create custom queue adapters for different databases.
  */
 export abstract class BaseQueueAdapter implements QueueAdapter {
-  protected readonly queueName: string
+  protected queueName = ""
 
-  constructor(queueName: string) {
+  /**
+   * Set the queue name. Called by the Queue class during initialization.
+   * @internal
+   */
+  setQueueName(queueName: string): void {
     this.queueName = queueName
   }
 
@@ -16,7 +20,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   abstract addJob<TJobPayload>(
     job: Omit<BaseJob<TJobPayload>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload>>
-  abstract updateJobStatus(id: string, status: JobStatus, error?: string): Promise<void>
+  abstract updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void>
   abstract updateJobProgress(id: string, progress: number): Promise<void>
   abstract incrementJobAttempts(id: string): Promise<void>
   abstract getQueueStats(): Promise<QueueStats>
@@ -35,6 +39,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
 
     // First try to get delayed jobs that are ready
     const delayedJob = await this.getDelayedJobReady(now)
+
     if (delayedJob) {
       await this.updateJobStatus(delayedJob.id, "pending")
       return { ...delayedJob, status: "pending" }

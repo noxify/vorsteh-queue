@@ -9,7 +9,7 @@ describe("Job Progress", () => {
   let queue: Queue
 
   beforeEach(() => {
-    adapter = new MemoryQueueAdapter("test-queue")
+    adapter = new MemoryQueueAdapter()
     queue = new Queue(adapter, { name: "test-queue", processingInterval: 10, jobInterval: 1 })
   })
 

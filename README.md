@@ -1,13 +1,13 @@
 <div align="center">
   <img src="./assets/vorsteh-queue-logo-nobg.png" alt="Vorsteh Queue" height="200" />
   <h1>Vorsteh Queue</h1>
-  <p>A powerful, ORM-agnostic queue engine that works with any orm. Handle background jobs, scheduled tasks, and recurring processes with ease.</p>
+  <p>A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle background jobs, scheduled tasks, and recurring processes with ease.</p>
 </div>
 
 ## Features
 
 - **Type-safe**: Full TypeScript support with generic job payloads
-- **Multiple adapters**: Drizzle ORM (PostgreSQL + MariaDB/MySQL) and in-memory implementations
+- **Multiple adapters**: Drizzle ORM (PostgreSQL), Prisma ORM (PostgreSQL), and in-memory implementations
 - **Priority queues**: Numeric priority system (lower = higher priority)
 - **Delayed jobs**: Schedule jobs for future execution
 - **Recurring jobs**: Cron expressions and interval-based repetition
@@ -22,8 +22,8 @@
 .
 ├── packages/
 │   ├── core/                # Core queue logic and interfaces
-│   ├── adapter-drizzle/     # Drizzle ORM adapter (PostgreSQL + MariaDB/MySQL)
-│   └── adapter-prisma/      # Prisma adapter (coming soon)
+│   ├── adapter-drizzle/     # Drizzle ORM adapter (PostgreSQL)
+│   └── adapter-prisma/      # Prisma ORM adapter (PostgreSQL)
 ├── examples/                # Standalone usage examples
 │   ├── drizzle-pg/         # Drizzle + node-postgres
 │   ├── drizzle-postgres/   # Drizzle + postgres.js
@@ -53,40 +53,53 @@ pnpm add @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
 ### Basic Usage
 
 ```typescript
-// PostgreSQL
+// Drizzle ORM with PostgreSQL
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 
+interface EmailPayload {
+  to: string
+  subject: string
+  body: string
+}
+
+interface EmailResult {
+  messageId: string
+  sent: boolean
+}
+
 const pool = new Pool({ connectionString: "postgresql://..." })
 const db = drizzle(pool)
-const adapter = new PostgresQueueAdapter(db, "my-queue")
-const queue = new Queue(adapter, { name: "my-queue" })
+const queue = new Queue(new PostgresQueueAdapter(db), { name: "my-queue" })
 
-// MariaDB/MySQL
-import { drizzle } from "drizzle-orm/mysql2"
-import mysql from "mysql2/promise"
-import { MariaDBQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+// Prisma ORM with PostgreSQL
+import { PrismaClient } from "@prisma/client"
+import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
 
-const connection = await mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "password",
-  database: "queue_db",
-})
-const db = drizzle(connection, { mode: "default" })
-const adapter = new MariaDBQueueAdapter(db, "my-queue")
-const queue = new Queue(adapter, { name: "my-queue" })
+const prisma = new PrismaClient()
+const queue = new Queue(new PostgresPrismaQueueAdapter(prisma), { name: "my-queue" })
 
 // Register job handlers
-queue.register("send-email", async (payload: { to: string; subject: string }) => {
-  // Send email logic
-  return { sent: true }
+queue.register<EmailPayload, EmailResult>("send-email", async (job) => {
+  console.log(`Sending email to ${job.payload.to}`)
+  
+  // Send email logic here
+  await sendEmail(job.payload)
+  
+  return { 
+    messageId: "msg_123", 
+    sent: true 
+  }
 })
 
 // Add jobs
-await queue.add("send-email", { to: "user@example.com", subject: "Welcome!" })
+await queue.add("send-email", { 
+  to: "user@example.com", 
+  subject: "Welcome!", 
+  body: "Welcome to our service!" 
+})
 await queue.add(
   "send-email",
   { to: "admin@example.com", subject: "Report" },

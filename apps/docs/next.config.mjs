@@ -33,6 +33,13 @@ const nextConfig = {
   trailingSlash: true,
   poweredByHeader: false,
   pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
+  /** Enables hot reloading for local packages without a build step */
+  transpilePackages: [
+    "@vorsteh-queue/core",
+    "@vorsteh-queue/adapter-drizzle",
+    "@vorsteh-queue/adapter-prisma",
+    "create-vorsteh-queue",
+  ],
   eslint: {
     ignoreDuringBuilds: true,
   },

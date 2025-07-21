@@ -1,6 +1,15 @@
 // Using built-in TypeScript utility instead of type-fest
 type Simplify<T> = { [K in keyof T]: T[K] } & {}
 
+/**
+ * Serialized error format for consistent error storage and handling.
+ */
+export interface SerializedError {
+  name: string
+  message: string
+  stack?: string
+}
+
 /** Job processing status */
 export type JobStatus = "pending" | "processing" | "completed" | "failed" | "delayed"
 
@@ -38,7 +47,7 @@ export interface BaseJob<TJobPayload = unknown> {
   /** When the job failed permanently */
   readonly failedAt?: Date
   /** Error message if the job failed */
-  readonly error?: string
+  readonly error?: SerializedError
   /** Current progress percentage (0-100) */
   readonly progress?: number
   /** Cron expression for recurring jobs */
@@ -149,7 +158,7 @@ export interface QueueAdapter {
     job: Omit<BaseJob<TJobPayload>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload>>
   getNextJob(): Promise<BaseJob | null>
-  updateJobStatus(id: string, status: JobStatus, error?: string): Promise<void>
+  updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void>
   updateJobProgress(id: string, progress: number): Promise<void>
   incrementJobAttempts(id: string): Promise<void>
 
@@ -159,6 +168,9 @@ export interface QueueAdapter {
   size(): Promise<number>
 
   transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult>
+
+  /** @internal Set the queue name for job isolation */
+  setQueueName?(queueName: string): void
 }
 
 /**
@@ -172,7 +184,7 @@ export interface QueueEvents {
   /** Emitted when a job completes successfully */
   "job:completed": BaseJob
   /** Emitted when a job fails permanently (includes error message) */
-  "job:failed": Simplify<BaseJob & { error: string }>
+  "job:failed": Simplify<BaseJob & { error: SerializedError }>
   /** Emitted when job progress is updated (includes current progress) */
   "job:progress": Simplify<BaseJob & { progress: number }>
   /** Emitted when a job is retried after failure */

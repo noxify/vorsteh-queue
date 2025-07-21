@@ -28,8 +28,7 @@ interface CleanupResult {
 }
 
 // Queue setup
-const adapter = new PostgresQueueAdapter(db, "advanced-queue")
-const queue = new Queue(adapter, { 
+const queue = new Queue(new PostgresQueueAdapter(db), { 
   name: "advanced-queue",
   removeOnComplete: 20,
   removeOnFail: 10

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import type React from "react"
+import { PackageInstallScript, ThemeStyles } from "renoun/components"
 
 import "./globals.css"
 
@@ -8,15 +9,17 @@ import { ThemeProvider } from "~/components/theme-provider"
 export const metadata: Metadata = {
   title: "Vorsteh Queue - Reliable Job Queue for Modern Applications",
   description:
-    "A powerful, ORM-agnostic queue engine that works with any database. Handle background jobs, scheduled tasks, and recurring processes with ease.",
+    "A powerful, ORM-agnostic queue engine for PostgreSQL 12+, MariaDB, and MySQL. Handle background jobs, scheduled tasks, and recurring processes with ease.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <ThemeStyles />
+        <PackageInstallScript />
         <ThemeProvider
-          attribute="class"
+          attribute={["class", "data-theme"]}
           defaultTheme="light"
           enableSystem
           disableTransitionOnChange

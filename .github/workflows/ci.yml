@@ -37,6 +37,9 @@ jobs:
       - name: Setup
         uses: ./.github/setup
 
+      - name: Generate prisma client
+        run: pnpm -F adapter-prisma prisma:generate
+
       - name: Lint
         run: pnpm lint
 
@@ -58,6 +61,9 @@ jobs:
 
       - name: Setup
         uses: ./.github/setup
+
+      - name: Generate prisma client
+        run: pnpm -F adapter-prisma prisma:generate
 
       - name: Typecheck
         run: pnpm typecheck
@@ -86,7 +92,9 @@ jobs:
         run: pnpm install
 
       - name: Build packages
-        run: pnpm --filter "./packages/*" build
+        run: |
+          pnpm -F adapter-prisma prisma:generate
+          pnpm --filter "./packages/*" build
 
       - name: Test Core Package
         run: pnpm test:core
@@ -94,8 +102,10 @@ jobs:
       - name: Test Drizzle PostgreSQL (PGlite)
         run: pnpm test:drizzle-postgres
 
-      - name: Test Drizzle MariaDB (Testcontainers)
-        run: pnpm test:drizzle-mariadb
+      - name: Test Prisma (Testcontainers - Postgres)
+        run: |
+          pnpm -F adapter-prisma prisma:generate
+          pnpm test:prisma-postgres
         env:
           # Ensure Docker is available for Testcontainers
           TESTCONTAINERS_RYUK_DISABLED: true
@@ -110,7 +120,10 @@ jobs:
       - name: Setup
         uses: ./.github/setup
 
+      - name: Generate prisma client
+        run: pnpm -F adapter-prisma prisma:generate
+
       - name: Build
-        run: pnpm --filter "./packages/*" build
+        run: pnpm build:pkg
 
       - run: pnpx pkg-pr-new publish ./packages/*

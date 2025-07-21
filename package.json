@@ -11,9 +11,12 @@
     "url": "https://github.com/noxify"
   },
   "scripts": {
+    "dev": "turbo dev --filter='@vorsteh-queue/*'",
     "dev:docs": "turbo dev --filter docs",
     "preview": "turbo run start -F docs...",
     "build": "turbo build",
+    "build:docs": "turbo build --filter docs",
+    "build:pkg": "turbo build --filter='@vorsteh-queue/*'",
     "clean": "git clean -xdf node_modules",
     "clean:cache": "turbo clean:cache",
     "clean:workspaces": "turbo clean",
@@ -30,9 +33,9 @@
     "test:ui": "vitest --ui",
     "test:core": "pnpm -F core test",
     "test:drizzle-postgres": "pnpm -F adapter-drizzle test:postgres",
-    "test:drizzle-mariadb": "pnpm -F adapter-drizzle test:mariadb",
+    "test:prisma-postgres": "pnpm -F adapter-prisma test:postgres",
     "cs": "changeset",
-    "ci:publish": "pnpm build && pnpm publish -r --access public --publish-branch main && pnpm changeset tag",
+    "ci:publish": "pnpm build:pkg && pnpm publish -r --access public --publish-branch main && pnpm changeset tag",
     "ci:version": "pnpm changeset version && pnpm install --no-frozen-lockfile && git add ."
   },
   "devDependencies": {

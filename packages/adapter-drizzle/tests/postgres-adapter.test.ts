@@ -1,5 +1,5 @@
 import { PGlite } from "@electric-sql/pglite"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/pglite"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
@@ -25,7 +25,8 @@ describe("PostgresQueueAdapter", () => {
     const { apply } = await pushSchema(schema, db as never)
     await apply()
 
-    adapter = new PostgresQueueAdapter(db, "test-queue")
+    adapter = new PostgresQueueAdapter(db)
+    adapter.setQueueName("test-queue")
     await adapter.connect()
   })
 
@@ -72,8 +73,6 @@ describe("PostgresQueueAdapter", () => {
         maxAttempts: 3,
         processAt: new Date(),
       })
-
-      // TODO: Check later how to fix it
 
       const job = await adapter.getNextJob()
       expect(job).toBeTruthy()
@@ -142,7 +141,6 @@ describe("PostgresQueueAdapter", () => {
       })
 
       // Should not get delayed job that's not ready
-      // TODO: Check later how to fix it
 
       const job1 = await adapter.getNextJob()
       expect(job1).toBeNull()
@@ -158,8 +156,6 @@ describe("PostgresQueueAdapter", () => {
         maxAttempts: 3,
         processAt: pastTime,
       })
-
-      // TODO: Check later how to fix it
 
       const job2 = await adapter.getNextJob()
       expect(job2).toBeTruthy()
@@ -202,5 +198,66 @@ describe("PostgresQueueAdapter", () => {
       expect(job.repeatLimit).toBe(5)
       expect(job.repeatCount).toBe(2)
     })
+  })
+})
+
+describe("PostgresQueueAdapter - Timezone Handling", () => {
+  let db: ReturnType<typeof drizzle<typeof schema>>
+  let adapter: PostgresQueueAdapter
+  let client: PGlite
+
+  beforeEach(async () => {
+    client = new PGlite()
+    db = drizzle(client, { schema })
+
+    const { apply } = await pushSchema(schema, db as never)
+    await apply()
+
+    adapter = new PostgresQueueAdapter(db)
+    adapter.setQueueName("timezone-test-queue")
+    await adapter.connect()
+  })
+
+  afterEach(async () => {
+    await adapter.disconnect()
+    await client.close()
+  })
+
+  it("should handle UTC timestamps correctly regardless of database timezone", async () => {
+    // Set database timezone to something other than UTC
+    await db.execute(sql`SET timezone = 'America/New_York'`)
+
+    const testDate = new Date("2025-01-15T12:00:00.000Z") // Explicit UTC time
+
+    const job = await adapter.addJob({
+      name: "timezone-test",
+      payload: { test: "timezone" },
+      status: "pending",
+      priority: 2,
+      attempts: 0,
+      maxAttempts: 3,
+      processAt: testDate,
+    })
+
+    // Retrieve the job and check the timestamp
+    const [retrieved] = await db
+      .select()
+      .from(schema.queueJobs)
+      .where(eq(schema.queueJobs.id, job.id))
+
+    // The processAt should match our input UTC time
+    expect(retrieved?.processAt.getTime()).toBe(testDate.getTime())
+
+    // Update job status and check timestamp consistency
+    await adapter.updateJobStatus(job.id, "processing")
+
+    const [updated] = await db
+      .select()
+      .from(schema.queueJobs)
+      .where(eq(schema.queueJobs.id, job.id))
+
+    // processedAt should be a valid UTC timestamp
+    expect(updated?.processedAt).toBeTruthy()
+    expect(updated?.processedAt?.getTime()).toBeGreaterThan(testDate.getTime())
   })
 })

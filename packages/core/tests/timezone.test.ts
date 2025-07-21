@@ -8,7 +8,7 @@ describe("UTC-First Timezone Support", () => {
   let queue: Queue
 
   beforeEach(() => {
-    adapter = new MemoryQueueAdapter("test-queue")
+    adapter = new MemoryQueueAdapter()
     queue = new Queue(adapter, { name: "test-queue" })
   })
 

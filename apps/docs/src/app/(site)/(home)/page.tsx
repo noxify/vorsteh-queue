@@ -1,12 +1,10 @@
-import Image from "next/image"
-import Link from "next/link"
+import { SiGithub as GithubIcon } from "@icons-pack/react-simple-icons"
 import {
   Calendar,
   CheckCircle,
   Clock,
   Code,
   Database,
-  Github,
   Heart,
   Info,
   Play,
@@ -16,76 +14,47 @@ import {
   Users,
   Zap,
 } from "lucide-react"
+import { CodeBlock } from "renoun/components"
 
-import { ThemeToggle } from "~/components/theme-toggle"
-import { Badge } from "~/components/ui/badge"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
 
+const example_snippet = `
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+interface TEmailPayload {
+  to: string
+  subject: string
+}
+
+interface TEmailResult {
+  sent: boolean
+}
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "email-queue" })
+
+queue.register<TEmailPayload, TEmailResult>("send-email", async ({ payload }) => {
+  // Send email logic here
+  return { sent: true }
+})
+
+await queue.add("send-email", { to: "user@example.com", subject: "Welcome!" })
+queue.start()
+`
+
 export default function Home() {
   return (
-    <div className="bg-cream-50 dark:bg-dark-200 min-h-screen">
-      {/* Header */}
-      <header className="border-cream-200 dark:border-dark-100 bg-cream-50/80 dark:bg-dark-200/80 sticky top-0 z-50 border-b backdrop-blur-sm">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center space-x-3">
-            <Image
-              src="/vorsteh-queue-logo.svg"
-              alt="Vorsteh Queue Logo"
-              width={40}
-              height={40}
-              className="rounded-lg"
-            />
-            <span className="text-dark-200 dark:text-dark-900 text-xl font-bold">
-              Vorsteh Queue
-            </span>
-          </div>
-          <nav className="hidden items-center space-x-6 md:flex">
-            <Link
-              href="#features"
-              className="text-dark-200 dark:text-dark-900 hover:text-orange-primary transition-colors"
-            >
-              Features
-            </Link>
-            <Link
-              href="#why"
-              className="text-dark-200 dark:text-dark-900 hover:text-orange-primary transition-colors"
-            >
-              Why Choose Us
-            </Link>
-            <Link
-              href="#about" // New link for About section
-              className="text-dark-200 dark:text-dark-900 hover:text-orange-primary transition-colors"
-            >
-              About
-            </Link>
-            <Link
-              href="#opensource"
-              className="text-dark-200 dark:text-dark-900 hover:text-orange-primary transition-colors"
-            >
-              Open Source
-            </Link>
-            <ThemeToggle />
-            <Button className="bg-orange-darker hover:bg-orange-accessible text-white">
-              Get Started
-            </Button>
-          </nav>
-        </div>
-      </header>
-
+    <>
       {/* Hero Section */}
       <section className="px-4 py-20">
         <div className="container mx-auto">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="space-y-6">
-              <Badge className="bg-badge-bg dark:bg-badge-dark-bg text-badge-text dark:text-badge-dark-text border-orange-primary/20">
-                Database Agnostic Queue Engine
-              </Badge>
               <h1 className="text-dark-200 dark:text-dark-900 text-4xl font-bold leading-tight md:text-6xl">
                 Reliable Job Queue for Modern Applications
               </h1>
               <p className="text-fur-500 dark:text-dark-800 text-xl leading-relaxed">
-                A powerful, ORM-agnostic queue engine that works with any database. Handle
+                A powerful, ORM-agnostic queue engine for PostgreSQL 12+, MariaDB, and MySQL. Handle
                 background jobs, scheduled tasks, and recurring processes with ease.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
@@ -101,49 +70,21 @@ export default function Home() {
                   variant="outline"
                   className="border-orange-darker dark:border-orange-light text-orange-darker dark:text-orange-light hover:bg-orange-darker dark:hover:bg-orange-light dark:hover:text-dark-200 border-2 bg-transparent hover:text-white"
                 >
-                  <Github className="mr-2 h-5 w-5" />
+                  <GithubIcon className="mr-2 h-5 w-5" />
                   View on GitHub
                 </Button>
               </div>
             </div>
 
             {/* Code Example */}
-            <div className="bg-dark-100 text-cream-50 overflow-x-auto rounded-lg border p-6 font-mono text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+            <CodeBlock language="ts">{example_snippet}</CodeBlock>
+            <div className="overflow-x-auto rounded-lg border p-6 font-mono text-sm shadow-lg dark:border-slate-700">
               <div className="mb-4 flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-red-500"></div>
                 <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
                 <div className="h-3 w-3 rounded-full bg-green-500"></div>
                 <span className="text-cream-200 ml-2 dark:text-slate-300">queue-example.ts</span>
               </div>
-              <pre className="text-cream-50 dark:text-slate-100">
-                {`import { VorstehQueue } from 'vorsteh-queue';
-
-// Initialize with any database
-const queue = new VorstehQueue({
-  adapter: 'prisma', // or 'drizzle', 'typeorm'
-  connection: prisma
-});
-
-// Add a job
-await queue.add('send-email', {
-  to: 'user@example.com',
-  subject: 'Welcome!'
-}, {
-  delay: 5000,
-  attempts: 3
-});
-
-// Process jobs
-queue.process('send-email', async (job) => {
-  await sendEmail(job.data);
-});
-
-// Schedule recurring jobs
-await queue.repeat('daily-report', 
-  { type: 'summary' }, 
-  { cron: '0 9 * * *' }
-);`}
-              </pre>
             </div>
           </div>
         </div>
@@ -424,7 +365,7 @@ await queue.repeat('daily-report',
             </div>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Button size="lg" className="bg-orange-darker hover:bg-orange-accessible text-white">
-                <Github className="mr-2 h-5 w-5" />
+                <GithubIcon className="mr-2 h-5 w-5" />
                 Star on GitHub
               </Button>
               <Button
@@ -441,93 +382,6 @@ await queue.repeat('daily-report',
       </section>
 
       {/* Footer */}
-      <footer className="bg-dark-100 dark:bg-dark-300 text-cream-50 dark:border-dark-100 border-t px-4 py-12">
-        <div className="container mx-auto">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <Image
-                  src="/vorsteh-queue-logo.svg"
-                  alt="Vorsteh Queue Logo"
-                  width={32}
-                  height={32}
-                  className="rounded"
-                />
-                <span className="text-lg font-bold">Vorsteh Queue</span>
-              </div>
-              <p className="text-cream-200 text-sm">
-                The reliable, database-agnostic queue engine for modern applications.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="mb-4 font-semibold">Product</h4>
-              <ul className="text-cream-200 space-y-2 text-sm">
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Documentation
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Examples
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Changelog
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 font-semibold">Community</h4>
-              <ul className="text-cream-200 space-y-2 text-sm">
-                <li>
-                  <a
-                    href="https://github.com/noxify/vorsteh-queue"
-                    target="_blank"
-                    className="hover:text-orange-primary transition-colors"
-                  >
-                    GitHub
-                  </a>
-                </li>
-
-                <li>
-                  <Link href="#" className="hover:text-orange-primary transition-colors">
-                    Contributing
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 font-semibold">Support</h4>
-              <ul className="text-cream-200 space-y-2 text-sm">
-                <li>
-                  <a
-                    href="https://github.com/noxify/vorsteh-queue/issues"
-                    target="_blank"
-                    className="hover:text-orange-primary transition-colors"
-                  >
-                    Bug Reports
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-fur-400 dark:border-dark-100 text-cream-200 mt-8 border-t pt-8 text-center text-sm">
-            <p>&copy; {new Date().getFullYear()} Vorsteh Queue. Released under the MIT License.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   )
 }

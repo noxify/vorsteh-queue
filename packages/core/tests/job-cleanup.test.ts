@@ -7,7 +7,7 @@ describe("Job Cleanup", () => {
   let queue: Queue
 
   beforeEach(() => {
-    adapter = new MemoryQueueAdapter("test-queue")
+    adapter = new MemoryQueueAdapter()
     vi.spyOn(adapter, "clearJobs").mockResolvedValue(0)
     vi.spyOn(adapter, "cleanupJobs").mockResolvedValue(0)
   })

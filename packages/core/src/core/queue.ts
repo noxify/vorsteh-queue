@@ -9,9 +9,11 @@ import type {
   QueueConfig,
   QueueEvents,
   QueueStats,
+  SerializedError,
 } from "../../types"
+import { serializeError } from "../utils/error"
 import { calculateDelay, waitFor } from "../utils/helpers"
-import { calculateNextRun, nowUtc, parseCron, toUtcDate } from "../utils/scheduler"
+import { asUtc, calculateNextRun, parseCron, toUtcDate } from "../utils/scheduler"
 import { createJobWrapper } from "./job-wrapper"
 
 type EventListener<TEventData> = (data: TEventData) => void | Promise<void>
@@ -55,6 +57,11 @@ export class Queue {
       processingInterval: 100,
       jobInterval: 10,
       ...config,
+    }
+
+    // Set the queue name on the adapter
+    if ("setQueueName" in adapter && typeof adapter.setQueueName === "function") {
+      adapter.setQueueName(this.config.name)
     }
   }
 
@@ -120,7 +127,7 @@ export class Queue {
   ): Promise<BaseJob<TJobPayload>> {
     const jobOptions = { ...this.config.defaultJobOptions, ...options }
     const timezone = jobOptions.timezone ?? "UTC"
-    const now = nowUtc()
+    const now = new Date()
 
     let processAt: Date
     let status: JobStatus = "pending"
@@ -130,14 +137,14 @@ export class Queue {
       processAt = toUtcDate(jobOptions.runAt, timezone)
       status = processAt > now ? "delayed" : "pending"
     } else if (jobOptions.delay) {
-      processAt = new Date(now.getTime() + jobOptions.delay)
+      processAt = asUtc(new Date(now.getTime() + jobOptions.delay))
       status = "delayed"
     } else if (jobOptions.cron) {
       // Parse cron in timezone, get UTC result
       processAt = parseCron(jobOptions.cron, timezone, now)
       status = "delayed"
     } else {
-      processAt = now
+      processAt = asUtc(now)
     }
 
     const job = await this.adapter.addJob({
@@ -303,6 +310,7 @@ export class Queue {
       }
 
       let queueSize = await this.adapter.size()
+
       if (queueSize === 0) {
         await waitFor(processingInterval)
         continue
@@ -342,7 +350,10 @@ export class Queue {
   private async processJob(job: BaseJob): Promise<void> {
     const handler = this.handlers.get(job.name)
     if (!handler) {
-      await this.failJob(job, `No handler registered for job: ${job.name}`)
+      await this.failJob(
+        job,
+        serializeError(new Error(`No handler registered for job: ${job.name}`)),
+      )
       return
     }
 
@@ -372,16 +383,16 @@ export class Queue {
   }
 
   private async handleJobError(job: BaseJob, error: unknown): Promise<void> {
-    const errorMessage = error instanceof Error ? error.message : String(error)
+    const serializedError = serializeError(error)
 
     if (job.attempts + 1 < job.maxAttempts) {
-      await this.retryJob(job, errorMessage)
+      await this.retryJob(job, serializedError)
     } else {
-      await this.failJob(job, errorMessage)
+      await this.failJob(job, serializedError)
     }
   }
 
-  private async retryJob(job: BaseJob, _error: string): Promise<void> {
+  private async retryJob(job: BaseJob, _error: unknown): Promise<void> {
     await this.adapter.incrementJobAttempts(job.id)
 
     const delay = Math.min(calculateDelay(job.attempts), this.config.maxRetryDelay)
@@ -392,14 +403,14 @@ export class Queue {
     this.emit("job:retried", { ...job, attempts: job.attempts + 1, processAt })
   }
 
-  private async failJob(job: BaseJob, error: string): Promise<void> {
+  private async failJob(job: BaseJob, error: unknown): Promise<void> {
     await this.adapter.updateJobStatus(job.id, "failed", error)
     this.emit("job:failed", {
       ...job,
       status: "failed",
       error,
       failedAt: new Date(),
-    } as Simplify<BaseJob & { error: string }>)
+    } as Simplify<BaseJob & { error: SerializedError }>)
 
     // Handle job cleanup
     await this.cleanupFailedJob()

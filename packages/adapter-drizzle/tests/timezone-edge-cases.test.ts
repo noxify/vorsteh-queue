@@ -20,7 +20,8 @@ describe("Timezone Edge Cases", () => {
     const { apply } = await pushSchema(schema, db as never)
     await apply()
 
-    adapter = new PostgresQueueAdapter(db, "timezone-edge-test")
+    adapter = new PostgresQueueAdapter(db)
+    adapter.setQueueName("timezone-edge-test")
     await adapter.connect()
   })
 
