@@ -1,0 +1,24 @@
+name: Deploy production docs
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - "changeset-release/main"
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/setup
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Deploy to Vercel
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
