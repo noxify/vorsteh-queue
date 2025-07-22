@@ -1,4 +1,4 @@
-name: Deploy production docs
+name: Deploy docs
 
 on:
   pull_request:
@@ -6,11 +6,16 @@ on:
       - closed
     branches:
       - "changeset-release/main"
+  push:
+    branches:
+      - main
 
 jobs:
-  deploy-production:
+  deploy:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
 
     steps:
       - uses: actions/checkout@v4
@@ -20,8 +25,17 @@ jobs:
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
-      - name: Deploy to Vercel
+        
+      - name: Deploy to Production
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
         run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          
+      - name: Deploy to Preview
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: vercel --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
