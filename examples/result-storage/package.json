@@ -1,0 +1,22 @@
+{
+  "name": "result-storage-example",
+  "version": "1.0.0",
+  "description": "demonstrating job result storage and retrieval with progress tracking using Drizzle ORM with PGlite (embedded PostgreSQL)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.5",
+    "@vorsteh-queue/adapter-drizzle": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "drizzle-orm": "^0.44.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.4",
+    "tsx": "4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

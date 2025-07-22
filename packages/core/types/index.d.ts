@@ -20,8 +20,9 @@ export type JobPriority = number
  * Base job interface containing all job metadata and payload.
  *
  * @template TJobPayload - Type of the job payload
+ * @template TJobResult - Type of the job result
  */
-export interface BaseJob<TJobPayload = unknown> {
+export interface BaseJob<TJobPayload = unknown, TJobResult = unknown> {
   /** Unique identifier for the job */
   readonly id: string
   /** Job type name used for handler registration */
@@ -48,6 +49,8 @@ export interface BaseJob<TJobPayload = unknown> {
   readonly failedAt?: Date
   /** Error message if the job failed */
   readonly error?: SerializedError
+  /** Result returned by the job handler (only available for completed jobs) */
+  readonly result?: TJobResult
   /** Current progress percentage (0-100) */
   readonly progress?: number
   /** Cron expression for recurring jobs */
@@ -58,6 +61,8 @@ export interface BaseJob<TJobPayload = unknown> {
   readonly repeatLimit?: number
   /** Current repetition count for recurring jobs */
   readonly repeatCount?: number
+  /** Job timeout in milliseconds or false to disable */
+  readonly timeout?: number | false
 }
 
 /**
@@ -81,8 +86,8 @@ export interface JobOptions {
   }
   /** Maximum number of retry attempts (default: 3) */
   readonly maxAttempts?: number
-  /** Job timeout in milliseconds (default: 30000) */
-  readonly timeout?: number
+  /** Job timeout in milliseconds or false to disable (default: 30000) */
+  readonly timeout?: number | false
   /** Timezone for job scheduling (default: UTC) */
   readonly timezone?: string
 }
@@ -106,7 +111,7 @@ export interface QueueConfig {
   /** Remove failed jobs: true = immediate, false = keep all, number = keep N jobs (default: 50) */
   readonly removeOnFail?: boolean | number
   /** Interval in milliseconds between queue polling cycles (default: 100) */
-  readonly processingInterval?: number
+  readonly pollInterval?: number
   /** Delay in milliseconds between processing individual jobs (default: 10) */
   readonly jobInterval?: number
 }
@@ -134,15 +139,17 @@ export interface QueueStats {
  * @template TJobResult - Type of return value
  */
 export type JobHandler<TJobPayload = unknown, TJobResult = unknown> = (
-  job: JobWithProgress<TJobPayload>,
+  job: JobWithProgress<TJobPayload, TJobResult>,
 ) => Promise<TJobResult>
 
 /**
  * Job interface with progress update capability.
  *
  * @template TJobPayload - Type of the job payload
+ * @template TJobResult - Type of the job result
  */
-export interface JobWithProgress<TJobPayload = unknown> extends BaseJob<TJobPayload> {
+export interface JobWithProgress<TJobPayload = unknown, TJobResult = unknown>
+  extends BaseJob<TJobPayload, TJobResult> {
   updateProgress(value: number): Promise<void>
 }
 
@@ -154,11 +161,11 @@ export interface QueueAdapter {
   connect(): Promise<void>
   disconnect(): Promise<void>
 
-  addJob<TJobPayload>(
-    job: Omit<BaseJob<TJobPayload>, "id" | "createdAt">,
-  ): Promise<BaseJob<TJobPayload>>
+  addJob<TJobPayload, TJobResult = unknown>(
+    job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
+  ): Promise<BaseJob<TJobPayload, TJobResult>>
   getNextJob(): Promise<BaseJob | null>
-  updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void>
+  updateJobStatus(id: string, status: JobStatus, error?: unknown, result?: unknown): Promise<void>
   updateJobProgress(id: string, progress: number): Promise<void>
   incrementJobAttempts(id: string): Promise<void>
 

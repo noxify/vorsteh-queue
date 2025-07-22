@@ -15,7 +15,9 @@ async function prepareTable() {
   let migrate
 
   try {
-    const schemaPathResult = await PrismaInternals.getSchemaWithPath()
+    const schemaPathResult = await PrismaInternals.getSchemaWithPath(
+      path.join(__dirname, "../prisma/schema.prisma"),
+    )
     if (!schemaPathResult.schemaPath) {
       // eslint-disable-next-line no-console
       console.error("No schema found")
@@ -33,6 +35,8 @@ async function prepareTable() {
 
     return { result: true }
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log({ error })
     return { result: false, error }
   } finally {
     void migrate?.stop()
@@ -248,86 +252,137 @@ describe("PostgresPrismaQueueAdapter", () => {
       expect(job.repeatCount).toBe(2)
     })
   })
-})
 
-describe("PostgresPrismaQueueAdapter - Timezone Handling", () => {
-  let container: StartedTestContainer
-  let prisma: PrismaClient
-  let adapter: PostgresPrismaQueueAdapter
+  describe("Timezone Handling", () => {
+    it("should handle UTC timestamps correctly regardless of database timezone", async () => {
+      const testDate = new Date("2025-01-15T12:00:00.000Z") // Explicit UTC time
 
-  beforeAll(async () => {
-    // Start PostgreSQL container
-    container = await new GenericContainer("postgres:15")
-      .withEnvironment({
-        POSTGRES_PASSWORD: "testpassword",
-        POSTGRES_USER: "testuser",
-        POSTGRES_DB: "testdb",
+      const job = await adapter.addJob({
+        name: "timezone-test",
+        payload: { test: "timezone" },
+        status: "pending",
+        priority: 2,
+        attempts: 0,
+        maxAttempts: 3,
+        processAt: testDate,
       })
-      .withExposedPorts(5432)
-      .withStartupTimeout(60000)
-      .start()
 
-    // Create Prisma client
-    const databaseUrl = `postgresql://testuser:testpassword@${container.getHost()}:${container.getMappedPort(5432)}/testdb`
-
-    vi.stubEnv("DATABASE_URL", databaseUrl)
-
-    const prismaAdapter = new PrismaPg({ connectionString: databaseUrl })
-    prisma = new PrismaClient({ adapter: prismaAdapter })
-
-    await prepareTable()
-  }, 120000)
-
-  beforeEach(async () => {
-    // Clean up before each test
-    await prisma.$executeRaw`DELETE FROM queue_jobs`
-
-    adapter = new PostgresPrismaQueueAdapter(prisma)
-    adapter.setQueueName("test-queue")
-    await adapter.connect()
-  })
-
-  afterAll(async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (prisma) {
-      await prisma.$disconnect()
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (container) {
-      await container.stop()
-    }
-  })
-
-  it("should handle UTC timestamps correctly regardless of database timezone", async () => {
-    const testDate = new Date("2025-01-15T12:00:00.000Z") // Explicit UTC time
-
-    const job = await adapter.addJob({
-      name: "timezone-test",
-      payload: { test: "timezone" },
-      status: "pending",
-      priority: 2,
-      attempts: 0,
-      maxAttempts: 3,
-      processAt: testDate,
-    })
-
-    // Retrieve the job and check the timestamp
-    const retrieved = await prisma.$queryRaw<{ process_at: Date }[]>`
+      // Retrieve the job and check the timestamp
+      const retrieved = await prisma.$queryRaw<{ process_at: Date }[]>`
       SELECT process_at FROM queue_jobs WHERE id = ${job.id}
     `
 
-    // The processAt should match our input UTC time
-    expect(retrieved[0]?.process_at.getTime()).toBe(testDate.getTime())
+      // The processAt should match our input UTC time
+      expect(retrieved[0]?.process_at.getTime()).toBe(testDate.getTime())
 
-    // Update job status and check timestamp consistency
-    await adapter.updateJobStatus(job.id, "processing")
+      // Update job status and check timestamp consistency
+      await adapter.updateJobStatus(job.id, "processing")
 
-    const updated = await prisma.$queryRaw<{ processed_at: Date | null }[]>`
+      const updated = await prisma.$queryRaw<{ processed_at: Date | null }[]>`
       SELECT processed_at FROM queue_jobs WHERE id = ${job.id}
     `
 
-    // processedAt should be a valid UTC timestamp
-    expect(updated[0]?.processed_at).toBeTruthy()
-    expect(updated[0]?.processed_at?.getTime()).toBeGreaterThan(testDate.getTime())
+      // processedAt should be a valid UTC timestamp
+      expect(updated[0]?.processed_at).toBeTruthy()
+      expect(updated[0]?.processed_at?.getTime()).toBeGreaterThan(testDate.getTime())
+    })
+  })
+
+  describe("result Handling", () => {
+    it("should store job result when job completes", async () => {
+      const job = await adapter.addJob({
+        name: "test-job",
+        payload: { input: "test" },
+        status: "pending",
+        priority: 2,
+        attempts: 0,
+        maxAttempts: 3,
+        processAt: new Date(),
+      })
+
+      const result = { success: true, output: "processed" }
+      await adapter.updateJobStatus(job.id, "completed", undefined, result)
+
+      const updated = await prisma.$queryRaw<
+        { status: string; result: unknown; completed_at: Date | null }[]
+      >`
+      SELECT status, result, completed_at FROM queue_jobs WHERE id = ${job.id}
+    `
+
+      expect(updated[0]?.status).toBe("completed")
+      expect(updated[0]?.result).toEqual(result)
+      expect(updated[0]?.completed_at).toBeTruthy()
+    })
+
+    it("should handle null/undefined results", async () => {
+      const job = await adapter.addJob({
+        name: "test-job",
+        payload: { input: "test" },
+        status: "pending",
+        priority: 2,
+        attempts: 0,
+        maxAttempts: 3,
+        processAt: new Date(),
+      })
+
+      await adapter.updateJobStatus(job.id, "completed", undefined, null)
+
+      const updated = await prisma.$queryRaw<{ result: unknown }[]>`
+      SELECT result FROM queue_jobs WHERE id = ${job.id}
+    `
+
+      expect(updated[0]?.result).toBeNull()
+    })
+
+    it("should preserve result in transformJob method", async () => {
+      const job = await adapter.addJob({
+        name: "test-job",
+        payload: { input: "test" },
+        status: "pending",
+        priority: 2,
+        attempts: 0,
+        maxAttempts: 3,
+        processAt: new Date(),
+      })
+
+      const result = { data: "test-result", count: 42 }
+      await adapter.updateJobStatus(job.id, "completed", undefined, result)
+
+      const nextJob = await adapter.getNextJob()
+      expect(nextJob).toBeNull() // No pending jobs
+
+      // Get the completed job directly from database
+      const dbJob = await prisma.$queryRaw<{ result: unknown }[]>`
+      SELECT result FROM queue_jobs WHERE id = ${job.id}
+    `
+
+      expect(dbJob[0]?.result).toEqual(result)
+    })
+
+    it("should not update result when not provided", async () => {
+      const job = await adapter.addJob({
+        name: "test-job",
+        payload: { input: "test" },
+        status: "pending",
+        priority: 2,
+        attempts: 0,
+        maxAttempts: 3,
+        processAt: new Date(),
+      })
+
+      // First update with result
+      const result = { initial: "result" }
+      await adapter.updateJobStatus(job.id, "processing", undefined, result)
+
+      // Second update without result (should preserve existing result)
+      await adapter.updateJobStatus(job.id, "completed")
+
+      const updated = await prisma.$queryRaw<{ result: unknown; status: string }[]>`
+      SELECT result, status FROM queue_jobs WHERE id = ${job.id}
+    `
+
+      expect(updated[0]?.result).toEqual(result)
+      expect(updated[0]?.status).toBe("completed")
+    })
   })
 })

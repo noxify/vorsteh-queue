@@ -396,6 +396,31 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
 
+  examples/result-storage:
+    dependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.3.5
+        version: 0.3.5
+      '@vorsteh-queue/adapter-drizzle':
+        specifier: workspace:*
+        version: link:../../packages/adapter-drizzle
+      '@vorsteh-queue/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      drizzle-orm:
+        specifier: ^0.44.3
+        version: 0.44.3(@electric-sql/pglite@0.3.5)(@prisma/client@6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.12.0(typescript@5.8.3))
+    devDependencies:
+      drizzle-kit:
+        specifier: ^0.31.4
+        version: 0.31.4
+      tsx:
+        specifier: 4.20.3
+        version: 4.20.3
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+
   packages/adapter-drizzle:
     dependencies:
       '@vorsteh-queue/core':

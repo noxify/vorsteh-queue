@@ -25,11 +25,6 @@
 │   ├── adapter-drizzle/     # Drizzle ORM adapter (PostgreSQL)
 │   └── adapter-prisma/      # Prisma ORM adapter (PostgreSQL)
 ├── examples/                # Standalone usage examples
-│   ├── drizzle-pg/         # Drizzle + node-postgres
-│   ├── drizzle-postgres/   # Drizzle + postgres.js
-│   ├── progress-tracking/  # Real-time progress updates
-│   ├── event-system/       # Comprehensive event monitoring
-│   └── pm2-workers/        # Production deployment with PM2
 └── tooling/                # Shared development tools
 ```
 
@@ -84,21 +79,22 @@ const queue = new Queue(new PostgresPrismaQueueAdapter(prisma), { name: "my-queu
 // Register job handlers
 queue.register<EmailPayload, EmailResult>("send-email", async (job) => {
   console.log(`Sending email to ${job.payload.to}`)
-  
+
   // Send email logic here
   await sendEmail(job.payload)
-  
-  return { 
-    messageId: "msg_123", 
-    sent: true 
+
+  // Return result - will be stored in job.result field
+  return {
+    messageId: "msg_123",
+    sent: true,
   }
 })
 
 // Add jobs
-await queue.add("send-email", { 
-  to: "user@example.com", 
-  subject: "Welcome!", 
-  body: "Welcome to our service!" 
+await queue.add("send-email", {
+  to: "user@example.com",
+  subject: "Welcome!",
+  body: "Welcome to our service!",
 })
 await queue.add(
   "send-email",
@@ -115,14 +111,7 @@ queue.start()
 
 ## Examples
 
-Check out the [examples directory](./examples/) for complete, runnable examples:
-
-- **[drizzle-pg](./examples/drizzle-pg/)** - Basic example using Drizzle ORM with node-postgres (pg)
-- **[drizzle-pglite](./examples/drizzle-pglite/)** - Zero-setup example using Drizzle ORM with PGlite (embedded PostgreSQL)
-- **[drizzle-postgres](./examples/drizzle-postgres/)** - Advanced example using Drizzle ORM with postgres.js and recurring jobs
-- **[event-system](./examples/event-system/)** - Comprehensive event monitoring and statistics using Drizzle ORM with postgres.js
-- **[pm2-workers](./examples/pm2-workers/)** - Manage multiple Vorsteh Queues with PM2 using Drizzle ORM with postgres.js
-- **[progress-tracking](./examples/progress-tracking/)** - Real-time job progress tracking using Drizzle ORM with postgres.js
+Check out the [examples directory](./examples/) for complete, runnable examples.
 
 > **Note**: All examples demonstrate the UTC-first timezone approach and automatic job cleanup features.
 
@@ -196,6 +185,49 @@ await queue.add("business-task", payload, {
 4. **Simple and predictable** - no runtime timezone complexity
 5. **Server timezone independent** - works consistently across environments
 
+## Job Results
+
+Job handlers can return results that are automatically stored and made available:
+
+```typescript
+interface ProcessResult {
+  processed: number
+  errors: string[]
+  duration: number
+}
+
+queue.register<{ items: string[] }, ProcessResult>("process-data", async (job) => {
+  const startTime = Date.now()
+  const errors: string[] = []
+  let processed = 0
+
+  for (const item of job.payload.items) {
+    try {
+      await processItem(item)
+      processed++
+    } catch (error) {
+      errors.push(`Failed to process ${item}: ${error.message}`)
+    }
+  }
+
+  // Return result - automatically stored in job.result field
+  return {
+    processed,
+    errors,
+    duration: Date.now() - startTime,
+  }
+})
+
+// Access results in events
+queue.on("job:completed", (job) => {
+  const result = job.result as ProcessResult
+  console.log(`Processed ${result.processed} items in ${result.duration}ms`)
+  if (result.errors.length > 0) {
+    console.warn(`Errors: ${result.errors.join(", ")}`)
+  }
+})
+```
+
 ## Progress Tracking
 
 ```typescript
@@ -235,6 +267,7 @@ queue.on("job:processing", (job) => {
 
 queue.on("job:completed", (job) => {
   console.log(`🎉 Job ${job.name} completed successfully`)
+  console.log(`📊 Result:`, job.result) // Access job result
 })
 
 queue.on("job:failed", (job) => {

@@ -2,6 +2,16 @@ import type { BaseJob, JobStatus, QueueStats } from "../../types"
 import { serializeError } from "../utils/error"
 import { BaseQueueAdapter } from "./base"
 
+/**
+ * In-memory queue adapter for testing and development.
+ * Stores all job data in memory - data is lost when the process exits.
+ *
+ * @example
+ * ```typescript
+ * const adapter = new MemoryQueueAdapter()
+ * const queue = new Queue(adapter, { name: "test-queue" })
+ * ```
+ */
 export class MemoryQueueAdapter extends BaseQueueAdapter {
   private jobs = new Map<string, BaseJob>()
   private connected = false
@@ -17,13 +27,13 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     return Promise.resolve()
   }
 
-  addJob<TJobPayload>(
-    job: Omit<BaseJob<TJobPayload>, "id" | "createdAt">,
-  ): Promise<BaseJob<TJobPayload>> {
+  addJob<TJobPayload, TJobResult = unknown>(
+    job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
+  ): Promise<BaseJob<TJobPayload, TJobResult>> {
     const id = this.generateId()
     const createdAt = new Date()
 
-    const newJob: BaseJob<TJobPayload> = {
+    const newJob: BaseJob<TJobPayload, TJobResult> = {
       ...job,
       id,
       createdAt,
@@ -31,13 +41,14 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       repeatEvery: job.repeatEvery,
       repeatLimit: job.repeatLimit,
       repeatCount: job.repeatCount ?? 0,
+      timeout: job.timeout,
     }
 
     this.jobs.set(id, newJob)
     return Promise.resolve(newJob)
   }
 
-  updateJobStatus(id: string, status: JobStatus, error?: unknown): Promise<void> {
+  updateJobStatus(id: string, status: JobStatus, error?: unknown, result?: unknown): Promise<void> {
     const job = this.jobs.get(id)
     if (!job) return Promise.resolve()
 
@@ -46,6 +57,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       ...job,
       status,
       error: error ? serializeError(error) : undefined,
+      result: result !== undefined ? result : job.result,
       processedAt: status === "processing" ? now : job.processedAt,
       completedAt: status === "completed" ? now : job.completedAt,
       failedAt: status === "failed" ? now : job.failedAt,

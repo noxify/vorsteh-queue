@@ -24,7 +24,9 @@ model QueueJob {
   completedAt  DateTime? @map("completed_at") @db.Timestamptz(6)
   failedAt     DateTime? @map("failed_at") @db.Timestamptz(6)
   error        Json?     @db.JsonB
+  result       Json?     @db.JsonB
   progress     Int?      @default(0)
+  timeout      Json?     @db.JsonB
   cron         String?   @db.VarChar(255)
   repeatEvery  Int?      @map("repeat_every")
   repeatLimit  Int?      @map("repeat_limit")

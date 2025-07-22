@@ -22,11 +22,13 @@ export const queueJobs = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
     failedAt: timestamp("failed_at", { withTimezone: true, mode: "date" }),
     error: jsonb("error"),
+    result: jsonb("result"),
     progress: integer("progress").default(0),
     cron: varchar("cron", { length: 255 }),
     repeatEvery: integer("repeat_every"),
     repeatLimit: integer("repeat_limit"),
     repeatCount: integer("repeat_count").default(0),
+    timeout: jsonb("timeout"),
   },
   (table) => [
     index("idx_queue_jobs_status_priority").on(
