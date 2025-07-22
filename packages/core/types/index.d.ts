@@ -61,6 +61,8 @@ export interface BaseJob<TJobPayload = unknown, TJobResult = unknown> {
   readonly repeatLimit?: number
   /** Current repetition count for recurring jobs */
   readonly repeatCount?: number
+  /** Job timeout in milliseconds or false to disable */
+  readonly timeout?: number | false
 }
 
 /**
@@ -84,8 +86,8 @@ export interface JobOptions {
   }
   /** Maximum number of retry attempts (default: 3) */
   readonly maxAttempts?: number
-  /** Job timeout in milliseconds (default: 30000) */
-  readonly timeout?: number
+  /** Job timeout in milliseconds or false to disable (default: 30000) */
+  readonly timeout?: number | false
   /** Timezone for job scheduling (default: UTC) */
   readonly timezone?: string
 }
@@ -109,7 +111,7 @@ export interface QueueConfig {
   /** Remove failed jobs: true = immediate, false = keep all, number = keep N jobs (default: 50) */
   readonly removeOnFail?: boolean | number
   /** Interval in milliseconds between queue polling cycles (default: 100) */
-  readonly processingInterval?: number
+  readonly pollInterval?: number
   /** Delay in milliseconds between processing individual jobs (default: 10) */
   readonly jobInterval?: number
 }

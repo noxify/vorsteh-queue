@@ -62,6 +62,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
         repeatEvery: job.repeatEvery ?? null,
         repeatLimit: job.repeatLimit ?? null,
         repeatCount: job.repeatCount ?? 0,
+        timeout: job.timeout,
       },
     })) as QueueJob
 
@@ -233,6 +234,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       repeatEvery: job.repeatEvery ?? undefined,
       repeatLimit: job.repeatLimit ?? undefined,
       repeatCount: job.repeatCount ?? 0,
+      timeout: job.timeout as number | false | undefined,
     }
   }
 }

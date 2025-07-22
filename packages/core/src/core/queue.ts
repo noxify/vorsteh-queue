@@ -54,7 +54,7 @@ export class Queue {
       maxRetryDelay: 30000,
       removeOnComplete: 100,
       removeOnFail: 50,
-      processingInterval: 100,
+      pollInterval: 100,
       jobInterval: 10,
       ...config,
     }
@@ -159,6 +159,7 @@ export class Queue {
       repeatEvery: jobOptions.repeat?.every,
       repeatLimit: jobOptions.repeat?.limit,
       repeatCount: 0,
+      timeout: jobOptions.timeout,
     })
 
     this.emit("job:added", job)
@@ -383,18 +384,18 @@ export class Queue {
    * @private
    */
   private async poll(): Promise<void> {
-    const { concurrency, processingInterval, jobInterval } = this.config
+    const { concurrency, pollInterval, jobInterval } = this.config
 
     while (!this.stopped) {
       if (this.isPaused || this.activeJobs >= concurrency) {
-        await waitFor(processingInterval)
+        await waitFor(pollInterval)
         continue
       }
 
       let queueSize = await this.adapter.size()
 
       if (queueSize === 0) {
-        await waitFor(processingInterval)
+        await waitFor(pollInterval)
         continue
       }
 
@@ -457,11 +458,17 @@ export class Queue {
     this.emit("job:processing", { ...job, status: "processing" })
 
     try {
-      const timeout = this.config.defaultJobOptions.timeout ?? 30000
-      const result = await Promise.race([
-        handler(createJobWrapper(job, this)),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Job timeout")), timeout)),
-      ])
+      const timeout = job.timeout ?? this.config.defaultJobOptions.timeout ?? 30000
+
+      const result =
+        timeout === false
+          ? await handler(createJobWrapper(job, this))
+          : await Promise.race([
+              handler(createJobWrapper(job, this)),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Job timeout")), timeout),
+              ),
+            ])
 
       await this.adapter.updateJobStatus(job.id, "completed", undefined, result)
       this.emit("job:completed", { ...job, status: "completed", completedAt: new Date(), result })

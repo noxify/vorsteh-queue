@@ -100,12 +100,12 @@ jobs:
         run: pnpm test:core
 
       - name: Test Drizzle PostgreSQL (PGlite)
-        run: pnpm test:drizzle-postgres
+        run: pnpm test:drizzle
 
       - name: Test Prisma (Testcontainers - Postgres)
         run: |
           pnpm -F adapter-prisma prisma:generate
-          pnpm test:prisma-postgres
+          pnpm test:prisma
         env:
           # Ensure Docker is available for Testcontainers
           TESTCONTAINERS_RYUK_DISABLED: true

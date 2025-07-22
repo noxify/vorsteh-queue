@@ -48,7 +48,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint .",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
-    "test:postgres": "vitest",
+    "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@vorsteh-queue/prettier-config",

@@ -28,6 +28,7 @@ export const queueJobs = pgTable(
     repeatEvery: integer("repeat_every"),
     repeatLimit: integer("repeat_limit"),
     repeatCount: integer("repeat_count").default(0),
+    timeout: jsonb("timeout"),
   },
   (table) => [
     index("idx_queue_jobs_status_priority").on(

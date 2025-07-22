@@ -10,7 +10,7 @@ describe("Job Progress", () => {
 
   beforeEach(() => {
     adapter = new MemoryQueueAdapter()
-    queue = new Queue(adapter, { name: "test-queue", processingInterval: 10, jobInterval: 1 })
+    queue = new Queue(adapter, { name: "test-queue", pollInterval: 10, jobInterval: 1 })
   })
 
   it("should support job progress updates", async () => {

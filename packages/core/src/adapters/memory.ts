@@ -41,6 +41,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       repeatEvery: job.repeatEvery,
       repeatLimit: job.repeatLimit,
       repeatCount: job.repeatCount ?? 0,
+      timeout: job.timeout,
     }
 
     this.jobs.set(id, newJob)

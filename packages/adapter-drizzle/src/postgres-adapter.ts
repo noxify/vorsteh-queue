@@ -65,6 +65,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
         repeatEvery: job.repeatEvery,
         repeatLimit: job.repeatLimit,
         repeatCount: job.repeatCount,
+        timeout: job.timeout,
       })
       .returning()
 
@@ -254,6 +255,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       repeatEvery: job.repeatEvery ?? undefined,
       repeatLimit: job.repeatLimit ?? undefined,
       repeatCount: job.repeatCount ?? 0,
+      timeout: job.timeout as number | false | undefined,
     }
   }
 }
