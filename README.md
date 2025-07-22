@@ -1,4 +1,3 @@
-<!-- test -->
 <div align="center">
   <img src="./assets/vorsteh-queue-logo-nobg.png" alt="Vorsteh Queue" height="200" />
   <h1>Vorsteh Queue</h1>
