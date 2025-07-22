@@ -29,7 +29,6 @@ const withMDX = createMDXPlugin({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "export",
-  distDir: "out",
   reactStrictMode: true,
   trailingSlash: true,
   poweredByHeader: false,
