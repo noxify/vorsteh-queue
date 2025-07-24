@@ -1,13 +1,32 @@
 import Image from "next/image"
 import Link from "next/link"
 
+const links = [
+  {
+    name: "Home",
+    target: "/",
+  },
+  {
+    name: "Docs",
+    target: "/docs",
+  },
+  {
+    name: "Examples",
+    target: "/docs/examples",
+  },
+  {
+    name: "Adapters",
+    target: "/docs/adapters",
+  },
+]
+
 export default function Footer() {
   return (
     <footer className="bg-dark-100 dark:bg-dark-300 text-cream-50 dark:border-dark-100 border-t px-4 py-12">
       <div className="container mx-auto">
-        <div className="grid gap-8 md:grid-cols-4">
+        <div className="px-4 py-4 md:mx-auto md:flex md:items-center md:justify-between">
           <div className="space-y-4">
-            <div className="flex items-center space-x-3">
+            <Link href={"/"} className="flex items-center space-x-3">
               <Image
                 src="/vorsteh-queue-logo.svg"
                 alt="Vorsteh Queue Logo"
@@ -16,73 +35,26 @@ export default function Footer() {
                 className="rounded"
               />
               <span className="text-lg font-bold">Vorsteh Queue</span>
-            </div>
-            <p className="text-cream-200 text-sm">
-              The reliable, database-agnostic queue engine for modern applications.
+            </Link>
+            <p className="text-cream-200 text-sm md:w-96">
+              A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle background jobs,
+              scheduled tasks, and recurring processes with ease.
             </p>
           </div>
 
-          <div>
-            <h4 className="mb-4 font-semibold">Product</h4>
-            <ul className="text-cream-200 space-y-2 text-sm">
-              <li>
-                <Link href="#" className="hover:text-orange-primary transition-colors">
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-orange-primary transition-colors">
-                  Documentation
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-orange-primary transition-colors">
-                  Examples
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-orange-primary transition-colors">
-                  Changelog
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-4 font-semibold">Community</h4>
-            <ul className="text-cream-200 space-y-2 text-sm">
-              <li>
-                <a
-                  href="https://github.com/noxify/vorsteh-queue"
-                  target="_blank"
+          <nav className="mt-4 items-center md:mt-0 md:flex">
+            <div className="items-center space-x-6 md:flex">
+              {links.map((ele, eleIdx) => (
+                <Link
+                  key={eleIdx}
+                  href={ele.target}
                   className="hover:text-orange-primary transition-colors"
                 >
-                  GitHub
-                </a>
-              </li>
-
-              <li>
-                <Link href="#" className="hover:text-orange-primary transition-colors">
-                  Contributing
+                  {ele.name}
                 </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-4 font-semibold">Support</h4>
-            <ul className="text-cream-200 space-y-2 text-sm">
-              <li>
-                <a
-                  href="https://github.com/noxify/vorsteh-queue/issues"
-                  target="_blank"
-                  className="hover:text-orange-primary transition-colors"
-                >
-                  Bug Reports
-                </a>
-              </li>
-            </ul>
-          </div>
+              ))}
+            </div>
+          </nav>
         </div>
 
         <div className="border-fur-400 dark:border-dark-100 text-cream-200 mt-8 border-t pt-8 text-center text-sm">

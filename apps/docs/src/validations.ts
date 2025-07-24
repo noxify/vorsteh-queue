@@ -1,5 +1,7 @@
 import z from "zod"
 
+import { allowedIcons } from "./lib/icon"
+
 export const frontmatterSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
@@ -22,3 +24,12 @@ export const docSchema = {
   frontmatter: frontmatterSchema,
   headings: headingSchema,
 }
+
+export const featuresSchema = z.object({
+  title: z.string(),
+  icon: z.enum(Object.keys(allowedIcons), {
+    error: (value) =>
+      `Icon "${String(value.input)}" is not specified. Please add it to the "icon.tsx".`,
+  }),
+  type: z.enum(["feature", "key_feature"]),
+})
