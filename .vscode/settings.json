@@ -11,8 +11,7 @@
     { "pattern": "tooling/*/" }
   ],
   "tailwindCSS.experimental.configFile": {
-    "apps/frontend/src/app/globals.css": ["apps/frontend/**"],
-    "packages/ui/src/styles/globals.css": ["packages/**", "apps/frontend/**"]
+    "apps/docs/src/app/globals.css": ["apps/docs/**"]
   },
   "tailwindCSS.emmetCompletions": true,
   "tailwindCSS.files.exclude": [

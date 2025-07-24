@@ -1,7 +1,18 @@
-// import type { z } from "zod"
-// import { EntryGroup, isDirectory, isFile } from "renoun/file-system"
+import { Directory, withSchema } from "renoun/file-system"
 
-// import type { frontmatterSchema } from "./validations"
+import { featuresSchema } from "./validations"
+
+export const features = new Directory({
+  path: "content/features",
+  include: "*.mdx",
+
+  loaders: {
+    mdx: withSchema(
+      { frontmatter: featuresSchema },
+      (path) => import(`../content/features/${path}.mdx`),
+    ),
+  },
+})
 // import { removeFromArray } from "./lib/utils"
 // import { generateDirectories } from "./sources"
 

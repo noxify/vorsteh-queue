@@ -55,7 +55,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
     "lint": "eslint .",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
@@ -71,7 +71,7 @@
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "eslint": "^9.31.0",
-    "rolldown": "^1.0.0-beta.1",
+    "rolldown": "1.0.0-beta.29",
     "rollup-plugin-delete": "^3.0.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
