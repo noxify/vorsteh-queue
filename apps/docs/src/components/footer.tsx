@@ -32,11 +32,10 @@ export default function Footer() {
                 alt="Vorsteh Queue Logo"
                 width={32}
                 height={32}
-                className="rounded"
               />
               <span className="text-lg font-bold">Vorsteh Queue</span>
             </Link>
-            <p className="text-sm text-cream-200 md:w-96">
+            <p className="text-sm text-cream-200 md:w-96 lg:w-xl">
               A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle background jobs,
               scheduled tasks, and recurring processes with ease.
             </p>

@@ -7,7 +7,8 @@ import { ExternalLinkIcon } from "lucide-react"
 import { CodeBlock, CodeInline, parseCodeProps, parsePreProps } from "renoun/components"
 
 import { Heading } from "~/components/heading"
-import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "~/components/shadcn/alert"
+import { Stepper, StepperItem } from "~/components/shadcn/stepper"
 import {
   Table,
   TableBody,
@@ -15,9 +16,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "~/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
-import { Stepper, StepperItem } from "./components/ui/stepper"
+} from "~/components/shadcn/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/shadcn/tabs"
 
 type AnchorProps = ComponentPropsWithoutRef<"a">
 

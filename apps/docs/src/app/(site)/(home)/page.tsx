@@ -5,10 +5,12 @@ import { CodeBlock, GitProviderLink, GitProviderLogo } from "renoun/components"
 
 import type { AllowedIcon } from "~/lib/icon"
 import { features } from "~/collections"
-import { Button } from "~/components/ui/button"
+import { Button } from "~/components/shadcn/button"
+import { buttonStyles } from "~/components/ui/button-styles"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
 import { asyncFilter } from "~/lib/async-filter"
 import { getIcon } from "~/lib/icon"
+import { cn } from "~/lib/utils"
 
 const example_snippet = `
 import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
@@ -110,7 +112,9 @@ export default async function Home() {
             </div>
 
             {/* Code Example */}
-            <CodeBlock language="ts">{example_snippet}</CodeBlock>
+            <CodeBlock language="ts" showToolbar={true} allowCopy={true} path="example-queue.ts">
+              {example_snippet}
+            </CodeBlock>
           </div>
         </div>
       </section>

@@ -2,8 +2,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { GitProviderLink, GitProviderLogo } from "renoun/components"
 
+import { Search } from "~/components/search"
+import { Button } from "~/components/shadcn/button"
 import { ThemeToggle } from "~/components/theme-toggle"
-import { Button } from "~/components/ui/button"
 
 const links = [
   {
@@ -48,10 +49,11 @@ export default function MainHeader() {
             ))}
           </div>
           <div className="ml-6 flex items-center space-x-1">
+            <Search />
             <ThemeToggle />
-            <Button asChild variant={"ghost"} size={"icon"}>
+            <Button variant={"ghost"} size={"icon"}>
               <GitProviderLink>
-                <GitProviderLogo width="1em" height="1em" />
+                <GitProviderLogo width="1.2rem" height="1.2rem" />
               </GitProviderLink>
             </Button>
           </div>
