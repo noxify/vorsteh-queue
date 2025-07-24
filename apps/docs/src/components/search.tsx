@@ -60,7 +60,7 @@ export function Search() {
 
     if (!useMockProvider) {
       if (window.pagefind) {
-        const search = await window.pagefind.search(value)
+        const search = await window.pagefind.debouncedSearch(value, {}, 300)
         const transformedResultList = await flattenSearchResult(search)
         setResults(transformedResultList)
       }
