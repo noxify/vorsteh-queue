@@ -29,7 +29,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "dev": "tsx src/index.ts",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },

@@ -22,7 +22,7 @@ const links = [
 
 export default function Footer() {
   return (
-    <footer className="bg-dark-100 dark:bg-dark-300 text-cream-50 dark:border-dark-100 border-t px-4 py-12">
+    <footer className="border-t bg-dark-100 px-4 py-12 text-cream-50 dark:border-dark-100 dark:bg-dark-300">
       <div className="container mx-auto">
         <div className="px-4 py-4 md:mx-auto md:flex md:items-center md:justify-between">
           <div className="space-y-4">
@@ -36,7 +36,7 @@ export default function Footer() {
               />
               <span className="text-lg font-bold">Vorsteh Queue</span>
             </Link>
-            <p className="text-cream-200 text-sm md:w-96">
+            <p className="text-sm text-cream-200 md:w-96">
               A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle background jobs,
               scheduled tasks, and recurring processes with ease.
             </p>
@@ -48,7 +48,7 @@ export default function Footer() {
                 <Link
                   key={eleIdx}
                   href={ele.target}
-                  className="hover:text-orange-primary transition-colors"
+                  className="transition-colors hover:text-orange-primary"
                 >
                   {ele.name}
                 </Link>
@@ -57,7 +57,7 @@ export default function Footer() {
           </nav>
         </div>
 
-        <div className="border-fur-400 dark:border-dark-100 text-cream-200 mt-8 border-t pt-8 text-center text-sm">
+        <div className="mt-8 border-t border-fur-400 pt-8 text-center text-sm text-cream-200 dark:border-dark-100">
           <p>&copy; {new Date().getFullYear()} Vorsteh Queue. Released under the MIT License.</p>
         </div>
       </div>

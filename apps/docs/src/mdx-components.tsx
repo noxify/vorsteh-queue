@@ -77,7 +77,7 @@ export function useMDXComponents() {
       <section>
         <div className="flex items-center justify-center">
           <div className="dot-background rounded-md border p-8 md:w-3/4 dark:border-gray-700">
-            <div className="bg-background border p-4">
+            <div className="border bg-background p-4">
               <Image
                 {...props}
                 width={0}
@@ -98,7 +98,7 @@ export function useMDXComponents() {
       <section>
         <div className="flex items-center justify-center">
           <div className="dot-background rounded-md border p-8 md:w-3/4 dark:border-gray-700">
-            <div className="bg-background border p-4">
+            <div className="border bg-background p-4">
               <Image
                 width={0}
                 height={0}
@@ -205,24 +205,24 @@ export function useMDXComponents() {
     },
 
     dt: ({ children }: { children?: ReactNode }) => {
-      return <dt className="text-primary text-sm font-medium leading-6">{children}</dt>
+      return <dt className="text-sm leading-6 font-medium text-primary">{children}</dt>
     },
 
     dd: ({ children }: { children?: ReactNode }) => {
       return (
-        <dd className="text-primary mt-1 text-sm leading-6 sm:col-span-2 sm:mt-0">{children}</dd>
+        <dd className="mt-1 text-sm leading-6 text-primary sm:col-span-2 sm:mt-0">{children}</dd>
       )
     },
 
     DescriptionList: ({ children }: { children: ReactNode }) => {
-      return <dl className="divide-accent-foreground/15 divide-y">{children}</dl>
+      return <dl className="divide-y divide-accent-foreground/15">{children}</dl>
     },
 
     DescriptionListItem: ({ label, children }: { label: string; children: ReactNode }) => {
       return (
         <div className="px-0 py-6 lg:grid lg:grid-cols-3 lg:gap-4">
-          <dt className="text-primary text-sm font-bold leading-6 lg:mt-0">{label}</dt>
-          <dd className="text-primary mt-1 text-sm leading-6 lg:col-span-2 lg:mt-0">{children}</dd>
+          <dt className="text-sm leading-6 font-bold text-primary lg:mt-0">{label}</dt>
+          <dd className="mt-1 text-sm leading-6 text-primary lg:col-span-2 lg:mt-0">{children}</dd>
         </div>
       )
     },

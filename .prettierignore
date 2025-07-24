@@ -1,2 +1,4 @@
 turbo/generators/scaffold/templates/**/*.hbs
 **/.cache
+CHANGELOG.md
+**/CHANGELOG.md

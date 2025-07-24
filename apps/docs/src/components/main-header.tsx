@@ -22,7 +22,7 @@ const links = [
 
 export default function MainHeader() {
   return (
-    <header className="border-cream-200 dark:border-dark-100 bg-cream-50/80 dark:bg-dark-200/80 sticky top-0 z-50 border-b backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-cream-200 bg-cream-50/80 backdrop-blur-sm dark:border-dark-100 dark:bg-dark-200/80">
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
         <Link href={"/"} className="flex items-center space-x-3">
           <Image
@@ -32,7 +32,7 @@ export default function MainHeader() {
             height={40}
             className="rounded-lg"
           />
-          <span className="text-dark-200 dark:text-dark-900 text-xl font-bold">Vorsteh Queue</span>
+          <span className="text-xl font-bold text-dark-200 dark:text-dark-900">Vorsteh Queue</span>
         </Link>
 
         <nav className="items-center md:flex">
@@ -41,7 +41,7 @@ export default function MainHeader() {
               <Link
                 key={eleIdx}
                 href={ele.target}
-                className="text-dark-200 dark:text-dark-900 hover:text-orange-primary transition-colors"
+                className="text-dark-200 transition-colors hover:text-orange-primary dark:text-dark-900"
               >
                 {ele.name}
               </Link>

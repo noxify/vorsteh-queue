@@ -8,7 +8,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules .next",
     "clean:cache": "git clean -xdf .cache",
     "dev": "renoun next dev",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
     "generate-pagefind": "pagefind --site out --output-path out/pagefind",
     "lint": "eslint .",
     "lint:links": "node --import ./src/register.js --import tsx/esm src/link-check.ts",
