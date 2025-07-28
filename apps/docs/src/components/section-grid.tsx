@@ -36,7 +36,7 @@ export default async function SectionGrid({
       elements.push({
         title: section.getTitle(),
         description: "",
-        path: `/docs/${removeFromArray(section.getPathnameSegments(), ["index"]).join("/")}`,
+        path: `/${removeFromArray(section.getPathnameSegments(), ["index"]).join("/")}`,
       })
     } else {
       const title = getTitle(section, frontmatter)
@@ -44,7 +44,7 @@ export default async function SectionGrid({
       elements.push({
         title,
         description: frontmatter.description ?? "",
-        path: `/docs/${removeFromArray(section.getPathnameSegments(), ["index"]).join("/")}`,
+        path: `/${removeFromArray(section.getPathnameSegments(), ["index"]).join("/")}`,
       })
     }
   }
