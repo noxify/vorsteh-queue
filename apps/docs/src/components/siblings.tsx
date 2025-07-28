@@ -27,10 +27,10 @@ export default async function Siblings({ source }: { source: EntryType }) {
               title={`Go to previous page: ${previousPage.title}`}
             >
               <div className="group flex shrink-0 items-center gap-x-4">
-                <ChevronLeftIcon className="h-5 w-5 flex-none text-gray-500 transition-colors duration-200 group-hover:text-indigo-400 dark:text-gray-400 dark:group-hover:text-white" />
+                <ChevronLeftIcon className="h-5 w-5 flex-none text-gray-500 transition-colors duration-200 group-hover:text-orange-primary dark:text-white dark:group-hover:text-orange-primary" />
                 <div className="flex flex-col items-start">
-                  <p className="text-xs leading-5 text-gray-500">Previous page</p>
-                  <p className="text-sm leading-5 font-medium text-gray-500 transition-colors duration-200 group-hover:text-indigo-400 dark:text-gray-400 dark:group-hover:text-white">
+                  <p className="text-xs leading-5 text-orange-primary">Previous page</p>
+                  <p className="text-sm leading-5 text-gray-600 transition-colors duration-200 group-hover:text-orange-primary dark:text-white dark:group-hover:text-orange-primary">
                     {previousPage.title}
                   </p>
                 </div>
@@ -51,12 +51,12 @@ export default async function Siblings({ source }: { source: EntryType }) {
             >
               <div className="group flex shrink-0 items-center gap-x-4">
                 <div className="flex flex-col items-end">
-                  <p className="text-xs leading-5 text-gray-500">Next page</p>
-                  <p className="text-sm leading-5 text-gray-500 transition-colors duration-200 group-hover:text-foreground dark:text-gray-400 dark:group-hover:text-white">
+                  <p className="text-xs leading-5 text-orange-primary">Next page</p>
+                  <p className="text-sm leading-5 text-gray-600 transition-colors duration-200 group-hover:text-orange-primary dark:text-white dark:group-hover:text-orange-primary">
                     {nextPage.title}
                   </p>
                 </div>
-                <ChevronRightIcon className="h-5 w-5 flex-none text-gray-500 transition-colors duration-200 group-hover:text-foreground dark:text-gray-400 dark:group-hover:text-white" />
+                <ChevronRightIcon className="h-5 w-5 flex-none text-gray-500 transition-colors duration-200 group-hover:text-orange-primary dark:text-white dark:group-hover:text-orange-primary" />
               </div>
             </Link>
           </>

@@ -1,0 +1,281 @@
+---
+title: Core Package
+description: The main queue engine containing all core functionality for job processing, scheduling, and management.
+---
+
+The core package contains the main queue engine and all essential functionality for job processing, scheduling, and event management.
+
+## Installation
+
+<PackageInstall
+  packages={["@vorsteh-queue/core"]}
+  className={{ container: "not-prose", code: "not-prose" }}
+/>
+
+## Key Features
+
+- **Queue Management** - Create and manage multiple queues
+- **Job Processing** - Register handlers and process jobs
+- **Event System** - Comprehensive event lifecycle
+- **Progress Tracking** - Real-time job progress updates
+- **Scheduling** - Delayed and recurring jobs
+- **Priority System** - Numeric priority-based processing
+- **Graceful Shutdown** - Clean termination handling
+
+## Core Methods
+
+### Registering Job Handlers
+
+Define how jobs should be processed:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+
+interface Payload {
+  to: string
+  subject: string
+}
+
+interface Result {
+  messageId: string
+  sent: true
+}
+
+queue.register<Payload, Result>("send-email", async (job) => {
+  //await sendEmail(job.payload)
+  return { messageId: "msg_123", sent: true }
+})
+```
+
+### Adding Jobs
+
+Add jobs to the queue for processing:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+
+// Basic job
+await queue.add("send-email", {
+  to: "user@example.com",
+  subject: "Welcome!",
+})
+
+// Job with options
+await queue.add("send-email", payload, {
+  priority: 1,
+  delay: 5000,
+  maxAttempts: 5,
+})
+```
+
+### Queue Control
+
+Manage queue processing:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+
+// Start processing jobs
+queue.start()
+
+// Pause processing
+queue.pause()
+
+// Resume processing
+queue.resume()
+
+// Graceful shutdown
+await queue.shutdown()
+```
+
+### Progress Tracking
+
+Update job progress in real-time:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+
+queue.register("process-data", async (job) => {
+  const items = job.payload.items
+
+  for (let i = 0; i < items.length; i++) {
+    //await processItem(items[i])
+
+    // Update progress (0-100)
+    const progress = Math.round(((i + 1) / items.length) * 100)
+    await job.updateProgress(progress)
+  }
+})
+```
+
+### Scheduling Jobs
+
+Schedule jobs for future execution:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+
+// Delayed job
+await queue.add(
+  "cleanup",
+  {},
+  {
+    delay: 60000, // 1 minute
+  },
+)
+
+// Recurring job with cron
+await queue.add(
+  "daily-report",
+  {},
+  {
+    cron: "0 9 * * *", // Every day at 9 AM
+    timezone: "America/New_York",
+  },
+)
+
+// Recurring job with interval
+await queue.add(
+  "health-check",
+  {},
+  {
+    repeat: { every: 30000, limit: 10 }, // Every 30s, 10 times
+  },
+)
+```
+
+### Event Handling
+
+Listen to job and queue events:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+
+// Job lifecycle events
+queue.on("job:added", (job) => {
+  console.log(`Job ${job.name} added to queue`)
+})
+
+queue.on("job:completed", (job) => {
+  console.log(`Job ${job.name} completed`)
+  console.log("Result:", job.result)
+})
+
+queue.on("job:failed", (job) => {
+  console.error(`Job ${job.name} failed:`, job.error)
+})
+
+queue.on("job:progress", (job) => {
+  console.log(`Job ${job.name}: ${job.progress}% complete`)
+})
+
+// Queue control events
+queue.on("queue:paused", () => {
+  console.log("Queue paused")
+})
+
+queue.on("queue:resumed", () => {
+  console.log("Queue resumed")
+})
+```
+
+### Queue Statistics
+
+Get queue metrics and status:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+
+// Get current stats
+const stats = await queue.getStats()
+console.log(stats) // { pending: 5, processing: 2, completed: 100, failed: 3 }
+
+// Get queue size
+const size = await queue.size()
+console.log(`${size} jobs pending`)
+
+// Clear jobs
+await queue.clear() // Clear all jobs
+await queue.clear("failed") // Clear only failed jobs
+```
+
+### Error Handling
+
+Handle job failures and timeouts:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+
+queue.register("risky-job", async (job) => {
+  try {
+    //await riskyOperation(job.payload)
+  } catch (error) {
+    throw error // Re-throw to mark job as failed
+  }
+})
+
+// Set job timeout
+await queue.add("risky-job", payload, {
+  timeout: 30000, // 30 seconds
+})
+```
+
+## Memory Adapter
+
+Includes a built-in memory adapter for testing and development:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+```
+
+## TypeScript Support
+
+Full TypeScript support with generic job payloads:
+
+```ts
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
+
+interface EmailPayload {
+  to: string
+  subject: string
+  body: string
+}
+
+interface EmailResult {
+  success: boolean
+}
+
+queue.register<EmailPayload, EmailResult>("send-email", async (job) => {
+  // job.payload is typed as EmailPayload
+  //await sendEmail(job.payload)
+
+  return {
+    success: true,
+  }
+})
+```
+
+## References
+
+- Sources: https://github.com/noxify/vorsteh-queue/tree/main/packages/core
+- NPM: https://www.npmjs.com/package/@vorsteh-queue/core

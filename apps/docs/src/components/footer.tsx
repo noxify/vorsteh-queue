@@ -8,15 +8,15 @@ const links = [
   },
   {
     name: "Docs",
-    target: "/docs",
+    target: "/docs/getting-started/introduction",
   },
   {
     name: "Examples",
     target: "/docs/examples",
   },
   {
-    name: "Adapters",
-    target: "/docs/adapters",
+    name: "Packages",
+    target: "/docs/packages",
   },
 ]
 

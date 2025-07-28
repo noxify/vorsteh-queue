@@ -89,7 +89,7 @@ export default async function Home() {
                   size="lg"
                   className="bg-orange-darker text-white hover:bg-orange-accessible"
                 >
-                  <Link href={"/docs/getting-started"}>
+                  <Link href={"/docs/getting-started/introduction/"}>
                     <Code className="mr-2 h-5 w-5" />
                     Get Started
                   </Link>

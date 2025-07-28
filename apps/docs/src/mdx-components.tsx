@@ -1,16 +1,9 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react"
-import type { CodeBlockProps } from "renoun/components"
 import type { MDXComponents } from "renoun/mdx"
 import Image from "next/image"
 import Link from "next/link"
 import { ExternalLinkIcon } from "lucide-react"
-import {
-  CodeBlock,
-  CodeInline,
-  PackageInstall,
-  parseCodeProps,
-  parsePreProps,
-} from "renoun/components"
+import { CodeBlock, CodeInline, PackageInstall } from "renoun/components"
 
 import { Heading } from "~/components/heading"
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert"
@@ -117,28 +110,6 @@ export function useMDXComponents() {
         </div>
       </section>
     ),
-
-    code: (props) => {
-      return (
-        <CodeInline
-          {...parseCodeProps(props)}
-          allowErrors
-          css={{
-            backgroundColor: "hsl(var(--secondary))",
-            color: "auto",
-            boxShadow: "none",
-            display: "inline",
-          }}
-          paddingX="auto"
-          paddingY="auto"
-          className="border px-2 py-0.5 text-xs"
-        />
-      )
-    },
-    // Code block
-    pre: (props: CodeBlockProps) => {
-      return <CodeBlock {...props} className={{ container: "my-4!" }} />
-    },
 
     CodeInline,
     CodeBlock,

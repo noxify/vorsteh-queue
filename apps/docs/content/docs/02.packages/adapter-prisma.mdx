@@ -1,5 +1,5 @@
 ---
-title: "@vorsteh-queue/adapter-prisma"
+title: Prisma Adapter
 description: Prisma ORM adapter for PostgreSQL with generated types and excellent developer tooling.
 ---
 
@@ -7,14 +7,13 @@ The Prisma adapter provides PostgreSQL support using Prisma ORM, offering genera
 
 ## Installation
 
-```bash
-npm install @vorsteh-queue/core @vorsteh-queue/adapter-prisma
-```
+<PackageInstall packages={["@vorsteh-queue/core", "@vorsteh-queue/adapter-prisma"]} />
 
 ## Quick Start
 
 ```typescript
 import { PrismaClient } from "@prisma/client"
+
 import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
 import { Queue } from "@vorsteh-queue/core"
 
@@ -55,7 +54,13 @@ model QueueJob {
 
 ### Migration
 
-Generate and apply the migration:
+Push the schema to your database:
+
+```bash
+npx prisma db push
+```
+
+Or generate and apply the migration:
 
 ```bash
 npx prisma migrate dev --name add-queue-jobs
@@ -69,104 +74,7 @@ Generate the Prisma client:
 npx prisma generate
 ```
 
-## Configuration Options
+## References
 
-```typescript
-const adapter = new PostgresPrismaQueueAdapter(prisma, {
-  modelName: "QueueJob" // Default: "QueueJob"
-})
-```
-
-## Prisma Features
-
-### Type Safety
-Generated types ensure type safety throughout your application:
-
-```typescript
-// Prisma generates these types automatically
-type QueueJob = {
-  id: string
-  name: string
-  payload: JsonValue
-  // ... other fields
-}
-```
-
-### Database Introspection
-Explore your data with Prisma Studio:
-
-```bash
-npx prisma studio
-```
-
-### Migration System
-Version-controlled database changes:
-
-```bash
-# Create migration
-npx prisma migrate dev --name migration-name
-
-# Deploy to production
-npx prisma migrate deploy
-
-# Reset database (development)
-npx prisma migrate reset
-```
-
-## Advanced Usage
-
-### Custom Prisma Client
-Use a custom Prisma client configuration:
-
-```typescript
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient({
-  log: ["query", "info", "warn", "error"],
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
-    }
-  }
-})
-```
-
-### Connection Pooling
-Configure connection pooling in your database URL:
-
-```
-postgresql://user:password@host:port/database?connection_limit=10&pool_timeout=20
-```
-
-## Performance Considerations
-
-- **Connection Pooling** - Configure appropriate pool sizes
-- **Query Optimization** - Prisma generates optimized queries
-- **Indexes** - Ensure proper indexing on status, priority, and runAt
-- **Batch Operations** - Use Prisma's batch operations for bulk updates
-
-## Benefits
-
-- **Generated Types** - Automatic type generation from schema
-- **Migration System** - Version-controlled database changes
-- **Developer Tools** - Prisma Studio for data exploration
-- **Query Builder** - Intuitive API for database operations
-- **IDE Support** - Excellent autocomplete and error checking
-
-## Troubleshooting
-
-### Common Issues
-
-**Schema sync issues:**
-```bash
-npx prisma db push  # For development
-npx prisma migrate deploy  # For production
-```
-
-**Type generation:**
-```bash
-npx prisma generate
-```
-
-**Connection issues:**
-Check your `DATABASE_URL` environment variable and connection limits.
+- Sources: https://github.com/noxify/vorsteh-queue/tree/main/packages/adapter-prisma
+- NPM: https://www.npmjs.com/package/@vorsteh-queue/adapter-prisma

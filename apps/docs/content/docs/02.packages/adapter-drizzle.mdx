@@ -1,5 +1,5 @@
 ---
-title: "@vorsteh-queue/adapter-drizzle"
+title: Drizzle Adapter
 description: Drizzle ORM adapter for PostgreSQL providing type-safe database operations with excellent performance.
 ---
 
@@ -7,9 +7,7 @@ The Drizzle adapter provides PostgreSQL support using Drizzle ORM, offering exce
 
 ## Installation
 
-```bash
-npm install @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
-```
+<PackageInstall packages={["@vorsteh-queue/core", "@vorsteh-queue/adapter-drizzle"]} />
 
 ## Quick Start
 
@@ -25,6 +23,12 @@ const db = drizzle(pool)
 const adapter = new PostgresQueueAdapter(db)
 const queue = new Queue(adapter)
 ```
+
+## Supported providers
+
+- PGlite
+- Postgres.JS
+- Node Progress
 
 ## Database Setup
 
@@ -54,38 +58,7 @@ npx drizzle-kit generate
 npx drizzle-kit migrate
 ```
 
-## Supported Drivers
+## References
 
-The adapter works with multiple PostgreSQL drivers:
-
-### node-postgres (pg)
-
-```typescript
-import { drizzle } from "drizzle-orm/node-postgres"
-import { Pool } from "pg"
-
-const pool = new Pool({ connectionString: "postgresql://..." })
-const db = drizzle(pool)
-```
-
-### postgres.js
-
-```typescript
-import { drizzle } from "drizzle-orm/postgres-js"
-import postgres from "postgres"
-
-const client = postgres("postgresql://...")
-const db = drizzle(client)
-```
-
-### PGlite (Development)
-
-```typescript
-import { PGlite } from "@electric-sql/pglite"
-import { drizzle } from "drizzle-orm/pglite"
-
-const client = new PGlite()
-const db = drizzle(client)
-```
-
-
+- Sources: https://github.com/noxify/vorsteh-queue/tree/main/packages/adapter-drizzle
+- NPM: https://www.npmjs.com/package/@vorsteh-queue/adapter-drizzle

@@ -1,5 +1,5 @@
 ---
-title: "create-vorsteh-queue"
+title: "create-vorsteh-queue CLI"
 description: CLI tool for quickly creating new Vorsteh Queue projects with pre-configured templates.
 ---
 
@@ -23,6 +23,7 @@ npx create-vorsteh-queue
 ```
 
 The CLI will prompt you for:
+
 - Project name
 - Template selection
 - Package manager preference
@@ -49,12 +50,12 @@ npx create-vorsteh-queue my-app \
 
 ## CLI Options
 
-| Option | Short | Description | Example |
-|--------|-------|-------------|---------|
-| `--template=<name>` | `-t=<name>` | Choose template | `-t=drizzle-postgres` |
-| `--package-manager=<pm>` | `-pm=<pm>` | Package manager | `-pm=pnpm` |
-| `--no-install` | - | Skip dependency install | `--no-install` |
-| `--quiet` | `-q` | Minimal output | `--quiet` |
+| Option                   | Short       | Description             | Example               |
+| ------------------------ | ----------- | ----------------------- | --------------------- |
+| `--template=<name>`      | `-t=<name>` | Choose template         | `-t=drizzle-postgres` |
+| `--package-manager=<pm>` | `-pm=<pm>`  | Package manager         | `-pm=pnpm`            |
+| `--no-install`           | -           | Skip dependency install | `--no-install`        |
+| `--quiet`                | `-q`        | Minimal output          | `--quiet`             |
 
 ## Available Templates
 
@@ -66,6 +67,8 @@ Templates are dynamically discovered from the repository:
 - **event-system** - Comprehensive event monitoring
 - **progress-tracking** - Real-time progress updates
 - **pm2-workers** - Multi-process workers with PM2
+- **prisma-client** - Example with the new `prisma-client`
+- **prisma-client-js** - Example with the old `prisma-client-js`
 
 ## Package Managers
 
@@ -89,6 +92,7 @@ Each template includes:
 ## Examples
 
 ### Quick Start
+
 ```bash
 npx create-vorsteh-queue my-app --template=drizzle-pglite
 cd my-app
@@ -96,6 +100,7 @@ npm run dev
 ```
 
 ### Production Setup
+
 ```bash
 npx create-vorsteh-queue worker-service \
   --template=drizzle-postgres \
@@ -106,6 +111,7 @@ pnpm dev
 ```
 
 ### CI/CD Friendly
+
 ```bash
 npx create-vorsteh-queue my-app \
   --template=event-system \
@@ -113,14 +119,6 @@ npx create-vorsteh-queue my-app \
   --no-install \
   --quiet
 ```
-
-## Benefits
-
-- **Zero Configuration** - Templates are pre-configured
-- **Best Practices** - Follow established patterns
-- **Type Safety** - Full TypeScript setup
-- **Development Ready** - Includes dev tools and scripts
-- **Production Ready** - Optimized for deployment
 
 ## Template Development
 
@@ -130,19 +128,3 @@ Templates are automatically discovered from the `examples/` directory in the rep
 2. Include a `package.json` with proper metadata
 3. Add a `README.md` with setup instructions
 4. The template becomes available automatically
-
-## Troubleshooting
-
-### Common Issues
-
-**Template not found:**
-- Check available templates with interactive mode
-- Ensure correct spelling
-
-**Installation fails:**
-- Try with `--no-install` and install manually
-- Check Node.js version (requires 20+)
-
-**Permission errors:**
-- Use `npx` instead of global installation
-- Check directory permissions

@@ -21,105 +21,25 @@ Use the CLI to create this example:
 npx create-vorsteh-queue my-app --template=pm2-workers
 ```
 
-## Manual Setup
+## Configuration
 
-1. **Install dependencies:**
 ```bash
-pnpm install
-```
-
-2. **Set up environment:**
-```bash
-cp .env.example .env
 # Edit .env with your database URL
-```
+cp .env.example .env
 
-3. **Push database schema:**
-```bash
+# push the schema to the database
 pnpm db:push
 ```
 
-4. **Install PM2 globally:**
+## Usage
+
 ```bash
-npm install -g pm2
+# with pnpm
+pnpm dev
+
+# with npm
+npm run dev
 ```
-
-## Running with PM2
-
-1. **Start all workers:**
-```bash
-pm2 start ecosystem.config.cjs
-```
-
-2. **Monitor processes:**
-```bash
-pm2 monit
-```
-
-3. **View logs:**
-```bash
-pm2 logs
-```
-
-4. **Stop all workers:**
-```bash
-pm2 stop all
-```
-
-## Worker Architecture
-
-The example includes:
-
-- **Email Worker** - Handles email sending jobs
-- **Image Worker** - Processes image manipulation tasks
-- **Report Worker** - Generates reports and analytics
-- **Producer** - Adds jobs to the queue for workers to process
-
-## PM2 Configuration
-
-```javascript
-module.exports = {
-  apps: [
-    {
-      name: 'email-worker',
-      script: './dist/workers/email-worker.js',
-      instances: 2,
-      exec_mode: 'fork'
-    },
-    {
-      name: 'image-worker',
-      script: './dist/workers/image-worker.js',
-      instances: 1,
-      exec_mode: 'fork'
-    },
-    // ... more workers
-  ]
-}
-```
-
-## Benefits
-
-- **Scalability** - Utilize multiple CPU cores
-- **Reliability** - Automatic process restart on failure
-- **Monitoring** - Built-in process monitoring
-- **Load distribution** - Balance work across processes
-- **Production ready** - Battle-tested process manager
-
-## Production Considerations
-
-- **Resource allocation** - Configure appropriate instance counts
-- **Memory limits** - Set memory limits to prevent leaks
-- **Log management** - Configure log rotation and retention
-- **Health checks** - Monitor worker health and performance
-- **Graceful shutdown** - Handle process termination properly
-
-## Monitoring
-
-PM2 provides excellent monitoring capabilities:
-- CPU and memory usage per process
-- Process restart counts and reasons
-- Real-time logs from all workers
-- Process status and health
 
 ## Source Code
 

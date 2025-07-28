@@ -89,7 +89,7 @@ export async function FileContent({ source }: { source: EntryType }) {
 
                     "prose-blockquote:mt-6 prose-blockquote:border-l-2 prose-blockquote:pl-6 prose-blockquote:italic",
                     "prose-p:leading-7 not-first:prose-p:mt-6",
-                    "prose-a:text-indigo-400 prose-a:hover:text-white",
+                    "prose-a:text-orange-primary prose-a:hover:text-black prose-a:dark:hover:text-white",
 
                     "prose-ul:ml-6 prose-ul:list-disc [&>li]:prose-ul:mt-2 [&>ul]:prose-ul:my-2 [&>ul]:prose-ul:ml-0",
                   )}

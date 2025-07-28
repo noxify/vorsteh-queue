@@ -9,28 +9,28 @@ import { Button } from "~/components/ui/button"
 const links = [
   {
     name: "Docs",
-    target: "/docs",
+    target: "/docs/getting-started/introduction",
   },
   {
     name: "Examples",
     target: "/docs/examples",
   },
   {
-    name: "Adapters",
-    target: "/docs/adapters",
+    name: "Packages",
+    target: "/docs/packages",
   },
 ]
 
 export default function MainHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-cream-200 bg-cream-50/80 backdrop-blur-sm dark:border-dark-100 dark:bg-dark-200/80">
-      <div className="container mx-auto flex items-center justify-between px-4 py-4">
+      <div className="container mx-auto flex items-center justify-between px-4 py-3">
         <Link href={"/"} className="flex items-center space-x-3">
           <Image
             src="/vorsteh-queue-logo.svg"
             alt="Vorsteh Queue Logo"
-            width={40}
-            height={40}
+            width={36}
+            height={36}
             className="rounded-lg"
           />
           <span className="text-xl font-bold text-dark-200 dark:text-dark-900">Vorsteh Queue</span>

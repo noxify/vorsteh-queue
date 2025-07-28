@@ -3,93 +3,35 @@ title: Result Storage
 description: Learn how to store and retrieve job results for later use and analysis.
 ---
 
-This example demonstrates how to store and retrieve job results, enabling you to access the output of completed jobs for further processing or analysis.
+This example demonstrates how to use job results in Vorsteh Queue. Job handlers can return values that are automatically stored in the database and made available through events and job records.
 
 ## Features Demonstrated
 
-- **Result storage** - Automatically store job return values
-- **Result retrieval** - Access results from completed jobs
-- **Typed results** - Type-safe result handling with TypeScript
-- **Result analysis** - Process and analyze job outcomes
+- **Result Storage**: Job handlers return results that are automatically stored
+- **Type Safety**: Full TypeScript support for job payloads and results
+- **Progress Tracking**: Real-time progress updates during job processing
+- **Error Handling**: Proper error collection and reporting in results
+- **Event Access**: Accessing results through job completion events
 
-## Setup
+## Configuration
 
-1. **Install dependencies:**
 ```bash
-pnpm install
+# Edit .env with your database URL
+cp .env.example .env
+
+# push the schema to the database
+pnpm db:push
 ```
 
-2. **Run the example:**
+## Usage
+
 ```bash
+# with pnpm
 pnpm dev
+
+# with npm
+npm run dev
 ```
-
-## Result Implementation
-
-```typescript
-interface ProcessResult {
-  processed: number
-  errors: string[]
-  duration: number
-}
-
-// Job handler that returns results
-queue.register<{ items: string[] }, ProcessResult>('process-data', async (job) => {
-  const startTime = Date.now()
-  const errors: string[] = []
-  let processed = 0
-
-  for (const item of job.payload.items) {
-    try {
-      await processItem(item)
-      processed++
-    } catch (error) {
-      errors.push(`Failed to process ${item}: ${error.message}`)
-    }
-  }
-
-  // Return result - automatically stored
-  return {
-    processed,
-    errors,
-    duration: Date.now() - startTime,
-  }
-})
-
-// Access results in events
-queue.on('job:completed', (job) => {
-  const result = job.result as ProcessResult
-  console.log(`Processed ${result.processed} items in ${result.duration}ms`)
-  
-  if (result.errors.length > 0) {
-    console.warn(`Errors: ${result.errors.join(', ')}`)
-  }
-})
-```
-
-## Result Benefits
-
-- **Audit trail** - Keep track of what jobs accomplished
-- **Error analysis** - Analyze failure patterns and reasons
-- **Performance metrics** - Track job execution times and efficiency
-- **Data pipeline** - Use results as input for subsequent jobs
-- **Reporting** - Generate reports based on job outcomes
-
-## Use Cases
-
-Result storage is valuable for:
-- Data processing pipelines
-- Batch operations with reporting
-- Error tracking and analysis
-- Performance monitoring
-- Audit and compliance requirements
-
-## Best Practices
-
-- Keep results reasonably sized (avoid storing large objects)
-- Use typed interfaces for result consistency
-- Include relevant metadata (timestamps, counts, etc.)
-- Consider result cleanup policies for long-running systems
 
 ## Source Code
 

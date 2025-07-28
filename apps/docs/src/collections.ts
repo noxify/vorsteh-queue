@@ -18,7 +18,7 @@ export const features = new Directory({
   },
 })
 
-const DocumentationDirectory = new Directory({
+export const DocumentationDirectory = new Directory({
   path: `content/docs`,
   basePathname: "docs",
   // hide hidden files ( starts with `_` ) and all asset directories ( `_assets` )

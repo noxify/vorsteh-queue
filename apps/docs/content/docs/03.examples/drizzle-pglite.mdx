@@ -20,40 +20,19 @@ Use the CLI to create this example:
 npx create-vorsteh-queue my-app --template=drizzle-pglite
 ```
 
-## Manual Setup
-
-1. **Install dependencies:**
-```bash
-pnpm install
-```
-
-2. **Run the example:**
-```bash
-pnpm dev
-```
+## Configuration
 
 No additional database setup is required - PGlite runs entirely in-memory!
 
-## Benefits of PGlite
+## Usage
 
-- **Zero configuration** - No PostgreSQL installation needed
-- **Fast startup** - Instant database initialization
-- **Portable** - Works anywhere Node.js runs
-- **Compatible** - Full PostgreSQL compatibility
-- **Development friendly** - Perfect for local development
+```bash
+# with pnpm
+pnpm dev
 
-## Use Cases
-
-This setup is ideal for:
-- Local development
-- Testing and CI/CD
-- Prototyping
-- Demos and examples
-- Environments where PostgreSQL installation isn't feasible
-
-## Migration to Production
-
-When ready for production, simply change the database connection from PGlite to a full PostgreSQL instance. The schema and code remain identical.
+# with npm
+npm run dev
+```
 
 ## Source Code
 

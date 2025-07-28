@@ -8,8 +8,8 @@
   "siteUrl": "https://vorsteh-queue.dev",
 
   "theme": {
-    "dark": "monokai",
-    "light": "monokai"
+    "dark": "one-dark-pro",
+    "light": "one-dark-pro"
   },
   "languages": [
     "css",

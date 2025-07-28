@@ -21,47 +21,25 @@ Use the CLI to create this example:
 npx create-vorsteh-queue my-app --template=drizzle-postgres
 ```
 
-## Manual Setup
+## Configuration
 
-1. **Install dependencies:**
 ```bash
-pnpm install
-```
-
-2. **Set up PostgreSQL database:**
-```bash
-cp .env.example .env
 # Edit .env with your database URL
-```
+cp .env.example .env
 
-3. **Push database schema:**
-```bash
+# push the schema to the database
 pnpm db:push
 ```
 
-4. **Run the example:**
+## Usage
+
 ```bash
+# with pnpm
 pnpm dev
+
+# with npm
+npm run dev
 ```
-
-## Code Overview
-
-The example includes:
-
-- **Database setup** with Drizzle ORM
-- **Queue initialization** with PostgreSQL adapter
-- **Job handlers** for different job types
-- **Event listeners** for monitoring
-- **Graceful shutdown** handling
-
-## Key Concepts
-
-This example is perfect for learning:
-- How to set up Vorsteh Queue with Drizzle
-- Basic job registration and processing
-- Event system usage
-- Priority-based job processing
-- Recurring job patterns
 
 ## Source Code
 
