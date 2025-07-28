@@ -12,5 +12,6 @@ const server = createServer(
 
 server.listen({ port: 3000 }, () => {
   const { port } = server.address() as AddressInfo
+  // eslint-disable-next-line no-console
   console.info(`Server is running on http://localhost:${port}`)
 })

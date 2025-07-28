@@ -1,51 +1,9 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
-
 import type { TreeItem } from "~/lib/navigation"
-import { AllDocumentation, DocumentationDirectory } from "~/collections"
+import { DocumentationDirectory } from "~/collections"
 import { DocsSidebar } from "~/components/docs-sidebar"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-} from "~/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarInset, SidebarProvider } from "~/components/ui/sidebar"
 import { getTree } from "~/lib/navigation"
 
-const items = [
-  {
-    title: "Home",
-    url: "#",
-    icon: Home,
-  },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
-]
 export function AppSidebar({ items }: { items: TreeItem[] }) {
   return (
     <Sidebar variant="sidebar" className="sticky top-[65px] h-screen">
