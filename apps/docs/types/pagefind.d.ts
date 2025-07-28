@@ -29,7 +29,7 @@ interface PagefindSearchOptions {
 interface PagefindFilterCounts extends Record<string, Record<string, number>> {}
 
 interface PagefindSearchResults {
-  results: PagefindSearchResult[]
+  results: PagefindSearchResult[] | null
   unfilteredResultCount: number
   filters: PagefindFilterCounts
   totalFilters: PagefindFilterCounts

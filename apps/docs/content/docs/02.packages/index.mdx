@@ -1,0 +1,42 @@
+---
+title: Packages
+description: Overview of all Vorsteh Queue packages and their purposes.
+---
+
+Vorsteh Queue is built as a modular system with separate packages for different functionality. This allows you to install only what you need and keeps the core lightweight.
+
+## Core Package
+
+- **[@vorsteh-queue/core](/docs/packages/core)** - The main queue engine with all core functionality
+
+## Adapter Packages
+
+- **[@vorsteh-queue/adapter-drizzle](/docs/packages/adapter-drizzle)** - Drizzle ORM adapter for PostgreSQL
+- **[@vorsteh-queue/adapter-prisma](/docs/packages/adapter-prisma)** - Prisma ORM adapter for PostgreSQL
+
+## CLI Tools
+
+- **[create-vorsteh-queue](/docs/packages/create-vorsteh-queue)** - CLI tool for creating new projects
+
+## Package Architecture
+
+The modular design allows for:
+
+- **Minimal dependencies** - Only install what you need
+- **Flexible adapters** - Easy to add new database adapters
+- **Type safety** - Full TypeScript support across all packages
+- **Independent versioning** - Packages can be updated independently
+
+## Installation Patterns
+
+### Basic Setup
+```bash
+npm install @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
+```
+
+### With CLI
+```bash
+npx create-vorsteh-queue my-app --template=drizzle-postgres
+```
+
+Choose the packages that match your project's needs and ORM preference.

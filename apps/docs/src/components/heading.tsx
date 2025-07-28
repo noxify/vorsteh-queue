@@ -25,7 +25,11 @@ export function Heading({
   return (
     <PolymorphicComponent as={`h${level}` as IntrinsicElement} id={id} className="group">
       {children}{" "}
-      <a href={`#${id}`} className="hidden no-underline group-hover:inline-block">
+      <a
+        href={`#${id}`}
+        className="hidden no-underline group-hover:inline-block"
+        data-pagefind-ignore
+      >
         #
       </a>
     </PolymorphicComponent>

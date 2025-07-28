@@ -4,11 +4,17 @@ import type { MDXComponents } from "renoun/mdx"
 import Image from "next/image"
 import Link from "next/link"
 import { ExternalLinkIcon } from "lucide-react"
-import { CodeBlock, CodeInline, parseCodeProps, parsePreProps } from "renoun/components"
+import {
+  CodeBlock,
+  CodeInline,
+  PackageInstall,
+  parseCodeProps,
+  parsePreProps,
+} from "renoun/components"
 
 import { Heading } from "~/components/heading"
-import { Alert, AlertDescription, AlertTitle } from "~/components/shadcn/alert"
-import { Stepper, StepperItem } from "~/components/shadcn/stepper"
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert"
+import { Stepper, StepperItem } from "~/components/ui/stepper"
 import {
   Table,
   TableBody,
@@ -16,8 +22,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "~/components/shadcn/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/shadcn/tabs"
+} from "~/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
 
 type AnchorProps = ComponentPropsWithoutRef<"a">
 
@@ -112,7 +118,6 @@ export function useMDXComponents() {
       </section>
     ),
 
-    // Inline code
     code: (props) => {
       return (
         <CodeInline
@@ -132,8 +137,12 @@ export function useMDXComponents() {
     },
     // Code block
     pre: (props: CodeBlockProps) => {
-      return <CodeBlock {...parsePreProps(props)} className={{ container: "my-4!" }} />
+      return <CodeBlock {...props} className={{ container: "my-4!" }} />
     },
+
+    CodeInline,
+    CodeBlock,
+    PackageInstall,
     Note: ({ title, children }: { title?: string; children: ReactNode }) => {
       return (
         <Alert variant={"default"} className="my-4">

@@ -1,72 +1,137 @@
 "use client"
 
-import type { PagefindSearchResults } from "types/pagefind"
+import type { Pagefind, PagefindSearchResults } from "types/pagefind"
+import * as React from "react"
 import { useEffect, useState } from "react"
 import { addBasePath } from "next/dist/client/add-base-path"
-import { SearchIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Interweave } from "interweave"
+import { HashIcon, SearchIcon } from "lucide-react"
 import pMap from "p-map"
+import { useDebouncedCallback } from "use-debounce"
 
-import { Button, buttonVariants } from "~/components/shadcn/button"
-import { CommandMenu } from "~/components/ui/command-menu"
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "~/components/ui/command"
+import { Button, buttonVariants } from "./ui/button"
 
 async function flattenSearchResult(pagefindResult: PagefindSearchResults) {
   const resultData = pMap(
-    pagefindResult.results,
+    pagefindResult.results ?? [],
     async (result) => {
-      const { data, ...rest } = result
+      const { data, id } = result
       const resolvedData = await data()
-      return {
-        ...rest,
-        ...resolvedData,
+
+      const { sub_results, meta, url, excerpt } = resolvedData
+
+      const headingResult = sub_results.map((ele, eleIdx) => {
+        return {
+          id: `${id}_${eleIdx}`,
+          type: "heading",
+          title: ele.title,
+          url: ele.url,
+          excerpt: ele.excerpt,
+        }
+      })
+
+      const pageResult = {
+        id,
+        meta,
+        title: meta.title,
+        type: "page",
+        url,
+        excerpt,
+        headings: headingResult,
       }
+
+      return [pageResult]
     },
     { concurrency: 1 },
   )
 
-  return resultData
+  return (await resultData).flat()
 }
 
 export function Search() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [search, setSearch] = useState("")
-  const [isSearching, setIsSearching] = useState(false)
-  const [results, setResults] = useState<Awaited<ReturnType<typeof flattenSearchResult>>>([])
+  const router = useRouter()
+  const [searchValue, setSearchValue] = useState("")
+  const [open, setOpen] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [useMockProvider, setUseMockProvider] = useState(false)
-
+  const [results, setResults] = useState<Awaited<ReturnType<typeof flattenSearchResult>>>([])
+  const [isPending, setIsPending] = useState(false)
   // try to load pagefind
   // if not found, use mock provider
   useEffect(() => {
     async function loadPagefind() {
-      try {
-        await import(/* webpackIgnore: true */ addBasePath("/pagefind/pagefind.js"))
-        setLoaded(true)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.log(
-          "Unable to load pagefind. Maybe you're running the page in dev mode? Switching to the mock provider...",
-        )
-        setLoaded(true)
-        setUseMockProvider(true)
+      if (typeof window.pagefind === "undefined") {
+        try {
+          window.pagefind = (await import(
+            /* webpackIgnore: true */ addBasePath("/pagefind/pagefind.js")
+          )) as unknown as Pagefind
+          setLoaded(true)
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.log(
+            "Unable to load pagefind. Maybe you're running the page in dev mode? Switching to the mock provider...",
+          )
+          setLoaded(true)
+          setUseMockProvider(true)
+        }
       }
     }
     void loadPagefind()
   }, [])
 
-  const handleSearch = async (value: string) => {
-    setIsSearching(true)
-    setSearch(value)
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setOpen((open) => !open)
+      }
+    }
 
+    document.addEventListener("keydown", down)
+    return () => document.removeEventListener("keydown", down)
+  }, [])
+
+  const handleOpen = () => {
+    setOpen(!open)
+    setSearchValue("")
+    setResults([])
+  }
+
+  const handleSearch = async (value: string) => {
+    if (value === "") {
+      setResults([])
+      return
+    }
+
+    setIsPending(true)
     if (!useMockProvider) {
       if (window.pagefind) {
-        const search = await window.pagefind.debouncedSearch(value, {}, 300)
+        // await window.pagefind.options({
+        //   excerptLength: 10,
+        // })
+        const search = await window.pagefind.debouncedSearch(value, undefined, 100)
         const transformedResultList = await flattenSearchResult(search)
         setResults(transformedResultList)
       }
     }
 
-    setIsSearching(false)
+    setIsPending(false)
+  }
+
+  const debouncedFetchItems = useDebouncedCallback(handleSearch, 300)
+  const handleOnSearchChange = (e: string) => {
+    setSearchValue(e)
+    void debouncedFetchItems(e)
   }
 
   if (!loaded) {
@@ -92,44 +157,69 @@ export function Search() {
       </div>
     )
   }
+
   return (
     <>
-      <Button variant="outline" size={"icon"} onClick={() => setIsOpen(true)} className="border-0">
+      <Button variant={"ghost"} size={"icon"} onClick={() => setOpen(true)}>
         <SearchIcon />
       </Button>
-      <CommandMenu
-        trigger="press"
-        shortcut="k"
-        isBlurred
-        isDismissable
-        isPending={isSearching}
-        onInputChange={handleSearch}
-        inputValue={search}
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}
+
+      <CommandDialog
+        open={open}
+        onOpenChange={handleOpen}
+        showCloseButton={false}
+        async={true}
+        className="top-20"
       >
-        <CommandMenu.Search placeholder="Quick search..." />
-        {!isSearching && search ? (
-          <CommandMenu.List items={results} disallowEmptySelection={true}>
-            {(result) => (
-              <CommandMenu.Item textValue={result.id} key={result.id}>
-                {result.id}
-              </CommandMenu.Item>
+        <CommandInput
+          value={searchValue}
+          placeholder="Type a command or search..."
+          onValueChange={handleOnSearchChange}
+          isPending={isPending}
+        />
+        <CommandList className="max-h-[700px]">
+          <>
+            {results.length > 0 ? (
+              <>
+                {results.map((result, idx) => {
+                  return (
+                    <CommandGroup key={idx} heading={result.meta.breadcrumb}>
+                      {result.headings.map((heading, idy) => {
+                        return (
+                          <CommandItem
+                            className="group"
+                            key={`${idx}_${idy}`}
+                            value={heading.url}
+                            id={`${idx}_${idy}`}
+                            onSelect={(element) => {
+                              setOpen(false)
+                              setSearchValue("")
+                              router.push(element)
+                            }}
+                          >
+                            <div>
+                              <div className="flex items-center space-x-2 font-bold">
+                                <HashIcon className="group:data-[selected=true]:text-white" />
+                                <span>{heading.title}</span>
+                              </div>
+                              <Interweave
+                                content={heading.excerpt}
+                                className="line-clamp-2 w-auto max-w-[calc(100%-2rem)] text-ellipsis"
+                              />
+                            </div>
+                          </CommandItem>
+                        )
+                      })}
+                    </CommandGroup>
+                  )
+                })}
+              </>
+            ) : (
+              <CommandEmpty>Nothing found...</CommandEmpty>
             )}
-          </CommandMenu.List>
-        ) : (
-          <CommandMenu.List disallowEmptySelection={true}>
-            <CommandMenu.Section title="Quick links">
-              <CommandMenu.Item href="/docs">Documentation</CommandMenu.Item>
-              <CommandMenu.Item href="/docs/examples">Examples</CommandMenu.Item>
-              <CommandMenu.Item href="/docs/adapters">Adapters</CommandMenu.Item>
-              <CommandMenu.Item href="https://github.com" target="_blank">
-                Open an issue...
-              </CommandMenu.Item>
-            </CommandMenu.Section>
-          </CommandMenu.List>
-        )}
-      </CommandMenu>
+          </>
+        </CommandList>
+      </CommandDialog>
     </>
   )
 }

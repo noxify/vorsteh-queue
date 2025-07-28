@@ -27,6 +27,7 @@
     "yaml",
     "sql",
     "xml",
-    "docker"
+    "docker",
+    "prisma"
   ]
 }

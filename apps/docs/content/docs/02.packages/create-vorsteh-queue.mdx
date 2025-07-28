@@ -1,0 +1,148 @@
+---
+title: "create-vorsteh-queue"
+description: CLI tool for quickly creating new Vorsteh Queue projects with pre-configured templates.
+---
+
+The `create-vorsteh-queue` CLI tool provides the fastest way to get started with Vorsteh Queue by creating new projects from pre-built templates.
+
+## Installation
+
+No installation required - use with `npx`:
+
+```bash
+npx create-vorsteh-queue
+```
+
+## Usage
+
+### Interactive Mode
+
+```bash
+# Full interactive experience
+npx create-vorsteh-queue
+```
+
+The CLI will prompt you for:
+- Project name
+- Template selection
+- Package manager preference
+- Dependency installation
+
+### Direct Mode
+
+```bash
+# With project name
+npx create-vorsteh-queue my-queue-app
+
+# With template selection
+npx create-vorsteh-queue my-app --template=drizzle-postgres
+
+# With package manager
+npx create-vorsteh-queue my-app --package-manager=pnpm
+
+# Fully automated
+npx create-vorsteh-queue my-app \
+  --template=drizzle-postgres \
+  --package-manager=pnpm \
+  --quiet
+```
+
+## CLI Options
+
+| Option | Short | Description | Example |
+|--------|-------|-------------|---------|
+| `--template=<name>` | `-t=<name>` | Choose template | `-t=drizzle-postgres` |
+| `--package-manager=<pm>` | `-pm=<pm>` | Package manager | `-pm=pnpm` |
+| `--no-install` | - | Skip dependency install | `--no-install` |
+| `--quiet` | `-q` | Minimal output | `--quiet` |
+
+## Available Templates
+
+Templates are dynamically discovered from the repository:
+
+- **drizzle-pg** - Basic Drizzle ORM with node-postgres
+- **drizzle-pglite** - Zero-setup with embedded PostgreSQL
+- **drizzle-postgres** - Advanced with recurring jobs
+- **event-system** - Comprehensive event monitoring
+- **progress-tracking** - Real-time progress updates
+- **pm2-workers** - Multi-process workers with PM2
+
+## Package Managers
+
+Supported package managers:
+
+- **npm** - Default Node.js package manager
+- **pnpm** - Fast, disk space efficient
+- **yarn** - Popular alternative
+- **bun** - Ultra-fast (experimental)
+
+## Template Structure
+
+Each template includes:
+
+- **Complete source code** - Ready-to-run example
+- **Database schema** - Pre-configured tables
+- **Environment setup** - Example `.env` files
+- **Documentation** - README with setup instructions
+- **TypeScript configuration** - Optimized settings
+
+## Examples
+
+### Quick Start
+```bash
+npx create-vorsteh-queue my-app --template=drizzle-pglite
+cd my-app
+npm run dev
+```
+
+### Production Setup
+```bash
+npx create-vorsteh-queue worker-service \
+  --template=drizzle-postgres \
+  --package-manager=pnpm
+cd worker-service
+pnpm db:push
+pnpm dev
+```
+
+### CI/CD Friendly
+```bash
+npx create-vorsteh-queue my-app \
+  --template=event-system \
+  --package-manager=pnpm \
+  --no-install \
+  --quiet
+```
+
+## Benefits
+
+- **Zero Configuration** - Templates are pre-configured
+- **Best Practices** - Follow established patterns
+- **Type Safety** - Full TypeScript setup
+- **Development Ready** - Includes dev tools and scripts
+- **Production Ready** - Optimized for deployment
+
+## Template Development
+
+Templates are automatically discovered from the `examples/` directory in the repository. To add a new template:
+
+1. Create a new example in `examples/`
+2. Include a `package.json` with proper metadata
+3. Add a `README.md` with setup instructions
+4. The template becomes available automatically
+
+## Troubleshooting
+
+### Common Issues
+
+**Template not found:**
+- Check available templates with interactive mode
+- Ensure correct spelling
+
+**Installation fails:**
+- Try with `--no-install` and install manually
+- Check Node.js version (requires 20+)
+
+**Permission errors:**
+- Use `npx` instead of global installation
+- Check directory permissions

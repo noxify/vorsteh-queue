@@ -1,0 +1,86 @@
+---
+title: Event System
+description: Comprehensive event monitoring and queue management demonstrating the complete event lifecycle.
+---
+
+This example showcases the powerful event system in Vorsteh Queue, providing comprehensive monitoring and management capabilities for your queue operations.
+
+## Features Demonstrated
+
+- **Complete event lifecycle** - From job creation to completion/failure
+- **Job statistics tracking** - Real-time counters for all job states
+- **Error handling and retries** - Automatic retry logic with event monitoring
+- **Queue control** - Pause/resume functionality with events
+- **Comprehensive logging** - Timestamped event logs with detailed information
+
+## Quick Start
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue my-app --template=event-system
+```
+
+## Manual Setup
+
+1. **Install dependencies:**
+```bash
+pnpm install
+```
+
+2. **Set up database:**
+```bash
+cp .env.example .env
+# Edit .env with your database URL
+```
+
+3. **Push database schema:**
+```bash
+pnpm db:push
+```
+
+4. **Run the example:**
+```bash
+pnpm dev
+```
+
+## What You'll See
+
+The example demonstrates:
+
+1. **Job Creation Events** - Track when jobs are added to the queue
+2. **Processing Events** - Monitor when jobs start processing
+3. **Progress Updates** - Real-time progress reporting
+4. **Completion Events** - Success and failure notifications
+5. **Retry Logic** - Automatic retry attempts with event tracking
+6. **Queue Statistics** - Live counters for different job states
+7. **Queue Control** - Pause/resume with event notifications
+
+## Event Types
+
+```typescript
+// Job lifecycle events
+queue.on('job:added', (job) => { /* ... */ })
+queue.on('job:processing', (job) => { /* ... */ })
+queue.on('job:progress', (job) => { /* ... */ })
+queue.on('job:completed', (job) => { /* ... */ })
+queue.on('job:failed', (job) => { /* ... */ })
+queue.on('job:retried', (job) => { /* ... */ })
+
+// Queue control events
+queue.on('queue:paused', () => { /* ... */ })
+queue.on('queue:resumed', () => { /* ... */ })
+```
+
+## Use Cases
+
+This example is perfect for:
+- Building monitoring dashboards
+- Implementing logging systems
+- Understanding queue behavior
+- Debugging production issues
+- Creating alerting systems
+
+## Source Code
+
+The complete source code is available in the [examples/event-system](https://github.com/noxify/vorsteh-queue/tree/main/examples/event-system) directory.

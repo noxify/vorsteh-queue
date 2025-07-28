@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
-@plugin "tailwindcss-react-aria-components";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -214,5 +213,21 @@
     --border: 28 48% 12%; /* dark-100 */
     --input: 28 48% 12%; /* dark-100 */
     --ring: 12 75% 36%; /* orange-accessible */
+  }
+}
+
+pre > code {
+  @apply !w-fit !pb-3;
+}
+
+@utility prose {
+  blockquote {
+    /* Remove extra quotes */
+    p {
+      &:first-of-type::before,
+      &:last-of-type::after {
+        display: none;
+      }
+    }
   }
 }

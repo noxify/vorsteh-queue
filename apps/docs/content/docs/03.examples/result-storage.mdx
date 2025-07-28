@@ -1,0 +1,96 @@
+---
+title: Result Storage
+description: Learn how to store and retrieve job results for later use and analysis.
+---
+
+This example demonstrates how to store and retrieve job results, enabling you to access the output of completed jobs for further processing or analysis.
+
+## Features Demonstrated
+
+- **Result storage** - Automatically store job return values
+- **Result retrieval** - Access results from completed jobs
+- **Typed results** - Type-safe result handling with TypeScript
+- **Result analysis** - Process and analyze job outcomes
+
+## Setup
+
+1. **Install dependencies:**
+```bash
+pnpm install
+```
+
+2. **Run the example:**
+```bash
+pnpm dev
+```
+
+## Result Implementation
+
+```typescript
+interface ProcessResult {
+  processed: number
+  errors: string[]
+  duration: number
+}
+
+// Job handler that returns results
+queue.register<{ items: string[] }, ProcessResult>('process-data', async (job) => {
+  const startTime = Date.now()
+  const errors: string[] = []
+  let processed = 0
+
+  for (const item of job.payload.items) {
+    try {
+      await processItem(item)
+      processed++
+    } catch (error) {
+      errors.push(`Failed to process ${item}: ${error.message}`)
+    }
+  }
+
+  // Return result - automatically stored
+  return {
+    processed,
+    errors,
+    duration: Date.now() - startTime,
+  }
+})
+
+// Access results in events
+queue.on('job:completed', (job) => {
+  const result = job.result as ProcessResult
+  console.log(`Processed ${result.processed} items in ${result.duration}ms`)
+  
+  if (result.errors.length > 0) {
+    console.warn(`Errors: ${result.errors.join(', ')}`)
+  }
+})
+```
+
+## Result Benefits
+
+- **Audit trail** - Keep track of what jobs accomplished
+- **Error analysis** - Analyze failure patterns and reasons
+- **Performance metrics** - Track job execution times and efficiency
+- **Data pipeline** - Use results as input for subsequent jobs
+- **Reporting** - Generate reports based on job outcomes
+
+## Use Cases
+
+Result storage is valuable for:
+- Data processing pipelines
+- Batch operations with reporting
+- Error tracking and analysis
+- Performance monitoring
+- Audit and compliance requirements
+
+## Best Practices
+
+- Keep results reasonably sized (avoid storing large objects)
+- Use typed interfaces for result consistency
+- Include relevant metadata (timestamps, counts, etc.)
+- Consider result cleanup policies for long-running systems
+
+## Source Code
+
+The complete source code is available in the [examples/result-storage](https://github.com/noxify/vorsteh-queue/tree/main/examples/result-storage) directory.

@@ -3,8 +3,8 @@ import Link from "next/link"
 import { GitProviderLink, GitProviderLogo } from "renoun/components"
 
 import { Search } from "~/components/search"
-import { Button } from "~/components/shadcn/button"
 import { ThemeToggle } from "~/components/theme-toggle"
+import { Button } from "~/components/ui/button"
 
 const links = [
   {
@@ -42,7 +42,7 @@ export default function MainHeader() {
               <Link
                 key={eleIdx}
                 href={ele.target}
-                className="text-dark-200 transition-colors hover:text-orange-primary dark:text-dark-900"
+                className="text-dark-200 transition-colors hover:text-orange-primary dark:text-dark-900 dark:hover:text-orange-primary"
               >
                 {ele.name}
               </Link>

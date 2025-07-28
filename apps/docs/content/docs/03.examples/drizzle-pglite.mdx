@@ -1,0 +1,60 @@
+---
+title: Drizzle PGlite
+description: Lightweight development setup using Drizzle ORM with PGlite for local development and testing.
+---
+
+This example shows how to use Vorsteh Queue with Drizzle ORM and PGlite, providing a lightweight PostgreSQL-compatible database that runs entirely in-memory or with local file storage.
+
+## Features Demonstrated
+
+- In-memory PostgreSQL-compatible database
+- No external database setup required
+- Perfect for development and testing
+- Same API as full PostgreSQL setup
+
+## Quick Start
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue my-app --template=drizzle-pglite
+```
+
+## Manual Setup
+
+1. **Install dependencies:**
+```bash
+pnpm install
+```
+
+2. **Run the example:**
+```bash
+pnpm dev
+```
+
+No additional database setup is required - PGlite runs entirely in-memory!
+
+## Benefits of PGlite
+
+- **Zero configuration** - No PostgreSQL installation needed
+- **Fast startup** - Instant database initialization
+- **Portable** - Works anywhere Node.js runs
+- **Compatible** - Full PostgreSQL compatibility
+- **Development friendly** - Perfect for local development
+
+## Use Cases
+
+This setup is ideal for:
+- Local development
+- Testing and CI/CD
+- Prototyping
+- Demos and examples
+- Environments where PostgreSQL installation isn't feasible
+
+## Migration to Production
+
+When ready for production, simply change the database connection from PGlite to a full PostgreSQL instance. The schema and code remain identical.
+
+## Source Code
+
+The complete source code is available in the [examples/drizzle-pglite](https://github.com/noxify/vorsteh-queue/tree/main/examples/drizzle-pglite) directory.

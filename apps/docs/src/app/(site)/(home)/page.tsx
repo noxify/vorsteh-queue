@@ -5,14 +5,12 @@ import { CodeBlock, GitProviderLink, GitProviderLogo } from "renoun/components"
 
 import type { AllowedIcon } from "~/lib/icon"
 import { features } from "~/collections"
-import { Button } from "~/components/shadcn/button"
-import { buttonStyles } from "~/components/ui/button-styles"
+import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
 import { asyncFilter } from "~/lib/async-filter"
 import { getIcon } from "~/lib/icon"
-import { cn } from "~/lib/utils"
 
-const example_snippet = `
+const example_snippet = /* typescript */ `
 import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
 
 interface TEmailPayload {
@@ -110,11 +108,12 @@ export default async function Home() {
                 </Button>
               </div>
             </div>
-
-            {/* Code Example */}
-            <CodeBlock language="ts" showToolbar={true} allowCopy={true} path="example-queue.ts">
-              {example_snippet}
-            </CodeBlock>
+            <div>
+              {/* Code Example */}
+              <CodeBlock language="ts" showToolbar={true} allowCopy={true} path="example-queue.ts">
+                {example_snippet}
+              </CodeBlock>
+            </div>
           </div>
         </div>
       </section>
@@ -171,7 +170,7 @@ export default async function Home() {
             {otherFeatures.map((ele, eleIdx) => (
               <div
                 key={eleIdx}
-                className="rounded-lg border bg-cream-100 p-6 text-center transition-colors hover:bg-cream-200 dark:border-dark-50 dark:bg-dark-100 dark:hover:bg-dark-50"
+                className="rounded-lg border border-orange-primary/40 bg-cream-100 p-6 text-center transition-colors hover:bg-cream-200 dark:border-dark-50 dark:bg-dark-100 dark:hover:bg-dark-50"
               >
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-orange-primary/10 dark:bg-orange-primary/20">
                   {getIcon(ele.icon, { className: "text-orange-primary h-6 w-6" })}

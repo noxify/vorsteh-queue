@@ -72,7 +72,7 @@
     "@vorsteh-queue/tsconfig": "workspace:*",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.3",
-    "eslint": "^9.31.0",
+    "eslint": "^9.32.0",
     "postgres": "^3.4.7",
     "prettier": "^3.6.2",
     "rolldown": "1.0.0-beta.29",

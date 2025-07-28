@@ -1,0 +1,32 @@
+---
+title: Introduction
+---
+
+Vorsteh Queue is a powerful, type-safe queue engine designed for PostgreSQL 12+. It provides a robust solution for handling background jobs, scheduled tasks, and recurring processes in your Node.js applications.
+
+## Key Features
+
+- **Type-safe**: Full TypeScript support with generic job payloads
+- **Multiple adapters**: Drizzle ORM (PostgreSQL), Prisma ORM (PostgreSQL), and in-memory implementations
+- **Priority queues**: Numeric priority system (lower = higher priority)
+- **Delayed jobs**: Schedule jobs for future execution
+- **Recurring jobs**: Cron expressions and interval-based repetition
+- **UTC-first timezone support**: Reliable timezone handling with UTC storage
+- **Progress tracking**: Real-time job progress updates
+- **Event system**: Listen to job lifecycle events
+- **Graceful shutdown**: Clean job processing termination
+
+## Requirements
+
+- **Node.js 20+**
+- **ESM only** - This package is ESM-only and cannot be imported with `require()`
+- **PostgreSQL 12+** for production use
+
+## Architecture
+
+Vorsteh Queue follows a modular architecture with:
+
+- **Core package** (`@vorsteh-queue/core`) - Contains the main queue logic and interfaces
+- **Adapter packages** - Database-specific implementations (Drizzle, Prisma)
+- **UTC-first design** - All timestamps stored as UTC for consistency
+- **Event-driven** - Comprehensive event system for monitoring and debugging

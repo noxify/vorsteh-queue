@@ -1,109 +1,54 @@
 "use client"
 
-import type {
-  TabListProps as TabListPrimitiveProps,
-  TabPanelProps as TabPanelPrimitiveProps,
-  TabProps as TabPrimitiveProps,
-  TabsProps as TabsPrimitiveProps,
-} from "react-aria-components"
-import {
-  composeRenderProps,
-  TabList as TabListPrimitive,
-  TabPanel as TabPanelPrimitive,
-  Tab as TabPrimitive,
-  Tabs as TabsPrimitive,
-} from "react-aria-components"
-import { twMerge } from "tailwind-merge"
+import * as React from "react"
+import * as TabsPrimitive from "@radix-ui/react-tabs"
 
-import { composeTailwindRenderProps } from "~/lib/primitive"
+import { cn } from "~/lib/utils"
 
-interface TabsProps extends TabsPrimitiveProps {
-  ref?: React.RefObject<HTMLDivElement>
-}
-const Tabs = ({ className, ref, ...props }: TabsProps) => {
+function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
   return (
-    <TabsPrimitive
-      className={composeTailwindRenderProps(
+    <TabsPrimitive.Root
+      data-slot="tabs"
+      className={cn("flex flex-col gap-2", className)}
+      {...props}
+    />
+  )
+}
+
+function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
+  return (
+    <TabsPrimitive.List
+      data-slot="tabs-list"
+      className={cn(
+        "inline-flex h-9 w-fit items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground",
         className,
-        "group/tabs flex orientation-vertical:w-[800px] orientation-vertical:flex-row orientation-horizontal:flex-col gap-4 forced-color-adjust-none",
       )}
-      ref={ref}
       {...props}
     />
   )
 }
 
-interface TabListProps<T extends object> extends TabListPrimitiveProps<T> {
-  ref?: React.RefObject<HTMLDivElement>
-}
-const TabList = <T extends object>({ className, ref, ...props }: TabListProps<T>) => {
+function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
-    <TabListPrimitive
-      ref={ref}
-      {...props}
-      className={composeRenderProps(className, (className, { orientation }) =>
-        twMerge([
-          "flex forced-color-adjust-none",
-          orientation === "horizontal" && "flex-row gap-x-5 border-border border-b",
-          orientation === "vertical" && "flex-col items-start gap-y-4 border-l",
-          className,
-        ]),
-      )}
-    />
-  )
-}
-
-interface TabProps extends TabPrimitiveProps {
-  ref?: React.RefObject<HTMLDivElement>
-}
-const Tab = ({ children, className, ref, ...props }: TabProps) => {
-  return (
-    <TabPrimitive
-      ref={ref}
-      {...props}
-      className={composeTailwindRenderProps(className, [
-        "relative flex cursor-default items-center whitespace-nowrap rounded-full font-medium text-fg text-sm outline-hidden transition hover:text-fg *:data-[slot=icon]:mr-2 *:data-[slot=icon]:size-4",
-        "group-orientation-vertical/tabs:w-full group-orientation-vertical/tabs:py-0 group-orientation-vertical/tabs:pr-2 group-orientation-vertical/tabs:pl-4",
-        "group-orientation-horizontal/tabs:pb-3",
-        "selected:text-fg text-muted-fg focus:ring-0",
-        "disabled:opacity-50",
-        "href" in props && "cursor-pointer",
-      ])}
-    >
-      {({ isSelected }) => (
-        <>
-          {children}
-          {isSelected && (
-            <span
-              data-slot="selected-indicator"
-              className={twMerge(
-                "absolute rounded bg-fg",
-                "group-orientation-horizontal/tabs:-bottom-px group-orientation-horizontal/tabs:inset-x-0 group-orientation-horizontal/tabs:h-0.5 group-orientation-horizontal/tabs:w-full",
-                "group-orientation-vertical/tabs:left-0 group-orientation-vertical/tabs:h-[calc(100%-10%)] group-orientation-vertical/tabs:w-0.5 group-orientation-vertical/tabs:transform",
-              )}
-            />
-          )}
-        </>
-      )}
-    </TabPrimitive>
-  )
-}
-
-interface TabPanelProps extends TabPanelPrimitiveProps {
-  ref?: React.RefObject<HTMLDivElement>
-}
-const TabPanel = ({ className, ref, ...props }: TabPanelProps) => {
-  return (
-    <TabPanelPrimitive
-      {...props}
-      ref={ref}
-      className={composeTailwindRenderProps(
+    <TabsPrimitive.Trigger
+      data-slot="tabs-trigger"
+      className={cn(
+        "inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
-        "flex-1 text-fg text-sm focus-visible:outline-hidden",
       )}
+      {...props}
     />
   )
 }
 
-export type { TabsProps, TabListProps, TabProps, TabPanelProps }
-export { Tabs, TabList, Tab, TabPanel }
+function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
+  return (
+    <TabsPrimitive.Content
+      data-slot="tabs-content"
+      className={cn("flex-1 outline-none", className)}
+      {...props}
+    />
+  )
+}
+
+export { Tabs, TabsList, TabsTrigger, TabsContent }

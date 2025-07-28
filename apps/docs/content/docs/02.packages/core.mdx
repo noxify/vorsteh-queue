@@ -1,0 +1,135 @@
+---
+title: "@vorsteh-queue/core"
+description: The main queue engine containing all core functionality for job processing, scheduling, and management.
+---
+
+The core package contains the main queue engine and all essential functionality for job processing, scheduling, and event management.
+
+## Installation
+
+```bash
+npm install @vorsteh-queue/core
+```
+
+## Key Features
+
+- **Queue Management** - Create and manage multiple queues
+- **Job Processing** - Register handlers and process jobs
+- **Event System** - Comprehensive event lifecycle
+- **Progress Tracking** - Real-time job progress updates
+- **Scheduling** - Delayed and recurring jobs
+- **Priority System** - Numeric priority-based processing
+- **Graceful Shutdown** - Clean termination handling
+
+## Main Classes
+
+### Queue
+
+The primary class for managing jobs and workers.
+
+```typescript
+import { Queue } from "@vorsteh-queue/core"
+
+const queue = new Queue(adapter, {
+  name: "my-queue",
+  concurrency: 5,
+  removeOnComplete: 100,
+  removeOnFail: 50
+})
+```
+
+### JobWrapper
+
+Internal class that wraps jobs with additional functionality like progress tracking.
+
+## Core Interfaces
+
+### QueueAdapter
+
+Base interface that all database adapters must implement:
+
+```typescript
+interface QueueAdapter {
+  addJob(job: JobData): Promise<Job>
+  getNextJob(): Promise<Job | null>
+  updateJob(id: string, updates: Partial<Job>): Promise<void>
+  // ... other methods
+}
+```
+
+### Job
+
+Core job interface with all job properties:
+
+```typescript
+interface Job {
+  id: string
+  name: string
+  payload: unknown
+  priority: number
+  attempts: number
+  maxAttempts: number
+  progress: number
+  // ... other properties
+}
+```
+
+## Event Types
+
+The core package defines all event types:
+
+- `job:added` - Job added to queue
+- `job:processing` - Job started processing
+- `job:progress` - Job progress updated
+- `job:completed` - Job completed successfully
+- `job:failed` - Job failed
+- `job:retried` - Job retried after failure
+- `queue:paused` - Queue paused
+- `queue:resumed` - Queue resumed
+
+## Utilities
+
+### Scheduler
+
+Handles cron expressions and recurring job scheduling:
+
+```typescript
+import { parseSchedule } from "@vorsteh-queue/core"
+
+const nextRun = parseSchedule("0 9 * * *", "America/New_York")
+```
+
+### Error Handling
+
+Built-in error types for better error handling:
+
+```typescript
+import { QueueError, JobTimeoutError } from "@vorsteh-queue/core"
+```
+
+## Memory Adapter
+
+Includes a built-in memory adapter for testing and development:
+
+```typescript
+import { Queue, MemoryAdapter } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryAdapter())
+```
+
+## TypeScript Support
+
+Full TypeScript support with generic job payloads:
+
+```typescript
+interface EmailPayload {
+  to: string
+  subject: string
+  body: string
+}
+
+queue.register<EmailPayload>("send-email", async (job) => {
+  // job.payload is typed as EmailPayload
+  await sendEmail(job.payload)
+})
+```

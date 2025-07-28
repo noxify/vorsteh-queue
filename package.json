@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "turbo dev --filter='@vorsteh-queue/*'",
     "dev:docs": "turbo dev --filter docs",
-    "preview": "turbo run start -F docs...",
+    "preview": "pnpm -F docs preview",
     "build": "turbo build",
     "build:docs": "turbo build --filter docs",
     "build:pkg": "turbo build --filter='@vorsteh-queue/*'",

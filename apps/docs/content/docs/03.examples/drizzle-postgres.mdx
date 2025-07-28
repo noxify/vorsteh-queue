@@ -1,0 +1,68 @@
+---
+title: Drizzle PostgreSQL
+description: Basic usage example with Drizzle ORM and PostgreSQL demonstrating core queue functionality.
+---
+
+This example demonstrates the basic usage of Vorsteh Queue with Drizzle ORM and PostgreSQL. It's a great starting point for understanding the core concepts and features.
+
+## Features Demonstrated
+
+- Job registration with different priorities
+- Recurring jobs with limits
+- Event listeners for job lifecycle
+- Queue statistics monitoring
+- Graceful shutdown with cleanup
+
+## Quick Start
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue my-app --template=drizzle-postgres
+```
+
+## Manual Setup
+
+1. **Install dependencies:**
+```bash
+pnpm install
+```
+
+2. **Set up PostgreSQL database:**
+```bash
+cp .env.example .env
+# Edit .env with your database URL
+```
+
+3. **Push database schema:**
+```bash
+pnpm db:push
+```
+
+4. **Run the example:**
+```bash
+pnpm dev
+```
+
+## Code Overview
+
+The example includes:
+
+- **Database setup** with Drizzle ORM
+- **Queue initialization** with PostgreSQL adapter
+- **Job handlers** for different job types
+- **Event listeners** for monitoring
+- **Graceful shutdown** handling
+
+## Key Concepts
+
+This example is perfect for learning:
+- How to set up Vorsteh Queue with Drizzle
+- Basic job registration and processing
+- Event system usage
+- Priority-based job processing
+- Recurring job patterns
+
+## Source Code
+
+The complete source code is available in the [examples/drizzle-postgres](https://github.com/noxify/vorsteh-queue/tree/main/examples/drizzle-postgres) directory.

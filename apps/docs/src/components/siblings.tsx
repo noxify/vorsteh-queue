@@ -1,0 +1,93 @@
+import Link from "next/link"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { isFile } from "renoun/file-system"
+
+import type { EntryType } from "~/collections"
+import { routes } from "~/collections"
+
+export default async function Siblings({ source }: { source: EntryType }) {
+  const [previousPage, nextPage] = await getSiblings(source)
+
+  if (!previousPage && !nextPage) {
+    return <></>
+  }
+
+  return (
+    <nav
+      className="mt-6 flex items-center justify-between border-t border-cream-200 pt-6 dark:border-dark-100"
+      data-pagefind-ignore
+    >
+      <div className="flex w-0 flex-1">
+        {previousPage && (
+          <>
+            <Link
+              prefetch={true}
+              href={previousPage.pathname}
+              className="text-gray-700"
+              title={`Go to previous page: ${previousPage.title}`}
+            >
+              <div className="group flex shrink-0 items-center gap-x-4">
+                <ChevronLeftIcon className="h-5 w-5 flex-none text-gray-500 transition-colors duration-200 group-hover:text-indigo-400 dark:text-gray-400 dark:group-hover:text-white" />
+                <div className="flex flex-col items-start">
+                  <p className="text-xs leading-5 text-gray-500">Previous page</p>
+                  <p className="text-sm leading-5 font-medium text-gray-500 transition-colors duration-200 group-hover:text-indigo-400 dark:text-gray-400 dark:group-hover:text-white">
+                    {previousPage.title}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          </>
+        )}
+      </div>
+
+      <div className="-mt-px flex w-0 flex-1 justify-end">
+        {nextPage && (
+          <>
+            <Link
+              prefetch={true}
+              href={nextPage.pathname}
+              className="text-gray-700"
+              title={`Go to next page: ${nextPage.title}`}
+            >
+              <div className="group flex shrink-0 items-center gap-x-4">
+                <div className="flex flex-col items-end">
+                  <p className="text-xs leading-5 text-gray-500">Next page</p>
+                  <p className="text-sm leading-5 text-gray-500 transition-colors duration-200 group-hover:text-foreground dark:text-gray-400 dark:group-hover:text-white">
+                    {nextPage.title}
+                  </p>
+                </div>
+                <ChevronRightIcon className="h-5 w-5 flex-none text-gray-500 transition-colors duration-200 group-hover:text-foreground dark:text-gray-400 dark:group-hover:text-white" />
+              </div>
+            </Link>
+          </>
+        )}
+      </div>
+    </nav>
+  )
+}
+
+// inspired by
+// * https://github.com/souporserious/renoun/blob/main/packages/renoun/src/file-system/index.tsx#L497
+async function getSiblings(
+  source: EntryType,
+): Promise<
+  [Awaited<typeof routes>[number] | undefined, Awaited<typeof routes>[number] | undefined]
+> {
+  let currentPath = ""
+
+  if (isFile(source) && source.getBaseName() === "index") {
+    currentPath = source.getParent().getPathname()
+  } else {
+    currentPath = source.getPathname()
+  }
+
+  const entries = await routes
+
+  const currentIndex = entries.findIndex((ele) => ele.pathname === currentPath)
+
+  const previousElement = currentIndex > 0 ? entries[currentIndex - 1] : undefined
+
+  const nextElement = currentIndex < entries.length - 1 ? entries[currentIndex + 1] : undefined
+
+  return [previousElement, nextElement]
+}

@@ -9,7 +9,8 @@ export const frontmatterSchema = z.object({
   navTitle: z.string().optional(),
   entrypoint: z.string().optional(),
   alias: z.string().optional(),
-  showToc: z.boolean().optional().default(true),
+  toc: z.boolean().optional().default(true),
+  ignoreSearch: z.boolean().optional().default(false),
 })
 
 export const headingSchema = z.array(

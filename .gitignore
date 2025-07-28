@@ -49,3 +49,4 @@ yarn-error.log*
 
 # turbo
 .turbo
+apps/docs/public/pagefind/

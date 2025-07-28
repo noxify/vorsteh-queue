@@ -1,0 +1,77 @@
+---
+title: Prisma Client
+description: Integration example using Prisma ORM with PostgreSQL for type-safe database operations.
+---
+
+This example demonstrates how to integrate Vorsteh Queue with Prisma ORM, providing type-safe database operations and excellent developer experience.
+
+## Features Demonstrated
+
+- Prisma ORM integration
+- Type-safe database operations
+- Prisma schema definition
+- Migration workflow
+- Generated Prisma Client usage
+
+## Setup
+
+1. **Install dependencies:**
+```bash
+pnpm install
+```
+
+2. **Set up environment:**
+```bash
+cp .env.example .env
+# Edit .env with your database URL
+```
+
+3. **Run Prisma migrations:**
+```bash
+npx prisma migrate dev
+```
+
+4. **Generate Prisma Client:**
+```bash
+npx prisma generate
+```
+
+5. **Run the example:**
+```bash
+pnpm dev
+```
+
+## Prisma Schema
+
+The example includes a complete Prisma schema with all necessary tables for Vorsteh Queue:
+
+```prisma
+// Queue tables for Vorsteh Queue
+model Job {
+  id          String   @id @default(cuid())
+  name        String
+  payload     Json
+  // ... other fields
+}
+```
+
+## Benefits of Prisma
+
+- **Type safety** - Generated types for all database operations
+- **Migration system** - Version-controlled database changes
+- **Developer experience** - Excellent tooling and IDE support
+- **Query builder** - Intuitive API for database operations
+
+## Prisma Studio
+
+You can also explore your queue data using Prisma Studio:
+
+```bash
+npx prisma studio
+```
+
+This opens a web interface where you can view and edit your queue jobs directly.
+
+## Source Code
+
+The complete source code is available in the [examples/prisma-client](https://github.com/noxify/vorsteh-queue/tree/main/examples/prisma-client) directory.

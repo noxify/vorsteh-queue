@@ -1,0 +1,98 @@
+---
+title: Progress Tracking
+description: Real-time job progress tracking with multiple scenarios including dataset processing and file uploads.
+---
+
+This example demonstrates how to implement real-time progress tracking for long-running jobs, perfect for building progress bars and status indicators in your applications.
+
+## Features Demonstrated
+
+- **Real-time progress updates** - Jobs report progress as they execute
+- **Multiple progress scenarios** - Dataset processing and file uploads
+- **Progress event listening** - Monitor progress updates in real-time
+- **Realistic simulations** - Chunked processing and upload scenarios
+
+## Quick Start
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue my-app --template=progress-tracking
+```
+
+## Manual Setup
+
+1. **Install dependencies:**
+```bash
+pnpm install
+```
+
+2. **Set up database:**
+```bash
+cp .env.example .env
+# Edit .env with your database URL
+```
+
+3. **Push database schema:**
+```bash
+pnpm db:push
+```
+
+4. **Run the example:**
+```bash
+pnpm dev
+```
+
+## What You'll See
+
+The example will demonstrate:
+
+1. **Dataset Processing** - Process 5 items with progress updates
+2. **File Upload Simulation** - Chunked upload with progress tracking
+3. **Real-time Updates** - Live progress percentages
+4. **Completion Notifications** - Final status updates
+
+## Progress Implementation
+
+```typescript
+// In your job handler
+queue.register('process-data', async (job) => {
+  const items = job.payload.items
+  
+  for (let i = 0; i < items.length; i++) {
+    // Process item
+    await processItem(items[i])
+    
+    // Update progress (0-100)
+    const progress = Math.round(((i + 1) / items.length) * 100)
+    await job.updateProgress(progress)
+  }
+  
+  return { processed: items.length }
+})
+
+// Listen to progress updates
+queue.on('job:progress', (job) => {
+  console.log(`Job ${job.name}: ${job.progress}% complete`)
+})
+```
+
+## Use Cases
+
+Perfect for implementing:
+- Progress bars in web applications
+- Upload indicators
+- Processing status displays
+- Long-running task monitoring
+- User feedback systems
+
+## Integration Tips
+
+- Update progress at meaningful intervals (not too frequently)
+- Use percentage values (0-100) for consistency
+- Provide meaningful progress descriptions
+- Handle progress updates gracefully in your UI
+
+## Source Code
+
+The complete source code is available in the [examples/progress-tracking](https://github.com/noxify/vorsteh-queue/tree/main/examples/progress-tracking) directory.

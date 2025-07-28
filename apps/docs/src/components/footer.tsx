@@ -58,6 +58,25 @@ export default function Footer() {
 
         <div className="mt-8 border-t border-fur-400 pt-8 text-center text-sm text-cream-200 dark:border-dark-100">
           <p>&copy; {new Date().getFullYear()} Vorsteh Queue. Released under the MIT License.</p>
+
+          <p>
+            Powered by{" "}
+            <a
+              href="https://www.nextjs.org"
+              target="_blank"
+              className="font-bold hover:text-orange-primary"
+            >
+              Next.js
+            </a>{" "}
+            and{" "}
+            <a
+              href="https://www.renoun.dev"
+              target="_blank"
+              className="font-bold hover:text-orange-primary"
+            >
+              Renoun
+            </a>{" "}
+          </p>
         </div>
       </div>
     </footer>
