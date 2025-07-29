@@ -195,21 +195,24 @@ export function isHidden(entry: EntryType) {
 
 async function filterInternalExports(entry: FileSystemEntry) {
   if (isFile(entry, ["ts", "tsx"])) {
+    const shouldSkip = await entry.getText().then((text) => text.includes("@skip-docs"))
     const fileExports = await entry.getExports()
-    const allTags = await Promise.all(fileExports.map((exportSource) => exportSource.getTags()))
+    let allTags = await Promise.all(fileExports.map((exportSource) => exportSource.getTags()))
+
+    allTags = allTags.filter((ele) => ele !== undefined)
     const allInternal = fileExports.every((_, index) => {
       const tags = allTags[index]
       return tags?.every((tag) => tag.name === "internal")
     })
 
-    if (allInternal) {
+    if (allInternal || allTags.length === 0 || shouldSkip) {
       return false
     }
 
     return true
   }
 
-  return isDirectory(entry) || isFile(entry, "mdx")
+  return isDirectory(entry) || isFile(entry, "ts")
 }
 
 export const routes = AllDocumentation.getEntries({ recursive: true }).then((entries) =>

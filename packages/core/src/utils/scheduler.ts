@@ -1,3 +1,6 @@
+/*
+ * @skip-docs
+ */
 import { TZDate } from "@date-fns/tz"
 import { Cron } from "croner"
 
@@ -117,6 +120,18 @@ export const toUtcDate = (date: Date, timezone = "UTC"): Date => {
   return new Date(tzDate.getTime())
 }
 
+/**
+ * Create a UTC Date object.
+ *
+ * @param input - Input date to convert
+ * @returns UTC Date
+ *
+ * @example
+ * ```typescript
+ * // Create a UTC Date object
+ * const utcDate = asUtc(new Date("2024-01-15T09:00:00"))
+ * ```
+ */
 export function asUtc(input: Date) {
   return new TZDate(input, "UTC")
 }

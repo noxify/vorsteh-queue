@@ -1,6 +1,9 @@
 import type { BaseJob, JobWithProgress } from "../../types"
 import type { Queue } from "./queue"
 
+/**
+ * @internal
+ */
 export function createJobWrapper<TJobPayload>(
   job: BaseJob<TJobPayload>,
   queue: Queue,

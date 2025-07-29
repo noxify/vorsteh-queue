@@ -1,3 +1,7 @@
+/*
+ * @skip-docs
+ */
+
 export { Queue } from "./core/queue"
 export { BaseQueueAdapter } from "./adapters/base"
 export { MemoryQueueAdapter } from "./adapters/memory"

@@ -1,25 +1,43 @@
+import { isFile } from "renoun/file-system"
+
 import { CorePackageDirectory } from "~/collections"
 import { References } from "./_components/Reference"
 
 export default async function Page() {
-  const files = (await CorePackageDirectory.getEntries({ includeIndexAndReadmeFiles: true })).map(
-    (ele) => ele.getPathname(),
+  const files = await CorePackageDirectory.getEntries({
+    includeIndexAndReadmeFiles: false,
+    recursive: true,
+  })
+
+  console.dir({ files })
+
+  const allExports = await Promise.all(
+    files
+      .filter((ele) => isFile(ele))
+      .map(async (entry) => {
+        const sourceFile = await CorePackageDirectory.getFile(
+          entry.getPathnameSegments({
+            includeBasePathname: false,
+            includeDirectoryNamedSegment: false,
+          }),
+          "ts",
+        )
+
+        const fileExports = await sourceFile.getExports()
+
+        return fileExports
+      }),
   )
-  const sourceFile = await CorePackageDirectory.getFile("index", "ts")
-
-  console.dir({ files, sourceFileName: sourceFile.getName() })
-
-  if (!sourceFile) {
-    return null
-  }
-
-  const fileExports = await sourceFile.getExports()
-
-  console.dir({ fileExports })
 
   return (
     <>
-      <References fileExports={fileExports} />
+      {allExports.map((fileExports, index) => {
+        return (
+          <div key={index}>
+            <References fileExports={fileExports} />
+          </div>
+        )
+      })}
     </>
   )
 }
