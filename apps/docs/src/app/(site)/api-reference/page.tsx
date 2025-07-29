@@ -15,6 +15,8 @@ export default async function Page() {
 
   const fileExports = await sourceFile.getExports()
 
+  console.dir({ fileExports })
+
   return (
     <>
       <References fileExports={fileExports} />

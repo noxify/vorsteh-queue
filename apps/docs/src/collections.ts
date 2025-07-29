@@ -37,16 +37,6 @@ export const AllDocumentation = new Collection({
 export const CorePackageDirectory = new Directory({
   path: "../../packages/core/src",
   basePathname: "api-reference",
-  loader: {
-    ts: (path) => import(`../../../packages/core/src/${path}.ts`),
-  },
-  // loader: {
-  //   mdx: withSchema<{
-  //     headings: MDXHeadings
-  //   }>(
-  //     (path) => import(`../../../packages/renoun/src/file-system/${path}.mdx`)
-  //   ),
-  // },
   include: filterInternalExports,
 })
 
