@@ -72,7 +72,7 @@ export async function FileContent({ source }: { source: EntryType }) {
                     // default prose
                     "prose dark:prose-invert",
                     // remove backtick from inline code block
-                    "prose-code:before:hidden prose-code:after:hidden",
+                    //"prose-code:before:hidden prose-code:after:hidden",
                     // use full width
                     "max-w-auto w-full min-w-full",
                     "grow",
