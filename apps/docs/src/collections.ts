@@ -37,6 +37,9 @@ export const AllDocumentation = new Collection({
 export const CorePackageDirectory = new Directory({
   path: "../../packages/core/src",
   basePathname: "api-reference",
+  loader: {
+    ts: (path) => import(`../../../packages/core/src/${path}.ts`),
+  },
   include: filterInternalExports,
 })
 
@@ -196,6 +199,9 @@ export function isHidden(entry: EntryType) {
 async function filterInternalExports(entry: FileSystemEntry) {
   if (isFile(entry, ["ts", "tsx"])) {
     const shouldSkip = await entry.getText().then((text) => text.includes("@skip-docs"))
+    if (shouldSkip) {
+      return false
+    }
     const fileExports = await entry.getExports()
     let allTags = await Promise.all(fileExports.map((exportSource) => exportSource.getTags()))
 
@@ -205,7 +211,7 @@ async function filterInternalExports(entry: FileSystemEntry) {
       return tags?.every((tag) => tag.name === "internal")
     })
 
-    if (allInternal || allTags.length === 0 || shouldSkip) {
+    if (allInternal || allTags.length === 0) {
       return false
     }
 
