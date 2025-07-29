@@ -43,6 +43,15 @@ import { queueJobsTable } from "@vorsteh-queue/adapter-drizzle"
 export { queueJobsTable }
 ```
 
+If you don't want to use the pre-defined schema, you can create your own schema definition.
+
+<RemoteCodeBlock
+  source="./packages/adapter-drizzle/src/postgres-schema.ts"
+  language="ts"
+  showToolbar={true}
+  path="queue-jobs.ts"
+/>
+
 ### Migration
 
 Push the schema to your database:

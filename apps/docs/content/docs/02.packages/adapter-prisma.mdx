@@ -28,29 +28,13 @@ const queue = new Queue(adapter)
 
 Add the queue job model to your `schema.prisma`:
 
-```prisma
-model QueueJob {
-  id           String    @id @default(cuid())
-  name         String
-  payload      Json
-  priority     Int       @default(0)
-  attempts     Int       @default(0)
-  maxAttempts  Int       @default(3) @map("max_attempts")
-  progress     Int       @default(0)
-  status       String    @default("pending")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  runAt        DateTime? @map("run_at")
-  completedAt  DateTime? @map("completed_at")
-  failedAt     DateTime? @map("failed_at")
-  error        String?
-  result       Json?
-
-  @@map("queue_jobs")
-  @@index([status, priority, runAt])
-  @@index([name])
-}
-```
+<RemoteCodeBlock
+  source="./packages/adapter-prisma/prisma/schema.prisma"
+  language="prisma"
+  showToolbar={true}
+  path="prisma/schema.prisma"
+  focusedLines="17-43"
+/>
 
 ### Migration
 

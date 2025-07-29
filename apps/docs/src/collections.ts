@@ -1,3 +1,4 @@
+import type { FileSystemEntry } from "renoun/file-system"
 import type { z } from "zod"
 import pMap from "p-map"
 import { Collection, Directory, isDirectory, isFile, withSchema } from "renoun/file-system"
@@ -31,6 +32,52 @@ export const DocumentationDirectory = new Directory({
 
 export const AllDocumentation = new Collection({
   entries: [DocumentationDirectory],
+})
+
+export const CorePackageDirectory = new Directory({
+  path: "../../packages/core/src",
+  basePathname: "api-reference",
+  loader: {
+    ts: (path) => import(`../../../packages/core/src/${path}.ts`),
+  },
+  // loader: {
+  //   mdx: withSchema<{
+  //     headings: MDXHeadings
+  //   }>(
+  //     (path) => import(`../../../packages/renoun/src/file-system/${path}.mdx`)
+  //   ),
+  // },
+  include: filterInternalExports,
+})
+
+export const AdapterDrizzlePackageDirectory = new Directory({
+  path: "../../packages/adapter-drizzle/src",
+  basePathname: "api-reference",
+  // loader: {
+  //   mdx: withSchema<{
+  //     headings: MDXHeadings
+  //   }>(
+  //     (path) => import(`../../../packages/renoun/src/file-system/${path}.mdx`)
+  //   ),
+  // },
+  include: filterInternalExports,
+})
+
+export const AdapterPrismaPackageDirectory = new Directory({
+  path: "../../packages/adapter-prisma/src",
+  basePathname: "api-reference",
+  // loader: {
+  //   mdx: withSchema<{
+  //     headings: MDXHeadings
+  //   }>(
+  //     (path) => import(`../../../packages/renoun/src/file-system/${path}.mdx`)
+  //   ),
+  // },
+  include: filterInternalExports,
+})
+
+export const PackageApiDocumentation = new Collection({
+  entries: [CorePackageDirectory, AdapterDrizzlePackageDirectory, AdapterPrismaPackageDirectory],
 })
 
 export type EntryType = Awaited<ReturnType<typeof AllDocumentation.getEntry>>
@@ -154,6 +201,25 @@ export const getBreadcrumbItems = async (slug: string[]) => {
  */
 export function isHidden(entry: EntryType) {
   return entry.getBaseName().startsWith("_")
+}
+
+async function filterInternalExports(entry: FileSystemEntry) {
+  if (isFile(entry, ["ts", "tsx"])) {
+    const fileExports = await entry.getExports()
+    const allTags = await Promise.all(fileExports.map((exportSource) => exportSource.getTags()))
+    const allInternal = fileExports.every((_, index) => {
+      const tags = allTags[index]
+      return tags?.every((tag) => tag.name === "internal")
+    })
+
+    if (allInternal) {
+      return false
+    }
+
+    return true
+  }
+
+  return isDirectory(entry) || isFile(entry, "mdx")
 }
 
 export const routes = AllDocumentation.getEntries({ recursive: true }).then((entries) =>
