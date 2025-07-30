@@ -1,5 +1,5 @@
 import type { TreeItem } from "~/lib/navigation"
-import { DocumentationDirectory } from "~/collections"
+import { AllDocumentation } from "~/collections"
 import { DocsSidebar } from "~/components/docs-sidebar"
 import { Sidebar, SidebarContent, SidebarInset, SidebarProvider } from "~/components/ui/sidebar"
 import { getTree } from "~/lib/navigation"
@@ -17,14 +17,12 @@ export function AppSidebar({ items }: { items: TreeItem[] }) {
 export default async function DocsLayout(
   props: Readonly<{
     params: Promise<{
-      slug: string[]
+      slug?: string[]
     }>
     children: React.ReactNode
   }>,
 ) {
-  const params = await props.params
-
-  const recursiveCollections = await DocumentationDirectory.getEntries({
+  const recursiveCollections = await AllDocumentation.getEntries({
     recursive: true,
   })
 
@@ -32,16 +30,7 @@ export default async function DocsLayout(
   // it's used to provide a short link for the user to switch easily between the different collections
   // it expects an `index.mdx` file in each collection at the root level ( e.g. `aria-docs/index.mdx`)
 
-  const tree = recursiveCollections
-    // to get only the relevant menu entries, we have to filter the list of collections
-    // based on the provided slug ( via `params.slug` ) and the path segments for the current source in the iteration
-    .filter((collection) => {
-      return collection.getPathnameSegments()[0] === params.slug[0]
-    })
-    // since we generated the nested tree later in the code ( via `getTree` )
-    // we can filter the list of collections based on the depth which should be shown as "root"
-    // in our case, we filter the list of collections based on depth 2
-    .filter((ele) => ele.getDepth() === 0)
+  const tree = recursiveCollections.filter((ele) => ele.getDepth() === 0)
 
   const sidebarItems = await getTree(tree)
 

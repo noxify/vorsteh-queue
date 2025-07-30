@@ -7,7 +7,7 @@ import type { AllowedIcon } from "~/lib/icon"
 import { features } from "~/collections"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
-import { asyncFilter } from "~/lib/async-filter"
+import { asyncFilter } from "~/lib/array-helper"
 import { getIcon } from "~/lib/icon"
 
 const example_snippet = /* typescript */ `
@@ -166,7 +166,7 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid h-56 place-items-stretch gap-6 md:grid-cols-2 lg:grid-cols-4">
             {otherFeatures.map((ele, eleIdx) => (
               <div
                 key={eleIdx}

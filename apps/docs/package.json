@@ -12,6 +12,7 @@
     "generate-pagefind": "pagefind --site out --output-path out/pagefind",
     "lint": "eslint .",
     "lint:links": "node --import ./src/register.js --import tsx/esm src/link-check.ts",
+    "matchtest": "tsx src/match.ts",
     "preview": "tsx src/localserver.ts",
     "typecheck": "tsc --noEmit"
   },
@@ -79,6 +80,7 @@
     "tailwind-merge": "3.3.1",
     "tailwindcss": "4.1.11",
     "tailwindcss-animate": "1.0.7",
+    "tsx": "4.20.3",
     "typescript": "^5.8.3"
   }
 }

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { format } from "date-fns/format"
 import { ExternalLinkIcon } from "lucide-react"
+import { Markdown } from "renoun/components"
 
 import type { EntryType } from "~/collections"
 import { getBreadcrumbItems, getFileContent, getSections } from "~/collections"
@@ -57,15 +58,34 @@ export async function FileContent({ source }: { source: EntryType }) {
             <SiteBreadcrumb items={breadcrumbItems} />
 
             <div {...pagefindProps}>
-              <h1
-                className="no-prose mb-2 scroll-m-20 text-3xl font-light tracking-tight sm:text-4xl md:text-5xl"
-                data-pagefind-meta="title"
+              <Markdown
+                components={{
+                  h1: (props) => (
+                    <h1
+                      {...props}
+                      className="no-prose mb-2 scroll-m-20 text-3xl font-light tracking-tight sm:text-4xl md:text-5xl"
+                      data-pagefind-meta="title"
+                    />
+                  ),
+                }}
               >
-                {frontmatter.title ?? source.getTitle()}
-              </h1>
-              <p className="mb-8 text-lg font-medium text-pretty text-muted-foreground sm:text-xl/8">
+                {frontmatter.title ? `# ${frontmatter.title}` : `# ${source.getTitle()}`}
+              </Markdown>
+
+              <Markdown
+                components={{
+                  p: (props) => (
+                    <p
+                      {...props}
+                      className="prose mb-8 text-lg font-medium text-pretty text-muted-foreground sm:text-xl/8"
+                    />
+                  ),
+                  code: (props) => <code>{props.children ?? ""}</code>,
+                }}
+              >
                 {frontmatter.description ?? ""}
-              </p>
+              </Markdown>
+
               <article>
                 <div
                   className={cn(

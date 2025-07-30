@@ -6,15 +6,20 @@ import { isDirectory } from "renoun/file-system"
 import { AllDocumentation, getBreadcrumbItems, getFileContent, routes } from "~/collections"
 import { DirectoryContent } from "~/components/directory-content"
 import { FileContent } from "~/components/file-content"
+import { removeFromArray } from "~/lib/utils"
 
 const CollectionInfo = cache(() => AllDocumentation)
 
 export async function generateStaticParams() {
-  return (await routes).map((entry) => ({ slug: entry.segments }))
+  const slugs = (await routes()).map((entry) => ({
+    slug: entry.segments,
+  }))
+
+  return slugs
 }
 
 interface PageProps {
-  params: Promise<{ slug: string[] }>
+  params: Promise<{ slug?: string[] }>
 }
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
@@ -33,20 +38,29 @@ export default async function DocsPage(props: PageProps) {
 
   let collection
 
+  const searchParam = removeFromArray(params.slug, ["docs"])
+
   try {
-    collection = await CollectionInfo().getEntry([...params.slug])
+    collection = await CollectionInfo().getEntry(searchParam)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e: unknown) {
     try {
-      collection = await CollectionInfo().getEntry([...params.slug, "index"])
+      collection = await CollectionInfo().getEntry([...searchParam, "index"])
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e: unknown) {
-      // eslint-disable-next-line no-console
-      console.warn("Unable to get entry for path:", params.slug)
+      try {
+        collection = await CollectionInfo().getEntry([...searchParam, "readme"])
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e: unknown) {
+        // eslint-disable-next-line no-console
+        console.warn("Unable to get entry for path:", searchParam)
 
-      return notFound()
+        return notFound()
+      }
     }
   }
+
+  console.dir({ searchParam, collection: collection.getAbsolutePath() })
 
   // check the current path if it's a valid file ( including index check for a directory )
   const file = await getFileContent(collection)
