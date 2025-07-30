@@ -1,6 +1,7 @@
 {
   "name": "@vorsteh-queue/adapter-prisma",
   "version": "0.2.0",
+  "description": "Prisma ORM adapter for Vorsteh Queue with PostgreSQL support",
   "keywords": [
     "queue",
     "job-queue",

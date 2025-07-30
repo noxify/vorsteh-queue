@@ -46,8 +46,7 @@ export default async function DocsPage(props: PageProps) {
   if (!transformedEntry.file && transformedEntry.isDirectory) {
     return (
       <>
-        {" "}
-        <DirectoryContent transformedEntry={transformedEntry} />{" "}
+        <DirectoryContent transformedEntry={transformedEntry} />
       </>
     )
   }

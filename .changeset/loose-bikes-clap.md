@@ -5,4 +5,4 @@
 "@vorsteh-queue/core": patch
 ---
 
-Updated deps
+Updated dependencies

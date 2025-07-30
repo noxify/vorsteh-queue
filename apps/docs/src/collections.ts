@@ -36,7 +36,10 @@ export const ExampleDirectory = new Directory({
   include: (entry) =>
     !entry.getBaseName().startsWith("_") &&
     !entry.getAbsolutePath().includes("_assets") &&
-    entry.getDepth() === 1 &&
+    // do not fetch all files in the example
+    // `depth == 0` - include the root `examples/readme.mdx`
+    // `depth == 1` - include only the `examples/<example>/readme.mdx
+    (entry.getDepth() == 1 || entry.getDepth() == 0) &&
     (isDirectory(entry) || isFile(entry, "mdx")),
 
   loader: {
@@ -135,6 +138,19 @@ export function isHidden(entry: EntryType) {
   return entry.getBaseName().startsWith("_")
 }
 
+/**
+ * Gets a file from the documentation collection based on the source entry
+ * Attempts to find the file in the following order:
+ * 1. Direct segment file
+ * 2. Index file in the segment directory
+ * 3. Readme file in the segment directory
+ *
+ * Handles special case for examples by excluding "docs" segment from the path
+ *
+ * @param source {EntryType} The source entry to get the file for
+ * @returns The found file or null if no file exists
+ */
+
 export async function getFile(source: EntryType) {
   const segments = source.getPathnameSegments({
     includeBasePathname: true,
@@ -157,6 +173,13 @@ export async function getFile(source: EntryType) {
   return segmentFile ?? indexFile ?? readmeFile ?? null
 }
 
+/**
+ * Gets a directory from the documentation collection based on the source entry
+ * Handles special case for examples by excluding "docs" segment from the path
+ *
+ * @param source {EntryType} The source entry to get the directory for
+ * @returns The directory corresponding to the source entry
+ */
 export async function getDirectory(source: EntryType) {
   const segments = source.getPathnameSegments({
     includeBasePathname: true,
@@ -172,10 +195,23 @@ export async function getDirectory(source: EntryType) {
   return currentDirectory
 }
 
+/**
+ * Retrieves the frontmatter metadata from a documentation file
+ * @param source {Awaited<ReturnType<typeof getFile>>} The file to get metadata from
+ * @returns The frontmatter metadata if it exists
+ */
 export async function getMetadata(source: Awaited<ReturnType<typeof getFile>>) {
   return await source?.getExportValue("frontmatter")
 }
 
+/**
+ * Gets the previous and next entries relative to the current entry in the documentation
+ * Returns a tuple containing [previousEntry, nextEntry] where either can be undefined
+ * if at the start/end of the documentation
+ *
+ * @param source {Awaited<ReturnType<typeof getTransformedEntry>>} The current entry to get siblings for
+ * @returns Tuple of previous and next entries
+ */
 export async function getSiblings(
   source: Awaited<ReturnType<typeof getTransformedEntry>>,
 ): Promise<
@@ -198,6 +234,11 @@ export async function getSiblings(
   return [previousElement, nextElement]
 }
 
+/**
+ * Transforms a FileSystemEntry into a standardized object containing key information
+ *
+ * @param source {EntryType} The file system entry to transform
+ */
 export async function getTransformedEntry(source: EntryType) {
   const file = await getFile(source)
   const metadata = file ? await getMetadata(file) : null
@@ -214,6 +255,10 @@ export async function getTransformedEntry(source: EntryType) {
   }
 }
 
+/**
+ * Caches and returns an array of transformed entries from the AllDocumentation collection
+ * Recursively gets all entries including index and readme files and transforms them
+ */
 export const transformedEntries = cache(async () => {
   const entries = await AllDocumentation.getEntries({
     recursive: true,
