@@ -49,7 +49,7 @@
     "@vorsteh-queue/tsconfig": "workspace:*",
     "eslint": "^9.32.0",
     "prettier": "^3.6.2",
-    "rolldown": "1.0.0-beta.29",
+    "rolldown": "1.0.0-beta.30",
     "rollup-plugin-delete": "^3.0.1",
     "tsx": "4.20.3",
     "typescript": "^5.8.3"
