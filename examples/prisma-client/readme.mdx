@@ -1,0 +1,19 @@
+---
+title: Prisma Client Example
+---
+
+Demonstrates Vorsteh Queue with Prisma ORM using the `prisma-client` provider that generates TypeScript files directly.
+
+## Setup
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue@latest my-project --template prisma-client
+cd my-project
+cp .env.example .env
+# Edit .env with your PostgreSQL database URL
+pnpm prisma:generate
+pnpm db:push
+pnpm dev
+```

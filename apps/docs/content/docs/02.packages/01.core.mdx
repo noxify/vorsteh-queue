@@ -56,6 +56,11 @@ Add jobs to the queue for processing:
 ```ts
 import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
 
+interface EmailPayload {
+  to: string
+  subject: string
+}
+
 const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
 
 // Basic job
@@ -65,6 +70,11 @@ await queue.add("send-email", {
 })
 
 // Job with options
+const payload: EmailPayload = {
+  to: "user@example.com",
+  subject: "Welcome!",
+}
+
 await queue.add("send-email", payload, {
   priority: 1,
   delay: 5000,
@@ -91,7 +101,7 @@ queue.pause()
 queue.resume()
 
 // Graceful shutdown
-await queue.shutdown()
+await queue.stop()
 ```
 
 ### Progress Tracking
@@ -101,9 +111,17 @@ Update job progress in real-time:
 ```ts
 import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
 
+interface ProcessPayload {
+  items: string[]
+}
+
+interface ProcessResult {
+  processed: number
+}
+
 const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
 
-queue.register("process-data", async (job) => {
+queue.register<ProcessPayload, ProcessResult>("process-data", async (job) => {
   const items = job.payload.items
 
   for (let i = 0; i < items.length; i++) {
@@ -113,6 +131,8 @@ queue.register("process-data", async (job) => {
     const progress = Math.round(((i + 1) / items.length) * 100)
     await job.updateProgress(progress)
   }
+
+  return { processed: items.length }
 })
 ```
 
@@ -123,21 +143,33 @@ Schedule jobs for future execution:
 ```ts
 import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
 
+interface CleanupPayload {
+  type: string
+}
+
+interface ReportPayload {
+  date: string
+}
+
+interface HealthCheckPayload {
+  endpoint: string
+}
+
 const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
 
 // Delayed job
-await queue.add(
+await queue.add<CleanupPayload>(
   "cleanup",
-  {},
+  { type: "temp-files" },
   {
     delay: 60000, // 1 minute
   },
 )
 
 // Recurring job with cron
-await queue.add(
+await queue.add<ReportPayload>(
   "daily-report",
-  {},
+  { date: new Date().toISOString() },
   {
     cron: "0 9 * * *", // Every day at 9 AM
     timezone: "America/New_York",
@@ -145,9 +177,9 @@ await queue.add(
 )
 
 // Recurring job with interval
-await queue.add(
+await queue.add<HealthCheckPayload>(
   "health-check",
-  {},
+  { endpoint: "/api/health" },
   {
     repeat: { every: 30000, limit: 10 }, // Every 30s, 10 times
   },
@@ -204,10 +236,6 @@ const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
 const stats = await queue.getStats()
 console.log(stats) // { pending: 5, processing: 2, completed: 100, failed: 3 }
 
-// Get queue size
-const size = await queue.size()
-console.log(`${size} jobs pending`)
-
 // Clear jobs
 await queue.clear() // Clear all jobs
 await queue.clear("failed") // Clear only failed jobs
@@ -220,17 +248,33 @@ Handle job failures and timeouts:
 ```ts
 import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
 
+interface RiskyJobPayload {
+  operation: string
+  data: unknown
+}
+
+interface RiskyJobResult {
+  success: boolean
+  error?: string
+}
+
 const queue = new Queue(new MemoryQueueAdapter(), { name: "example" })
 
-queue.register("risky-job", async (job) => {
+queue.register<RiskyJobPayload, RiskyJobResult>("risky-job", async (job) => {
   try {
     //await riskyOperation(job.payload)
+    return { success: true }
   } catch (error) {
     throw error // Re-throw to mark job as failed
   }
 })
 
 // Set job timeout
+const payload: RiskyJobPayload = {
+  operation: "data-processing",
+  data: { items: [1, 2, 3] },
+}
+
 await queue.add("risky-job", payload, {
   timeout: 30000, // 30 seconds
 })

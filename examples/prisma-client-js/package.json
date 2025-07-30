@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "pnpm with-env tsx src/index.ts",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
+    "db:push": "prisma db push",
     "with-env": "dotenv -e .env --"
   },
   "dependencies": {
