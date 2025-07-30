@@ -63,7 +63,7 @@ export function MobileTableOfContents({ toc }: TocProps) {
   const filteredToc = toc.filter((item) => item.level > 1 && item.level <= 4)
 
   return (
-    <div className="fixed top-12 left-0 z-20 h-[calc(theme(height.12)+1px)] w-full border-b bg-background px-2 py-2.5 lg:left-[theme(width.72)] lg:w-[calc(theme(width.full)-theme(width.72))] xl:hidden">
+    <div className="fixed top-16 left-0 z-20 h-[calc(theme(height.12)+1px)] w-full border-b bg-background px-2 py-2.5 lg:left-[20rem] lg:w-[calc(theme(width.full)-20rem)] xl:hidden">
       <DropdownMenu>
         <DropdownMenuTrigger className="w-full rounded-md ring-ring hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:outline-hidden data-[state=open]:bg-accent">
           <div className="flex items-center gap-1.5 overflow-hidden px-2 py-1.5 text-left text-sm transition-all">

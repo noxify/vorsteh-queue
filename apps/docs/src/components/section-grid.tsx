@@ -1,10 +1,7 @@
-import type { z } from "zod"
 import Link from "next/link"
 
 import type { getSections } from "~/collections"
-import type { frontmatterSchema } from "~/validations"
-import { getFileContent, getTitle, isHidden } from "~/collections"
-import { removeFromArray } from "~/lib/utils"
+import { getMetadata, isHidden } from "~/collections"
 
 export default async function SectionGrid({
   sections,
@@ -18,15 +15,13 @@ export default async function SectionGrid({
   const elements = []
 
   for (const section of sections) {
-    if (isHidden(section)) {
+    if (isHidden(section.entry)) {
       continue
     }
 
-    let file: Awaited<ReturnType<typeof getFileContent>>
-    let frontmatter: z.infer<typeof frontmatterSchema> | undefined
+    let frontmatter: Awaited<ReturnType<typeof getMetadata>>
     try {
-      file = await getFileContent(section)
-      frontmatter = await file?.getExportValue("frontmatter")
+      frontmatter = await getMetadata(section.file)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e: unknown) {
       continue
@@ -34,17 +29,15 @@ export default async function SectionGrid({
 
     if (!frontmatter) {
       elements.push({
-        title: section.getTitle(),
+        title: section.title,
         description: "",
-        path: `/${removeFromArray(section.getPathnameSegments(), ["index"]).join("/")}`,
+        path: section.raw_pathname,
       })
     } else {
-      const title = getTitle(section, frontmatter)
-
       elements.push({
-        title,
+        title: section.title,
         description: frontmatter.description ?? "",
-        path: `/${removeFromArray(section.getPathnameSegments(), ["index"]).join("/")}`,
+        path: section.raw_pathname,
       })
     }
   }

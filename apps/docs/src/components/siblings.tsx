@@ -1,12 +1,15 @@
 import Link from "next/link"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
-import { isFile } from "renoun/file-system"
 
-import type { EntryType } from "~/collections"
-import { routes } from "~/collections"
+import type { getTransformedEntry } from "~/collections"
+import { getSiblings } from "~/collections"
 
-export default async function Siblings({ source }: { source: EntryType }) {
-  const [previousPage, nextPage] = await getSiblings(source)
+export default async function Siblings({
+  transformedEntry,
+}: {
+  transformedEntry: Awaited<ReturnType<typeof getTransformedEntry>>
+}) {
+  const [previousPage, nextPage] = await getSiblings(transformedEntry)
 
   if (!previousPage && !nextPage) {
     return <></>
@@ -22,7 +25,7 @@ export default async function Siblings({ source }: { source: EntryType }) {
           <>
             <Link
               prefetch={true}
-              href={previousPage.pathname}
+              href={previousPage.raw_pathname}
               className="text-gray-700"
               title={`Go to previous page: ${previousPage.title}`}
             >
@@ -45,7 +48,7 @@ export default async function Siblings({ source }: { source: EntryType }) {
           <>
             <Link
               prefetch={true}
-              href={nextPage.pathname}
+              href={nextPage.raw_pathname}
               className="text-gray-700"
               title={`Go to next page: ${nextPage.title}`}
             >
@@ -64,30 +67,4 @@ export default async function Siblings({ source }: { source: EntryType }) {
       </div>
     </nav>
   )
-}
-
-// inspired by
-// * https://github.com/souporserious/renoun/blob/main/packages/renoun/src/file-system/index.tsx#L497
-async function getSiblings(
-  source: EntryType,
-): Promise<
-  [Awaited<typeof routes>[number] | undefined, Awaited<typeof routes>[number] | undefined]
-> {
-  let currentPath = ""
-
-  if (isFile(source) && source.getBaseName() === "index") {
-    currentPath = source.getParent().getPathname()
-  } else {
-    currentPath = source.getPathname()
-  }
-
-  const entries = await routes
-
-  const currentIndex = entries.findIndex((ele) => ele.pathname === currentPath)
-
-  const previousElement = currentIndex > 0 ? entries[currentIndex - 1] : undefined
-
-  const nextElement = currentIndex < entries.length - 1 ? entries[currentIndex + 1] : undefined
-
-  return [previousElement, nextElement]
 }

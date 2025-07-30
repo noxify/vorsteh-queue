@@ -1,17 +1,12 @@
 import type { Metadata } from "next"
-import { cache } from "react"
 import { notFound } from "next/navigation"
-import { isDirectory } from "renoun/file-system"
 
-import { AllDocumentation, getBreadcrumbItems, getFileContent, routes } from "~/collections"
+import { getBreadcrumbItems, transformedEntries } from "~/collections"
 import { DirectoryContent } from "~/components/directory-content"
 import { FileContent } from "~/components/file-content"
-import { removeFromArray } from "~/lib/utils"
-
-const CollectionInfo = cache(() => AllDocumentation)
 
 export async function generateStaticParams() {
-  const slugs = (await routes()).map((entry) => ({
+  const slugs = (await transformedEntries()).map((entry) => ({
     slug: entry.segments,
   }))
 
@@ -36,51 +31,33 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 export default async function DocsPage(props: PageProps) {
   const params = await props.params
 
-  let collection
+  const searchParam = `/${params.slug?.join("/") ?? ""}`
 
-  const searchParam = removeFromArray(params.slug, ["docs"])
+  const transformedEntry = (await transformedEntries()).find(
+    (ele) => ele.raw_pathname == searchParam,
+  )
 
-  try {
-    collection = await CollectionInfo().getEntry(searchParam)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (e: unknown) {
-    try {
-      collection = await CollectionInfo().getEntry([...searchParam, "index"])
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e: unknown) {
-      try {
-        collection = await CollectionInfo().getEntry([...searchParam, "readme"])
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e: unknown) {
-        // eslint-disable-next-line no-console
-        console.warn("Unable to get entry for path:", searchParam)
-
-        return notFound()
-      }
-    }
+  if (!transformedEntry) {
+    return notFound()
   }
-
-  console.dir({ searchParam, collection: collection.getAbsolutePath() })
-
-  // check the current path if it's a valid file ( including index check for a directory )
-  const file = await getFileContent(collection)
 
   // if we can't find an index file, but we have a valid directory
   // use the directory component for rendering
-  if (!file && isDirectory(collection)) {
+  if (!transformedEntry.file && transformedEntry.isDirectory) {
     return (
       <>
-        <DirectoryContent source={collection} />
+        {" "}
+        <DirectoryContent transformedEntry={transformedEntry} />{" "}
       </>
     )
   }
 
   // if we have a valid file ( including the index file )
   // use the file component for rendering
-  if (file) {
+  if (transformedEntry.file) {
     return (
       <>
-        <FileContent source={collection} />
+        <FileContent transformedEntry={transformedEntry} />
       </>
     )
   }

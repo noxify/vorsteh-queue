@@ -3,35 +3,33 @@ import { format } from "date-fns/format"
 import { ExternalLinkIcon } from "lucide-react"
 import { Markdown } from "renoun/components"
 
-import type { EntryType } from "~/collections"
-import { getBreadcrumbItems, getFileContent, getSections } from "~/collections"
+import type { transformedEntries } from "~/collections"
+import { getBreadcrumbItems, getMetadata, getSections } from "~/collections"
 import { SiteBreadcrumb } from "~/components/breadcrumb"
 import SectionGrid from "~/components/section-grid"
 import Siblings from "~/components/siblings"
 import { MobileTableOfContents, TableOfContents } from "~/components/table-of-contents"
 import { cn } from "~/lib/utils"
 
-export async function FileContent({ source }: { source: EntryType }) {
-  // maybe this is obsolete, since we called them earlier in the `DocsPage` component
-  // but to have a similiar behaviour as we have in the `DirectoryContent` component
-  // we use `source` as input and we have to call the `getFileContent` again
-  const file = await getFileContent(source)
-  if (!file) {
-    return notFound()
-  }
+export async function FileContent({
+  transformedEntry,
+}: {
+  transformedEntry: Awaited<ReturnType<typeof transformedEntries>>[number]
+}) {
+  if (!transformedEntry.file) return notFound()
 
   const [Content, frontmatter, headings, createdAt, lastUpdate, breadcrumbItems, sections] =
     await Promise.all([
-      file.getExportValue("default"),
-      file.getExportValue("frontmatter"),
-      file.getExportValue("headings"),
-      file.getFirstCommitDate(),
-      file.getLastCommitDate(),
-      getBreadcrumbItems(file.getPathnameSegments()),
-      getSections(source),
+      transformedEntry.file.getExportValue("default"),
+      getMetadata(transformedEntry.file),
+      transformedEntry.file.getExportValue("headings"),
+      transformedEntry.file.getFirstCommitDate(),
+      transformedEntry.file.getLastCommitDate(),
+      getBreadcrumbItems(transformedEntry.segments),
+      getSections(transformedEntry.entry),
     ])
 
-  const pagefindProps = !frontmatter.ignoreSearch
+  const pagefindProps = !frontmatter?.ignoreSearch
     ? {
         "data-pagefind-body": "",
       }
@@ -40,19 +38,19 @@ export async function FileContent({ source }: { source: EntryType }) {
   return (
     <>
       <div className="container py-6">
-        {headings.length > 0 && frontmatter.toc && <MobileTableOfContents toc={headings} />}
+        {headings.length > 0 && frontmatter?.toc && <MobileTableOfContents toc={headings} />}
 
         <div
           className={cn("gap-8 xl:grid", {
-            "mt-12 xl:mt-0": headings.length > 0 && frontmatter.toc,
-            "xl:grid-cols-[1fr_300px]": frontmatter.toc,
-            "xl:grid-cols-1": !frontmatter.toc,
+            "mt-12 xl:mt-0": headings.length > 0 && frontmatter?.toc,
+            "xl:grid-cols-[1fr_300px]": frontmatter?.toc,
+            "xl:grid-cols-1": !frontmatter?.toc,
           })}
         >
           <div
             className={cn("mx-auto", {
-              "w-full 2xl:w-6xl": !frontmatter.toc,
-              "w-full 2xl:w-4xl": frontmatter.toc,
+              "w-full 2xl:w-6xl": !frontmatter?.toc,
+              "w-full 2xl:w-4xl": frontmatter?.toc,
             })}
           >
             <SiteBreadcrumb items={breadcrumbItems} />
@@ -69,7 +67,7 @@ export async function FileContent({ source }: { source: EntryType }) {
                   ),
                 }}
               >
-                {frontmatter.title ? `# ${frontmatter.title}` : `# ${source.getTitle()}`}
+                {`# ${frontmatter?.title ?? transformedEntry.title}`}
               </Markdown>
 
               <Markdown
@@ -83,7 +81,7 @@ export async function FileContent({ source }: { source: EntryType }) {
                   code: (props) => <code>{props.children ?? ""}</code>,
                 }}
               >
-                {frontmatter.description ?? ""}
+                {frontmatter?.description ?? "&nbsp;"}
               </Markdown>
 
               <article>
@@ -120,9 +118,9 @@ export async function FileContent({ source }: { source: EntryType }) {
                 <SectionGrid sections={sections} />
               </article>
             </div>
-            <Siblings source={source} />
+            <Siblings transformedEntry={transformedEntry} />
           </div>
-          {frontmatter.toc ? (
+          {frontmatter?.toc ? (
             <div className="hidden w-[19.5rem] xl:sticky xl:top-[4.75rem] xl:-mr-6 xl:block xl:h-[calc(100vh-4.75rem)] xl:flex-none xl:overflow-y-auto xl:pr-6 xl:pb-16">
               <TableOfContents toc={headings} />
 
@@ -144,11 +142,15 @@ export async function FileContent({ source }: { source: EntryType }) {
                 <div className="justify-center text-sm text-muted-foreground">
                   {/* eslint-disable-next-line no-restricted-properties */}
                   {process.env.NODE_ENV === "development" ? (
-                    <a href={source.getEditorUri()} className="hover:text-white">
+                    <a href={transformedEntry.entry.getEditorUri()} className="hover:text-white">
                       View source <ExternalLinkIcon className="inline h-4 w-4" />
                     </a>
                   ) : (
-                    <a href={source.getSourceUrl()} target="_blank" className="hover:text-white">
+                    <a
+                      href={transformedEntry.entry.getSourceUrl()}
+                      target="_blank"
+                      className="hover:text-white"
+                    >
                       View source <ExternalLinkIcon className="inline h-4 w-4" />
                     </a>
                   )}

@@ -1,7 +1,7 @@
 import { isDirectory, isFile } from "renoun/file-system"
 
 import type { EntryType } from "~/collections"
-import { getFileContent } from "~/collections"
+import { getFile } from "~/collections"
 
 export interface TreeItem {
   title: string
@@ -28,7 +28,7 @@ async function buildTreeNavigation(entry: EntryType): Promise<TreeItem | null> {
     return null
   }
   if (isDirectory(entry)) {
-    const file = await getFileContent(entry)
+    const file = await getFile(entry)
     let frontmatter = null
     if (file) {
       frontmatter = await file.getExportValue("frontmatter")
@@ -46,7 +46,7 @@ async function buildTreeNavigation(entry: EntryType): Promise<TreeItem | null> {
         : [],
     }
   } else {
-    const file = await getFileContent(entry)
+    const file = await getFile(entry)
     if (!file) {
       return null
     }

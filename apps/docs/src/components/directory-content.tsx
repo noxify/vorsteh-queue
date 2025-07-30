@@ -1,14 +1,18 @@
-import type { EntryType } from "~/collections"
+import type { transformedEntries } from "~/collections"
 import { getBreadcrumbItems, getSections } from "~/collections"
 import { SiteBreadcrumb } from "~/components/breadcrumb"
-import SectionGrid from "~/components/section-grid"
-import Siblings from "~/components/siblings"
 import { cn } from "~/lib/utils"
+import SectionGrid from "./section-grid"
+import Siblings from "./siblings"
 
-export async function DirectoryContent({ source }: { source: EntryType }) {
+export async function DirectoryContent({
+  transformedEntry,
+}: {
+  transformedEntry: Awaited<ReturnType<typeof transformedEntries>>[number]
+}) {
   const [breadcrumbItems, sections] = await Promise.all([
-    getBreadcrumbItems(source.getPathnameSegments()),
-    getSections(source),
+    getBreadcrumbItems(transformedEntry.segments),
+    getSections(transformedEntry.entry),
   ])
 
   return (
@@ -33,14 +37,14 @@ export async function DirectoryContent({ source }: { source: EntryType }) {
                   className="no-prose mb-2 scroll-m-20 text-4xl font-light tracking-tight lg:text-5xl"
                   data-pagefind-meta="title"
                 >
-                  {source.getTitle()}
+                  {transformedEntry.title}
                 </h1>
               </div>
 
               <SectionGrid sections={sections} />
             </article>
 
-            <Siblings source={source} />
+            <Siblings transformedEntry={transformedEntry} />
           </div>
         </div>
       </div>

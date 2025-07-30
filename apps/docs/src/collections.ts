@@ -1,6 +1,6 @@
-import type { FileSystemEntry } from "renoun/file-system"
+// import type { FileSystemEntry } from "renoun/file-system"
 import type { z } from "zod"
-import pMap from "p-map"
+import { cache } from "react"
 import { Collection, Directory, isDirectory, isFile, withSchema } from "renoun/file-system"
 
 import type { frontmatterSchema } from "./validations"
@@ -30,47 +30,22 @@ export const DocumentationDirectory = new Directory({
   },
 })
 
-export const AllDocumentation = new Collection({
-  entries: [DocumentationDirectory],
-})
+export const ExampleDirectory = new Directory({
+  path: `../../examples`,
+  basePathname: "docs/examples",
+  include: (entry) =>
+    !entry.getBaseName().startsWith("_") &&
+    !entry.getAbsolutePath().includes("_assets") &&
+    entry.getDepth() === 1 &&
+    (isDirectory(entry) || isFile(entry, "mdx")),
 
-export const CorePackageDirectory = new Directory({
-  path: "../../packages/core/src",
-  basePathname: "api-reference",
   loader: {
-    ts: (path) => import(`../../../packages/core/src/${path}.ts`),
+    mdx: withSchema(docSchema, (path) => import(`../../../examples/${path}.mdx`)),
   },
-  include: filterInternalExports,
 })
 
-export const AdapterDrizzlePackageDirectory = new Directory({
-  path: "../../packages/adapter-drizzle/src",
-  basePathname: "api-reference",
-  // loader: {
-  //   mdx: withSchema<{
-  //     headings: MDXHeadings
-  //   }>(
-  //     (path) => import(`../../../packages/renoun/src/file-system/${path}.mdx`)
-  //   ),
-  // },
-  include: filterInternalExports,
-})
-
-export const AdapterPrismaPackageDirectory = new Directory({
-  path: "../../packages/adapter-prisma/src",
-  basePathname: "api-reference",
-  // loader: {
-  //   mdx: withSchema<{
-  //     headings: MDXHeadings
-  //   }>(
-  //     (path) => import(`../../../packages/renoun/src/file-system/${path}.mdx`)
-  //   ),
-  // },
-  include: filterInternalExports,
-})
-
-export const PackageApiDocumentation = new Collection({
-  entries: [CorePackageDirectory, AdapterDrizzlePackageDirectory, AdapterPrismaPackageDirectory],
+export const AllDocumentation = new Collection({
+  entries: [DocumentationDirectory, ExampleDirectory],
 })
 
 export type EntryType = Awaited<ReturnType<typeof AllDocumentation.getEntry>>
@@ -78,37 +53,19 @@ export type DirectoryType = Awaited<ReturnType<typeof AllDocumentation.getDirect
 
 /**
  * Helper function to get the title for an element in the sidebar/navigation
- * @param collection {EntryType} the collection to get the title for
+ * @param entry {EntryType} the entry to get the title for
  * @param frontmatter {z.infer<typeof frontmatterSchema>} the frontmatter to get the title from
  * @param includeTitle? {boolean} whether to include the title in the returned string
  * @returns {string} the title to be displayed in the sidebar/navigation
  */
 export function getTitle(
-  collection: EntryType,
+  entry: EntryType,
   frontmatter: z.infer<typeof frontmatterSchema>,
   includeTitle = false,
 ): string {
   return includeTitle
-    ? (frontmatter.navTitle ?? frontmatter.title ?? collection.getTitle())
-    : (frontmatter.navTitle ?? collection.getTitle())
-}
-
-/**
- * Helper function to get the file content for a given source entry
- * This function will try to get the file based on the given path and the "mdx" extension
- * If the file is not found, it will try to get the index file based on the given path and the "mdx" extension
- * If there is also no index file, it will return null
- *
- * @param source {EntryType} the source entry to get the file content for
- */
-export const getFileContent = async (source: EntryType) => {
-  // first, try to get the file based on the given path
-
-  return await AllDocumentation.getFile(source.getPathnameSegments(), "mdx").catch(async () => {
-    return await AllDocumentation.getFile([...source.getPathnameSegments(), "index"], "mdx").catch(
-      () => null,
-    )
-  })
+    ? (frontmatter.navTitle ?? frontmatter.title ?? entry.getTitle())
+    : (frontmatter.navTitle ?? entry.getTitle())
 }
 
 /**
@@ -123,19 +80,18 @@ export const getFileContent = async (source: EntryType) => {
 export async function getSections(source: EntryType) {
   if (source.getDepth() > -1) {
     if (isDirectory(source)) {
-      return (
-        await (await AllDocumentation.getDirectory(source.getPathnameSegments())).getEntries()
-      ).filter((ele) => ele.getPathname() !== source.getPathname())
+      const parent = await (await getDirectory(source)).getEntries()
+      return await Promise.all(parent.map(async (ele) => await getTransformedEntry(ele)))
     }
 
     if (isFile(source) && source.getBaseName() === "index") {
-      return await source.getParent().getEntries()
+      const parent = await (await getDirectory(source.getParent())).getEntries()
+      return await Promise.all(parent.map(async (ele) => await getTransformedEntry(ele)))
     }
     return []
   } else {
-    return (
-      await (await AllDocumentation.getDirectory(source.getPathnameSegments())).getEntries()
-    ).filter((ele) => ele.getPathname() !== source.getPathname())
+    const parent = await (await getDirectory(source)).getEntries()
+    return await Promise.all(parent.map(async (ele) => await getTransformedEntry(ele)))
   }
 }
 
@@ -144,7 +100,7 @@ export async function getSections(source: EntryType) {
  *
  * @param slug {string[]} the slug to get the breadcrumb items for
  */
-export const getBreadcrumbItems = async (slug: string[]) => {
+export const getBreadcrumbItems = async (slug: string[] = []) => {
   // we do not want to have "index" as breadcrumb element
   const cleanedSlug = removeFromArray(slug, ["index"])
 
@@ -153,35 +109,18 @@ export const getBreadcrumbItems = async (slug: string[]) => {
   const items = []
 
   for (const currentPageSegement of combinations) {
-    let collection: EntryType
-    let file: Awaited<ReturnType<typeof getFileContent>>
-    let frontmatter: z.infer<typeof frontmatterSchema> | undefined
-    try {
-      collection = await AllDocumentation.getEntry(currentPageSegement)
-      if (collection.getPathnameSegments().includes("index")) {
-        file = await getFileContent(collection.getParent())
-      } else {
-        file = await getFileContent(collection)
-      }
+    const entry = (await transformedEntries()).find(
+      (ele) => ele.raw_pathname === `/${currentPageSegement.join("/")}`,
+    )
 
-      frontmatter = await file?.getExportValue("frontmatter")
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e: unknown) {
+    if (!entry) {
       continue
     }
 
-    if (!frontmatter) {
-      items.push({
-        title: collection.getTitle(),
-        path: [...collection.getPathnameSegments()],
-      })
-    } else {
-      const title = getTitle(collection, frontmatter, true)
-      items.push({
-        title,
-        path: [...removeFromArray(collection.getPathnameSegments(), ["index"])],
-      })
-    }
+    items.push({
+      title: entry.title,
+      path: entry.segments,
+    })
   }
 
   return items
@@ -196,40 +135,94 @@ export function isHidden(entry: EntryType) {
   return entry.getBaseName().startsWith("_")
 }
 
-async function filterInternalExports(entry: FileSystemEntry) {
-  if (isFile(entry, ["ts", "tsx"])) {
-    const shouldSkip = await entry.getText().then((text) => text.includes("@skip-docs"))
-    if (shouldSkip) {
-      return false
-    }
-    const fileExports = await entry.getExports()
-    let allTags = await Promise.all(fileExports.map((exportSource) => exportSource.getTags()))
+export async function getFile(source: EntryType) {
+  const segments = source.getPathnameSegments({
+    includeBasePathname: true,
+    includeDirectoryNamedSegment: true,
+  })
 
-    allTags = allTags.filter((ele) => ele !== undefined)
-    const allInternal = fileExports.every((_, index) => {
-      const tags = allTags[index]
-      return tags?.every((tag) => tag.name === "internal")
-    })
+  const excludeSegments = segments[1] === "examples" ? ["docs"] : []
 
-    if (allInternal || allTags.length === 0) {
-      return false
-    }
+  const [segmentFile, indexFile, readmeFile] = await Promise.all([
+    AllDocumentation.getFile(removeFromArray(segments, excludeSegments), "mdx").catch(() => null),
+    AllDocumentation.getFile(removeFromArray([...segments, "index"], excludeSegments), "mdx").catch(
+      () => null,
+    ),
+    AllDocumentation.getFile(
+      removeFromArray([...segments, "readme"], excludeSegments),
+      "mdx",
+    ).catch(() => null),
+  ])
 
-    return true
-  }
-
-  return isDirectory(entry) || isFile(entry, "ts")
+  return segmentFile ?? indexFile ?? readmeFile ?? null
 }
 
-export const routes = AllDocumentation.getEntries({ recursive: true }).then((entries) =>
-  pMap(entries, async (doc) => {
-    const file = await getFileContent(doc)
-    const metadata = file ? await file.getExportValue("frontmatter") : undefined
+export async function getDirectory(source: EntryType) {
+  const segments = source.getPathnameSegments({
+    includeBasePathname: true,
+    includeDirectoryNamedSegment: true,
+  })
 
-    return {
-      pathname: doc.getPathname(),
-      segments: doc.getPathnameSegments({ includeBasePathname: true }),
-      title: metadata ? getTitle(doc, metadata, true) : doc.getTitle(),
-    }
-  }),
-)
+  const excludeSegments = segments[1] === "examples" ? ["docs"] : []
+
+  const currentDirectory = await AllDocumentation.getDirectory(
+    removeFromArray(segments, excludeSegments),
+  )
+
+  return currentDirectory
+}
+
+export async function getMetadata(source: Awaited<ReturnType<typeof getFile>>) {
+  return await source?.getExportValue("frontmatter")
+}
+
+export async function getSiblings(
+  source: Awaited<ReturnType<typeof getTransformedEntry>>,
+): Promise<
+  [
+    Awaited<ReturnType<typeof getTransformedEntry>> | undefined,
+    Awaited<ReturnType<typeof getTransformedEntry>> | undefined,
+  ]
+> {
+  const entries = await transformedEntries()
+
+  const arrayUniqueByKey = [...new Map(entries.map((item) => [item.raw_pathname, item])).values()]
+
+  const currentIndex = arrayUniqueByKey.findIndex((ele) => ele.raw_pathname === source.raw_pathname)
+
+  const previousElement = currentIndex > 0 ? arrayUniqueByKey[currentIndex - 1] : undefined
+
+  const nextElement =
+    currentIndex < arrayUniqueByKey.length - 1 ? arrayUniqueByKey[currentIndex + 1] : undefined
+
+  return [previousElement, nextElement]
+}
+
+export async function getTransformedEntry(source: EntryType) {
+  const file = await getFile(source)
+  const metadata = file ? await getMetadata(file) : null
+
+  return {
+    raw_pathname: source.getPathname({ includeBasePathname: true }),
+    pathname: source.getPathname({ includeBasePathname: false }),
+    segments: source.getPathnameSegments({ includeBasePathname: true }),
+    title: metadata ? getTitle(source, metadata, true) : source.getTitle(),
+    path: source.getAbsolutePath(),
+    entry: source,
+    file,
+    isDirectory: isDirectory(source),
+  }
+}
+
+export const transformedEntries = cache(async () => {
+  const entries = await AllDocumentation.getEntries({
+    recursive: true,
+    includeIndexAndReadmeFiles: true,
+  })
+
+  return await Promise.all(
+    entries.map(async (doc) => {
+      return await getTransformedEntry(doc)
+    }),
+  )
+})
