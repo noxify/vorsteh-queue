@@ -39,7 +39,7 @@ export default async function DocsLayout(
       <SidebarProvider>
         <AppSidebar items={sidebarItems} />
         <SidebarInset className="bg-white dark:bg-secondary">
-          <div className="flex flex-1 flex-col gap-4 p-4 pb-[calc(var(--footer-height)+1rem)]">
+          <div className="flex flex-1 flex-col gap-4 pb-[calc(var(--footer-height)+1rem)]">
             <main className="flex w-full flex-1 flex-col transition-all duration-300 ease-in-out">
               {props.children}
             </main>

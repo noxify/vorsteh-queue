@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation"
-import { format } from "date-fns/format"
 import { ExternalLinkIcon } from "lucide-react"
 import { Markdown } from "renoun/components"
 
@@ -18,16 +17,13 @@ export async function FileContent({
 }) {
   if (!transformedEntry.file) return notFound()
 
-  const [Content, frontmatter, headings, createdAt, lastUpdate, breadcrumbItems, sections] =
-    await Promise.all([
-      transformedEntry.file.getExportValue("default"),
-      getMetadata(transformedEntry.file),
-      transformedEntry.file.getExportValue("headings"),
-      transformedEntry.file.getFirstCommitDate(),
-      transformedEntry.file.getLastCommitDate(),
-      getBreadcrumbItems(transformedEntry.segments),
-      getSections(transformedEntry.entry),
-    ])
+  const [Content, frontmatter, headings, breadcrumbItems, sections] = await Promise.all([
+    transformedEntry.file.getExportValue("default"),
+    getMetadata(transformedEntry.file),
+    transformedEntry.file.getExportValue("headings"),
+    getBreadcrumbItems(transformedEntry.segments),
+    getSections(transformedEntry.entry),
+  ])
 
   const pagefindProps = !frontmatter?.ignoreSearch
     ? {
@@ -38,11 +34,11 @@ export async function FileContent({
   return (
     <>
       <div className="container py-6">
-        {headings.length > 0 && frontmatter?.toc && <MobileTableOfContents toc={headings} />}
+        <MobileTableOfContents toc={headings.length > 0 && frontmatter?.toc ? headings : []} />
 
         <div
-          className={cn("gap-8 xl:grid", {
-            "mt-12 xl:mt-0": headings.length > 0 && frontmatter?.toc,
+          className={cn("mt-12 gap-8 xl:mt-0 xl:grid", {
+            "lg:mt-0": !frontmatter?.toc,
             "xl:grid-cols-[1fr_300px]": frontmatter?.toc,
             "xl:grid-cols-1": !frontmatter?.toc,
           })}
@@ -109,7 +105,7 @@ export async function FileContent({
                     "prose-p:leading-7 not-first:prose-p:mt-6",
                     "prose-a:text-orange-primary prose-a:hover:text-black prose-a:dark:hover:text-white",
 
-                    "prose-ul:ml-6 prose-ul:list-disc [&>li]:prose-ul:mt-2 [&>ul]:prose-ul:my-2 [&>ul]:prose-ul:ml-0",
+                    "prose-ul:ml-2 prose-ul:list-disc [&>li]:prose-ul:mt-2 [&>ul]:prose-ul:my-2 [&>ul]:prose-ul:ml-0",
                   )}
                 >
                   <Content />
@@ -121,7 +117,7 @@ export async function FileContent({
             <Siblings transformedEntry={transformedEntry} />
           </div>
           {frontmatter?.toc ? (
-            <div className="hidden w-[19.5rem] xl:sticky xl:top-[4.75rem] xl:-mr-6 xl:block xl:h-[calc(100vh-4.75rem)] xl:flex-none xl:overflow-y-auto xl:pr-6 xl:pb-16">
+            <div className="hidden w-[19.5rem] xl:sticky xl:top-[6.55rem] xl:-mr-6 xl:block xl:h-[calc(100vh-6.55rem)] xl:flex-none xl:overflow-y-auto xl:pr-6 xl:pb-16">
               <TableOfContents toc={headings} />
 
               <div
@@ -129,27 +125,20 @@ export async function FileContent({
                   "border-t pt-6": headings.length > 0,
                 })}
               >
-                {createdAt && (
-                  <div className="text-sm text-muted-foreground">
-                    Created at: {format(createdAt, "dd.MM.yyyy")}
-                  </div>
-                )}
-                {lastUpdate && (
-                  <div className="text-sm text-muted-foreground">
-                    Last updated: {format(lastUpdate, "dd.MM.yyyy")}
-                  </div>
-                )}
                 <div className="justify-center text-sm text-muted-foreground">
                   {/* eslint-disable-next-line no-restricted-properties */}
                   {process.env.NODE_ENV === "development" ? (
-                    <a href={transformedEntry.entry.getEditorUri()} className="hover:text-white">
+                    <a
+                      href={transformedEntry.entry.getEditorUri()}
+                      className="hover:text-orange-primary"
+                    >
                       View source <ExternalLinkIcon className="inline h-4 w-4" />
                     </a>
                   ) : (
                     <a
                       href={transformedEntry.entry.getSourceUrl()}
                       target="_blank"
-                      className="hover:text-white"
+                      className="hover:text-orange-primary"
                     >
                       View source <ExternalLinkIcon className="inline h-4 w-4" />
                     </a>

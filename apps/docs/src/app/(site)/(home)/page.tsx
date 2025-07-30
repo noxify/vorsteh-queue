@@ -166,7 +166,7 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="grid h-56 place-items-stretch gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid place-items-stretch gap-6 md:grid-cols-2 lg:grid-cols-4">
             {otherFeatures.map((ele, eleIdx) => (
               <div
                 key={eleIdx}

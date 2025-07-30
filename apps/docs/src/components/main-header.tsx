@@ -2,22 +2,39 @@ import Image from "next/image"
 import Link from "next/link"
 import { GitProviderLink, GitProviderLogo } from "renoun/components"
 
+import type { TreeItem } from "~/lib/navigation"
 import { Search } from "~/components/search"
 import { ThemeToggle } from "~/components/theme-toggle"
 import { Button } from "~/components/ui/button"
 
-const links = [
+export const links: TreeItem[] = [
   {
-    name: "Docs",
-    target: "/docs/getting-started/introduction",
+    title: "Home",
+    path: "/",
+    slug: [],
+    depth: 0,
+    isFile: true,
   },
   {
-    name: "Examples",
-    target: "/docs/examples",
+    title: "Docs",
+    path: "/docs/getting-started/introduction",
+    slug: ["docs", "getting-started", "introduction"],
+    depth: 0,
+    isFile: true,
   },
   {
-    name: "Packages",
-    target: "/docs/packages",
+    title: "Examples",
+    path: "/docs/examples",
+    slug: ["docs", "examples"],
+    depth: 0,
+    isFile: true,
+  },
+  {
+    title: "Packages",
+    path: "/docs/packages",
+    slug: ["docs", "packages"],
+    depth: 0,
+    isFile: true,
   },
 ]
 
@@ -41,13 +58,14 @@ export default function MainHeader() {
             {links.map((ele, eleIdx) => (
               <Link
                 key={eleIdx}
-                href={ele.target}
+                href={ele.path}
                 className="text-dark-200 transition-colors hover:text-orange-primary dark:text-dark-900 dark:hover:text-orange-primary"
               >
-                {ele.name}
+                {ele.title}
               </Link>
             ))}
           </div>
+
           <div className="ml-6 flex items-center space-x-1">
             <Search />
             <ThemeToggle />

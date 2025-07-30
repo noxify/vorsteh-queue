@@ -1,6 +1,7 @@
 ---
 title: Introduction
-description: Get started with Vorsteh Queue, a powerful TypeScript-first job queue for PostgreSQL. Learn the core concepts and see how to build reliable background job processing.
+description: Get started with Vorsteh Queue, a powerful TypeScript-first job queue for PostgreSQL.
+toc: false
 ---
 
 Vorsteh Queue is a powerful, type-safe queue engine designed for PostgreSQL 12+. It provides a robust solution for handling background jobs, scheduled tasks, and recurring processes in your Node.js applications.
@@ -20,14 +21,14 @@ Vorsteh Queue is a powerful, type-safe queue engine designed for PostgreSQL 12+.
 ## Requirements
 
 - **Node.js 20+**
-- **ESM only** - This package is ESM-only and cannot be imported with `require()`
+- **ESM only** - This package is ESM-only
 - **PostgreSQL 12+** for production use
 
 ## Architecture
 
 Vorsteh Queue follows a modular architecture with:
 
-- **Core package** (`@vorsteh-queue/core`) - Contains the main queue logic and interfaces
-- **Adapter packages** - Database-specific implementations (Drizzle, Prisma)
+- **Core package** - Contains the main queue logic and interfaces
+- **Adapter packages** - ORM-specific implementations
 - **UTC-first design** - All timestamps stored as UTC for consistency
 - **Event-driven** - Comprehensive event system for monitoring and debugging

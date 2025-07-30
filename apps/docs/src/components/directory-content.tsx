@@ -4,6 +4,7 @@ import { SiteBreadcrumb } from "~/components/breadcrumb"
 import { cn } from "~/lib/utils"
 import SectionGrid from "./section-grid"
 import Siblings from "./siblings"
+import { MobileTableOfContents } from "./table-of-contents"
 
 export async function DirectoryContent({
   transformedEntry,
@@ -18,7 +19,9 @@ export async function DirectoryContent({
   return (
     <>
       <div className="container py-6">
-        <div className={cn("gap-8 xl:grid")}>
+        <MobileTableOfContents toc={[]} />
+
+        <div className={cn("mt-12 gap-8 xl:mt-0 xl:grid")}>
           <div className="mx-auto w-full 2xl:w-6xl">
             <SiteBreadcrumb items={breadcrumbItems} />
 
