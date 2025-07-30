@@ -1,14 +1,8 @@
-import { resolve } from "path"
 import tsconfigPaths from "vite-tsconfig-paths"
 import { defineConfig, Plugin } from "vitest/config"
 
 export default defineConfig({
-  plugins: [
-    // @ts-expect-error `vite-tsconfig-paths` uses vite@7 - vitest uses `vite@6``
-    //                  which produces the following error
-    //                  `error TS2769: No overload matches this call`
-    tsconfigPaths(),
-  ],
+  plugins: [tsconfigPaths()],
   test: {
     projects: ["packages/*"],
     environment: "node",

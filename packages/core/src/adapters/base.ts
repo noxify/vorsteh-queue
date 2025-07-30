@@ -25,7 +25,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   /**
    * Add a new job to the queue storage
    *
-   * @param job - Job data without id and createdAt
+   * @param job Job data without id and createdAt
    * @returns Promise resolving to the created job with id and createdAt
    */
   abstract addJob<TJobPayload, TJobResult = unknown>(
@@ -35,10 +35,10 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   /**
    * Update job status and optionally set error or result
    *
-   * @param id - Job ID to update
-   * @param status - New job status
-   * @param error - Optional error data for failed jobs
-   * @param result - Optional result data for completed jobs
+   * @param id Job ID to update
+   * @param status New job status
+   * @param error Optional error data for failed jobs
+   * @param result Optional result data for completed jobs
    */
   abstract updateJobStatus(
     id: string,
@@ -50,15 +50,15 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   /**
    * Update job progress percentage
    *
-   * @param id - Job ID to update
-   * @param progress - Progress percentage (0-100)
+   * @param id Job ID to update
+   * @param progress Progress percentage (0-100)
    */
   abstract updateJobProgress(id: string, progress: number): Promise<void>
 
   /**
    * Increment job attempt counter
    *
-   * @param id - Job ID to update
+   * @param id Job ID to update
    */
   abstract incrementJobAttempts(id: string): Promise<void>
 
@@ -72,7 +72,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   /**
    * Clear jobs from the queue
    *
-   * @param status - Optional status filter, clears all jobs if not provided
+   * @param status Optional status filter, clears all jobs if not provided
    * @returns Promise resolving to number of jobs cleared
    */
   abstract clearJobs(status?: JobStatus): Promise<number>
@@ -80,8 +80,8 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   /**
    * Clean up old jobs, keeping only the most recent N jobs
    *
-   * @param status - Job status to clean up
-   * @param keepCount - Number of jobs to keep
+   * @param status Job status to clean up
+   * @param keepCount Number of jobs to keep
    * @returns Promise resolving to number of jobs cleaned up
    */
   abstract cleanupJobs(status: JobStatus, keepCount: number): Promise<number>
@@ -95,7 +95,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   /**
    * Execute a function within a database transaction
    *
-   * @param fn - Function to execute in transaction
+   * @param fn Function to execute in transaction
    * @returns Promise resolving to the function's return value
    */
   abstract transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult>
@@ -123,7 +123,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   /**
    * Get a delayed job that is ready to be processed
    *
-   * @param now - Current timestamp to compare against processAt
+   * @param now Current timestamp to compare against processAt
    * @returns Promise resolving to ready delayed job or null
    * @protected
    */

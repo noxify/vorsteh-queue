@@ -1,5 +1,5 @@
 /**
- * Generic Prisma client interface - accepts any PrismaClient
+ * Generic Prisma client interface - accepts a PrismaClient
  * Inspired by better-auth's approach: https://github.com/better-auth/better-auth/blob/main/packages/better-auth/src/adapters/prisma-adapter/prisma-adapter.ts
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

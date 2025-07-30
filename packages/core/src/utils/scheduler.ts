@@ -9,9 +9,9 @@ import { Cron } from "croner"
  * This is the core of our UTC-first approach - all timezone calculations happen here,
  * and the result is always a UTC timestamp for storage and processing.
  *
- * @param expression - Cron expression (e.g., "0 9 * * *")
- * @param timezone - IANA timezone (e.g., "America/New_York")
- * @param baseDate - Base date for calculation (defaults to current time)
+ * @param expression Cron expression (e.g., "0 9 * * *")
+ * @param timezone IANA timezone (e.g. `America/New_York`)
+ * @param baseDate Base date for calculation (defaults to current time)
  * @returns Next execution time as UTC Date
  *
  * @example
@@ -57,7 +57,7 @@ export const parseCron = (
  * For cron jobs, timezone conversion happens here and result is UTC.
  * For intervals, timezone is irrelevant (just add milliseconds).
  *
- * @param options - Configuration object
+ * @param options Configuration object
  * @returns Next execution time as UTC Date
  *
  * @example
@@ -101,8 +101,8 @@ export const calculateNextRun = (options: {
  * Convert a local date to UTC by interpreting it in a specific timezone.
  * Used when users provide local times that need timezone context.
  *
- * @param date - Input date to convert
- * @param timezone - IANA timezone to interpret the date in
+ * @param date  Input date to convert
+ * @param timezone IANA timezone to interpret the date in
  * @returns UTC Date
  *
  * @example
@@ -123,7 +123,7 @@ export const toUtcDate = (date: Date, timezone = "UTC"): Date => {
 /**
  * Create a UTC Date object.
  *
- * @param input - Input date to convert
+ * @param input Input date to convert
  * @returns UTC Date
  *
  * @example

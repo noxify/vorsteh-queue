@@ -356,8 +356,8 @@ export class Queue {
   /**
    * Internal method to emit queue events to registered listeners.
    *
-   * @param event - Event name to emit
-   * @param data - Event data to pass to listeners
+   * @param event Event name to emit
+   * @param data Event data to pass to listeners
    * @private
    *
    * @example
@@ -440,7 +440,7 @@ export class Queue {
    * Internal method to process a job using its registered handler.
    * Handles job timeouts, completion, cleanup and recurring job scheduling.
    *
-   * @param job - The job to process
+   * @param job The job to process
    * @returns Promise that resolves when job processing is complete
    * @private
    */
@@ -489,8 +489,8 @@ export class Queue {
    * Internal method to handle job errors.
    * Determines whether to retry or fail the job based on attempt count.
    *
-   * @param job - The failed job
-   * @param error - The error that occurred
+   * @param job The failed job
+   * @param error The error that occurred
    * @returns Promise that resolves when error handling is complete
    * @private
    */
@@ -508,8 +508,8 @@ export class Queue {
    * Internal method to retry a failed job.
    * Increments attempt count and schedules next attempt with backoff delay.
    *
-   * @param job - The job to retry
-   * @param _error - The error from the failed attempt
+   * @param job The job to retry
+   * @param _error The error from the failed attempt
    * @returns Promise that resolves when job is scheduled for retry
    * @private
    */
@@ -528,8 +528,8 @@ export class Queue {
    * Internal method to mark a job as permanently failed.
    * Updates job status and triggers cleanup of failed jobs.
    *
-   * @param job - The job to fail
-   * @param error - The error that caused the failure
+   * @param job The job to fail
+   * @param error The error that caused the failure
    * @returns Promise that resolves when job is marked as failed
    * @private
    */
@@ -594,8 +594,8 @@ export class Queue {
    * Internal method to handle recurring job scheduling.
    * Creates the next occurrence of recurring jobs based on cron or repeat interval.
    *
-   * @param job - The completed job that may need to be rescheduled
-   * @param originalTimezone - Optional timezone for cron scheduling
+   * @param job The completed job that may need to be rescheduled
+   * @param originalTimezone Optional timezone for cron scheduling
    * @returns Promise that resolves when next job is scheduled
    * @private
    */

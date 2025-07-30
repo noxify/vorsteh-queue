@@ -19,8 +19,8 @@ export type JobPriority = number
 /**
  * Base job interface containing all job metadata and payload.
  *
- * @template TJobPayload - Type of the job payload
- * @template TJobResult - Type of the job result
+ * @template TJobPayload Type of the job payload
+ * @template TJobResult Type of the job result
  */
 export interface BaseJob<TJobPayload = unknown, TJobResult = unknown> {
   /** Unique identifier for the job */
@@ -135,8 +135,8 @@ export interface QueueStats {
 /**
  * Function type for job handlers.
  *
- * @template TJobPayload - Type of job payload
- * @template TJobResult - Type of return value
+ * @template TJobPayload Type of job payload
+ * @template TJobResult Type of return value
  */
 export type JobHandler<TJobPayload = unknown, TJobResult = unknown> = (
   job: JobWithProgress<TJobPayload, TJobResult>,
@@ -145,8 +145,8 @@ export type JobHandler<TJobPayload = unknown, TJobResult = unknown> = (
 /**
  * Job interface with progress update capability.
  *
- * @template TJobPayload - Type of the job payload
- * @template TJobResult - Type of the job result
+ * @template TJobPayload Type of the job payload
+ * @template TJobResult Type of the job result
  */
 export interface JobWithProgress<TJobPayload = unknown, TJobResult = unknown>
   extends BaseJob<TJobPayload, TJobResult> {

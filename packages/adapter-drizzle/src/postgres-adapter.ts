@@ -33,7 +33,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   /**
    * Create a new PostgreSQL queue adapter.
    *
-   * @param db - Drizzle PostgreSQL database instance
+   * @param db Drizzle PostgreSQL database instance
    */
   constructor(private readonly db: DrizzleDatabase) {
     super()
