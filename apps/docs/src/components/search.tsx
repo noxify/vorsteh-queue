@@ -165,6 +165,7 @@ export function Search() {
     <>
       <Button variant={"ghost"} size={"icon"} onClick={() => setOpen(true)}>
         <SearchIcon />
+        <span className="sr-only">Search</span>
       </Button>
 
       <CommandDialog
