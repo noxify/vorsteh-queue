@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { addBasePath } from "next/dist/client/add-base-path"
 import { useRouter } from "next/navigation"
 import { Interweave } from "interweave"
-import { HashIcon, SearchIcon } from "lucide-react"
+import { ArrowDown, ArrowUp, CornerDownLeft, FileIcon, HashIcon, SearchIcon } from "lucide-react"
 import pMap from "p-map"
 import { useDebouncedCallback } from "use-debounce"
 
@@ -36,6 +36,7 @@ async function flattenSearchResult(pagefindResult: PagefindSearchResults) {
           title: ele.title,
           url: ele.url,
           excerpt: ele.excerpt,
+          level: ele.anchor?.element,
         }
       })
 
@@ -109,6 +110,7 @@ export function Search() {
 
   const handleSearch = async (value: string) => {
     if (value === "") {
+      setIsPending(false)
       setResults([])
       return
     }
@@ -130,6 +132,7 @@ export function Search() {
 
   const debouncedFetchItems = useDebouncedCallback(handleSearch, 300)
   const handleOnSearchChange = (e: string) => {
+    setIsPending(true)
     setSearchValue(e)
     void debouncedFetchItems(e)
   }
@@ -184,32 +187,58 @@ export function Search() {
                 {results.map((result, idx) => {
                   return (
                     <CommandGroup key={idx} heading={result.meta.breadcrumb}>
-                      {result.headings.map((heading, idy) => {
-                        return (
-                          <CommandItem
-                            className="group"
-                            key={`${idx}_${idy}`}
-                            value={heading.url}
-                            id={`${idx}_${idy}`}
-                            onSelect={(element) => {
-                              setOpen(false)
-                              setSearchValue("")
-                              router.push(element)
-                            }}
-                          >
-                            <div>
-                              <div className="flex items-center space-x-2 font-bold">
-                                <HashIcon className="group:data-[selected=true]:text-white" />
-                                <span>{heading.title}</span>
+                      <CommandItem
+                        className="group"
+                        key={`${idx}`}
+                        value={result.url}
+                        id={`${idx}`}
+                        onSelect={(element) => {
+                          setOpen(false)
+                          setSearchValue("")
+                          router.push(element)
+                        }}
+                      >
+                        <div>
+                          <div className="flex items-center space-x-2 font-bold">
+                            <FileIcon className="text-orange-primary group-data-[selected=true]:text-white" />
+                            <span>{result.title}</span>
+                          </div>
+                          <Interweave
+                            content={result.excerpt}
+                            className="line-clamp-2 w-auto max-w-[calc(100%-2rem)] text-ellipsis [&_mark]:rounded [&_mark]:bg-orange-primary [&_mark]:px-1 [&_mark]:text-white group-data-[selected=true]:[&_mark]:bg-white group-data-[selected=true]:[&_mark]:text-foreground group-data-[selected=true]:[&_mark]:dark:text-orange-accessible"
+                          />
+                        </div>
+                      </CommandItem>
+                      {result.headings
+                        .filter((ele) => {
+                          return ele.level != "h1" && ele.level !== undefined
+                        })
+                        .map((heading, idy) => {
+                          return (
+                            <CommandItem
+                              className="group"
+                              key={`${idx}_${idy}`}
+                              value={heading.url}
+                              id={`${idx}_${idy}`}
+                              onSelect={(element) => {
+                                setOpen(false)
+                                setSearchValue("")
+                                router.push(element)
+                              }}
+                            >
+                              <div className="ml-2">
+                                <div className="flex items-center space-x-2 font-bold">
+                                  <HashIcon className="text-orange-primary group-data-[selected=true]:text-white" />
+                                  <span>{heading.title}</span>
+                                </div>
+                                <Interweave
+                                  content={heading.excerpt}
+                                  className="line-clamp-2 w-auto max-w-[calc(100%-2rem)] text-ellipsis [&_mark]:rounded [&_mark]:bg-orange-primary [&_mark]:px-1 [&_mark]:text-white group-data-[selected=true]:[&_mark]:bg-white group-data-[selected=true]:[&_mark]:text-foreground group-data-[selected=true]:[&_mark]:dark:text-orange-accessible"
+                                />
                               </div>
-                              <Interweave
-                                content={heading.excerpt}
-                                className="line-clamp-2 w-auto max-w-[calc(100%-2rem)] text-ellipsis"
-                              />
-                            </div>
-                          </CommandItem>
-                        )
-                      })}
+                            </CommandItem>
+                          )
+                        })}
                     </CommandGroup>
                   )
                 })}
@@ -225,6 +254,30 @@ export function Search() {
             )}
           </>
         </CommandList>
+        <div className="inset-x-0 flex h-10 items-center justify-end gap-4 rounded-b-xl border-t px-4 text-xs font-medium text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <kbd className="pointer-events-none flex h-5 items-center justify-center gap-1 rounded border bg-orange-primary px-1 font-sans text-[0.7rem] font-medium text-white select-none">
+              <CornerDownLeft className="size-3" />
+            </kbd>{" "}
+            Go to Page
+          </div>
+          <div className="flex items-center gap-1">
+            <kbd className="pointer-events-none flex h-5 items-center justify-center gap-1 rounded border bg-orange-primary px-1 font-sans text-[0.7rem] font-medium text-white select-none">
+              ESC
+            </kbd>{" "}
+            Close
+          </div>
+
+          <div className="flex items-center gap-1">
+            <kbd className="pointer-events-none flex h-5 items-center justify-center gap-1 rounded border bg-orange-primary px-1 font-sans text-[0.7rem] font-medium text-white select-none">
+              <ArrowUp className="size-3" />
+            </kbd>
+            <kbd className="pointer-events-none flex h-5 items-center justify-center gap-1 rounded border bg-orange-primary px-1 font-sans text-[0.7rem] font-medium text-white select-none">
+              <ArrowDown className="size-3" />
+            </kbd>{" "}
+            Navigate
+          </div>
+        </div>
       </CommandDialog>
     </>
   )
