@@ -1,5 +1,12 @@
 # create-vorsteh-queue
 
+## 0.1.1
+
+### Patch Changes
+
+- 4716031: update JSDOC descriptions
+- 8f765e3: Updated dependencies
+
 ## 0.1.0
 
 ### Minor Changes

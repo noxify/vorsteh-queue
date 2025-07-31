@@ -1,5 +1,15 @@
 # @vorsteh-queue/adapter-drizzle
 
+## 0.3.1
+
+### Patch Changes
+
+- 4716031: update JSDOC descriptions
+- 8f765e3: Updated dependencies
+- Updated dependencies [4716031]
+- Updated dependencies [8f765e3]
+  - @vorsteh-queue/core@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
