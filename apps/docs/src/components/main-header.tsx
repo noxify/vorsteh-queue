@@ -6,6 +6,7 @@ import type { TreeItem } from "~/lib/navigation"
 import { Search } from "~/components/search"
 import { ThemeToggle } from "~/components/theme-toggle"
 import { Button } from "~/components/ui/button"
+import MobileMenu from "./mobile-menu"
 
 export const links: TreeItem[] = [
   {
@@ -66,14 +67,17 @@ export default function MainHeader() {
             ))}
           </div>
 
-          <div className="ml-6 flex items-center space-x-1">
-            <Search />
-            <ThemeToggle />
-            <Button variant={"ghost"} size={"icon"}>
-              <GitProviderLink>
-                <GitProviderLogo width="1.2rem" height="1.2rem" />
-              </GitProviderLink>
-            </Button>
+          <div className="ml-6 flex items-center">
+            <div className="space-x-1">
+              <Search />
+              <ThemeToggle />
+              <Button variant={"ghost"} size={"icon"}>
+                <GitProviderLink>
+                  <GitProviderLogo width="1.2rem" height="1.2rem" />
+                </GitProviderLink>
+              </Button>
+            </div>
+            <MobileMenu items={links} />
           </div>
         </nav>
       </div>

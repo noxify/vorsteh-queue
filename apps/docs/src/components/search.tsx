@@ -214,8 +214,10 @@ export function Search() {
                   )
                 })}
               </>
-            ) : (
+            ) : searchValue !== "" ? (
               <CommandEmpty>Nothing found...</CommandEmpty>
+            ) : (
+              <CommandEmpty>Start typing...</CommandEmpty>
             )}
           </>
         </CommandList>
