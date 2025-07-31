@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -112,6 +114,40 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentcolor);
   }
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--border, currentColor);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-variation-settings: normal;
+    scroll-behavior: smooth;
+    height: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+  }
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
 }
 
 @layer base {
@@ -156,7 +192,7 @@
     --card: 28 48% 7%; /* dark-200 */
     --card-foreground: 40 75% 98%; /* dark-900 */
 
-    --popover: 28 48% 7%; /* dark-200 */
+    --popover: 28 48% 17%; /* dark-200 */
     --popover-foreground: 40 75% 98%; /* dark-900 */
 
     --primary: 12 75% 36%; /* orange-accessible */
@@ -177,5 +213,79 @@
     --border: 28 48% 12%; /* dark-100 */
     --input: 28 48% 12%; /* dark-100 */
     --ring: 12 75% 36%; /* orange-accessible */
+  }
+}
+
+pre > code {
+  @apply !w-fit !pb-3;
+}
+
+@utility prose {
+  blockquote {
+    /* Remove extra quotes */
+    p {
+      &:first-of-type::before,
+      &:last-of-type::after {
+        display: none;
+      }
+    }
+  }
+}
+
+/*
+  ---break---
+*/
+
+:root {
+  --sidebar: 40 75% 98%; /* cream-50 */
+  --sidebar-foreground: 28 55% 19%; /* fur-500 */
+  --sidebar-primary: 12 75% 31%; /* orange-darker */
+  --sidebar-primary-foreground: 40 75% 98%; /* cream-50 */
+  --sidebar-accent: 40 38% 85%; /* cream-200 */
+  --sidebar-accent-foreground: 28 55% 19%; /* fur-500 */
+  --sidebar-border: 40 38% 85%; /* cream-200 */
+  --sidebar-ring: 12 75% 31%; /* orange-darker */
+}
+
+/*
+  ---break---
+*/
+
+.dark {
+  --sidebar: 28 48% 7%; /* dark-200 */
+  --sidebar-foreground: 40 75% 98%; /* dark-900 */
+  --sidebar-primary: 12 75% 36%; /* orange-accessible */
+  --sidebar-primary-foreground: 40 75% 98%; /* dark-900 */
+  --sidebar-accent: 28 48% 12%; /* dark-100 */
+  --sidebar-accent-foreground: 40 75% 98%; /* dark-900 */
+  --sidebar-border: 28 48% 12%; /* dark-100 */
+  --sidebar-ring: 12 75% 36%; /* orange-accessible */
+}
+
+/*
+  ---break---
+*/
+
+@theme inline {
+  --color-sidebar: var(--muted);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--primary);
+  --color-sidebar-primary-foreground: var(--primary-foreground);
+  --color-sidebar-accent: var(--accent);
+  --color-sidebar-accent-foreground: var(--accent-foreground);
+  --color-sidebar-border: var(--border);
+  --color-sidebar-ring: var(--ring);
+}
+
+/*
+  ---break---
+*/
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }

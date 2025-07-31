@@ -77,8 +77,8 @@ export class Queue {
   /**
    * Register a job handler for a specific job type.
    *
-   * @param name - The job type name
-   * @param handler - Function to process jobs of this type
+   * @param name The job type name
+   * @param handler Function to process jobs of this type
    *
    * @example
    * ```typescript
@@ -98,9 +98,9 @@ export class Queue {
   /**
    * Add a new job to the queue.
    *
-   * @param name - The job type name (must be registered)
-   * @param payload - Job data to process
-   * @param options - Job configuration options
+   * @param name The job type name (must be registered)
+   * @param payload Job data to process
+   * @param options Job configuration options
    * @returns Promise resolving to the created job
    *
    * @example
@@ -169,9 +169,9 @@ export class Queue {
   /**
    * Alias for the `add()` method. Add a new job to the queue.
    *
-   * @param name - The job type name (must be registered)
-   * @param payload - Job data to process
-   * @param options - Job configuration options
+   * @param name The job type name (must be registered)
+   * @param payload Job data to process
+   * @param options Job configuration options
    * @returns Promise resolving to the created job
    *
    * @example
@@ -238,7 +238,7 @@ export class Queue {
   /**
    * Get current queue statistics.
    *
-   * @returns Promise resolving to queue statistics
+   * @returns Promise<QueueStats> resolving to queue statistics
    *
    * @example
    * ```typescript
@@ -268,8 +268,8 @@ export class Queue {
   /**
    * Clear jobs from the queue.
    *
-   * @param status - Optional job status filter to clear only jobs with specific status
-   * @returns Promise resolving to number of jobs cleared
+   * @param status  Optional job status filter to clear only jobs with specific status
+   * @returns Promise<number> resolving to number of jobs cleared
    *
    * @example
    * ```typescript
@@ -287,8 +287,8 @@ export class Queue {
   /**
    * Update the progress of a specific job.
    *
-   * @param id - The job ID to update progress for
-   * @param progress - Progress percentage (0-100)
+   * @param id The job ID to update progress for
+   * @param progress Progress percentage (0-100)
    * @returns Promise that resolves when progress is updated
    *
    * @example
@@ -308,7 +308,7 @@ export class Queue {
    * Manually dequeue and mark the next job as completed without processing.
    * This is primarily used for testing or manual job management.
    *
-   * @returns Promise resolving to the dequeued job or null if no jobs available
+   * @returns Promise<BaseJob | null> resolving to the dequeued job or null if no jobs available
    *
    * @example
    * ```typescript
@@ -329,8 +329,8 @@ export class Queue {
   /**
    * Listen to queue events.
    *
-   * @param event - Event name to listen for
-   * @param listener - Event handler function
+   * @param event Event name to listen for
+   * @param listener Event handler function
    *
    * @example
    * ```typescript
@@ -356,8 +356,8 @@ export class Queue {
   /**
    * Internal method to emit queue events to registered listeners.
    *
-   * @param event - Event name to emit
-   * @param data - Event data to pass to listeners
+   * @param event Event name to emit
+   * @param data Event data to pass to listeners
    * @private
    *
    * @example
@@ -440,7 +440,7 @@ export class Queue {
    * Internal method to process a job using its registered handler.
    * Handles job timeouts, completion, cleanup and recurring job scheduling.
    *
-   * @param job - The job to process
+   * @param job The job to process
    * @returns Promise that resolves when job processing is complete
    * @private
    */
@@ -489,8 +489,8 @@ export class Queue {
    * Internal method to handle job errors.
    * Determines whether to retry or fail the job based on attempt count.
    *
-   * @param job - The failed job
-   * @param error - The error that occurred
+   * @param job The failed job
+   * @param error The error that occurred
    * @returns Promise that resolves when error handling is complete
    * @private
    */
@@ -508,8 +508,8 @@ export class Queue {
    * Internal method to retry a failed job.
    * Increments attempt count and schedules next attempt with backoff delay.
    *
-   * @param job - The job to retry
-   * @param _error - The error from the failed attempt
+   * @param job The job to retry
+   * @param _error The error from the failed attempt
    * @returns Promise that resolves when job is scheduled for retry
    * @private
    */
@@ -528,8 +528,8 @@ export class Queue {
    * Internal method to mark a job as permanently failed.
    * Updates job status and triggers cleanup of failed jobs.
    *
-   * @param job - The job to fail
-   * @param error - The error that caused the failure
+   * @param job The job to fail
+   * @param error The error that caused the failure
    * @returns Promise that resolves when job is marked as failed
    * @private
    */
@@ -594,8 +594,8 @@ export class Queue {
    * Internal method to handle recurring job scheduling.
    * Creates the next occurrence of recurring jobs based on cron or repeat interval.
    *
-   * @param job - The completed job that may need to be rescheduled
-   * @param originalTimezone - Optional timezone for cron scheduling
+   * @param job The completed job that may need to be rescheduled
+   * @param originalTimezone Optional timezone for cron scheduling
    * @returns Promise that resolves when next job is scheduled
    * @private
    */

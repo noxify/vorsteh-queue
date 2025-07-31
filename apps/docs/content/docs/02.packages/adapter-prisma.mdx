@@ -1,0 +1,65 @@
+---
+title: Prisma Adapter
+navTitle: "@vorsteh-queue/adapter-prisma"
+description: Prisma ORM adapter for PostgreSQL with generated types and excellent developer tooling.
+---
+
+The Prisma adapter provides PostgreSQL support using Prisma ORM, offering generated types, migrations, and excellent developer tooling.
+
+## Installation
+
+<PackageInstall packages={["@vorsteh-queue/core", "@vorsteh-queue/adapter-prisma"]} />
+
+## Quick Start
+
+```typescript
+import { PrismaClient } from "@prisma/client"
+
+import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+import { Queue } from "@vorsteh-queue/core"
+
+const prisma = new PrismaClient()
+const adapter = new PostgresPrismaQueueAdapter(prisma)
+const queue = new Queue(adapter)
+```
+
+## Database Setup
+
+### Schema
+
+Add the queue job model to your `schema.prisma`:
+
+<RemoteCodeBlock
+  source="./packages/adapter-prisma/prisma/schema.prisma"
+  language="prisma"
+  showToolbar={true}
+  path="prisma/schema.prisma"
+  focusedLines="17-43"
+/>
+
+### Migration
+
+Push the schema to your database:
+
+```bash
+npx prisma db push
+```
+
+Or generate and apply the migration:
+
+```bash
+npx prisma migrate dev --name add-queue-jobs
+```
+
+### Generate Client
+
+Generate the Prisma client:
+
+```bash
+npx prisma generate
+```
+
+## References
+
+- Sources: https://github.com/noxify/vorsteh-queue/tree/main/packages/adapter-prisma
+- NPM: https://www.npmjs.com/package/@vorsteh-queue/adapter-prisma

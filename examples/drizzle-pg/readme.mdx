@@ -1,0 +1,18 @@
+---
+title: Drizzle with node-postgres Example
+navTitle: Drizzle with node-postgres
+description: Demonstrates Vorsteh Queue with Drizzle ORM and node-postgres driver. Shows basic job processing, priorities, and delayed scheduling.
+---
+
+## Setup
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue@latest my-project --template drizzle-pg
+cd my-project
+cp .env.example .env
+# Edit .env with your PostgreSQL database URL
+pnpm db:push
+pnpm dev
+```

@@ -1,133 +1,273 @@
-// import type { z } from "zod"
-// import { EntryGroup, isDirectory, isFile } from "renoun/file-system"
+// import type { FileSystemEntry } from "renoun/file-system"
+import type { z } from "zod"
+import { cache } from "react"
+import { Collection, Directory, isDirectory, isFile, withSchema } from "renoun/file-system"
 
-// import type { frontmatterSchema } from "./validations"
-// import { removeFromArray } from "./lib/utils"
-// import { generateDirectories } from "./sources"
+import type { frontmatterSchema } from "./validations"
+import { removeFromArray } from "./lib/utils"
+import { docSchema, featuresSchema } from "./validations"
 
-// export const DocumentationGroup = new EntryGroup({
-//   entries: [...generateDirectories()],
-// })
+export const features = new Directory({
+  path: "content/features",
+  include: "*.mdx",
 
-// export type EntryType = Awaited<ReturnType<typeof DocumentationGroup.getEntry>>
-// export type DirectoryType = Awaited<ReturnType<typeof DocumentationGroup.getDirectory>>
+  loader: {
+    mdx: withSchema(
+      { frontmatter: featuresSchema },
+      (path) => import(`../content/features/${path}.mdx`),
+    ),
+  },
+})
 
-// /**
-//  * Helper function to get the title for an element in the sidebar/navigation
-//  * @param collection {EntryType} the collection to get the title for
-//  * @param frontmatter {z.infer<typeof frontmatterSchema>} the frontmatter to get the title from
-//  * @param includeTitle? {boolean} whether to include the title in the returned string
-//  * @returns {string} the title to be displayed in the sidebar/navigation
-//  */
-// export function getTitle(
-//   collection: EntryType,
-//   frontmatter: z.infer<typeof frontmatterSchema>,
-//   includeTitle = false,
-// ): string {
-//   return includeTitle
-//     ? (frontmatter.navTitle ?? frontmatter.title ?? collection.getTitle())
-//     : (frontmatter.navTitle ?? collection.getTitle())
-// }
+export const DocumentationDirectory = new Directory({
+  path: `content/docs`,
+  basePathname: "docs",
+  // hide hidden files ( starts with `_` ) and all asset directories ( `_assets` )
+  include: (entry) =>
+    !entry.getBaseName().startsWith("_") && !entry.getAbsolutePath().includes("_assets"),
+  loader: {
+    mdx: withSchema(docSchema, (path) => import(`../content/docs/${path}.mdx`)),
+  },
+})
 
-// /**
-//  * Helper function to get the file content for a given source entry
-//  * This function will try to get the file based on the given path and the "mdx" extension
-//  * If the file is not found, it will try to get the index file based on the given path and the "mdx" extension
-//  * If there is also no index file, it will return null
-//  *
-//  * @param source {EntryType} the source entry to get the file content for
-//  */
-// export const getFileContent = async (source: EntryType) => {
-//   // first, try to get the file based on the given path
+export const ExampleDirectory = new Directory({
+  path: `../../examples`,
+  basePathname: "docs/examples",
+  include: (entry) =>
+    !entry.getBaseName().startsWith("_") &&
+    !entry.getAbsolutePath().includes("_assets") &&
+    // do not fetch all files in the example
+    // `depth == 0` - include the root `examples/readme.mdx`
+    // `depth == 1` - include only the `examples/<example>/readme.mdx
+    (entry.getDepth() == 1 || entry.getDepth() == 0) &&
+    (isDirectory(entry) || isFile(entry, "mdx")),
 
-//   return await DocumentationGroup.getFile(source.getPathSegments(), "mdx").catch(async () => {
-//     return await DocumentationGroup.getFile([...source.getPathSegments(), "index"], "mdx").catch(
-//       () => null,
-//     )
-//   })
-// }
+  loader: {
+    mdx: withSchema(docSchema, (path) => import(`../../../examples/${path}.mdx`)),
+  },
+})
 
-// /**
-//  * Helper function to get the sections for a given source entry
-//  * This function will try to get the sections based on the given path
-//  *
-//  * If there there are no entries/children for the current path, it will return an empty array
-//  *
-//  * @param source {EntryType} the source entry to get the sections for
-//  * @returns
-//  */
-// export async function getSections(source: EntryType) {
-//   if (source.getDepth() > -1) {
-//     if (isDirectory(source)) {
-//       return (
-//         await (await DocumentationGroup.getDirectory(source.getPathSegments())).getEntries()
-//       ).filter((ele) => ele.getPath() !== source.getPath())
-//     }
+export const AllDocumentation = new Collection({
+  entries: [DocumentationDirectory, ExampleDirectory],
+})
 
-//     if (isFile(source) && source.getBaseName() === "index") {
-//       return await source.getParent().getEntries()
-//     }
-//     return []
-//   } else {
-//     return (
-//       await (await DocumentationGroup.getDirectory(source.getPathSegments())).getEntries()
-//     ).filter((ele) => ele.getPath() !== source.getPath())
-//   }
-// }
+export type EntryType = Awaited<ReturnType<typeof AllDocumentation.getEntry>>
+export type DirectoryType = Awaited<ReturnType<typeof AllDocumentation.getDirectory>>
 
-// /**
-//  * Helper function to get the breadcrumb items for a given slug
-//  *
-//  * @param slug {string[]} the slug to get the breadcrumb items for
-//  */
-// export const getBreadcrumbItems = async (slug: string[]) => {
-//   // we do not want to have "index" as breadcrumb element
-//   const cleanedSlug = removeFromArray(slug, ["index"])
+/**
+ * Helper function to get the title for an element in the sidebar/navigation
+ * @param entry {EntryType} the entry to get the title for
+ * @param frontmatter {z.infer<typeof frontmatterSchema>} the frontmatter to get the title from
+ * @param includeTitle? {boolean} whether to include the title in the returned string
+ * @returns {string} the title to be displayed in the sidebar/navigation
+ */
+export function getTitle(
+  entry: EntryType,
+  frontmatter: z.infer<typeof frontmatterSchema>,
+  includeTitle = false,
+): string {
+  return includeTitle
+    ? (frontmatter.navTitle ?? frontmatter.title ?? entry.getTitle())
+    : (frontmatter.navTitle ?? entry.getTitle())
+}
 
-//   const combinations = cleanedSlug.map((_, index) => cleanedSlug.slice(0, index + 1))
+/**
+ * Helper function to get the sections for a given source entry
+ * This function will try to get the sections based on the given path
+ *
+ * If there there are no entries/children for the current path, it will return an empty array
+ *
+ * @param source {EntryType} the source entry to get the sections for
+ * @returns
+ */
+export async function getSections(source: EntryType) {
+  if (source.getDepth() > -1) {
+    if (isDirectory(source)) {
+      const parent = await (await getDirectory(source)).getEntries()
+      return await Promise.all(parent.map(async (ele) => await getTransformedEntry(ele)))
+    }
 
-//   const items = []
+    if (isFile(source) && source.getBaseName() === "index") {
+      const parent = await (await getDirectory(source.getParent())).getEntries()
+      return await Promise.all(parent.map(async (ele) => await getTransformedEntry(ele)))
+    }
+    return []
+  } else {
+    const parent = await (await getDirectory(source)).getEntries()
+    return await Promise.all(parent.map(async (ele) => await getTransformedEntry(ele)))
+  }
+}
 
-//   for (const currentPageSegement of combinations) {
-//     let collection: EntryType
-//     let file: Awaited<ReturnType<typeof getFileContent>>
-//     let frontmatter: z.infer<typeof frontmatterSchema> | undefined
-//     try {
-//       collection = await DocumentationGroup.getEntry(currentPageSegement)
-//       if (collection.getPathSegments().includes("index")) {
-//         file = await getFileContent(collection.getParent())
-//       } else {
-//         file = await getFileContent(collection)
-//       }
+/**
+ * Helper function to get the breadcrumb items for a given slug
+ *
+ * @param slug {string[]} the slug to get the breadcrumb items for
+ */
+export const getBreadcrumbItems = async (slug: string[] = []) => {
+  // we do not want to have "index" as breadcrumb element
+  const cleanedSlug = removeFromArray(slug, ["index"])
 
-//       frontmatter = await file?.getExportValue("frontmatter")
-//       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//     } catch (e: unknown) {
-//       continue
-//     }
+  const combinations = cleanedSlug.map((_, index) => cleanedSlug.slice(0, index + 1))
 
-//     if (!frontmatter) {
-//       items.push({
-//         title: collection.getTitle(),
-//         path: ["docs", ...collection.getPathSegments()],
-//       })
-//     } else {
-//       const title = getTitle(collection, frontmatter, true)
-//       items.push({
-//         title,
-//         path: ["docs", ...removeFromArray(collection.getPathSegments(), ["index"])],
-//       })
-//     }
-//   }
+  const items = []
 
-//   return items
-// }
+  for (const currentPageSegement of combinations) {
+    const entry = (await transformedEntries()).find(
+      (ele) => ele.raw_pathname === `/${currentPageSegement.join("/")}`,
+    )
 
-// /**
-//  * Checks if an entry is hidden (starts with an underscore)
-//  *
-//  * @param entry {EntryType} the entry to check for visibility
-//  */
-// export function isHidden(entry: EntryType) {
-//   return entry.getBaseName().startsWith("_")
-// }
+    if (!entry) {
+      continue
+    }
+
+    items.push({
+      title: entry.title,
+      path: entry.segments,
+    })
+  }
+
+  return items
+}
+
+/**
+ * Checks if an entry is hidden (starts with an underscore)
+ *
+ * @param entry {EntryType} the entry to check for visibility
+ */
+export function isHidden(entry: EntryType) {
+  return entry.getBaseName().startsWith("_")
+}
+
+/**
+ * Gets a file from the documentation collection based on the source entry
+ * Attempts to find the file in the following order:
+ * 1. Direct segment file
+ * 2. Index file in the segment directory
+ * 3. Readme file in the segment directory
+ *
+ * Handles special case for examples by excluding "docs" segment from the path
+ *
+ * @param source {EntryType} The source entry to get the file for
+ * @returns The found file or null if no file exists
+ */
+
+export async function getFile(source: EntryType) {
+  const segments = source.getPathnameSegments({
+    includeBasePathname: true,
+    includeDirectoryNamedSegment: true,
+  })
+
+  const excludeSegments = segments[1] === "examples" ? ["docs"] : []
+
+  const [segmentFile, indexFile, readmeFile] = await Promise.all([
+    AllDocumentation.getFile(removeFromArray(segments, excludeSegments), "mdx").catch(() => null),
+    AllDocumentation.getFile(removeFromArray([...segments, "index"], excludeSegments), "mdx").catch(
+      () => null,
+    ),
+    AllDocumentation.getFile(
+      removeFromArray([...segments, "readme"], excludeSegments),
+      "mdx",
+    ).catch(() => null),
+  ])
+
+  return segmentFile ?? indexFile ?? readmeFile ?? null
+}
+
+/**
+ * Gets a directory from the documentation collection based on the source entry
+ * Handles special case for examples by excluding "docs" segment from the path
+ *
+ * @param source {EntryType} The source entry to get the directory for
+ * @returns The directory corresponding to the source entry
+ */
+export async function getDirectory(source: EntryType) {
+  const segments = source.getPathnameSegments({
+    includeBasePathname: true,
+    includeDirectoryNamedSegment: true,
+  })
+
+  const excludeSegments = segments[1] === "examples" ? ["docs"] : []
+
+  const currentDirectory = await AllDocumentation.getDirectory(
+    removeFromArray(segments, excludeSegments),
+  )
+
+  return currentDirectory
+}
+
+/**
+ * Retrieves the frontmatter metadata from a documentation file
+ * @param source {Awaited<ReturnType<typeof getFile>>} The file to get metadata from
+ * @returns The frontmatter metadata if it exists
+ */
+export async function getMetadata(source: Awaited<ReturnType<typeof getFile>>) {
+  return await source?.getExportValue("frontmatter")
+}
+
+/**
+ * Gets the previous and next entries relative to the current entry in the documentation
+ * Returns a tuple containing [previousEntry, nextEntry] where either can be undefined
+ * if at the start/end of the documentation
+ *
+ * @param source {Awaited<ReturnType<typeof getTransformedEntry>>} The current entry to get siblings for
+ * @returns Tuple of previous and next entries
+ */
+export async function getSiblings(
+  source: Awaited<ReturnType<typeof getTransformedEntry>>,
+): Promise<
+  [
+    Awaited<ReturnType<typeof getTransformedEntry>> | undefined,
+    Awaited<ReturnType<typeof getTransformedEntry>> | undefined,
+  ]
+> {
+  const entries = await transformedEntries()
+
+  const arrayUniqueByKey = [...new Map(entries.map((item) => [item.raw_pathname, item])).values()]
+
+  const currentIndex = arrayUniqueByKey.findIndex((ele) => ele.raw_pathname === source.raw_pathname)
+
+  const previousElement = currentIndex > 0 ? arrayUniqueByKey[currentIndex - 1] : undefined
+
+  const nextElement =
+    currentIndex < arrayUniqueByKey.length - 1 ? arrayUniqueByKey[currentIndex + 1] : undefined
+
+  return [previousElement, nextElement]
+}
+
+/**
+ * Transforms a FileSystemEntry into a standardized object containing key information
+ *
+ * @param source {EntryType} The file system entry to transform
+ */
+export async function getTransformedEntry(source: EntryType) {
+  const file = await getFile(source)
+  const metadata = file ? await getMetadata(file) : null
+
+  return {
+    raw_pathname: source.getPathname({ includeBasePathname: true }),
+    pathname: source.getPathname({ includeBasePathname: false }),
+    segments: source.getPathnameSegments({ includeBasePathname: true }),
+    title: metadata ? getTitle(source, metadata, true) : source.getTitle(),
+    path: source.getAbsolutePath(),
+    entry: source,
+    file,
+    isDirectory: isDirectory(source),
+  }
+}
+
+/**
+ * Caches and returns an array of transformed entries from the AllDocumentation collection
+ * Recursively gets all entries including index and readme files and transforms them
+ */
+export const transformedEntries = cache(async () => {
+  const entries = await AllDocumentation.getEntries({
+    recursive: true,
+    includeIndexAndReadmeFiles: true,
+  })
+
+  return await Promise.all(
+    entries.map(async (doc) => {
+      return await getTransformedEntry(doc)
+    }),
+  )
+})

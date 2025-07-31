@@ -1,3 +1,7 @@
+/*
+ * @skip-docs
+ */
+
 /**
  * Source: https://github.com/mgcrea/prisma-queue/blob/master/src/utils/time.ts
  * License: MIT

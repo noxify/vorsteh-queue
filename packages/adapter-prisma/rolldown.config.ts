@@ -16,5 +16,11 @@ export default defineConfig({
     entryFileNames: "[name].js",
   },
   plugins: [del({ targets: "dist/*" })],
-  external: ["@vorsteh-queue/core", "prisma", "@prisma/client", "./src/generated/**"],
+  external: [
+    "@vorsteh-queue/core",
+    "prisma",
+    "@prisma/client",
+    "./src/generated/**",
+    "./generated/**",
+  ],
 })

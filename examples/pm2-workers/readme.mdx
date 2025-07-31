@@ -1,0 +1,54 @@
+---
+title: PM2 Workers Example
+navTitle: PM2 Worker
+description: Demonstrates running multiple specialized queue workers with PM2 process manager for production deployment. Shows clustering, monitoring, and process management.
+---
+
+## Setup
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue@latest my-project --template pm2-workers
+cd my-project
+cp .env.example .env
+# Edit .env with your PostgreSQL database URL
+pnpm db:push
+```
+
+## Additional Commands
+
+### Start all workers:
+
+```bash
+pnpm start
+```
+
+### Monitor workers:
+
+```bash
+pnpm monit    # Interactive monitoring
+pnpm logs     # View logs
+```
+
+### Control workers:
+
+```bash
+pnpm restart  # Restart all workers
+pnpm stop     # Stop all workers
+pnpm delete   # Delete all workers
+```
+
+### Adding Jobs
+
+#### Add sample jobs once:
+
+```bash
+pnpm dev
+```
+
+#### Add jobs continuously (for testing):
+
+```bash
+pnpm dev --continuous
+```

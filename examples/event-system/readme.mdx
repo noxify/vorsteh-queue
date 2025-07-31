@@ -1,0 +1,18 @@
+---
+title: Event System Example
+navTitle: Event System
+description: Demonstrates comprehensive event monitoring and queue management with job lifecycle events, statistics tracking, and queue control.
+---
+
+## Setup
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue@latest my-project --template event-system
+cd my-project
+cp .env.example .env
+# Edit .env with your PostgreSQL database URL
+pnpm db:push
+pnpm dev
+```

@@ -26,8 +26,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   /**
    * Create a new PostgreSQL Prisma queue adapter.
    *
-   * @param prisma - Any PrismaClient instance
-   * @param config - Optional configuration
+   * @param prisma PrismaClient instance
+   * @param config Optional configuration
    */
   constructor(prisma: PrismaClient) {
     super()

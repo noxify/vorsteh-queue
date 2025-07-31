@@ -1,5 +1,5 @@
 import createMDXPlugin from "@next/mdx"
-import rehypeRenoun from "@renoun/mdx/rehype"
+import { rehypePlugins } from "@renoun/mdx"
 import remarkRenounAddHeadings from "@renoun/mdx/remark/add-headings"
 import remarkRenounRemoveParagraphs from "@renoun/mdx/remark/remove-immediate-paragraphs"
 import remarkRenounRelativeLinks from "@renoun/mdx/remark/transform-relative-links"
@@ -22,7 +22,7 @@ const withMDX = createMDXPlugin({
       remarkRenounRelativeLinks,
       remarkGfm,
     ],
-    rehypePlugins: [rehypeRenoun, rehypeMdxImportMedia],
+    rehypePlugins: [...rehypePlugins, rehypeMdxImportMedia],
   },
 })
 

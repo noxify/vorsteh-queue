@@ -1,5 +1,7 @@
 import z from "zod"
 
+import { allowedIcons } from "./lib/icon"
+
 export const frontmatterSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
@@ -7,7 +9,8 @@ export const frontmatterSchema = z.object({
   navTitle: z.string().optional(),
   entrypoint: z.string().optional(),
   alias: z.string().optional(),
-  showToc: z.boolean().optional().default(true),
+  toc: z.boolean().optional().default(true),
+  ignoreSearch: z.boolean().optional().default(false),
 })
 
 export const headingSchema = z.array(
@@ -22,3 +25,12 @@ export const docSchema = {
   frontmatter: frontmatterSchema,
   headings: headingSchema,
 }
+
+export const featuresSchema = z.object({
+  title: z.string(),
+  icon: z.enum(Object.keys(allowedIcons), {
+    error: (value) =>
+      `Icon "${String(value.input)}" is not specified. Please add it to the "icon.tsx".`,
+  }),
+  type: z.enum(["feature", "key_feature"]),
+})

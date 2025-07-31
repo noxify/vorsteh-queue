@@ -9,7 +9,7 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

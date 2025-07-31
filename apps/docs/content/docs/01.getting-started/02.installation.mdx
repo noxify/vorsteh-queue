@@ -1,0 +1,76 @@
+---
+title: Installation
+description: Learn how to install Vorsteh Queue packages for your preferred ORM adapter.
+---
+
+## Prerequisites
+
+Before installing Vorsteh Queue, ensure you have:
+
+- **Node.js 20+**
+- **PostgreSQL 12+** database
+- **ESM project** - Add `"type": "module"` to your `package.json` or use `.mjs` file extensions
+
+## Quick Start with CLI (Recommended)
+
+The fastest way to get started is using the `create-vorsteh-queue` CLI tool:
+
+```bash
+# Interactive setup
+npx create-vorsteh-queue my-queue-app
+
+# Or with specific options
+npx create-vorsteh-queue worker-service \
+  --template=drizzle-postgres \
+  --package-manager=pnpm \
+  --quiet
+```
+
+### Available Templates
+
+- **drizzle-pg** - Basic Drizzle ORM with node-postgres
+- **drizzle-pglite** - Zero-setup with embedded PostgreSQL
+- **drizzle-postgres** - Advanced with recurring jobs
+- **event-system** - Comprehensive event monitoring
+- **progress-tracking** - Real-time progress updates
+- **pm2-workers** - Multi-process workers with PM2
+
+## Manual Installation
+
+If you prefer to add Vorsteh Queue to an existing project:
+
+### Drizzle ORM (PostgreSQL)
+
+<PackageInstall
+  packages={["@vorsteh-queue/core", "@vorsteh-queue/adapter-drizzle"]}
+  className={{ container: "not-prose", code: "not-prose" }}
+/>
+
+### Prisma ORM (PostgreSQL)
+
+<PackageInstall
+  packages={["@vorsteh-queue/core", "@vorsteh-queue/adapter-prisma"]}
+  className={{ container: "not-prose", code: "not-prose" }}
+/>
+
+## Database Setup
+
+After installation, you'll need to set up the required database tables. Each adapter provides migration scripts or schema definitions:
+
+- **Drizzle**: Use the provided schema and run migrations
+- **Prisma**: Add the schema to your `schema.prisma` and run `prisma migrate`
+
+Refer to the specific adapter documentation for detailed setup instructions.
+
+## Verify Installation
+
+Create a simple test file to verify your installation:
+
+```typescript
+import { Queue } from "@vorsteh-queue/core"
+
+// Your adapter import will vary based on your choice
+console.log("Vorsteh Queue installed successfully!")
+```
+
+Run the file with Node.js to confirm everything is working correctly.

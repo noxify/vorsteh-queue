@@ -7,18 +7,18 @@
   "scripts": {
     "dev": "pnpm with-env tsx src/index.ts",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
+    "db:push": "prisma db push",
     "with-env": "dotenv -e .env --"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^6.12.0",
-    "@prisma/client": "^6.12.0",
+    "@prisma/adapter-pg": "^6.13.0",
+    "@prisma/client": "^6.13.0",
     "@vorsteh-queue/adapter-prisma": "workspace:*",
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
-    "dotenv-cli": "8.0.0",
-    "prisma": "^6.12.0",
+    "dotenv-cli": "10.0.0",
+    "prisma": "^6.13.0",
     "tsx": "4.20.3",
     "typescript": "^5.8.3"
   }

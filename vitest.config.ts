@@ -1,10 +1,11 @@
-import { defineConfig } from "vitest/config"
 import tsconfigPaths from "vite-tsconfig-paths"
+import { defineConfig, Plugin } from "vitest/config"
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     projects: ["packages/*"],
+    environment: "node",
     coverage: {
       provider: "v8",
       all: true,
