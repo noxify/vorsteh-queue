@@ -215,7 +215,11 @@ export function Search() {
                 })}
               </>
             ) : searchValue !== "" ? (
-              <CommandEmpty>Nothing found...</CommandEmpty>
+              isPending ? (
+                <CommandEmpty>Searching...</CommandEmpty>
+              ) : (
+                <CommandEmpty>Nothing found...</CommandEmpty>
+              )
             ) : (
               <CommandEmpty>Start typing...</CommandEmpty>
             )}
