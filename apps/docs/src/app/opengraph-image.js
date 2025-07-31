@@ -1,6 +1,8 @@
 import { ImageResponse } from "next/og"
 
 export const dynamic = "force-static"
+export const contentType = "image/png"
+
 // eslint-disable-next-line @typescript-eslint/require-await
 export default async function Image() {
   return new ImageResponse(
