@@ -47,7 +47,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload, TJobResult>> {
     const result = await this.db
-      .insertInto("")
+      .insertInto("queue_jobs")
       .values({
         queue_name: this.queueName,
         name: job.name,

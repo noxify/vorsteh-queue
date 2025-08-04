@@ -1,11 +1,11 @@
-# @vorsteh-queue/adapter-drizzle
+# @vorsteh-queue/adapter-kysely
 
-Drizzle ORM adapter for Vorsteh Queue supporting PostgreSQL databases.
+Kysely ORM adapter for Vorsteh Queue supporting PostgreSQL databases.
 
 ## Features
 
-- **PostgreSQL Support**: Full PostgreSQL compatibility with PGlite, node-postgres, and postgres.js
-- **Type Safety**: Full TypeScript support with Drizzle ORM
+- **PostgreSQL Support**: Full PostgreSQL compatibility with node-postgres and other drivers
+- **Type Safety**: Full TypeScript support with Kysely ORM
 - **SKIP LOCKED**: Concurrent job processing without lock contention
 - **JSON Payloads**: Complex data structures with proper serialization
 - **UTC-First**: All timestamps stored as UTC for reliable timezone handling
@@ -19,9 +19,9 @@ Drizzle ORM adapter for Vorsteh Queue supporting PostgreSQL databases.
 ## Installation
 
 ```bash
-npm install @vorsteh-queue/adapter-drizzle drizzle-orm
+npm install @vorsteh-queue/adapter-kysely kysely
 # or
-pnpm add @vorsteh-queue/adapter-drizzle drizzle-orm
+pnpm add @vorsteh-queue/adapter-kysely kysely
 ```
 
 > **Note**: Make sure your project has `"type": "module"` in package.json or use `.mjs` file extensions.
@@ -29,17 +29,20 @@ pnpm add @vorsteh-queue/adapter-drizzle drizzle-orm
 ## Usage
 
 ```typescript
-import { drizzle } from "drizzle-orm/node-postgres"
+import { Kysely, PostgresDialect } from "kysely"
 import { Pool } from "pg"
 
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
 import { Queue } from "@vorsteh-queue/core"
 
 // Setup PostgreSQL connection
-const pool = new Pool({
-  connectionString: "postgresql://user:password@localhost:5432/database",
+const db = new Kysely({
+  dialect: new PostgresDialect({
+    pool: new Pool({
+      connectionString: "postgresql://user:password@localhost:5432/database",
+    }),
+  }),
 })
-const db = drizzle(pool)
 
 interface EmailPayload {
   to: string
@@ -82,45 +85,77 @@ queue.start()
 
 ## Schema Setup
 
-### Using Drizzle Schemas (Recommended)
+### Using Kysely Migrations
+
+The adapter includes migration files that you can run using Kysely's migration system.
+
+Create a new migration file for the `queue_table` and copy the following code into the new created file.
 
 ```typescript
-import { drizzle } from "drizzle-orm/node-postgres"
-
-import { postgresSchema } from "@vorsteh-queue/adapter-drizzle"
-
-const db = drizzle(pool, { schema: postgresSchema })
+// src/migrations/queue_table.ts
+export {up, down} from "@vorsteh-queue/adapter-kysely/migrations
 ```
 
-### Using Drizzle Kit Migrations
+### Manual Schema Creation
 
-```typescript
-// src/schema/index.ts - Your application schema
-import { pgTable, serial, varchar } from "drizzle-orm/pg-core"
+```ts
+// src/migrations/queue_table.ts
+import type { Kysely } from "kysely"
+import { sql } from "kysely"
 
-import { postgresSchema } from "@vorsteh-queue/adapter-drizzle"
+export async function up(db: Kysely<unknown>) {
+  await db.schema
+    .createTable("queue_jobs")
+    .addColumn("id", "uuid", (col) => col.defaultTo(sql`gen_random_uuid()`).notNull())
+    .addColumn("queue_name", "varchar(255)", (col) => col.notNull())
+    .addColumn("name", "varchar(255)", (col) => col.notNull())
+    .addColumn("payload", "jsonb", (col) => col.notNull())
+    .addColumn("status", "varchar(50)", (col) => col.notNull())
+    .addColumn("priority", "int4", (col) => col.notNull())
+    .addColumn("attempts", "int4", (col) => col.defaultTo(0).notNull())
+    .addColumn("max_attempts", "int4", (col) => col.notNull())
+    .addColumn("cron", "varchar(255)")
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.defaultTo(sql`timezone('utc'::text, now())`).notNull(),
+    )
+    .addColumn("process_at", "timestamptz", (col) => col.notNull())
+    .addColumn("processed_at", "timestamptz")
+    .addColumn("completed_at", "timestamptz")
+    .addColumn("failed_at", "timestamptz")
+    .addColumn("error", "jsonb")
+    .addColumn("result", "jsonb")
+    .addColumn("progress", "int4")
+    .addColumn("repeat_every", "int4")
+    .addColumn("repeat_limit", "int4")
+    .addColumn("repeat_count", "int4")
+    .execute()
 
-// Your existing tables
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }),
-})
+  await db.schema
+    .createIndex("idx_queue_jobs_status_priority")
+    .on("queue_jobs")
 
-// Export queue schema alongside your schema
-export const queueJobs = postgresSchema.queueJobs
-```
+    .columns(["queue_name", "status", "priority", "created_at"])
+    .execute()
 
-```bash
-# Generate and run migrations
-npx drizzle-kit generate
-npx drizzle-kit migrate
+  await db.schema
+    .createIndex("idx_queue_jobs_process_at")
+    .on("queue_jobs")
+
+    .column("process_at")
+    .execute()
+}
+
+export async function down(db: Kysely<unknown>) {
+  await db.schema.dropTable("queue_jobs").execute()
+}
 ```
 
 ## Supported PostgreSQL Drivers
 
 - **node-postgres** (`pg`)
 - **postgres.js** (`postgres`)
-- **PGlite** (for embedded/testing)
+- **pglite**
+- Any Kysely-compatible PostgreSQL driver
 
 ## Testing
 
