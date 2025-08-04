@@ -1,4 +1,5 @@
-import { Kysely, sql } from "kysely"
+import type { Kysely } from "kysely"
+import { sql } from "kysely"
 
 export async function up(db: Kysely<unknown>) {
   await db.schema
@@ -11,6 +12,7 @@ export async function up(db: Kysely<unknown>) {
     .addColumn("priority", "int4", (col) => col.notNull())
     .addColumn("attempts", "int4", (col) => col.defaultTo(0).notNull())
     .addColumn("max_attempts", "int4", (col) => col.notNull())
+    .addColumn("timeout", "jsonb")
     .addColumn("cron", "varchar(255)")
     .addColumn("created_at", "timestamptz", (col) =>
       col.defaultTo(sql`timezone('utc'::text, now())`).notNull(),

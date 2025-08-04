@@ -14,6 +14,7 @@ export async function up(db) {
     .addColumn("priority", "int4", (col) => col.notNull())
     .addColumn("attempts", "int4", (col) => col.defaultTo(0).notNull())
     .addColumn("max_attempts", "int4", (col) => col.notNull())
+    .addColumn("timeout", "jsonb")
     .addColumn("cron", "varchar(255)")
     .addColumn("created_at", "timestamptz", (col) =>
       col.defaultTo(sql`timezone('utc'::text, now())`).notNull(),

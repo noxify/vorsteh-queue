@@ -93,7 +93,7 @@ queue.on("job:retried", (job) => {
 })
 
 async function main() {
-  console.log("🚀 Starting Advanced Drizzle PostgreSQL Queue Example")
+  console.log("🚀 Starting Kysely Postgres.JS Queue Example")
 
   // Add jobs with different priorities and features
   await queue.add(
