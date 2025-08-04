@@ -1,7 +1,7 @@
 import { sql } from "kysely"
 
 /**
- * @param {import('kysely').Kysely<unknown} db
+ * @param {import('kysely').Kysely<unknown>} db
  */
 export async function up(db) {
   await db.schema
@@ -46,7 +46,7 @@ export async function up(db) {
 }
 
 /**
- * @param {import('kysely').Kysely<unknown} db
+ * @param {import('kysely').Kysely<unknown>} db
  */
 export async function down(db) {
   await db.schema.dropTable("queue_jobs").execute()
