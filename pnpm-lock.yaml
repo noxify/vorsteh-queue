@@ -359,9 +359,6 @@ importers:
       dotenv-cli:
         specifier: 10.0.0
         version: 10.0.0
-      drizzle-kit:
-        specifier: ^0.31.4
-        version: 0.31.4
       kysely-ctl:
         specifier: 0.14.0
         version: 0.14.0(kysely-postgres-js@2.0.0(kysely@0.28.4)(postgres@3.4.7))(kysely@0.28.4)(magicast@0.3.5)
