@@ -579,12 +579,6 @@ importers:
       kysely-pglite-dialect:
         specifier: ^1.1.1
         version: 1.1.1(@electric-sql/pglite@0.3.6)(kysely@0.28.4)
-      kysely-postgres-js:
-        specifier: ^2.0.0
-        version: 2.0.0(kysely@0.28.4)(postgres@3.4.7)
-      postgres:
-        specifier: ^3.4.7
-        version: 3.4.7
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -8724,13 +8718,13 @@ snapshots:
 
   '@types/docker-modem@3.0.6':
     dependencies:
-      '@types/node': 24.1.0
+      '@types/node': 22.16.5
       '@types/ssh2': 1.15.5
 
   '@types/dockerode@3.3.42':
     dependencies:
       '@types/docker-modem': 3.0.6
-      '@types/node': 24.1.0
+      '@types/node': 22.16.5
       '@types/ssh2': 1.15.5
 
   '@types/estree-jsx@1.0.5':
@@ -8797,11 +8791,11 @@ snapshots:
 
   '@types/ssh2-streams@0.1.12':
     dependencies:
-      '@types/node': 24.1.0
+      '@types/node': 22.16.5
 
   '@types/ssh2@0.5.52':
     dependencies:
-      '@types/node': 24.1.0
+      '@types/node': 22.16.5
       '@types/ssh2-streams': 0.1.12
 
   '@types/ssh2@1.15.5':
@@ -12236,7 +12230,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 24.1.0
+      '@types/node': 22.16.5
       long: 5.3.2
 
   proxy-agent@6.4.0:

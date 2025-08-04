@@ -1,1 +1,4 @@
-export { PostgresPrismaQueueAdapter } from "./postgres-adapter"
+export {
+  PostgresPrismaQueueAdapter,
+  PostgresPrismaQueueAdapter as PostgresQueueAdapter,
+} from "./postgres-adapter"

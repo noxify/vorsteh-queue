@@ -1,2 +1,5 @@
 // PostgreSQL adapter
-export { PostgresQueueAdapter } from "./postgres-adapter"
+export {
+  PostgresQueueAdapter,
+  PostgresQueueAdapter as PostgresKyselyQueueAdapter,
+} from "./postgres-adapter"
