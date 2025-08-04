@@ -13,13 +13,39 @@ import type { DB, QueueJob } from "./types"
  *
  * @example
  * ```typescript
- * import { drizzle } from "drizzle-orm/node-postgres"
- * import { Pool } from "pg"
+ * import { Kysely } from "kysely"
+ * import { PostgresJSDialect } from "kysely-postgres-js"
+ * import postgres from "postgres"
  *
- * const pool = new Pool({ connectionString: "postgresql://..." })
- * const db = drizzle(pool)
- * const adapter = new PostgresQueueAdapter(db)
- * const queue = new Queue(adapter, { name: "my-queue" })
+ * import type { QueueJobTableDefinition } from "@vorsteh-queue/adapter-kysely/types"
+ *
+ * import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+ * import { Queue } from "@vorsteh-queue/core"
+ *
+ * interface DB {
+ *   queue_jobs: QueueJobTableDefinition
+ *   other_table: {
+ *     name: string
+ *   }
+ * }
+ *
+ * const client = postgres(
+ *   process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/queue_db",
+ *   { max: 10 }, // Connection pool
+ * )
+ *
+ * const db = new Kysely<DB>({
+ *   dialect: new PostgresJSDialect({
+ *     postgres: client,
+ *   }),
+ * })
+ *
+ *
+ * const queue = new Queue(new PostgresQueueAdapter(db), {
+ *   name: "advanced-queue",
+ *   removeOnComplete: 20,
+ *   removeOnFail: 10,
+ * })
  * ```
  */
 export class PostgresQueueAdapter extends BaseQueueAdapter {
