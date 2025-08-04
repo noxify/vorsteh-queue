@@ -1,0 +1,85 @@
+---
+title: Kysely Adapter
+navTitle: "@vorsteh-queue/adapter-kysely"
+description: Kysely adapter for PostgreSQL providing type-safe database operations with excellent performance.
+---
+
+The Kysely adapter provides PostgreSQL support using Kysely, offering excellent TypeScript integration and performance.
+
+## Installation
+
+<PackageInstall packages={["@vorsteh-queue/core", "@vorsteh-queue/adapter-kysely"]} />
+
+## Quick Start
+
+```typescript
+import { Kysely } from "kysely"
+import { PostgresJSDialect } from "kysely-postgres-js"
+import postgres from "postgres"
+
+import type { QueueJobTableDefinition } from "@vorsteh-queue/adapter-kysely/types"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+import { Queue } from "@vorsteh-queue/core"
+
+interface DB {
+  queue_jobs: QueueJobTableDefinition
+  other_table: {
+    name: string
+  }
+}
+
+// Shared database connection
+const client = postgres(
+  process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/queue_db",
+  { max: 10 }, // Connection pool
+)
+
+const db = new Kysely<DB>({
+  dialect: new PostgresJSDialect({
+    postgres: client,
+  }),
+})
+
+const adapter = new PostgresQueueAdapter(db)
+const queue = new Queue(adapter)
+```
+
+## Supported providers
+
+- PGlite
+- Postgres.JS
+- Node Progress
+
+## Database Setup
+
+### Schema
+
+The adapter includes a pre-defined migration:
+
+```typescript
+// migrations/queue-jobs.ts
+import { down, up } from "@vorsteh-queue/adapter-kysely/migrations"
+
+// Use in your schema file
+export { up, down }
+```
+
+If you don't want to use the pre-defined schema, you can create your own migration.
+
+<RemoteCodeBlock
+  source="./packages/adapter-kysely/src/migrations/queue_table.mjs"
+  language="ts"
+  showToolbar={true}
+  path="queue-jobs.ts"
+/>
+
+### Migration
+
+To run the migrations, we recommend to use [`kysely-ctl`](https://github.com/kysely-org/kysely-ctl).
+
+> `kysely-ctl` is the command-line tool for Kysely.
+
+## References
+
+- Sources: https://github.com/noxify/vorsteh-queue/tree/main/packages/adapter-kysely
+- NPM: https://www.npmjs.com/package/@vorsteh-queue/adapter-kysely

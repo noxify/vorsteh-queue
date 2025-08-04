@@ -33,15 +33,18 @@ export const DocumentationDirectory = new Directory({
 export const ExampleDirectory = new Directory({
   path: `../../examples`,
   basePathname: "docs/examples",
-  include: (entry) =>
-    !entry.getBaseName().startsWith("_") &&
-    !entry.getAbsolutePath().includes("_assets") &&
-    // do not fetch all files in the example
-    // `depth == 0` - include the root `examples/readme.mdx`
-    // `depth == 1` - include only the `examples/<example>/readme.mdx
-    (entry.getDepth() == 1 || entry.getDepth() == 0) &&
-    (isDirectory(entry) || isFile(entry, "mdx")),
-
+  include: (entry) => {
+    return (
+      !entry.getBaseName().startsWith("_") &&
+      !entry.getBaseName().startsWith(".") &&
+      !entry.getAbsolutePath().includes("_assets") &&
+      // do not fetch all files in the example
+      // `depth == 0` - include the root `examples/readme.mdx`
+      // `depth == 1` - include only the `examples/<example>/readme.mdx
+      (entry.getDepth() == 1 || entry.getDepth() == 0) &&
+      (isDirectory(entry) || isFile(entry, "mdx"))
+    )
+  },
   loader: {
     mdx: withSchema(docSchema, (path) => import(`../../../examples/${path}.mdx`)),
   },
