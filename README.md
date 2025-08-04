@@ -311,19 +311,20 @@ This project was developed with AI assistance, combining human expertise with AI
 # Install dependencies
 pnpm install
 
-# Run all tests
-pnpm test
+# Autofix format issues
+pnpm format:fix
 
-# Run specific test suites
-pnpm test:core                # Core package tests
-pnpm test:drizzle-postgres    # PostgreSQL adapter tests
-pnpm test:drizzle-mariadb     # MariaDB adapter tests
+# Fix issues in the `package.json` ( order, version mismatch )
+pnpm lint:ws -f
+
+# Lint
+pnpm lint
 
 # Type check
 pnpm typecheck
 
-# Lint
-pnpm lint
+# Run all tests
+pnpm test
 
 # Build packages
 pnpm build

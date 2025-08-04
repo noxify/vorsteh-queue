@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Vorsteh Queue - Reliable Job Queue for Modern Applications",
     short_name: "Vorsteh Queue",
     description:
-      "A powerful, ORM-agnostic queue engine for PostgreSQL 12+, MariaDB, and MySQL. Handle background jobs, scheduled tasks, and recurring processes with ease.",
+      "A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle background jobs, scheduled tasks, and recurring processes with ease.",
     start_url: "/",
     display: "standalone",
     background_color: "#f8f4e6",

@@ -9,7 +9,7 @@ import { ThemeProvider } from "~/components/theme-provider"
 export const metadata: Metadata = {
   title: "Vorsteh Queue - Reliable Job Queue for Modern Applications",
   description:
-    "A powerful, ORM-agnostic queue engine for PostgreSQL 12+, MariaDB, and MySQL. Handle background jobs, scheduled tasks, and recurring processes with ease.",
+    "A powerful, ORM-agnostic queue engine for PostgreSQL 12. Handle background jobs, scheduled tasks, and recurring processes with ease.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
