@@ -19,7 +19,7 @@
     "@next/eslint-plugin-next": "15.4.5",
     "eslint-config-turbo": "2.5.5",
     "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-package-json": "0.47.1",
+    "eslint-plugin-package-json": "0.48.0",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "5.2.0",
     "jsonc-eslint-parser": "2.4.0",

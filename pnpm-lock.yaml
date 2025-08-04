@@ -102,8 +102,8 @@ importers:
         specifier: 13.1.1
         version: 13.1.1(react@19.1.1)
       lucide-react:
-        specifier: 0.534.0
-        version: 0.534.0(react@19.1.1)
+        specifier: 0.536.0
+        version: 0.536.0(react@19.1.1)
       multimatch:
         specifier: 7.0.0
         version: 7.0.0
@@ -242,7 +242,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       pg:
         specifier: 8.16.3
         version: 8.16.3
@@ -273,7 +273,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
     devDependencies:
       '@types/node':
         specifier: 22.16.5
@@ -295,7 +295,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -323,7 +323,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -348,7 +348,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -432,7 +432,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -460,7 +460,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
     devDependencies:
       drizzle-kit:
         specifier: ^0.31.4
@@ -495,7 +495,7 @@ importers:
         version: 0.31.4
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       eslint:
         specifier: ^9.32.0
         version: 9.32.0(jiti@2.5.1)
@@ -506,8 +506,8 @@ importers:
         specifier: ^3.6.2
         version: 3.6.2
       rolldown:
-        specifier: 1.0.0-beta.30
-        version: 1.0.0-beta.30
+        specifier: 1.0.0-beta.31
+        version: 1.0.0-beta.31
       rollup-plugin-delete:
         specifier: ^3.0.1
         version: 3.0.1(rollup@4.45.1)
@@ -540,14 +540,14 @@ importers:
         specifier: ^9.32.0
         version: 9.32.0(jiti@2.5.1)
       kysely:
-        specifier: ^0.28.3
-        version: 0.28.3
+        specifier: ^0.28.4
+        version: 0.28.4
       kysely-pglite-dialect:
         specifier: ^1.1.1
-        version: 1.1.1(@electric-sql/pglite@0.3.6)(kysely@0.28.3)
+        version: 1.1.1(@electric-sql/pglite@0.3.6)(kysely@0.28.4)
       kysely-postgres-js:
         specifier: ^2.0.0
-        version: 2.0.0(kysely@0.28.3)(postgres@3.4.7)
+        version: 2.0.0(kysely@0.28.4)(postgres@3.4.7)
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -555,8 +555,8 @@ importers:
         specifier: ^3.6.2
         version: 3.6.2
       rolldown:
-        specifier: 1.0.0-beta.30
-        version: 1.0.0-beta.30
+        specifier: 1.0.0-beta.31
+        version: 1.0.0-beta.31
       rollup-plugin-delete:
         specifier: ^3.0.1
         version: 3.0.1(rollup@4.45.1)
@@ -604,14 +604,14 @@ importers:
         specifier: ^6.13.0
         version: 6.13.0(magicast@0.3.5)(typescript@5.8.3)
       rolldown:
-        specifier: 1.0.0-beta.30
-        version: 1.0.0-beta.30
+        specifier: 1.0.0-beta.31
+        version: 1.0.0-beta.31
       rollup-plugin-delete:
         specifier: ^3.0.1
         version: 3.0.1(rollup@4.45.1)
       testcontainers:
-        specifier: ^11.4.0
-        version: 11.4.0
+        specifier: ^11.5.0
+        version: 11.5.0
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -622,8 +622,8 @@ importers:
   packages/core:
     dependencies:
       '@date-fns/tz':
-        specifier: ^1.2.0
-        version: 1.2.0
+        specifier: ^1.3.1
+        version: 1.3.1
       croner:
         specifier: ^9.1.0
         version: 9.1.0
@@ -644,8 +644,8 @@ importers:
         specifier: ^9.32.0
         version: 9.32.0(jiti@2.5.1)
       rolldown:
-        specifier: 1.0.0-beta.30
-        version: 1.0.0-beta.30
+        specifier: 1.0.0-beta.31
+        version: 1.0.0-beta.31
       rollup-plugin-delete:
         specifier: ^3.0.1
         version: 3.0.1(rollup@4.45.1)
@@ -696,8 +696,8 @@ importers:
         specifier: ^3.6.2
         version: 3.6.2
       rolldown:
-        specifier: 1.0.0-beta.30
-        version: 1.0.0-beta.30
+        specifier: 1.0.0-beta.31
+        version: 1.0.0-beta.31
       rollup-plugin-delete:
         specifier: ^3.0.1
         version: 3.0.1(rollup@4.45.1)
@@ -723,8 +723,8 @@ importers:
         specifier: 2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.38.0(eslint@9.32.0(jiti@2.5.1))(typescript@5.8.3))(eslint@9.32.0(jiti@2.5.1))
       eslint-plugin-package-json:
-        specifier: 0.47.1
-        version: 0.47.1(@types/estree@1.0.8)(eslint@9.32.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0)
+        specifier: 0.48.0
+        version: 0.48.0(@types/estree@1.0.8)(eslint@9.32.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0)
       eslint-plugin-react:
         specifier: 7.37.5
         version: 7.37.5(eslint@9.32.0(jiti@2.5.1))
@@ -925,8 +925,8 @@ packages:
   '@clack/prompts@0.11.0':
     resolution: {integrity: sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw==}
 
-  '@date-fns/tz@1.2.0':
-    resolution: {integrity: sha512-LBrd7MiJZ9McsOgxqWX7AaxrDjcFVjWH/tIKJd7pnR7McaslGYOP1QmmiBXdJH/H/yLCT+rcQ7FaPBUxRGUtrg==}
+  '@date-fns/tz@1.3.1':
+    resolution: {integrity: sha512-LnBOyuj+piItX/D5BWBSckBsuZyOt7Jg2obGNiObq7qjl1A2/8F+i4RS8/MmkSdnw6hOe6afrJLCWrUWZw5Mlw==}
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
@@ -1673,12 +1673,12 @@ packages:
     resolution: {integrity: sha512-O2yRJce1GOc6PAy3QxFM4NzFiWzvScDC1/5ihYBL6BUEVdq0XMWN01sppE+H6bBXbaFYipjwFLEWLg5PaSOThA==}
     engines: {node: '>=8.0.0'}
 
-  '@oxc-project/runtime@0.78.0':
-    resolution: {integrity: sha512-jOU7sDFMyq5ShGJC21UobalVzqcdtWGfySVp8ELvKoVLzMpLHb4kv1bs9VKxaP8XC7Z9hlAXwEKVhCTN+j21aQ==}
+  '@oxc-project/runtime@0.80.0':
+    resolution: {integrity: sha512-3rzy1bJAZ4s7zV9TKT60x119RwJDCDqEtCwK/Zc2qlm7wGhiIUxLLYUhE/mN91yB0u1kxm5sh4NjU12sPqQTpg==}
     engines: {node: '>=6.9.0'}
 
-  '@oxc-project/types@0.78.0':
-    resolution: {integrity: sha512-8FvExh0WRWN1FoSTjah1xa9RlavZcJQ8/yxRbZ7ElmSa2Ij5f5Em7MvRbSthE6FbwC6Wh8iAw0Gpna7QdoqLGg==}
+  '@oxc-project/types@0.80.0':
+    resolution: {integrity: sha512-xxHQm8wfCv2e8EmtaDwpMeAHOWqgQDAYg+BJouLXSQt5oTKu9TIXrgNMGSrM2fLvKmECsRd9uUFAAD+hPyootA==}
 
   '@pagefind/darwin-arm64@1.3.0':
     resolution: {integrity: sha512-365BEGl6ChOsauRjyVpBjXybflXAOvoMROw3TucAROHIcdBvXk9/2AmEvGFU0r75+vdQI4LJdJdpH4Y6Yqaj4A==}
@@ -2189,78 +2189,78 @@ packages:
     resolution: {integrity: sha512-C7c51Nn4yTxXFKvgh2txJFNweaVcfUPQxwEUFw4aWsCmfiBDJsTSwviIF8EcwjQ6k8bPyMWCl1vw4BdxE569Cg==}
     engines: {node: '>= 10'}
 
-  '@rolldown/binding-android-arm64@1.0.0-beta.30':
-    resolution: {integrity: sha512-4j7QBitb/WMT1fzdJo7BsFvVNaFR5WCQPdf/RPDHEsgQIYwBaHaL47KTZxncGFQDD1UAKN3XScJ0k7LAsZfsvg==}
+  '@rolldown/binding-android-arm64@1.0.0-beta.31':
+    resolution: {integrity: sha512-0mFtKwOG7smn0HkvQ6h8j0m/ohkR7Fp5eMTJ2Pns/HSbePHuDpxMaQ4TjZ6arlVXxpeWZlAHeT5BeNsOA3iWTg==}
     cpu: [arm64]
     os: [android]
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.30':
-    resolution: {integrity: sha512-4vWFTe1o5LXeitI2lW8qMGRxxwrH/LhKd2HDLa/QPhdxohvdnfKyDZWN96XUhDyje2bHFCFyhMs3ak2lg2mJFA==}
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.31':
+    resolution: {integrity: sha512-BHfHJ8Nb5G7ZKJl6pimJacupONT4F7w6gmQHw41rouAnJF51ORDwGefWeb6OMLzGmJwzxlIVPERfnJf1EsMM7A==}
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.30':
-    resolution: {integrity: sha512-MxrfodqImbsDFFFU/8LxyFPZjt7s4ht8g2Zb76EmIQ+xlmit46L9IzvWiuMpEaSJ5WbnjO7fCDWwakMGyJJ+Dw==}
+  '@rolldown/binding-darwin-x64@1.0.0-beta.31':
+    resolution: {integrity: sha512-4MiuRtExC08jHbSU/diIL+IuQP+3Ck1FbWAplK+ysQJ7fxT3DMxy5FmnIGfmhaqow8oTjb2GEwZJKgTRjZL1Vw==}
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-freebsd-x64@1.0.0-beta.30':
-    resolution: {integrity: sha512-c/TQXcATKoO8qE1bCjCOkymZTu7yVUAxBSNLp42Q97XHCb0Cu9v6MjZpB6c7Hq9NQ9NzW44uglak9D/r77JeDw==}
+  '@rolldown/binding-freebsd-x64@1.0.0-beta.31':
+    resolution: {integrity: sha512-nffC1u7ccm12qlAea8ExY3AvqlaHy/o/3L4p5Es8JFJ3zJSs6e3DyuxGZZVdl9EVwsLxPPTvioIl4tEm2afwyw==}
     cpu: [x64]
     os: [freebsd]
 
-  '@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.30':
-    resolution: {integrity: sha512-Vxci4xylM11zVqvrmezAaRjGBDyOlMRtlt7TDgxaBmSYLuiokXbZpD8aoSuOyjUAeN0/tmWItkxNGQza8UWGNQ==}
+  '@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.31':
+    resolution: {integrity: sha512-LHmAaB3rB1GOJuHscKcL2Ts/LKLcb3YWTh2uQ/876rg/J9WE9kQ0kZ+3lRSYbth/YL8ln54j4JZmHpqQY3xptQ==}
     cpu: [arm]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.30':
-    resolution: {integrity: sha512-iEBEdSs25Ol0lXyVNs763f7YPAIP0t1EAjoXME81oJ94DesJslaLTj71Rn1shoMDVA+dfkYA286w5uYnOs9ZNA==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.31':
+    resolution: {integrity: sha512-oTDZVfqIAjLB2I1yTiLyyhfPPO6dky33sTblxTCpe+ZT55WizN3KDoBKJ4yXG8shI6I4bRShVu29Xg0yAjyQYw==}
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.30':
-    resolution: {integrity: sha512-Ny684Sn1X8c+gGLuDlxkOuwiEE3C7eEOqp1/YVBzQB4HO7U/b4n7alvHvShboOEY5DP1fFUjq6Z+sBLYlCIZbQ==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.31':
+    resolution: {integrity: sha512-duJ3IkEBj9Xe9NYW1n8Y3483VXHGi8zQ0ZsLbK8464EJUXLF7CXM8Ry+jkkUw+ZvA+Zu1E/+C6p2Y6T9el0C9g==}
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.30':
-    resolution: {integrity: sha512-6moyULHDPKwt5RDEV72EqYw5n+s46AerTwtEBau5wCsZd1wuHS1L9z6wqhKISXAFTK9sneN0TEjvYKo+sgbbiA==}
+  '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.31':
+    resolution: {integrity: sha512-qdbmU5QSZ0uoLZBYMxiHsMQmizqtzFGTVPU5oyU1n0jU0Mo+mkSzqZuL8VBnjHOHzhVxZsoAGH9JjiRzCnoGVA==}
     cpu: [arm64]
     os: [openharmony]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.30':
-    resolution: {integrity: sha512-p0yoPdoGg5Ow2YZKKB5Ypbn58i7u4XFk3PvMkriFnEcgtVk40c5u7miaX7jH0JdzahyXVBJ/KT5yEpJrzQn8yg==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.31':
+    resolution: {integrity: sha512-H7+r34TSV8udB2gAsebFM/YuEeNCkPGEAGJ1JE7SgI9XML6FflqcdKfrRSneQFsPaom/gCEc1g0WW5MZ0O3blw==}
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.30':
-    resolution: {integrity: sha512-sM/KhCrsT0YdHX10mFSr0cvbfk1+btG6ftepAfqhbcDfhi0s65J4dTOxGmklJnJL9i1LXZ8WA3N4wmnqsfoK8Q==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.31':
+    resolution: {integrity: sha512-zRm2YmzFVqbsmUsyyZnHfJrOlQUcWS/FJ5ZWL8Q1kZh5PnLBrTVZNpakIWwAxpN5gNEi9MmFd5YHocVJp8ps1Q==}
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-wasm32-wasi@1.0.0-beta.30':
-    resolution: {integrity: sha512-i3kD5OWs8PQP0V+JW3TFyCLuyjuNzrB45em0g84Jc+gvnDsGVlzVjMNPo7txE/yT8CfE90HC/lDs3ry9FvaUyw==}
+  '@rolldown/binding-wasm32-wasi@1.0.0-beta.31':
+    resolution: {integrity: sha512-fM1eUIuHLsNJXRlWOuIIex1oBJ89I0skFWo5r/D3KSJ5gD9MBd3g4Hp+v1JGohvyFE+7ylnwRxSUyMEeYpA69A==}
     engines: {node: '>=14.0.0'}
     cpu: [wasm32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.30':
-    resolution: {integrity: sha512-q7mrYln30V35VrCqnBVQQvNPQm8Om9HC59I3kMYiOWogvJobzSPyO+HA1MP363+Qgwe39I2I1nqBKPOtWZ33AQ==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.31':
+    resolution: {integrity: sha512-4nftR9V2KHH3zjBwf6leuZZJQZ7v0d70ogjHIqB3SDsbDLvVEZiGSsSn2X6blSZRZeJSFzK0pp4kZ67zdZXwSw==}
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.30':
-    resolution: {integrity: sha512-nUqGBt39XTpbBEREEnyKofdP3uz+SN/x2884BH+N3B2NjSUrP6NXwzltM35C0wKK42hX/nthRrwSgj715m99Jw==}
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.31':
+    resolution: {integrity: sha512-0TQcKu9xZVHYALit+WJsSuADGlTFfOXhnZoIHWWQhTk3OgbwwbYcSoZUXjRdFmR6Wswn4csHtJGN1oYKeQ6/2g==}
     cpu: [ia32]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.30':
-    resolution: {integrity: sha512-lbnvUwAXIVWSXAeZrCa4b1KvV/DW0rBnMHuX0T7I6ey1IsXZ90J37dEgt3j48Ex1Cw1E+5H7VDNP2gyOX8iu3w==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.31':
+    resolution: {integrity: sha512-3zMICWwpZh1jrkkKDYIUCx/2wY3PXLICAS0AnbeLlhzfWPhCcpNK9eKhiTlLAZyTp+3kyipoi/ZSVIh+WDnBpQ==}
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/pluginutils@1.0.0-beta.30':
-    resolution: {integrity: sha512-whXaSoNUFiyDAjkUF8OBpOm77Szdbk5lGNqFe6CbVbJFrhCCPinCbRA3NjawwlNHla1No7xvXXh+CpSxnPfUEw==}
+  '@rolldown/pluginutils@1.0.0-beta.31':
+    resolution: {integrity: sha512-IaDZ9NhjOIOkYtm+hH0GX33h3iVZ2OeSUnFF0+7Z4+1GuKs4Kj5wK3+I2zNV9IPLfqV4XlwWif8SXrZNutxciQ==}
 
   '@rollup/rollup-android-arm-eabi@4.43.0':
     resolution: {integrity: sha512-Krjy9awJl6rKbruhQDgivNbD1WuLb8xAclM4IR4cN5pHGAs2oIMMQJEiC3IC/9TZJ+QZkmZhlMO/6MBGxPidpw==}
@@ -3781,8 +3781,8 @@ packages:
       '@typescript-eslint/parser':
         optional: true
 
-  eslint-plugin-package-json@0.47.1:
-    resolution: {integrity: sha512-tkZynGhfHaiZd6lmElUXX/GFLXsgb+Z4Am7+uTLAuIQ6iUFpchMZa/d2KYqa6jR3k8drR80pwhj/TkYUSIIiaw==}
+  eslint-plugin-package-json@0.48.0:
+    resolution: {integrity: sha512-M8Dx4GDhpe9oRvWr84nsrCK+tfLIE5RI+GcyM0wm9KUghmp5mYGL+BO0kzA686dPuEwVTbmfEAazY7tt3hMQtA==}
     engines: {node: ^=20.19.0 || >=22.12.0}
     peerDependencies:
       eslint: '>=8.0.0'
@@ -4608,8 +4608,8 @@ packages:
       kysely: '>= 0.24.0 < 1'
       postgres: '>= 3.4.0 < 4'
 
-  kysely@0.28.3:
-    resolution: {integrity: sha512-svKnkSH72APRdjfVCCOknxaC9Eb3nA2StHG9d5/sKOqRvHRp2Dtf1XwDvc92b4B5v6LV+EAGWXQbZ5jMOvHaDw==}
+  kysely@0.28.4:
+    resolution: {integrity: sha512-pfQj8/Bo3KSzC1HIZB5MeeYRWcDmx1ZZv8H25LsyeygqXE+gfsbUAgPT1GSYZFctB1cdOVlv+OifuCls2mQSnw==}
     engines: {node: '>=20.0.0'}
 
   lazystream@1.0.1:
@@ -4745,8 +4745,8 @@ packages:
     resolution: {integrity: sha512-Nv9KddBcQSlQopmBHXSsZVY5xsdlZkdH/Iey0BlcBYggMd4two7cZnKOK9vmy3nY0O5RGH99z1PCeTpPqszUYg==}
     engines: {bun: '>=1.0.0', deno: '>=1.30.0', node: '>=8.0.0'}
 
-  lucide-react@0.534.0:
-    resolution: {integrity: sha512-4Bz7rujQ/mXHqCwjx09ih/Q9SCizz9CjBV5repw9YSHZZZaop9/Oj0RgCDt6WdEaeAPfbcZ8l2b4jzApStqgNw==}
+  lucide-react@0.536.0:
+    resolution: {integrity: sha512-2PgvNa9v+qz4Jt/ni8vPLt4jwoFybXHuubQT8fv4iCW5TjDxkbZjNZZHa485ad73NSEn/jdsEtU57eE1g+ma8A==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -5227,8 +5227,8 @@ packages:
   package-json-from-dist@1.0.1:
     resolution: {integrity: sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==}
 
-  package-json-validator@0.23.0:
-    resolution: {integrity: sha512-HJokcABTkX8Calu86WCG0EknqWwf+doB7Xk3/EnXoO5/mjHC8H+D66UDZBjHtyZ1MIo0lrdSasbdOCHlr80n6Q==}
+  package-json-validator@0.24.1:
+    resolution: {integrity: sha512-MTtImbS7Cn170JdSe/p2vxtNPtICZhs5P5npHOiDwEspD0F0FrI8krZ1N3t3tHGpMeZrMGSa5sdNH17hJHDwXQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
@@ -5835,8 +5835,8 @@ packages:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
 
-  rolldown@1.0.0-beta.30:
-    resolution: {integrity: sha512-H/LmDTUPlm65hWOTjXvd1k0qrGinNi8LrG3JsHVm6Oit7STg0upBmgoG5PZUHbAnGTHr0MLoLyzjmH261lIqSg==}
+  rolldown@1.0.0-beta.31:
+    resolution: {integrity: sha512-M2Q+RfG0FMJeSW3RSFTbvtjGVTcQpTQvN247D0EMSsPkpZFoinopR9oAnQiwgogQyzDuvKNnbyCbQQlmNAzSoQ==}
     hasBin: true
 
   rollup-plugin-delete@3.0.1:
@@ -6302,8 +6302,8 @@ packages:
     resolution: {integrity: sha512-pFYqmTw68LXVjeWJMST4+borgQP2AyMNbg1BpZh9LbyhUeNkeaPF9gzfPGUAnSMV3qPYdWUwDIjjCLiSDOl7vg==}
     engines: {node: '>=18'}
 
-  testcontainers@11.4.0:
-    resolution: {integrity: sha512-eX5nc/Fi5I0LHqwxw6BuUvWNfdl+M2sKX6fX/47RP89Xs5nU6smd0iD7dpFogxy8/wACjlucLoutJc7b5mtq7w==}
+  testcontainers@11.5.0:
+    resolution: {integrity: sha512-RPhuRqJ7OZR5e/uw9UEGbxuKjHGXruLlorRRcJvx429xzVapYammBNxmO2PNUW4M5lM/l6NryOY/AVECXaunSw==}
 
   text-decoder@1.2.3:
     resolution: {integrity: sha512-3/o9z3X0X0fTupwsYvR03pJ/DjWuqqrfwBgTQzdWDiQSm9KitAyz/9WqsT2JQW7KV2m+bC2ol/zqpW37NHxLaA==}
@@ -6510,8 +6510,8 @@ packages:
   undici-types@7.8.0:
     resolution: {integrity: sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==}
 
-  undici@7.12.0:
-    resolution: {integrity: sha512-GrKEsc3ughskmGA9jevVlIOPMiiAHJ4OFUtaAH+NhfTUSiZ1wMPIQqQvAJUrJspFXJt3EBWgpAeoHEDVT1IBug==}
+  undici@7.13.0:
+    resolution: {integrity: sha512-l+zSMssRqrzDcb3fjMkjjLGmuiiK2pMIcV++mJaAc9vhjSGpvM7h43QgP+OAMb1GImHmbPyG2tBXeuyG5iY4gA==}
     engines: {node: '>=20.18.1'}
 
   unherit@1.1.3:
@@ -7145,7 +7145,7 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@date-fns/tz@1.2.0': {}
+  '@date-fns/tz@1.3.1': {}
 
   '@drizzle-team/brocli@0.10.2': {}
 
@@ -7745,9 +7745,9 @@ snapshots:
   '@opentelemetry/api@1.4.1':
     optional: true
 
-  '@oxc-project/runtime@0.78.0': {}
+  '@oxc-project/runtime@0.80.0': {}
 
-  '@oxc-project/types@0.78.0': {}
+  '@oxc-project/types@0.80.0': {}
 
   '@pagefind/darwin-arm64@1.3.0':
     optional: true
@@ -8369,51 +8369,51 @@ snapshots:
 
   '@resvg/resvg-wasm@2.4.0': {}
 
-  '@rolldown/binding-android-arm64@1.0.0-beta.30':
+  '@rolldown/binding-android-arm64@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.30':
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.30':
+  '@rolldown/binding-darwin-x64@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-freebsd-x64@1.0.0-beta.30':
+  '@rolldown/binding-freebsd-x64@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.30':
+  '@rolldown/binding-linux-arm-gnueabihf@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.30':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.30':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.30':
+  '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.30':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.30':
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-wasm32-wasi@1.0.0-beta.30':
+  '@rolldown/binding-wasm32-wasi@1.0.0-beta.31':
     dependencies:
       '@napi-rs/wasm-runtime': 1.0.1
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.30':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.30':
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.30':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.31':
     optional: true
 
-  '@rolldown/pluginutils@1.0.0-beta.30': {}
+  '@rolldown/pluginutils@1.0.0-beta.31': {}
 
   '@rollup/rollup-android-arm-eabi@4.43.0':
     optional: true
@@ -8673,13 +8673,13 @@ snapshots:
 
   '@types/docker-modem@3.0.6':
     dependencies:
-      '@types/node': 22.16.5
+      '@types/node': 24.1.0
       '@types/ssh2': 1.15.5
 
   '@types/dockerode@3.3.42':
     dependencies:
       '@types/docker-modem': 3.0.6
-      '@types/node': 22.16.5
+      '@types/node': 24.1.0
       '@types/ssh2': 1.15.5
 
   '@types/estree-jsx@1.0.5':
@@ -9645,13 +9645,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3)):
+  drizzle-orm@0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.4)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3)):
     optionalDependencies:
       '@electric-sql/pglite': 0.3.6
       '@opentelemetry/api': 1.4.1
       '@prisma/client': 6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
       '@types/pg': 8.15.5
-      kysely: 0.28.3
+      kysely: 0.28.4
       mysql2: 3.14.2
       pg: 8.16.3
       postgres: 3.4.7
@@ -9953,7 +9953,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-package-json@0.47.1(@types/estree@1.0.8)(eslint@9.32.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0):
+  eslint-plugin-package-json@0.48.0(@types/estree@1.0.8)(eslint@9.32.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0):
     dependencies:
       '@altano/repository-tools': 2.0.1
       change-case: 5.4.4
@@ -9962,7 +9962,7 @@ snapshots:
       eslint: 9.32.0(jiti@2.5.1)
       eslint-fix-utils: 0.4.0(@types/estree@1.0.8)(eslint@9.32.0(jiti@2.5.1))
       jsonc-eslint-parser: 2.4.0
-      package-json-validator: 0.23.0
+      package-json-validator: 0.24.1
       semver: 7.7.2
       sort-object-keys: 1.1.3
       sort-package-json: 3.4.0
@@ -10897,17 +10897,17 @@ snapshots:
 
   klona@2.0.6: {}
 
-  kysely-pglite-dialect@1.1.1(@electric-sql/pglite@0.3.6)(kysely@0.28.3):
+  kysely-pglite-dialect@1.1.1(@electric-sql/pglite@0.3.6)(kysely@0.28.4):
     dependencies:
       '@electric-sql/pglite': 0.3.6
-      kysely: 0.28.3
+      kysely: 0.28.4
 
-  kysely-postgres-js@2.0.0(kysely@0.28.3)(postgres@3.4.7):
+  kysely-postgres-js@2.0.0(kysely@0.28.4)(postgres@3.4.7):
     dependencies:
-      kysely: 0.28.3
+      kysely: 0.28.4
       postgres: 3.4.7
 
-  kysely@0.28.3: {}
+  kysely@0.28.4: {}
 
   lazystream@1.0.1:
     dependencies:
@@ -11014,7 +11014,7 @@ snapshots:
   lru.min@1.1.2:
     optional: true
 
-  lucide-react@0.534.0(react@19.1.1):
+  lucide-react@0.536.0(react@19.1.1):
     dependencies:
       react: 19.1.1
 
@@ -11823,7 +11823,7 @@ snapshots:
 
   package-json-from-dist@1.0.1: {}
 
-  package-json-validator@0.23.0:
+  package-json-validator@0.24.1:
     dependencies:
       semver: 7.7.2
       validate-npm-package-license: 3.0.4
@@ -12609,27 +12609,27 @@ snapshots:
 
   reusify@1.1.0: {}
 
-  rolldown@1.0.0-beta.30:
+  rolldown@1.0.0-beta.31:
     dependencies:
-      '@oxc-project/runtime': 0.78.0
-      '@oxc-project/types': 0.78.0
-      '@rolldown/pluginutils': 1.0.0-beta.30
+      '@oxc-project/runtime': 0.80.0
+      '@oxc-project/types': 0.80.0
+      '@rolldown/pluginutils': 1.0.0-beta.31
       ansis: 4.1.0
     optionalDependencies:
-      '@rolldown/binding-android-arm64': 1.0.0-beta.30
-      '@rolldown/binding-darwin-arm64': 1.0.0-beta.30
-      '@rolldown/binding-darwin-x64': 1.0.0-beta.30
-      '@rolldown/binding-freebsd-x64': 1.0.0-beta.30
-      '@rolldown/binding-linux-arm-gnueabihf': 1.0.0-beta.30
-      '@rolldown/binding-linux-arm64-gnu': 1.0.0-beta.30
-      '@rolldown/binding-linux-arm64-musl': 1.0.0-beta.30
-      '@rolldown/binding-linux-arm64-ohos': 1.0.0-beta.30
-      '@rolldown/binding-linux-x64-gnu': 1.0.0-beta.30
-      '@rolldown/binding-linux-x64-musl': 1.0.0-beta.30
-      '@rolldown/binding-wasm32-wasi': 1.0.0-beta.30
-      '@rolldown/binding-win32-arm64-msvc': 1.0.0-beta.30
-      '@rolldown/binding-win32-ia32-msvc': 1.0.0-beta.30
-      '@rolldown/binding-win32-x64-msvc': 1.0.0-beta.30
+      '@rolldown/binding-android-arm64': 1.0.0-beta.31
+      '@rolldown/binding-darwin-arm64': 1.0.0-beta.31
+      '@rolldown/binding-darwin-x64': 1.0.0-beta.31
+      '@rolldown/binding-freebsd-x64': 1.0.0-beta.31
+      '@rolldown/binding-linux-arm-gnueabihf': 1.0.0-beta.31
+      '@rolldown/binding-linux-arm64-gnu': 1.0.0-beta.31
+      '@rolldown/binding-linux-arm64-musl': 1.0.0-beta.31
+      '@rolldown/binding-linux-arm64-ohos': 1.0.0-beta.31
+      '@rolldown/binding-linux-x64-gnu': 1.0.0-beta.31
+      '@rolldown/binding-linux-x64-musl': 1.0.0-beta.31
+      '@rolldown/binding-wasm32-wasi': 1.0.0-beta.31
+      '@rolldown/binding-win32-arm64-msvc': 1.0.0-beta.31
+      '@rolldown/binding-win32-ia32-msvc': 1.0.0-beta.31
+      '@rolldown/binding-win32-x64-msvc': 1.0.0-beta.31
 
   rollup-plugin-delete@3.0.1(rollup@4.45.1):
     dependencies:
@@ -13218,7 +13218,7 @@ snapshots:
       glob: 10.4.5
       minimatch: 9.0.5
 
-  testcontainers@11.4.0:
+  testcontainers@11.5.0:
     dependencies:
       '@balena/dockerignore': 1.0.2
       '@types/dockerode': 3.3.42
@@ -13234,7 +13234,7 @@ snapshots:
       ssh-remote-port-forward: 1.0.4
       tar-fs: 3.1.0
       tmp: 0.2.3
-      undici: 7.12.0
+      undici: 7.13.0
     transitivePeerDependencies:
       - bare-buffer
       - supports-color
@@ -13435,7 +13435,7 @@ snapshots:
 
   undici-types@7.8.0: {}
 
-  undici@7.12.0: {}
+  undici@7.13.0: {}
 
   unherit@1.1.3:
     dependencies:
