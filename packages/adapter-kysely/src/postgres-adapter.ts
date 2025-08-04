@@ -23,13 +23,17 @@ import type { DB, QueueJob } from "./types"
  * ```
  */
 export class PostgresQueueAdapter extends BaseQueueAdapter {
+  private customDbClient: Kysely<DB>
   /**
    * Create a new PostgreSQL queue adapter.
    *
    * @param db Kysely database instance
    */
-  constructor(private readonly db: Kysely<DB>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(private readonly db: Kysely<any>) {
     super()
+
+    this.customDbClient = db as Kysely<DB>
   }
 
   async connect(): Promise<void> {
@@ -40,13 +44,13 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   async disconnect(): Promise<void> {
     // Releases all resources and disconnects from the database.
 
-    await this.db.destroy()
+    await this.customDbClient.destroy()
   }
 
   async addJob<TJobPayload, TJobResult = unknown>(
     job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload, TJobResult>> {
-    const result = await this.db
+    const result = await this.customDbClient
       .insertInto("queue_jobs")
       .values({
         queue_name: this.queueName,
@@ -88,11 +92,11 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     if (status === "completed") updates.completed_at = asUtc(now)
     if (status === "failed") updates.failed_at = asUtc(now)
 
-    await this.db.updateTable("queue_jobs").set(updates).where("id", "=", id).execute()
+    await this.customDbClient.updateTable("queue_jobs").set(updates).where("id", "=", id).execute()
   }
 
   async incrementJobAttempts(id: string): Promise<void> {
-    await this.db
+    await this.customDbClient
       .updateTable("queue_jobs")
       .set({ attempts: sql`${"attempts"} + 1` })
       .where("id", "=", id)
@@ -103,7 +107,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     // Ensure progress is between 0-100
     const normalizedProgress = Math.max(0, Math.min(100, progress))
 
-    await this.db
+    await this.customDbClient
       .updateTable("queue_jobs")
       .set({ progress: normalizedProgress })
       .where("id", "=", id)
@@ -111,7 +115,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   }
 
   async getQueueStats(): Promise<QueueStats> {
-    const stats = await this.db
+    const stats = await this.customDbClient
       .selectFrom("queue_jobs")
       .select(({ fn }) => [
         "status",
@@ -141,13 +145,15 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   }
 
   async clearJobs(status?: JobStatus): Promise<number> {
-    const query = this.db.deleteFrom("queue_jobs").where("queue_name", "=", this.queueName)
+    const query = this.customDbClient
+      .deleteFrom("queue_jobs")
+      .where("queue_name", "=", this.queueName)
 
     if (status) {
       query.where("status", "=", status)
     }
 
-    // const result = (await this.db
+    // const result = (await this.customDbClient
     //   .delete(schema.queueJobs)
     const result = await query.executeTakeFirst()
 
@@ -156,7 +162,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
   async cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
     // Get jobs to delete (all except the most recent N)
-    const jobsToDelete = await this.db
+    const jobsToDelete = await this.customDbClient
       .selectFrom("queue_jobs")
       .select("id")
       .where("queue_name", "=", this.queueName)
@@ -171,7 +177,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
     const idsToDelete = jobsToDelete.map((job) => job.id)
 
-    const result = await this.db
+    const result = await this.customDbClient
       .deleteFrom("queue_jobs")
       .where("queue_name", "=", this.queueName)
       .where("id", "in", idsToDelete)
@@ -181,20 +187,20 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   }
 
   async size(): Promise<number> {
-    const result = await this.db
+    const result = await this.customDbClient
       .selectFrom("queue_jobs")
-      .select(this.db.fn.count("id").as("count"))
+      .select(this.customDbClient.fn.count("id").as("count"))
       .executeTakeFirst()
 
     return Number(result?.count ?? 0)
   }
 
   async transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult> {
-    return this.db.transaction().execute(async () => fn())
+    return this.customDbClient.transaction().execute(async () => fn())
   }
 
   protected async getDelayedJobReady(now: Date): Promise<BaseJob | null> {
-    const job = await this.db
+    const job = await this.customDbClient
       .selectFrom("queue_jobs")
       .selectAll()
       .where("queue_name", "=", this.queueName)
@@ -211,7 +217,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   }
 
   protected async getPendingJobByPriority(): Promise<BaseJob | null> {
-    const job = await this.db
+    const job = await this.customDbClient
       .selectFrom("queue_jobs")
       .selectAll()
       .where("queue_name", "=", this.queueName)
