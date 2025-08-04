@@ -109,7 +109,7 @@ importers:
         version: 7.0.0
       next:
         specifier: 15.4.5
-        version: 15.4.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 15.4.5(@opentelemetry/api@1.4.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       next-themes:
         specifier: latest
         version: 0.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -242,7 +242,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       pg:
         specifier: 8.16.3
         version: 8.16.3
@@ -273,7 +273,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
     devDependencies:
       '@types/node':
         specifier: 22.16.5
@@ -295,7 +295,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -323,7 +323,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -348,7 +348,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -432,7 +432,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -460,7 +460,7 @@ importers:
         version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
     devDependencies:
       drizzle-kit:
         specifier: ^0.31.4
@@ -495,10 +495,59 @@ importers:
         version: 0.31.4
       drizzle-orm:
         specifier: ^0.44.4
-        version: 0.44.4(@electric-sql/pglite@0.3.6)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))
       eslint:
         specifier: ^9.32.0
         version: 9.32.0(jiti@2.5.1)
+      postgres:
+        specifier: ^3.4.7
+        version: 3.4.7
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+      rolldown:
+        specifier: 1.0.0-beta.30
+        version: 1.0.0-beta.30
+      rollup-plugin-delete:
+        specifier: ^3.0.1
+        version: 3.0.1(rollup@4.45.1)
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.1.0)(@vitest/ui@3.2.4)(jiti@2.5.1)(lightningcss@1.30.1)(msw@2.10.4(@types/node@24.1.0)(typescript@5.8.3))(tsx@4.20.3)(yaml@2.8.0)
+
+  packages/adapter-kysely:
+    dependencies:
+      '@vorsteh-queue/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.3.6
+        version: 0.3.6
+      '@vorsteh-queue/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@vorsteh-queue/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@vorsteh-queue/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      eslint:
+        specifier: ^9.32.0
+        version: 9.32.0(jiti@2.5.1)
+      kysely:
+        specifier: ^0.28.3
+        version: 0.28.3
+      kysely-pglite-dialect:
+        specifier: ^1.1.1
+        version: 1.1.1(@electric-sql/pglite@0.3.6)(kysely@0.28.3)
+      kysely-postgres-js:
+        specifier: ^2.0.0
+        version: 2.0.0(kysely@0.28.3)(postgres@3.4.7)
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -1619,6 +1668,10 @@ packages:
 
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
+
+  '@opentelemetry/api@1.4.1':
+    resolution: {integrity: sha512-O2yRJce1GOc6PAy3QxFM4NzFiWzvScDC1/5ihYBL6BUEVdq0XMWN01sppE+H6bBXbaFYipjwFLEWLg5PaSOThA==}
+    engines: {node: '>=8.0.0'}
 
   '@oxc-project/runtime@0.78.0':
     resolution: {integrity: sha512-jOU7sDFMyq5ShGJC21UobalVzqcdtWGfySVp8ELvKoVLzMpLHb4kv1bs9VKxaP8XC7Z9hlAXwEKVhCTN+j21aQ==}
@@ -4542,6 +4595,22 @@ packages:
   klona@2.0.6:
     resolution: {integrity: sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA==}
     engines: {node: '>= 8'}
+
+  kysely-pglite-dialect@1.1.1:
+    resolution: {integrity: sha512-WZxLbrqe+tAVv6eWKwt2OOpVfdQUPGGt6amFbLGSsKwODUt1RKqvuNdu02dOC2Kz0LebRnl/h+J5zY01WKDOGA==}
+    peerDependencies:
+      '@electric-sql/pglite': ^0.2.0
+      kysely: '>=0.23.0'
+
+  kysely-postgres-js@2.0.0:
+    resolution: {integrity: sha512-R1tWx6/x3tSatWvsmbHJxpBZYhNNxcnMw52QzZaHKg7ZOWtHib4iZyEaw4gb2hNKVctWQ3jfMxZT/ZaEMK6kBQ==}
+    peerDependencies:
+      kysely: '>= 0.24.0 < 1'
+      postgres: '>= 3.4.0 < 4'
+
+  kysely@0.28.3:
+    resolution: {integrity: sha512-svKnkSH72APRdjfVCCOknxaC9Eb3nA2StHG9d5/sKOqRvHRp2Dtf1XwDvc92b4B5v6LV+EAGWXQbZ5jMOvHaDw==}
+    engines: {node: '>=20.0.0'}
 
   lazystream@1.0.1:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
@@ -7673,6 +7742,9 @@ snapshots:
   '@open-draft/until@2.1.0':
     optional: true
 
+  '@opentelemetry/api@1.4.1':
+    optional: true
+
   '@oxc-project/runtime@0.78.0': {}
 
   '@oxc-project/types@0.78.0': {}
@@ -9573,11 +9645,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.4(@electric-sql/pglite@0.3.6)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3)):
+  drizzle-orm@0.44.4(@electric-sql/pglite@0.3.6)(@opentelemetry/api@1.4.1)(@prisma/client@6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(@types/pg@8.15.5)(kysely@0.28.3)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3)):
     optionalDependencies:
       '@electric-sql/pglite': 0.3.6
+      '@opentelemetry/api': 1.4.1
       '@prisma/client': 6.13.0(prisma@6.13.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
       '@types/pg': 8.15.5
+      kysely: 0.28.3
       mysql2: 3.14.2
       pg: 8.16.3
       postgres: 3.4.7
@@ -10823,6 +10897,18 @@ snapshots:
 
   klona@2.0.6: {}
 
+  kysely-pglite-dialect@1.1.1(@electric-sql/pglite@0.3.6)(kysely@0.28.3):
+    dependencies:
+      '@electric-sql/pglite': 0.3.6
+      kysely: 0.28.3
+
+  kysely-postgres-js@2.0.0(kysely@0.28.3)(postgres@3.4.7):
+    dependencies:
+      kysely: 0.28.3
+      postgres: 3.4.7
+
+  kysely@0.28.3: {}
+
   lazystream@1.0.1:
     dependencies:
       readable-stream: 2.3.8
@@ -11551,7 +11637,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  next@15.4.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  next@15.4.5(@opentelemetry/api@1.4.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@next/env': 15.4.5
       '@swc/helpers': 0.5.15
@@ -11569,6 +11655,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 15.4.5
       '@next/swc-win32-arm64-msvc': 15.4.5
       '@next/swc-win32-x64-msvc': 15.4.5
+      '@opentelemetry/api': 1.4.1
       sharp: 0.34.3
     transitivePeerDependencies:
       - '@babel/core'
