@@ -12,8 +12,8 @@
   "dependencies": {
     "@vorsteh-queue/adapter-kysely": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
-    "kysely-postgres-js": "2.0.0",
     "kysely": "^0.28.4",
+    "kysely-postgres-js": "^2.0.0",
     "postgres": "^3.4.7"
   },
   "devDependencies": {

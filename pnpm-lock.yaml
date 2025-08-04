@@ -350,7 +350,7 @@ importers:
         specifier: ^0.28.4
         version: 0.28.4
       kysely-postgres-js:
-        specifier: 2.0.0
+        specifier: ^2.0.0
         version: 2.0.0(kysely@0.28.4)(postgres@3.4.7)
       postgres:
         specifier: ^3.4.7
