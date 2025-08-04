@@ -6,6 +6,9 @@ import type { QueueJobTableDefinition } from "@vorsteh-queue/adapter-kysely/type
 
 interface DB {
   queue_jobs: QueueJobTableDefinition
+  other_table: {
+    name: string
+  }
 }
 
 // Shared database connection

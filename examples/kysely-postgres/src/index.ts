@@ -4,25 +4,25 @@ import { Queue } from "@vorsteh-queue/core"
 import { client, db } from "./database"
 
 // Job payload types
-interface ReportJob {
+interface ReportJobPayload {
   userId: string
   type: "daily" | "weekly" | "monthly"
   includeCharts?: boolean
 }
 
-interface CleanupJob {
+interface CleanupJobPayload {
   olderThan: string
   fileTypes?: string[]
 }
 
 // Job result types
-interface ReportResult {
+interface ReportJobResult {
   reportId: string
   status: "completed" | "failed"
   fileSize?: number
 }
 
-interface CleanupResult {
+interface CleanupJobResult {
   deletedCount: number
   freedSpace: number
 }
@@ -35,7 +35,7 @@ const queue = new Queue(new PostgresQueueAdapter(db), {
 })
 
 // Job handlers with proper types
-queue.register<ReportJob, ReportResult>("generate-report", async (job) => {
+queue.register<ReportJobPayload, ReportJobResult>("generate-report", async (job) => {
   const { userId, type, includeCharts = false } = job.payload
   console.log(
     `📈 Generating ${type} report for user ${userId}${includeCharts ? " with charts" : ""}`,
@@ -56,7 +56,7 @@ queue.register<ReportJob, ReportResult>("generate-report", async (job) => {
   }
 })
 
-queue.register<CleanupJob, CleanupResult>("cleanup-files", async (job) => {
+queue.register<CleanupJobPayload, CleanupJobResult>("cleanup-files", async (job) => {
   const { olderThan, fileTypes = ["tmp", "log"] } = job.payload
   console.log(`🧽 Cleaning up ${fileTypes.join(", ")} files older than ${olderThan}`)
 
@@ -96,7 +96,7 @@ async function main() {
   console.log("🚀 Starting Advanced Drizzle PostgreSQL Queue Example")
 
   // Add jobs with different priorities and features
-  await queue.add<ReportJob>(
+  await queue.add(
     "generate-report",
     {
       userId: "user123",
@@ -106,7 +106,7 @@ async function main() {
     { priority: 1 },
   )
 
-  await queue.add<CleanupJob>(
+  await queue.add(
     "cleanup-files",
     {
       olderThan: "30d",
@@ -115,7 +115,7 @@ async function main() {
     { priority: 3 },
   )
 
-  await queue.add<ReportJob>(
+  await queue.add(
     "generate-report",
     {
       userId: "user456",
@@ -125,7 +125,7 @@ async function main() {
   )
 
   // Add recurring cleanup job
-  await queue.add<CleanupJob>(
+  await queue.add(
     "cleanup-files",
     { olderThan: "7d" },
     {
@@ -134,7 +134,7 @@ async function main() {
   )
 
   // Add cron job
-  await queue.add<ReportJob>(
+  await queue.add(
     "generate-report",
     { userId: "system", type: "daily" },
     {
