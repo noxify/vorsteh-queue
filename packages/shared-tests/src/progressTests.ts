@@ -29,8 +29,9 @@ export function runProgressTests<TDatabase = unknown>(ctx: SharedTestContext<TDa
 
       db = ctx.initDbClient(database)
 
+      await internalDbClient`CREATE EXTENSION IF NOT EXISTS pgcrypto CASCADE;`
       // ensure the database is clean before migration
-      await internalDbClient`drop table if exists queue_jobs`
+      await internalDbClient`drop table if exists queue_jobs;`
 
       await ctx.migrate(db)
     }, 60000)
