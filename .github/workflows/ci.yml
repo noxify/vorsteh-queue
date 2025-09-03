@@ -136,7 +136,7 @@ jobs:
 
       - name: Build package
         run: |
-          pnpm --filter "./packages/adapter-drizzle" build
+          pnpm --filter "./packages/*" build
 
       - name: Test Drizzle PostgreSQL (Postgres ${{ matrix.pg-version }})
         run: pnpm test:drizzle
