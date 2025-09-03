@@ -20,7 +20,8 @@ export function runProgressTests<TDatabase = unknown>(ctx: SharedTestContext<TDa
 
     beforeAll(async () => {
       // creating a new database container for each test suite
-      database = await initDatabase()
+      // eslint-disable-next-line turbo/no-undeclared-env-vars
+      database = await initDatabase(process.env.PG_VERSION ? Number(process.env.PG_VERSION) : 17)
 
       internalDbClient = postgres(database.container.getConnectionUri(), {
         max: 10,

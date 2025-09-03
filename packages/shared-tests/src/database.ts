@@ -1,6 +1,6 @@
 import { PostgreSqlContainer } from "@testcontainers/postgresql"
 
-export async function initDatabase(version = 15) {
+export async function initDatabase(version = 17) {
   const container = await new PostgreSqlContainer(`postgres:${version}`)
     .withEnvironment({
       POSTGRES_PASSWORD: "testpassword",

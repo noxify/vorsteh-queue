@@ -85,7 +85,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.13.1
+          version: 10.15.1
           run_install: false
 
       - shell: bash
@@ -112,6 +112,38 @@ jobs:
         env:
           # Ensure Docker is available for Testcontainers
           TESTCONTAINERS_RYUK_DISABLED: true
+
+  postgres-drizzle:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pg-version: [12, 13, 14, 15, 16, 17]
+    name: Test (Postgres ${{ matrix.pg-version }})
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/setup
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+          run_install: false
+
+      - shell: bash
+        run: pnpm install
+
+      - name: Build package
+        run: |
+          pnpm --filter "./packages/adapter-drizzle" build
+
+      - name: Test Drizzle PostgreSQL (Postgres ${{ matrix.pg-version }})
+        run: pnpm test:drizzle
+        env:
+          # Ensure Docker is available for Testcontainers
+          TESTCONTAINERS_RYUK_DISABLED: true
+          PG_VERSION: ${{ matrix.pg-version }}
 
   pkg-new-release:
     needs: [lint, format, typecheck, unittest]
