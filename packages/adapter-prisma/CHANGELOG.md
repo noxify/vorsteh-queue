@@ -1,5 +1,14 @@
 # @vorsteh-queue/adapter-prisma
 
+## 0.2.2
+
+### Patch Changes
+
+- 4414f87: Add `PostgresQueueAdapter` as alias to `PostgresPrismaQueueAdapter`
+- 73cdaf2: update dependencies
+- Updated dependencies [73cdaf2]
+  - @vorsteh-queue/core@0.3.2
+
 ## 0.2.1
 
 ### Patch Changes
