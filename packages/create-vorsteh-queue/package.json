@@ -20,7 +20,7 @@
   "type": "module",
   "bin": "./dist/index.js",
   "files": [
-    "dist"
+    "dist/*"
   ],
   "scripts": {
     "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
