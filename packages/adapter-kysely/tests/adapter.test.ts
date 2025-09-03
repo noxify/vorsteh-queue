@@ -5,7 +5,7 @@ import { PostgresJSDialect } from "kysely-postgres-js"
 import postgres from "postgres"
 
 import type { DatabaseConnectionProps } from "@vorsteh-queue/shared-tests/types"
-import { runTests } from "@vorsteh-queue/shared-tests/tests/progress"
+import { runTests } from "@vorsteh-queue/shared-tests/tests/adapter"
 
 import type { DB } from "~/types"
 import { PostgresQueueAdapter } from "../src"

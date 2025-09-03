@@ -1,12 +1,12 @@
 import postgres from "postgres"
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { BaseQueueAdapter } from "@vorsteh-queue/core"
 
 import type { SharedTestContext } from "../types"
 import { initDatabase } from "../database"
 
-export function runProgressTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>) {
+export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>) {
   describe("Progress Tests", () => {
     let database: Awaited<ReturnType<typeof initDatabase>>
     let db: ReturnType<SharedTestContext<TDatabase>["initDbClient"]>
@@ -22,6 +22,8 @@ export function runProgressTests<TDatabase = unknown>(ctx: SharedTestContext<TDa
       // creating a new database container for each test suite
       // eslint-disable-next-line turbo/no-undeclared-env-vars
       database = await initDatabase(process.env.PG_VERSION ? Number(process.env.PG_VERSION) : 17)
+
+      vi.stubEnv("DATABASE_URL", database.container.getConnectionUri())
 
       internalDbClient = postgres(database.container.getConnectionUri(), {
         max: 10,

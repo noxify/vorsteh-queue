@@ -1,92 +1,46 @@
-import { PGlite } from "@electric-sql/pglite"
-import { eq } from "drizzle-orm"
-import { drizzle } from "drizzle-orm/pglite"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+// Migration logic is powered by https://github.com/drizzle-team/drizzle-orm/discussions/1901
 
-import { PostgresQueueAdapter } from "~/index"
-import * as schema from "~/postgres-schema"
+import { createRequire } from "module"
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
 
-// Import pushSchema from drizzle-kit/api
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports
-const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
+import type { DatabaseConnectionProps } from "@vorsteh-queue/shared-tests/types"
+import { runTests } from "@vorsteh-queue/shared-tests/tests/progress"
 
-describe("PostgresQueueAdapter Progress", () => {
-  let db: ReturnType<typeof drizzle<typeof schema>>
-  let adapter: PostgresQueueAdapter
-  let client: PGlite
+import { PostgresQueueAdapter } from "../src"
+import * as schema from "../src/postgres-schema"
 
-  beforeEach(async () => {
-    client = new PGlite()
-    db = drizzle(client, { schema })
+global.require = createRequire(import.meta.url)
 
-    // Apply schema using drizzle-kit/api
-    const { apply } = await pushSchema(schema, db as never)
-    await apply()
+const { generateDrizzleJson, generateMigration } = await import("drizzle-kit/api")
 
-    adapter = new PostgresQueueAdapter(db)
-    adapter.setQueueName("test-queue")
-    await adapter.connect()
-  })
-
-  afterEach(async () => {
-    await adapter.disconnect()
-    await client.close()
-  })
-
-  it("should update job progress", async () => {
-    // Add a job
-    const job = await adapter.addJob({
-      name: "progress-test",
-      payload: { data: "test" },
-      status: "processing",
-      priority: 2,
-      attempts: 0,
-      maxAttempts: 3,
-      processAt: new Date(),
+runTests<PostgresJsDatabase<typeof schema>>({
+  initDbClient: (props: DatabaseConnectionProps): PostgresJsDatabase<typeof schema> => {
+    const client = postgres(props.container.getConnectionUri(), {
+      max: 10, // Connection pool size
     })
+    return drizzle(client, { schema })
+  },
+  initAdapter: (db) => {
+    return new PostgresQueueAdapter(db)
+  },
+  migrate: async (db) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const [previous, current] = await Promise.all(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        [{}, schema].map((schemaObject) => generateDrizzleJson(schemaObject)),
+      )
 
-    // Update progress to 50%
-    await adapter.updateJobProgress(job.id, 50)
+      const statements = await generateMigration(previous, current)
+      const migration = statements.join("\n")
 
-    // Verify progress was updated in database
-    const [updated] = await db
-      .select()
-      .from(schema.queueJobs)
-      .where(eq(schema.queueJobs.id, job.id))
-
-    expect(updated?.progress).toBe(50)
-
-    // Update progress to 100%
-    await adapter.updateJobProgress(job.id, 100)
-
-    // Verify progress was updated again
-    const [completed] = await db
-      .select()
-      .from(schema.queueJobs)
-      .where(eq(schema.queueJobs.id, job.id))
-
-    expect(completed?.progress).toBe(100)
-  })
-
-  it("should normalize progress values", async () => {
-    // Add a job
-    const job = await adapter.addJob({
-      name: "progress-test",
-      payload: { data: "test" },
-      status: "processing",
-      priority: 2,
-      attempts: 0,
-      maxAttempts: 3,
-      processAt: new Date(),
-    })
-
-    // Test with out-of-range values
-    await adapter.updateJobProgress(job.id, -10)
-    let result = await db.select().from(schema.queueJobs).where(eq(schema.queueJobs.id, job.id))
-    expect(result[0]?.progress).toBe(0)
-
-    await adapter.updateJobProgress(job.id, 150)
-    result = await db.select().from(schema.queueJobs).where(eq(schema.queueJobs.id, job.id))
-    expect(result[0]?.progress).toBe(100)
-  })
+      await db.execute(migration)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Migration error:", err)
+      throw err
+    }
+  },
 })
