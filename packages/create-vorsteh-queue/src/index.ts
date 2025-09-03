@@ -11,25 +11,14 @@ import terminalLink from "terminal-link"
 
 interface Template {
   name: string
+  alias: string
   description: string
   path: string
-}
-
-interface GitHubContent {
-  name: string
-  type: string
-  download_url?: string
-}
-
-interface GitHubFile {
-  content: string
 }
 
 interface NpmPackageData {
   version: string
 }
-
-type PackageJson = Awaited<ReturnType<typeof readPackage>>
 
 async function fetchTemplates(): Promise<Template[]> {
   const s = spinner()
@@ -37,56 +26,33 @@ async function fetchTemplates(): Promise<Template[]> {
 
   try {
     // Fetch examples directory contents
-    const response = await fetch(
-      "https://api.github.com/repos/noxify/vorsteh-queue/contents/examples",
-    )
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const response = await fetch("https://vorsteh-queue.dev/templates.json")
 
-    const contents = (await response.json()) as GitHubContent[]
-    const templates: Template[] = []
-
-    // Process each directory in examples/
-    for (const item of contents) {
-      if (item.type === "dir") {
-        try {
-          // Fetch package.json for each example
-          const pkgResponse = await fetch(
-            `https://api.github.com/repos/noxify/vorsteh-queue/contents/examples/${item.name}/package.json`,
-          )
-          if (pkgResponse.ok) {
-            const pkgData = (await pkgResponse.json()) as GitHubFile
-            const pkgContent = JSON.parse(atob(pkgData.content)) as Partial<PackageJson>
-
-            templates.push({
-              name: pkgContent.name ?? item.name,
-              description: pkgContent.description ?? `${item.name} example`,
-              path: `examples/${item.name}`,
-            })
-          }
-        } catch (error) {
-          // Skip directories without valid package.json
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          console.warn(pc.yellow(`⚠️  Skipping ${item.name}: ${error}`))
-        }
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
     }
 
-    s.stop(`Found ${templates.length} templates`)
-    return templates
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
-    s.stop("Failed to fetch templates")
+    const responseBody = (await response.json()) as { templates: Template[] }
+
+    s.stop(`Found ${responseBody.templates.length} templates`)
+    return responseBody.templates
+  } catch (error: unknown) {
+    s.stop(
+      `Failed to fetch templates - ${error instanceof Error ? error.toString() : String(error)}`,
+    )
     // Fallback to hardcoded templates
 
     console.warn(pc.yellow("⚠️  Using fallback templates"))
     return [
       {
-        name: "drizzle-postgres",
+        name: "drizzle-postgres-example",
+        alias: "drizzle-postgres",
         description: "Drizzle ORM + postgres.js",
         path: "examples/drizzle-postgres",
       },
       {
-        name: "drizzle-pglite",
+        name: "drizzle-pglite-example",
+        alias: "drizzle-pglite",
         description: "Drizzle ORM + PGlite (Embedded)",
         path: "examples/drizzle-pglite",
       },
