@@ -53,12 +53,20 @@ If you prefer to add Vorsteh Queue to an existing project:
   className={{ container: "not-prose", code: "not-prose" }}
 />
 
+### Prisma ORM (PostgreSQL)
+
+<PackageInstall
+  packages={["@vorsteh-queue/core", "@vorsteh-queue/adapter-kysely"]}
+  className={{ container: "not-prose", code: "not-prose" }}
+/>
+
 ## Database Setup
 
 After installation, you'll need to set up the required database tables. Each adapter provides migration scripts or schema definitions:
 
 - **Drizzle**: Use the provided schema and run migrations
 - **Prisma**: Add the schema to your `schema.prisma` and run `prisma migrate`
+- **Kysely**: Use the provided schema and run migrations
 
 Refer to the specific adapter documentation for detailed setup instructions.
 

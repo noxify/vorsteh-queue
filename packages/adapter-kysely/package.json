@@ -1,0 +1,101 @@
+{
+  "name": "@vorsteh-queue/adapter-kysely",
+  "version": "0.0.0",
+  "description": "Kysely adapter for Vorsteh Queue with PostgreSQL support",
+  "keywords": [
+    "queue",
+    "job-queue",
+    "drizzle",
+    "drizzle-orm",
+    "postgresql",
+    "postgres",
+    "database",
+    "adapter",
+    "typescript",
+    "background-jobs",
+    "task-queue",
+    "worker",
+    "pg",
+    "pglite",
+    "postgres-js",
+    "node-postgres",
+    "sql",
+    "orm"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/adapter-kysely"
+  },
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./migrations": {
+      "default": "./src/migrations.js"
+    },
+    "./postgres-adapter": {
+      "types": "./dist/postgres-adapter.d.ts",
+      "default": "./dist/postgres-adapter.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "db:generate": "drizzle-kit generate",
+    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
+    "lint": "eslint .",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "prettier": "@vorsteh-queue/prettier-config",
+  "dependencies": {
+    "@vorsteh-queue/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.7",
+    "@vorsteh-queue/eslint-config": "workspace:*",
+    "@vorsteh-queue/prettier-config": "workspace:*",
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "eslint": "^9.34.0",
+    "kysely": "^0.28.5",
+    "kysely-ctl": "^0.18.0",
+    "kysely-pglite-dialect": "^1.1.1",
+    "prettier": "^3.6.2",
+    "rolldown": "1.0.0-beta.34",
+    "rollup-plugin-delete": "^3.0.1",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "kysely": ">=0.28.0"
+  },
+  "peerDependenciesMeta": {
+    "@types/pg": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "postgres": {
+      "optional": true
+    }
+  }
+}

@@ -1,5 +1,8 @@
 // PostgreSQL adapter
-export { PostgresQueueAdapter } from "./postgres-adapter"
+export {
+  PostgresQueueAdapter,
+  PostgresQueueAdapter as PostgresDrizzleQueueAdapter,
+} from "./postgres-adapter"
 
 // Schemas
 export * as postgresSchema from "./postgres-schema"

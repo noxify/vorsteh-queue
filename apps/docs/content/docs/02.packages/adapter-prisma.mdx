@@ -39,25 +39,9 @@ Add the queue job model to your `schema.prisma`:
 
 ### Migration
 
-Push the schema to your database:
+To run the migrations, we recommend to use the [`prisma cli`](https://www.prisma.io/docs/orm/tools/prisma-cli).
 
-```bash
-npx prisma db push
-```
-
-Or generate and apply the migration:
-
-```bash
-npx prisma migrate dev --name add-queue-jobs
-```
-
-### Generate Client
-
-Generate the Prisma client:
-
-```bash
-npx prisma generate
-```
+> The Prisma command line interface (CLI) is the primary way to interact with your Prisma project from the command line.
 
 ## References
 

@@ -1,0 +1,25 @@
+{
+  "name": "kysely-postgres-example",
+  "version": "1.0.0",
+  "description": "Advanced Vorsteh Queue example using kysely with postgres.js and recurring jobs",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm with-env tsx src/index.ts",
+    "db:push": "pnpm with-env kysely migrate:latest",
+    "with-env": "dotenv -e .env --"
+  },
+  "dependencies": {
+    "@vorsteh-queue/adapter-kysely": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "kysely": "^0.28.5",
+    "kysely-postgres-js": "^2.0.0",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "dotenv-cli": "10.0.0",
+    "kysely-ctl": "^0.18.0",
+    "tsx": "4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
