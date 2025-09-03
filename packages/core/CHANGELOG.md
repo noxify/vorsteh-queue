@@ -1,5 +1,11 @@
 # @vorsteh-queue/core
 
+## 0.3.2
+
+### Patch Changes
+
+- 73cdaf2: update dependencies
+
 ## 0.3.1
 
 ### Patch Changes

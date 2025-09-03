@@ -1,5 +1,14 @@
 # @vorsteh-queue/adapter-drizzle
 
+## 0.3.2
+
+### Patch Changes
+
+- 4414f87: Add `PostgresQueueAdapter` as alias to `PostgresDrizzleQueueAdapter`
+- 73cdaf2: update dependencies
+- Updated dependencies [73cdaf2]
+  - @vorsteh-queue/core@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes
