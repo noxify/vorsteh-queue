@@ -46,7 +46,7 @@
     "p-map": "7.0.3",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "read-pkg": "9.0.1",
+    "read-pkg": "^9.0.1",
     "rehype-mdx-import-media": "1.2.0",
     "remark-frontmatter": "5.0.0",
     "remark-gfm": "4.0.1",

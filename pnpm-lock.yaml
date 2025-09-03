@@ -126,7 +126,7 @@ importers:
         specifier: 19.1.1
         version: 19.1.1(react@19.1.1)
       read-pkg:
-        specifier: 9.0.1
+        specifier: ^9.0.1
         version: 9.0.1
       rehype-mdx-import-media:
         specifier: 1.2.0
