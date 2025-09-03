@@ -5,7 +5,7 @@ export default defineConfig({
   input: {
     index: "src/index.ts",
     "postgres-adapter": "src/postgres-adapter.ts",
-    migrations: "src/migrations/queue_table.mjs",
+    migrations: "src/migrations/queue_table.ts",
     types: "src/types.ts",
   },
   output: {
