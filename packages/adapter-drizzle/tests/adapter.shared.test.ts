@@ -6,7 +6,7 @@ import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 
 import type { DatabaseConnectionProps } from "@vorsteh-queue/shared-tests/types"
-import { runProgressTests } from "@vorsteh-queue/shared-tests/tests/progress"
+import { runAdapterTests } from "@vorsteh-queue/shared-tests/tests/adapter"
 
 import { PostgresQueueAdapter } from "../src"
 import * as schema from "../src/postgres-schema"
@@ -15,7 +15,7 @@ global.require = createRequire(import.meta.url)
 
 const { generateDrizzleJson, generateMigration } = await import("drizzle-kit/api")
 
-runProgressTests<PostgresJsDatabase<typeof schema>>({
+runAdapterTests<PostgresJsDatabase<typeof schema>>({
   initDbClient: (props: DatabaseConnectionProps): PostgresJsDatabase<typeof schema> => {
     const client = postgres(props.container.getConnectionUri(), {
       max: 10, // Connection pool size

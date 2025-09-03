@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./*": "./src/*.ts"
+    "./*": "./src/*.ts",
+    "./tests/*": "./src/tests/*.ts"
   },
   "main": "src/index.ts",
   "types": "src/types.ts",

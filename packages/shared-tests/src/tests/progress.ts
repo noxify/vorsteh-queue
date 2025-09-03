@@ -3,11 +3,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 
 import type { BaseQueueAdapter } from "@vorsteh-queue/core"
 
-import type { SharedTestContext } from "./types"
-import { initDatabase } from "./database"
+import type { SharedTestContext } from "../types"
+import { initDatabase } from "../database"
 
 export function runProgressTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>) {
-  describe("Adapter Progress", () => {
+  describe("Progress Tests", () => {
     let database: Awaited<ReturnType<typeof initDatabase>>
     let db: ReturnType<SharedTestContext<TDatabase>["initDbClient"]>
     let adapter: BaseQueueAdapter
@@ -29,6 +29,7 @@ export function runProgressTests<TDatabase = unknown>(ctx: SharedTestContext<TDa
 
       db = ctx.initDbClient(database)
 
+      // fix `gen_random_uuid does not exists` error on postgres 12
       await internalDbClient`CREATE EXTENSION IF NOT EXISTS pgcrypto CASCADE;`
       // ensure the database is clean before migration
       await internalDbClient`drop table if exists queue_jobs;`
