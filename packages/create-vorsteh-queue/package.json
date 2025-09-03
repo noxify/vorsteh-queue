@@ -1,6 +1,6 @@
 {
   "name": "create-vorsteh-queue",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Create Vorsteh Queue applications with one command",
   "keywords": [
     "vorsteh-queue",
