@@ -1,4 +1,3 @@
-import type { StartedTestContainer } from "testcontainers"
 import postgres from "postgres"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 
