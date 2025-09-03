@@ -1,7 +1,7 @@
-import { promises as fs } from "fs"
 import * as path from "path"
 import { PGlite } from "@electric-sql/pglite"
-import { FileMigrationProvider, Kysely, Migrator, sql } from "kysely"
+import { Kysely, Migrator, sql } from "kysely"
+import { TSFileMigrationProvider } from "kysely-ctl"
 import { PGliteDialect } from "kysely-pglite-dialect"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
@@ -23,9 +23,7 @@ describe("PostgresQueueAdapter", () => {
 
     const migrator = new Migrator({
       db,
-      provider: new FileMigrationProvider({
-        fs,
-        path,
+      provider: new TSFileMigrationProvider({
         // This needs to be an absolute path.
         migrationFolder: path.join(__dirname, "../src/migrations"),
       }),
@@ -226,9 +224,7 @@ describe("PostgresQueueAdapter - Timezone Handling", () => {
 
     const migrator = new Migrator({
       db,
-      provider: new FileMigrationProvider({
-        fs,
-        path,
+      provider: new TSFileMigrationProvider({
         // This needs to be an absolute path.
         migrationFolder: path.join(__dirname, "../src/migrations"),
       }),
@@ -300,9 +296,7 @@ describe("PostgresQueueAdapter - Result Storage", () => {
 
     const migrator = new Migrator({
       db,
-      provider: new FileMigrationProvider({
-        fs,
-        path,
+      provider: new TSFileMigrationProvider({
         // This needs to be an absolute path.
         migrationFolder: path.join(__dirname, "../src/migrations"),
       }),

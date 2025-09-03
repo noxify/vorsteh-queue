@@ -1,7 +1,7 @@
-import { promises as fs } from "fs"
 import * as path from "path"
 import { PGlite } from "@electric-sql/pglite"
-import { FileMigrationProvider, Kysely, Migrator } from "kysely"
+import { Kysely, Migrator } from "kysely"
+import { TSFileMigrationProvider } from "kysely-ctl"
 import { PGliteDialect } from "kysely-pglite-dialect"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
@@ -23,9 +23,7 @@ describe("PostgresQueueAdapter Progress", () => {
 
     const migrator = new Migrator({
       db,
-      provider: new FileMigrationProvider({
-        fs,
-        path,
+      provider: new TSFileMigrationProvider({
         // This needs to be an absolute path.
         migrationFolder: path.join(__dirname, "../src/migrations"),
       }),

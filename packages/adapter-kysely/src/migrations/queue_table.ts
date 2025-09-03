@@ -1,9 +1,7 @@
+import type { Kysely } from "kysely"
 import { sql } from "kysely"
 
-/**
- * @param {import('kysely').Kysely<unknown>} db
- */
-export async function up(db) {
+export async function up(db: Kysely<unknown>) {
   await db.schema
     .createTable("queue_jobs")
     .addColumn("id", "uuid", (col) => col.defaultTo(sql`gen_random_uuid()`).notNull())
@@ -46,9 +44,6 @@ export async function up(db) {
     .execute()
 }
 
-/**
- * @param {import('kysely').Kysely<unknown>} db
- */
-export async function down(db) {
+export async function down(db: Kysely<unknown>) {
   await db.schema.dropTable("queue_jobs").execute()
 }
