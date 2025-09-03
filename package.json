@@ -16,7 +16,7 @@
     "preview": "pnpm -F docs preview",
     "build": "turbo build",
     "build:docs": "turbo build --filter docs",
-    "build:pkg": "turbo build --filter='@vorsteh-queue/*'",
+    "build:pkg": "turbo build --filter='@vorsteh-queue/*' --filter=create-vorsteh-queue",
     "clean": "git clean -xdf node_modules",
     "clean:cache": "turbo clean:cache",
     "clean:workspaces": "turbo clean",
