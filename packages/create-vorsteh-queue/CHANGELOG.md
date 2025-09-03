@@ -1,5 +1,13 @@
 # create-vorsteh-queue
 
+## 0.1.4
+
+### Patch Changes
+
+- 9543593: use static json list from our own website to fetch the available templates.
+
+  This solves the "Rate limit" problem which comes from the GitHub API.
+
 ## 0.1.3
 
 ### Patch Changes
