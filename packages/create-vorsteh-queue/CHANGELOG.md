@@ -1,5 +1,11 @@
 # create-vorsteh-queue
 
+## 0.1.3
+
+### Patch Changes
+
+- 14143bc: fix build issue
+
 ## 0.1.2
 
 ### Patch Changes
