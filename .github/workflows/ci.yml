@@ -101,6 +101,9 @@ jobs:
 
       - name: Test Drizzle PostgreSQL (PGlite)
         run: pnpm test:drizzle
+        env:
+          # Ensure Docker is available for Testcontainers
+          TESTCONTAINERS_RYUK_DISABLED: true
 
       - name: Test Prisma (Testcontainers - Postgres)
         run: |
