@@ -13,16 +13,16 @@
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/noxify/vorsteh-queue",
+    "url": "git+https://github.com/noxify/vorsteh-queue.git",
     "directory": "packages/create-vorsteh-queue"
   },
   "license": "MIT",
   "type": "module",
   "bin": {
-    "create-vorsteh-queue": "./dist/index.js"
+    "create-vorsteh-queue": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist/*"
   ],
   "scripts": {
     "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
