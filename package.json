@@ -5,7 +5,7 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.15.1",
   "author": {
     "name": "Marcus Reinhardt",
     "url": "https://github.com/noxify"
