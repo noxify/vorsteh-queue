@@ -47,12 +47,12 @@
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.32.0",
+    "eslint": "^9.34.0",
     "prettier": "^3.6.2",
-    "rolldown": "1.0.0-beta.31",
+    "rolldown": "1.0.0-beta.34",
     "rollup-plugin-delete": "^3.0.1",
-    "tsx": "4.20.3",
-    "typescript": "^5.8.3"
+    "tsx": "4.20.5",
+    "typescript": "^5.9.2"
   },
   "engines": {
     "node": ">=18"

@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type React from "react"
-import { PackageInstallScript, ThemeStyles } from "renoun/components"
+import { ThemeStyles } from "renoun/components"
 
 import "./globals.css"
 
@@ -17,7 +17,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeStyles />
-        <PackageInstallScript />
         <ThemeProvider
           attribute={["class", "data-theme"]}
           defaultTheme="system"

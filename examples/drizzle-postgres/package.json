@@ -12,13 +12,13 @@
   "dependencies": {
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
-    "drizzle-orm": "^0.44.4",
+    "drizzle-orm": "^0.44.5",
     "postgres": "^3.4.7"
   },
   "devDependencies": {
     "dotenv-cli": "10.0.0",
     "drizzle-kit": "^0.31.4",
-    "tsx": "4.20.3",
-    "typescript": "^5.8.3"
+    "tsx": "4.20.5",
+    "typescript": "^5.9.2"
   }
 }

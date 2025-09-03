@@ -9,14 +9,14 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.3.6",
+    "@electric-sql/pglite": "^0.3.7",
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
-    "drizzle-orm": "^0.44.4"
+    "drizzle-orm": "^0.44.5"
   },
   "devDependencies": {
     "@types/node": "22.16.5",
-    "tsx": "4.20.3",
-    "typescript": "^5.8.3"
+    "tsx": "4.20.5",
+    "typescript": "^5.9.2"
   }
 }

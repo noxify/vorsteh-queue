@@ -67,18 +67,18 @@
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.3.6",
+    "@electric-sql/pglite": "^0.3.7",
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "drizzle-kit": "^0.31.4",
-    "drizzle-orm": "^0.44.4",
-    "eslint": "^9.32.0",
+    "drizzle-orm": "^0.44.5",
+    "eslint": "^9.34.0",
     "postgres": "^3.4.7",
     "prettier": "^3.6.2",
-    "rolldown": "1.0.0-beta.31",
+    "rolldown": "1.0.0-beta.34",
     "rollup-plugin-delete": "^3.0.1",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
