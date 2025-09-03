@@ -63,6 +63,7 @@
     "@prisma/migrate": "^6.15.0",
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
+    "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "eslint": "^9.34.0",
     "prettier": "^3.6.2",
