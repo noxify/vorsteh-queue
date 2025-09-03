@@ -18,7 +18,9 @@
   },
   "license": "MIT",
   "type": "module",
-  "bin": "./dist/index.js",
+  "bin": {
+    "create-vorsteh-queue": "./dist/index.js"
+  },
   "files": [
     "dist/*"
   ],
