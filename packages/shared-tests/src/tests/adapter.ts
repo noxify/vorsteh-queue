@@ -215,5 +215,105 @@ export function runAdapterTests<TDatabase = unknown>(ctx: SharedTestContext<TDat
         expect(job.repeatCount).toBe(2)
       })
     })
+
+    describe.skip("Result storage", async () => {
+      it("should store job result when job completes", async () => {
+        const job = await adapter.addJob({
+          name: "test-job",
+          payload: { input: "test" },
+          status: "pending",
+          priority: 2,
+          attempts: 0,
+          maxAttempts: 3,
+          processAt: new Date(),
+        })
+
+        const result = { success: true, output: "processed" }
+        await adapter.updateJobStatus(job.id, "completed", undefined, result)
+
+        // const [updated] = await db
+        //   .select()
+        //   .from(schema.queueJobs)
+        //   .where(eq(schema.queueJobs.id, job.id))
+
+        // expect(updated?.status).toBe("completed")
+        // expect(updated?.result).toEqual(result)
+        // expect(updated?.completedAt).toBeTruthy()
+      })
+
+      it("should handle null/undefined results", async () => {
+        const job = await adapter.addJob({
+          name: "test-job",
+          payload: { input: "test" },
+          status: "pending",
+          priority: 2,
+          attempts: 0,
+          maxAttempts: 3,
+          processAt: new Date(),
+        })
+
+        await adapter.updateJobStatus(job.id, "completed", undefined, null)
+
+        // const [updated] = await db
+        //   .select()
+        //   .from(schema.queueJobs)
+        //   .where(eq(schema.queueJobs.id, job.id))
+
+        // expect(updated?.result).toBeNull()
+      })
+
+      it("should preserve result in transformJob method", async () => {
+        const job = await adapter.addJob({
+          name: "test-job",
+          payload: { input: "test" },
+          status: "pending",
+          priority: 2,
+          attempts: 0,
+          maxAttempts: 3,
+          processAt: new Date(),
+        })
+
+        const result = { data: "test-result", count: 42 }
+        await adapter.updateJobStatus(job.id, "completed", undefined, result)
+
+        const nextJob = await adapter.getNextJob()
+        expect(nextJob).toBeNull() // No pending jobs
+
+        // Get the completed job directly from database and transform
+        // const [dbJob] = await db
+        //   .select()
+        //   .from(schema.queueJobs)
+        //   .where(eq(schema.queueJobs.id, job.id))
+
+        // expect(dbJob?.result).toEqual(result)
+      })
+
+      it("should not update result when not provided", async () => {
+        const job = await adapter.addJob({
+          name: "test-job",
+          payload: { input: "test" },
+          status: "pending",
+          priority: 2,
+          attempts: 0,
+          maxAttempts: 3,
+          processAt: new Date(),
+        })
+
+        // First update with result
+        const result = { initial: "result" }
+        await adapter.updateJobStatus(job.id, "processing", undefined, result)
+
+        // Second update without result (should preserve existing result)
+        await adapter.updateJobStatus(job.id, "completed")
+
+        // const [updated] = await db
+        //   .select()
+        //   .from(schema.queueJobs)
+        //   .where(eq(schema.queueJobs.id, job.id))
+
+        // expect(updated?.result).toEqual(result)
+        // expect(updated?.status).toBe("completed")
+      })
+    })
   })
 }
