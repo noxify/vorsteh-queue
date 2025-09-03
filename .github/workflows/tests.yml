@@ -177,21 +177,3 @@ jobs:
           # Ensure Docker is available for Testcontainers
           TESTCONTAINERS_RYUK_DISABLED: true
           PG_VERSION: ${{ matrix.pg-version }}
-
-  pkg-new-release:
-    needs: [lint, format, typecheck, unittest]
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/setup
-
-      - name: Generate prisma client
-        run: pnpm -F adapter-prisma prisma:generate
-
-      - name: Build
-        run: pnpm build:pkg
-
-      - run: pnpx pkg-pr-new publish ./packages/*
