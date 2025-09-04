@@ -1,5 +1,12 @@
 # @vorsteh-queue/adapter-prisma
 
+## 0.2.3
+
+### Patch Changes
+
+- be7ad99: Fixed transform issue
+- fef15d5: use shared tests
+
 ## 0.2.2
 
 ### Patch Changes

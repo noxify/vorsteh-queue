@@ -1,5 +1,11 @@
 # @vorsteh-queue/adapter-drizzle
 
+## 0.3.3
+
+### Patch Changes
+
+- fef15d5: use shared tests
+
 ## 0.3.2
 
 ### Patch Changes
