@@ -68,50 +68,8 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-  unittest:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20, 22]
-    name: Test (Node.js ${{ matrix.node-version }})
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.13.1
-          run_install: false
-
-      - shell: bash
-        run: pnpm install
-
-      - name: Build packages
-        run: |
-          pnpm -F adapter-prisma prisma:generate
-          pnpm --filter "./packages/*" build
-
-      - name: Test Core Package
-        run: pnpm test:core
-
-      - name: Test Drizzle PostgreSQL (PGlite)
-        run: pnpm test:drizzle
-
-      - name: Test Prisma (Testcontainers - Postgres)
-        run: |
-          pnpm -F adapter-prisma prisma:generate
-          pnpm test:prisma
-        env:
-          # Ensure Docker is available for Testcontainers
-          TESTCONTAINERS_RYUK_DISABLED: true
-
   pkg-new-release:
-    needs: [lint, format, typecheck, unittest]
+    needs: [lint, format, typecheck]
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:

@@ -184,7 +184,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
   protected async getDelayedJobReady(now: Date): Promise<BaseJob | null> {
     // Use raw SQL with SKIP LOCKED for race condition prevention
-    const result = await this.db.$queryRaw<QueueJob[]>`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await this.db.$queryRaw<any[]>`
       SELECT * FROM queue_jobs
       WHERE queue_name = ${this.queueName}
         AND status = 'delayed'
@@ -193,14 +194,16 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       LIMIT 1
       FOR UPDATE SKIP LOCKED
     `
+    const transformedResult = result.map(mapKeysToCamelCase<QueueJob>)
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return result.length > 0 ? this.transformJob(result[0]!) : null
+    return transformedResult.length > 0 ? this.transformJob(transformedResult[0]!) : null
   }
 
   protected async getPendingJobByPriority(): Promise<BaseJob | null> {
     // Use raw SQL with SKIP LOCKED for race condition prevention
-    const result = await this.db.$queryRaw<QueueJob[]>`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await this.db.$queryRaw<any[]>`
       SELECT * FROM queue_jobs
       WHERE queue_name = ${this.queueName}
         AND status = 'pending'
@@ -209,8 +212,10 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       FOR UPDATE SKIP LOCKED
     `
 
+    const transformedResult = result.map(mapKeysToCamelCase<QueueJob>)
+
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return result.length > 0 ? this.transformJob(result[0]!) : null
+    return transformedResult.length > 0 ? this.transformJob(transformedResult[0]!) : null
   }
 
   private transformJob(job: QueueJob): BaseJob {
@@ -237,4 +242,16 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       timeout: job.timeout as number | false | undefined,
     }
   }
+}
+
+function toCamelCaseKey(key: string): string {
+  return key.replace(/_([a-z])/g, (_, char: string) => char.toUpperCase())
+}
+
+function mapKeysToCamelCase<T extends Record<string, unknown>>(row: T): T {
+  const result: Record<string, unknown> = {}
+  for (const key in row) {
+    result[toCamelCaseKey(key)] = row[key]
+  }
+  return result as T
 }

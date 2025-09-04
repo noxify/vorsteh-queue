@@ -6,7 +6,7 @@ import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 
 import type { DatabaseConnectionProps } from "@vorsteh-queue/shared-tests/types"
-import { runTests } from "@vorsteh-queue/shared-tests/tests/progress"
+import { runTests } from "@vorsteh-queue/shared-tests/tests/timezone"
 
 import { PostgresQueueAdapter } from "../src"
 import * as schema from "../src/postgres-schema"

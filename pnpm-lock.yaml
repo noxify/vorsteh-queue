@@ -13,7 +13,7 @@ importers:
         version: 2.29.6(@types/node@24.3.0)
       '@vitest/coverage-v8':
         specifier: 3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.3.0)(@vitest/ui@3.2.4)(jiti@2.5.1)(lightningcss@1.30.1)(msw@2.10.4(@types/node@24.3.0)(typescript@5.9.2))(tsx@4.20.5)(yaml@2.8.1))
+        version: 3.2.4(vitest@3.2.4)
       '@vitest/ui':
         specifier: 3.2.4
         version: 3.2.4(vitest@3.2.4)
@@ -150,8 +150,8 @@ importers:
         specifier: 9.5.0
         version: 9.5.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       tm-grammars:
-        specifier: 1.24.8
-        version: 1.24.8
+        specifier: 1.24.9
+        version: 1.24.9
       tm-themes:
         specifier: 1.10.9
         version: 1.10.9
@@ -359,8 +359,8 @@ importers:
         specifier: ^0.28.5
         version: 0.28.5
       kysely-postgres-js:
-        specifier: ^2.0.0
-        version: 2.0.0(kysely@0.28.5)(postgres@3.4.7)
+        specifier: ^3.0.0
+        version: 3.0.0(kysely@0.28.5)(postgres@3.4.7)
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -370,7 +370,7 @@ importers:
         version: 10.0.0
       kysely-ctl:
         specifier: ^0.18.0
-        version: 0.18.0(kysely-postgres-js@2.0.0(kysely@0.28.5)(postgres@3.4.7))(kysely@0.28.5)(magicast@0.3.5)(typescript@5.9.2)
+        version: 0.18.0(kysely-postgres-js@3.0.0(kysely@0.28.5)(postgres@3.4.7))(kysely@0.28.5)(magicast@0.3.5)(typescript@5.9.2)
       tsx:
         specifier: 4.20.5
         version: 4.20.5
@@ -527,6 +527,9 @@ importers:
       '@vorsteh-queue/prettier-config':
         specifier: workspace:*
         version: link:../../tooling/prettier
+      '@vorsteh-queue/shared-tests':
+        specifier: workspace:*
+        version: link:../shared-tests
       '@vorsteh-queue/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -573,6 +576,9 @@ importers:
       '@vorsteh-queue/prettier-config':
         specifier: workspace:*
         version: link:../../tooling/prettier
+      '@vorsteh-queue/shared-tests':
+        specifier: workspace:*
+        version: link:../shared-tests
       '@vorsteh-queue/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -584,10 +590,13 @@ importers:
         version: 0.28.5
       kysely-ctl:
         specifier: ^0.18.0
-        version: 0.18.0(kysely-postgres-js@2.0.0(kysely@0.28.5)(postgres@3.4.7))(kysely@0.28.5)(magicast@0.3.5)(typescript@5.9.2)
-      kysely-pglite-dialect:
-        specifier: ^1.1.1
-        version: 1.1.1(@electric-sql/pglite@0.3.7)(kysely@0.28.5)
+        version: 0.18.0(kysely-postgres-js@3.0.0(kysely@0.28.5)(postgres@3.4.7))(kysely@0.28.5)(magicast@0.3.5)(typescript@5.9.2)
+      kysely-postgres-js:
+        specifier: ^3.0.0
+        version: 3.0.0(kysely@0.28.5)(postgres@3.4.7)
+      postgres:
+        specifier: ^3.4.7
+        version: 3.4.7
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -628,6 +637,9 @@ importers:
       '@vorsteh-queue/prettier-config':
         specifier: workspace:*
         version: link:../../tooling/prettier
+      '@vorsteh-queue/shared-tests':
+        specifier: workspace:*
+        version: link:../shared-tests
       '@vorsteh-queue/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -745,6 +757,39 @@ importers:
         specifier: ^5.9.2
         version: 5.9.2
 
+  packages/shared-tests:
+    devDependencies:
+      '@testcontainers/postgresql':
+        specifier: ^11.5.1
+        version: 11.5.1
+      '@vorsteh-queue/core':
+        specifier: workspace:*
+        version: link:../core
+      '@vorsteh-queue/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@vorsteh-queue/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@vorsteh-queue/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      eslint:
+        specifier: ^9.34.0
+        version: 9.34.0(jiti@2.5.1)
+      postgres:
+        specifier: ^3.4.7
+        version: 3.4.7
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+      testcontainers:
+        specifier: ^11.5.1
+        version: 11.5.1
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.3.0)(@vitest/ui@3.2.4)(jiti@2.5.1)(lightningcss@1.30.1)(msw@2.10.4(@types/node@24.3.0)(typescript@5.9.2))(tsx@4.20.5)(yaml@2.8.1)
+
   tooling/eslint:
     dependencies:
       '@eslint/compat':
@@ -760,8 +805,8 @@ importers:
         specifier: 2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.42.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))
       eslint-plugin-package-json:
-        specifier: 0.56.1
-        version: 0.56.1(@types/estree@1.0.8)(eslint@9.34.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0)
+        specifier: 0.56.2
+        version: 0.56.2(@types/estree@1.0.8)(eslint@9.34.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0)
       eslint-plugin-react:
         specifier: 7.37.5
         version: 7.37.5(eslint@9.34.0(jiti@2.5.1))
@@ -2793,6 +2838,9 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
+  '@testcontainers/postgresql@11.5.1':
+    resolution: {integrity: sha512-6P1QYIKRkktSVwTuwU0Pke5WbXTkvpLleyQcgknJPbZwhaIsCrhnbZlVzj2g/e+Nf9Lmdy1F2OAai+vUrBq0AQ==}
+
   '@tootallnate/quickjs-emscripten@0.23.0':
     resolution: {integrity: sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA==}
 
@@ -4012,8 +4060,8 @@ packages:
       '@typescript-eslint/parser':
         optional: true
 
-  eslint-plugin-package-json@0.56.1:
-    resolution: {integrity: sha512-9yn1TVafPXKd9vznw/EG3Ge4fpTmTGOse9XhGsvNBur/aUIAmGvzSG+kYk3yTPpHDlT0sGlM4+XgW0xUHzCNpQ==}
+  eslint-plugin-package-json@0.56.2:
+    resolution: {integrity: sha512-0LUN3SMNRHOTVaDCvm00lxmqxrliWvDep0Ecjruz+nvsg/ruea3eNUGHR1c/HUVd9n0aSrIdKdmleY/4nwqItQ==}
     engines: {node: ^=20.19.0 || >=22.12.0}
     peerDependencies:
       eslint: '>=8.0.0'
@@ -4819,17 +4867,15 @@ packages:
       kysely-postgres-js:
         optional: true
 
-  kysely-pglite-dialect@1.1.1:
-    resolution: {integrity: sha512-WZxLbrqe+tAVv6eWKwt2OOpVfdQUPGGt6amFbLGSsKwODUt1RKqvuNdu02dOC2Kz0LebRnl/h+J5zY01WKDOGA==}
-    peerDependencies:
-      '@electric-sql/pglite': ^0.2.0
-      kysely: '>=0.23.0'
-
-  kysely-postgres-js@2.0.0:
-    resolution: {integrity: sha512-R1tWx6/x3tSatWvsmbHJxpBZYhNNxcnMw52QzZaHKg7ZOWtHib4iZyEaw4gb2hNKVctWQ3jfMxZT/ZaEMK6kBQ==}
+  kysely-postgres-js@3.0.0:
+    resolution: {integrity: sha512-o2t/xNSYJQDW6rVGGFPXKmZ0BEz2dGn66c2B+cO/k9ZNcU2qPWPycQPQ+B+P2MBXbKYq0xV9BZmFIvkUrmFWAQ==}
+    engines: {bun: '>=1.2', node: '>=20'}
     peerDependencies:
       kysely: '>= 0.24.0 < 1'
-      postgres: '>= 3.4.0 < 4'
+      postgres: ^3.4.0
+    peerDependenciesMeta:
+      postgres:
+        optional: true
 
   kysely@0.28.5:
     resolution: {integrity: sha512-rlB0I/c6FBDWPcQoDtkxi9zIvpmnV5xoIalfCMSMCa7nuA6VGA3F54TW9mEgX4DVf10sXAWCF5fDbamI/5ZpKA==}
@@ -6562,8 +6608,8 @@ packages:
     resolution: {integrity: sha512-t2T/WLB2WRgZ9EpE4jgPJ9w+i66UZfDc8wHh0xrwiRNN+UwH98GIJkTeZqX9rg0i0ptwzqW+uYeIF0T4F8LR7A==}
     engines: {node: '>=14.0.0'}
 
-  tm-grammars@1.24.8:
-    resolution: {integrity: sha512-+DUrP9IKlCoZpStOECtzCvBAIeDhms0236Tpvv22C279sPmz370YaJl5RQtAVgdweT73HpRzrhdxmBMIQjfgZw==}
+  tm-grammars@1.24.9:
+    resolution: {integrity: sha512-fjEqErbJeMqkNCACsOH2bbEA/Q3KEauOGgJeuYfULSEYEkkkdPoLQGG3l9FkfATcOcv0ppvKuoGLbanLtIY7Gw==}
 
   tm-themes@1.10.9:
     resolution: {integrity: sha512-2pBK8ZHXFibHOoKmi1aE2VF1ISsMpqTU+RS3+YS8LGNEm4WSkmnDqdylbtsmZIfFTxy/8KbsiBKbrmnHYVTZFw==}
@@ -8976,6 +9022,13 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.1.12
 
+  '@testcontainers/postgresql@11.5.1':
+    dependencies:
+      testcontainers: 11.5.1
+    transitivePeerDependencies:
+      - bare-buffer
+      - supports-color
+
   '@tootallnate/quickjs-emscripten@0.23.0': {}
 
   '@ts-morph/common@0.27.0':
@@ -9204,7 +9257,7 @@ snapshots:
       '@resvg/resvg-wasm': 2.4.0
       satori: 0.16.0
 
-  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.3.0)(@vitest/ui@3.2.4)(jiti@2.5.1)(lightningcss@1.30.1)(msw@2.10.4(@types/node@24.3.0)(typescript@5.9.2))(tsx@4.20.5)(yaml@2.8.1))':
+  '@vitest/coverage-v8@3.2.4(vitest@3.2.4)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -10338,7 +10391,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-package-json@0.56.1(@types/estree@1.0.8)(eslint@9.34.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0):
+  eslint-plugin-package-json@0.56.2(@types/estree@1.0.8)(eslint@9.34.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0):
     dependencies:
       '@altano/repository-tools': 2.0.1
       change-case: 5.4.4
@@ -11264,7 +11317,7 @@ snapshots:
 
   klona@2.0.6: {}
 
-  kysely-ctl@0.18.0(kysely-postgres-js@2.0.0(kysely@0.28.5)(postgres@3.4.7))(kysely@0.28.5)(magicast@0.3.5)(typescript@5.9.2):
+  kysely-ctl@0.18.0(kysely-postgres-js@3.0.0(kysely@0.28.5)(postgres@3.4.7))(kysely@0.28.5)(magicast@0.3.5)(typescript@5.9.2):
     dependencies:
       c12: 3.2.0(magicast@0.3.5)
       citty: 0.1.6
@@ -11279,19 +11332,15 @@ snapshots:
       std-env: 3.9.0
       tsconfck: 3.1.6(typescript@5.9.2)
     optionalDependencies:
-      kysely-postgres-js: 2.0.0(kysely@0.28.5)(postgres@3.4.7)
+      kysely-postgres-js: 3.0.0(kysely@0.28.5)(postgres@3.4.7)
     transitivePeerDependencies:
       - magicast
       - typescript
 
-  kysely-pglite-dialect@1.1.1(@electric-sql/pglite@0.3.7)(kysely@0.28.5):
-    dependencies:
-      '@electric-sql/pglite': 0.3.7
-      kysely: 0.28.5
-
-  kysely-postgres-js@2.0.0(kysely@0.28.5)(postgres@3.4.7):
+  kysely-postgres-js@3.0.0(kysely@0.28.5)(postgres@3.4.7):
     dependencies:
       kysely: 0.28.5
+    optionalDependencies:
       postgres: 3.4.7
 
   kysely@0.28.5: {}
@@ -13653,7 +13702,7 @@ snapshots:
 
   tinyspy@4.0.3: {}
 
-  tm-grammars@1.24.8: {}
+  tm-grammars@1.24.9: {}
 
   tm-themes@1.10.9: {}
 
