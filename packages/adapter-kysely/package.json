@@ -1,6 +1,6 @@
 {
   "name": "@vorsteh-queue/adapter-kysely",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Kysely adapter for Vorsteh Queue with PostgreSQL support",
   "keywords": [
     "queue",

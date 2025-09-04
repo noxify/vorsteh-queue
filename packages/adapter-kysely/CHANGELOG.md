@@ -1,5 +1,11 @@
 # @vorsteh-queue/adapter-kysely
 
+## 0.1.1
+
+### Patch Changes
+
+- fef15d5: use shared tests
+
 ## 0.1.0
 
 ### Minor Changes
