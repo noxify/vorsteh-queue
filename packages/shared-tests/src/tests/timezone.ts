@@ -57,7 +57,7 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
       // Set database timezone to something other than UTC
       // await db.execute(sql`SET timezone = 'America/New_York'`)
 
-      await internalDbClient`SET timezone = 'America/New_York`
+      await internalDbClient`SET timezone = 'America/New_York'`
 
       const testDate = new Date("2025-01-15T12:00:00.000Z") // Explicit UTC time
 
