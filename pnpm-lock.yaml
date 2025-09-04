@@ -150,8 +150,8 @@ importers:
         specifier: 9.5.0
         version: 9.5.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       tm-grammars:
-        specifier: 1.24.8
-        version: 1.24.8
+        specifier: 1.24.9
+        version: 1.24.9
       tm-themes:
         specifier: 1.10.9
         version: 1.10.9
@@ -805,8 +805,8 @@ importers:
         specifier: 2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.42.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))
       eslint-plugin-package-json:
-        specifier: 0.56.1
-        version: 0.56.1(@types/estree@1.0.8)(eslint@9.34.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0)
+        specifier: 0.56.2
+        version: 0.56.2(@types/estree@1.0.8)(eslint@9.34.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0)
       eslint-plugin-react:
         specifier: 7.37.5
         version: 7.37.5(eslint@9.34.0(jiti@2.5.1))
@@ -4060,8 +4060,8 @@ packages:
       '@typescript-eslint/parser':
         optional: true
 
-  eslint-plugin-package-json@0.56.1:
-    resolution: {integrity: sha512-9yn1TVafPXKd9vznw/EG3Ge4fpTmTGOse9XhGsvNBur/aUIAmGvzSG+kYk3yTPpHDlT0sGlM4+XgW0xUHzCNpQ==}
+  eslint-plugin-package-json@0.56.2:
+    resolution: {integrity: sha512-0LUN3SMNRHOTVaDCvm00lxmqxrliWvDep0Ecjruz+nvsg/ruea3eNUGHR1c/HUVd9n0aSrIdKdmleY/4nwqItQ==}
     engines: {node: ^=20.19.0 || >=22.12.0}
     peerDependencies:
       eslint: '>=8.0.0'
@@ -6608,8 +6608,8 @@ packages:
     resolution: {integrity: sha512-t2T/WLB2WRgZ9EpE4jgPJ9w+i66UZfDc8wHh0xrwiRNN+UwH98GIJkTeZqX9rg0i0ptwzqW+uYeIF0T4F8LR7A==}
     engines: {node: '>=14.0.0'}
 
-  tm-grammars@1.24.8:
-    resolution: {integrity: sha512-+DUrP9IKlCoZpStOECtzCvBAIeDhms0236Tpvv22C279sPmz370YaJl5RQtAVgdweT73HpRzrhdxmBMIQjfgZw==}
+  tm-grammars@1.24.9:
+    resolution: {integrity: sha512-fjEqErbJeMqkNCACsOH2bbEA/Q3KEauOGgJeuYfULSEYEkkkdPoLQGG3l9FkfATcOcv0ppvKuoGLbanLtIY7Gw==}
 
   tm-themes@1.10.9:
     resolution: {integrity: sha512-2pBK8ZHXFibHOoKmi1aE2VF1ISsMpqTU+RS3+YS8LGNEm4WSkmnDqdylbtsmZIfFTxy/8KbsiBKbrmnHYVTZFw==}
@@ -10391,7 +10391,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-package-json@0.56.1(@types/estree@1.0.8)(eslint@9.34.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0):
+  eslint-plugin-package-json@0.56.2(@types/estree@1.0.8)(eslint@9.34.0(jiti@2.5.1))(jsonc-eslint-parser@2.4.0):
     dependencies:
       '@altano/repository-tools': 2.0.1
       change-case: 5.4.4
@@ -13702,7 +13702,7 @@ snapshots:
 
   tinyspy@4.0.3: {}
 
-  tm-grammars@1.24.8: {}
+  tm-grammars@1.24.9: {}
 
   tm-themes@1.10.9: {}
 
