@@ -53,9 +53,11 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
       adapter.setQueueName("test-queue")
     })
 
-    it.skip("should handle UTC timestamps correctly regardless of database timezone", async () => {
+    it("should handle UTC timestamps correctly regardless of database timezone", async () => {
       // Set database timezone to something other than UTC
       // await db.execute(sql`SET timezone = 'America/New_York'`)
+
+      await internalDbClient`SET timezone = 'America/New_York`
 
       const testDate = new Date("2025-01-15T12:00:00.000Z") // Explicit UTC time
 
@@ -70,26 +72,23 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
       })
 
       // Retrieve the job and check the timestamp
-      // const [retrieved] = await db
-      //   .select()
-      //   .from(schema.queueJobs)
-      //   .where(eq(schema.queueJobs.id, job.id))
+      const [retrieved]: [{ process_at: number }?] =
+        await internalDbClient`SELECT process_at FROM queue_jobs WHERE id=${job.id}`
 
-      // // The processAt should match our input UTC time
-      // expect(retrieved?.processAt.getTime()).toBe(testDate.getTime())
+      // The processAt should match our input UTC time
+      expect(retrieved?.process_at).toBe(testDate.getTime())
 
       // Update job status and check timestamp consistency
       await adapter.updateJobStatus(job.id, "processing")
 
-      // const [updated] = await db
-      //   .select()
-      //   .from(schema.queueJobs)
-      //   .where(eq(schema.queueJobs.id, job.id))
+      const [updated]: [{ processed_at: number }?] =
+        await internalDbClient`SELECT processed_at FROM queue_jobs WHERE id=${job.id}`
 
-      // // processedAt should be a valid UTC timestamp
-      // expect(updated?.processedAt).toBeTruthy()
-      // expect(updated?.processedAt?.getTime()).toBeGreaterThan(testDate.getTime())
+      // processedAt should be a valid UTC timestamp
+      expect(updated?.processed_at).toBeTruthy()
+      expect(updated?.processed_at).toBeGreaterThan(testDate.getTime())
     })
+
     it("should handle dates with explicit timezone offsets", async () => {
       // User passes date with timezone offset
       const dateWithOffset = new Date("2024-01-15T14:00:00+02:00") // 2 PM in +2 timezone = 12 PM UTC

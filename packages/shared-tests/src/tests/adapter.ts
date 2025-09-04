@@ -98,7 +98,7 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
         expect(job?.name).toBe("job-1") // High priority first
       })
 
-      it.skip("should update job status", async () => {
+      it("should update job status", async () => {
         const job = await adapter.addJob({
           name: "test-job",
           payload: { data: "test" },
@@ -111,12 +111,11 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
 
         await adapter.updateJobStatus(job.id, "processing")
 
-        // const [updated] = await db
-        //   .select()
-        //   .from(schema.queueJobs)
-        //   .where(eq(schema.queueJobs.id, job.id))
-        // expect(updated?.status).toBe("processing")
-        // expect(updated?.processedAt).toBeTruthy()
+        const [updated]: [{ progressed_at: number; status: string }?] =
+          await internalDbClient`SELECT processed_at, status FROM queue_jobs WHERE id=${job.id}`
+
+        expect(updated?.status).toBe("processing")
+        expect(updated?.progressed_at).toBeTruthy()
       })
 
       it("should get queue stats", async () => {
@@ -218,7 +217,7 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
       })
     })
 
-    describe.skip("Result storage", async () => {
+    describe("Result storage", async () => {
       it("should store job result when job completes", async () => {
         const job = await adapter.addJob({
           name: "test-job",
@@ -233,14 +232,12 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
         const result = { success: true, output: "processed" }
         await adapter.updateJobStatus(job.id, "completed", undefined, result)
 
-        // const [updated] = await db
-        //   .select()
-        //   .from(schema.queueJobs)
-        //   .where(eq(schema.queueJobs.id, job.id))
+        const [updated]: [{ completed_at: number; status: string; result: unknown }?] =
+          await internalDbClient`SELECT completed_at, status, result FROM queue_jobs WHERE id=${job.id}`
 
-        // expect(updated?.status).toBe("completed")
-        // expect(updated?.result).toEqual(result)
-        // expect(updated?.completedAt).toBeTruthy()
+        expect(updated?.status).toBe("completed")
+        expect(updated?.result).toEqual(result)
+        expect(updated?.completed_at).toBeTruthy()
       })
 
       it("should handle null/undefined results", async () => {
@@ -256,12 +253,10 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
 
         await adapter.updateJobStatus(job.id, "completed", undefined, null)
 
-        // const [updated] = await db
-        //   .select()
-        //   .from(schema.queueJobs)
-        //   .where(eq(schema.queueJobs.id, job.id))
+        const [updated]: [{ result: unknown }?] =
+          await internalDbClient`SELECT result FROM queue_jobs WHERE id=${job.id}`
 
-        // expect(updated?.result).toBeNull()
+        expect(updated?.result).toBeNull()
       })
 
       it("should preserve result in transformJob method", async () => {
@@ -281,13 +276,10 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
         const nextJob = await adapter.getNextJob()
         expect(nextJob).toBeNull() // No pending jobs
 
-        // Get the completed job directly from database and transform
-        // const [dbJob] = await db
-        //   .select()
-        //   .from(schema.queueJobs)
-        //   .where(eq(schema.queueJobs.id, job.id))
+        const [dbJob]: [{ result: unknown }?] =
+          await internalDbClient`SELECT result FROM queue_jobs WHERE id=${job.id}`
 
-        // expect(dbJob?.result).toEqual(result)
+        expect(dbJob?.result).toEqual(result)
       })
 
       it("should not update result when not provided", async () => {
@@ -308,13 +300,11 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
         // Second update without result (should preserve existing result)
         await adapter.updateJobStatus(job.id, "completed")
 
-        // const [updated] = await db
-        //   .select()
-        //   .from(schema.queueJobs)
-        //   .where(eq(schema.queueJobs.id, job.id))
+        const [updated]: [{ result: unknown; status: string }?] =
+          await internalDbClient`SELECT result FROM queue_jobs WHERE id=${job.id}`
 
-        // expect(updated?.result).toEqual(result)
-        // expect(updated?.status).toBe("completed")
+        expect(updated?.result).toEqual(result)
+        expect(updated?.status).toBe("completed")
       })
     })
   })
