@@ -217,7 +217,7 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
       })
     })
 
-    describe("Result storage", async () => {
+    describe("Result storage", () => {
       it("should store job result when job completes", async () => {
         const job = await adapter.addJob({
           name: "test-job",
