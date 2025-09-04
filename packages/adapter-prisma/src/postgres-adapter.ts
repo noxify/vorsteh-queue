@@ -1,7 +1,7 @@
-import type { BaseJob, JobStatus, Queue, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import type { BaseJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
 import { BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
-import type { PrismaClientInternal } from "../types"
+import type { PrismaClient, PrismaClientInternal } from "../types"
 import type { QueueJobModel as QueueJob } from "./generated/prisma/models"
 
 /**
@@ -184,6 +184,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
   protected async getDelayedJobReady(now: Date): Promise<BaseJob | null> {
     // Use raw SQL with SKIP LOCKED for race condition prevention
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await this.db.$queryRaw<any[]>`
       SELECT * FROM queue_jobs
       WHERE queue_name = ${this.queueName}
