@@ -111,11 +111,11 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
 
         await adapter.updateJobStatus(job.id, "processing")
 
-        const [updated]: [{ progressed_at: number; status: string }?] =
+        const [updated]: [{ processed_at: Date; status: string }?] =
           await internalDbClient`SELECT processed_at, status FROM queue_jobs WHERE id=${job.id}`
 
         expect(updated?.status).toBe("processing")
-        expect(updated?.progressed_at).toBeTruthy()
+        expect(updated?.processed_at).toBeTruthy()
       })
 
       it("should get queue stats", async () => {
@@ -232,7 +232,7 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
         const result = { success: true, output: "processed" }
         await adapter.updateJobStatus(job.id, "completed", undefined, result)
 
-        const [updated]: [{ completed_at: number; status: string; result: unknown }?] =
+        const [updated]: [{ completed_at: Date; status: string; result: unknown }?] =
           await internalDbClient`SELECT completed_at, status, result FROM queue_jobs WHERE id=${job.id}`
 
         expect(updated?.status).toBe("completed")
@@ -301,7 +301,9 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
         await adapter.updateJobStatus(job.id, "completed")
 
         const [updated]: [{ result: unknown; status: string }?] =
-          await internalDbClient`SELECT result FROM queue_jobs WHERE id=${job.id}`
+          await internalDbClient`SELECT result, status FROM queue_jobs WHERE id=${job.id}`
+
+        console.dir({ updated })
 
         expect(updated?.result).toEqual(result)
         expect(updated?.status).toBe("completed")

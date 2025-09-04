@@ -72,21 +72,21 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
       })
 
       // Retrieve the job and check the timestamp
-      const [retrieved]: [{ process_at: number }?] =
+      const [retrieved]: [{ process_at: Date }?] =
         await internalDbClient`SELECT process_at FROM queue_jobs WHERE id=${job.id}`
 
       // The processAt should match our input UTC time
-      expect(retrieved?.process_at).toBe(testDate.getTime())
+      expect(retrieved?.process_at.getTime()).toBe(testDate.getTime())
 
       // Update job status and check timestamp consistency
       await adapter.updateJobStatus(job.id, "processing")
 
-      const [updated]: [{ processed_at: number }?] =
+      const [updated]: [{ processed_at: Date }?] =
         await internalDbClient`SELECT processed_at FROM queue_jobs WHERE id=${job.id}`
 
       // processedAt should be a valid UTC timestamp
       expect(updated?.processed_at).toBeTruthy()
-      expect(updated?.processed_at).toBeGreaterThan(testDate.getTime())
+      expect(updated?.processed_at.getTime()).toBeGreaterThan(testDate.getTime())
     })
 
     it("should handle dates with explicit timezone offsets", async () => {
