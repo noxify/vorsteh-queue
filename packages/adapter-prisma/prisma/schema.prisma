@@ -2,7 +2,8 @@ generator client {
   // Required
   provider = "prisma-client"
   output   = "../src/generated/prisma"
-  previewFeatures = ["queryCompiler", "driverAdapters"]
+  // Optional, but required if you're using an older prisma version
+  // previewFeatures = ["queryCompiler", "driverAdapters"]
   // Optional
   runtime                = "nodejs"
   moduleFormat           = "esm"

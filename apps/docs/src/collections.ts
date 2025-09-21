@@ -9,7 +9,7 @@ import { docSchema, featuresSchema } from "./validations"
 
 export const features = new Directory({
   path: "content/features",
-  include: "*.mdx",
+  filter: "*.mdx",
 
   loader: {
     mdx: withSchema(
@@ -22,8 +22,15 @@ export const features = new Directory({
 export const DocumentationDirectory = new Directory({
   path: `content/docs`,
   basePathname: "docs",
+  repository: {
+    repository: "vorsteh-queue",
+    branch: "main",
+    host: "github",
+    owner: "noxify",
+    baseUrl: "https://github.com",
+  },
   // hide hidden files ( starts with `_` ) and all asset directories ( `_assets` )
-  include: (entry) =>
+  filter: (entry) =>
     !entry.getBaseName().startsWith("_") && !entry.getAbsolutePath().includes("_assets"),
   loader: {
     mdx: withSchema(docSchema, (path) => import(`../content/docs/${path}.mdx`)),
@@ -33,7 +40,14 @@ export const DocumentationDirectory = new Directory({
 export const ExampleDirectory = new Directory({
   path: `../../examples`,
   basePathname: "docs/examples",
-  include: (entry) => {
+  repository: {
+    repository: "vorsteh-queue",
+    branch: "main",
+    host: "github",
+    owner: "noxify",
+    baseUrl: "https://github.com",
+  },
+  filter: (entry) => {
     return (
       !entry.getBaseName().startsWith("_") &&
       !entry.getBaseName().startsWith(".") &&

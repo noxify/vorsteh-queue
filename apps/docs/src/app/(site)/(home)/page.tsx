@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { CheckCircle, Code, Heart, Info } from "lucide-react"
 import pMap from "p-map"
-import { CodeBlock, GitProviderLink, GitProviderLogo } from "renoun/components"
+import { CodeBlock, Link as GitLink, Logo as GitLogo } from "renoun/components"
 
 import type { AllowedIcon } from "~/lib/icon"
 import { features } from "~/collections"
@@ -101,10 +101,10 @@ export default async function Home() {
                   variant="outline"
                   className="border-2 border-orange-darker bg-transparent text-orange-darker hover:bg-orange-darker hover:text-white dark:border-orange-light dark:text-orange-light dark:hover:bg-orange-light dark:hover:text-dark-200"
                 >
-                  <GitProviderLink>
-                    <GitProviderLogo width="1em" height="1em" />
+                  <GitLink variant="repository">
+                    <GitLogo variant="gitHost" width="1em" height="1em" />
                     <span>View on GitHub</span>
-                  </GitProviderLink>
+                  </GitLink>
                 </Button>
               </div>
             </div>
@@ -254,10 +254,10 @@ export default async function Home() {
                 size="lg"
                 className="bg-orange-darker text-white hover:bg-orange-accessible"
               >
-                <GitProviderLink>
-                  <GitProviderLogo width="1em" height="1em" />
+                <GitLink variant="repository">
+                  <GitLogo variant="gitHost" width="1em" height="1em" />
                   <span>View on GitHub</span>
-                </GitProviderLink>
+                </GitLink>
               </Button>
 
               <Button

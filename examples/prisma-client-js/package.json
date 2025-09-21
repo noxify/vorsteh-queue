@@ -11,13 +11,13 @@
     "with-env": "dotenv -e .env --"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
+    "@prisma/client": "^6.16.2",
     "@vorsteh-queue/adapter-prisma": "workspace:*",
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
     "dotenv-cli": "10.0.0",
-    "prisma": "^6.15.0",
+    "prisma": "^6.16.2",
     "tsx": "4.20.5",
     "typescript": "^5.9.2"
   }
