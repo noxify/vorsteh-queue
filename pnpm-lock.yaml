@@ -178,8 +178,8 @@ importers:
         specifier: 2.0.13
         version: 2.0.13
       '@types/node':
-        specifier: 22.16.5
-        version: 22.16.5
+        specifier: 22.18.6
+        version: 22.18.6
       '@types/react':
         specifier: 19.1.13
         version: 19.1.13
@@ -285,8 +285,8 @@ importers:
         version: 0.44.5(@electric-sql/pglite@0.3.8)(@opentelemetry/api@1.9.0)(@prisma/client@6.16.2(prisma@6.16.2(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.15.5)(kysely@0.28.7)(mysql2@3.14.2)(pg@8.16.3)(postgres@3.4.7)(prisma@6.16.2(magicast@0.3.5)(typescript@5.9.2))
     devDependencies:
       '@types/node':
-        specifier: 22.16.5
-        version: 22.16.5
+        specifier: 22.18.6
+        version: 22.18.6
       tsx:
         specifier: 4.20.5
         version: 4.20.5
@@ -727,8 +727,8 @@ importers:
         version: 5.0.0
     devDependencies:
       '@types/node':
-        specifier: 22.16.5
-        version: 22.16.5
+        specifier: 22.18.6
+        version: 22.18.6
       '@vorsteh-queue/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
@@ -2925,11 +2925,8 @@ packages:
   '@types/node@18.19.127':
     resolution: {integrity: sha512-gSjxjrnKXML/yo0BO099uPixMqfpJU0TKYjpfLU7TrtA2WWDki412Np/RSTPRil1saKBhvVVKzVx/p/6p94nVA==}
 
-  '@types/node@22.16.5':
-    resolution: {integrity: sha512-bJFoMATwIGaxxx8VJPeM8TonI8t579oRvgAuT8zFugJsJZgzqv0Fu8Mhp68iecjzG7cnN3mO2dJQ5uUM2EFrgQ==}
-
-  '@types/node@24.1.0':
-    resolution: {integrity: sha512-ut5FthK5moxFKH2T1CUOC6ctR67rQRvvHdFLCD2Ql6KXmMuCrjsSsRI9UsLCm9M18BMwClv4pn327UvB7eeO1w==}
+  '@types/node@22.18.6':
+    resolution: {integrity: sha512-r8uszLPpeIWbNKtvWRt/DbVi5zbqZyj1PTmhRMqBMvDnaz1QpmSKujUtJLrqGZeoM8v72MfYggDceY4K1itzWQ==}
 
   '@types/node@24.5.2':
     resolution: {integrity: sha512-FYxk1I7wPv3K2XBaoyH2cTnocQEu8AOZ60hPbsyukMPLv5/5qr7V1i8PLHdl6Zf87I+xZXFvPCXYjiTFq+YSDQ==}
@@ -6842,9 +6839,6 @@ packages:
   undici-types@7.12.0:
     resolution: {integrity: sha512-goOacqME2GYyOZZfb5Lgtu+1IDmAlAEu5xnD3+xTzS10hT0vzpf0SPjkXwAw9Jm+4n/mQGDP3LO8CPbYROeBfQ==}
 
-  undici-types@7.8.0:
-    resolution: {integrity: sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==}
-
   undici@7.16.0:
     resolution: {integrity: sha512-QEg3HPMll0o3t2ourKwOeUAZ159Kn9mx5pnzHRQO8+Wixmh88YdZRiIwat0iNzNNXn0yoEtXJqFpyW7eM8BV7g==}
     engines: {node: '>=20.18.1'}
@@ -9120,13 +9114,13 @@ snapshots:
 
   '@types/docker-modem@3.0.6':
     dependencies:
-      '@types/node': 24.5.2
+      '@types/node': 22.18.6
       '@types/ssh2': 1.15.5
 
   '@types/dockerode@3.3.44':
     dependencies:
       '@types/docker-modem': 3.0.6
-      '@types/node': 24.5.2
+      '@types/node': 22.18.6
       '@types/ssh2': 1.15.5
 
   '@types/estree-jsx@1.0.5':
@@ -9163,23 +9157,20 @@ snapshots:
     dependencies:
       undici-types: 5.26.5
 
-  '@types/node@22.16.5':
+  '@types/node@22.18.6':
     dependencies:
       undici-types: 6.21.0
-
-  '@types/node@24.1.0':
-    dependencies:
-      undici-types: 7.8.0
 
   '@types/node@24.5.2':
     dependencies:
       undici-types: 7.12.0
+    optional: true
 
   '@types/normalize-package-data@2.4.4': {}
 
   '@types/pg@8.15.5':
     dependencies:
-      '@types/node': 24.1.0
+      '@types/node': 22.18.6
       pg-protocol: 1.10.3
       pg-types: 2.2.0
 
@@ -9193,15 +9184,15 @@ snapshots:
 
   '@types/serve-handler@6.1.4':
     dependencies:
-      '@types/node': 22.16.5
+      '@types/node': 22.18.6
 
   '@types/ssh2-streams@0.1.12':
     dependencies:
-      '@types/node': 24.5.2
+      '@types/node': 22.18.6
 
   '@types/ssh2@0.5.52':
     dependencies:
-      '@types/node': 24.5.2
+      '@types/node': 22.18.6
       '@types/ssh2-streams': 0.1.12
 
   '@types/ssh2@1.15.5':
@@ -12676,7 +12667,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 24.5.2
+      '@types/node': 22.18.6
       long: 5.3.2
 
   proxy-agent@6.4.0:
@@ -13945,9 +13936,8 @@ snapshots:
 
   undici-types@6.21.0: {}
 
-  undici-types@7.12.0: {}
-
-  undici-types@7.8.0: {}
+  undici-types@7.12.0:
+    optional: true
 
   undici@7.16.0: {}
 
