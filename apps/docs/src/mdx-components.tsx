@@ -6,7 +6,7 @@ import type { MDXComponents } from "renoun/mdx"
 import Image from "next/image"
 import Link from "next/link"
 import { ExternalLinkIcon } from "lucide-react"
-import { CodeBlock, CodeInline, PackageInstall } from "renoun/components"
+import { CodeBlock, CodeInline, Command } from "renoun/components"
 
 import { Heading } from "~/components/heading"
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert"
@@ -116,7 +116,7 @@ export function useMDXComponents() {
 
     CodeInline,
     CodeBlock,
-    PackageInstall,
+    Command,
 
     RemoteCodeBlock: async (props: CodeBlockProps & { source: string }) => {
       const directoryPath = join(process.cwd(), "../..")

@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { GitProviderLink, GitProviderLogo } from "renoun/components"
+import { Link as GitLink, Logo as GitLogo } from "renoun/components"
 
 import type { TreeItem } from "~/lib/navigation"
 import { Search } from "~/components/search"
@@ -72,9 +72,9 @@ export default function MainHeader() {
               <Search />
               <ThemeToggle />
               <Button variant={"ghost"} size={"icon"}>
-                <GitProviderLink>
-                  <GitProviderLogo width="1.2rem" height="1.2rem" />
-                </GitProviderLink>
+                <GitLink variant="repository">
+                  <GitLogo variant="gitHost" width="1.2rem" height="1.2rem" />
+                </GitLink>
               </Button>
             </div>
             <MobileMenu items={links} />
