@@ -40,7 +40,7 @@
     "ci:version": "pnpm changeset version && pnpm install --no-frozen-lockfile && git add ."
   },
   "devDependencies": {
-    "@changesets/cli": "2.29.6",
+    "@changesets/cli": "2.29.7",
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "3.2.4",
     "@vorsteh-queue/prettier-config": "workspace:*",
