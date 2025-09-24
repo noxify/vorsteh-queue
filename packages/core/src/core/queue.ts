@@ -2,6 +2,8 @@ import type { Simplify } from "type-fest"
 
 import type {
   BaseJob,
+  BatchJob,
+  BatchJobHandler,
   JobHandler,
   JobOptions,
   JobStatus,
@@ -33,6 +35,8 @@ export class Queue {
   private readonly adapter: QueueAdapter
   private readonly config: Required<QueueConfig>
   private readonly handlers = new Map<string, JobHandler>()
+  private readonly batchHandlers = new Map<string, BatchJobHandler>()
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private readonly listeners = new Map<keyof QueueEvents, EventListener<any>[]>()
 
@@ -56,6 +60,7 @@ export class Queue {
       removeOnFail: 50,
       pollInterval: 100,
       jobInterval: 10,
+      batch: { ...(config.batch ?? {}) },
       ...config,
     }
 
@@ -93,6 +98,27 @@ export class Queue {
     handler: JobHandler<TJobPayload, TJobResult>,
   ): void {
     this.handlers.set(name, handler as JobHandler)
+  }
+
+  /**
+   * Register a batch job handler for a specific job type.
+   *
+   * @param name The job type name
+   * @param handler Function to process jobs of this type in batches
+   *
+   * @example
+   * ```typescript
+   * queue.registerBatch("send-emails", async (jobs) => {
+   *   // jobs: BatchJobWithProgress<Payload>[]
+   *   // Batch processing logic
+   * })
+   * ```
+   */
+  registerBatch<TJobPayload, TJobResult>(
+    name: string,
+    handler: BatchJobHandler<TJobPayload, TJobResult>,
+  ): void {
+    this.batchHandlers.set(name, handler as BatchJobHandler)
   }
 
   /**
@@ -192,6 +218,37 @@ export class Queue {
   }
 
   /**
+   * Add multiple jobs to the queue in a single batch operation.
+   *
+   * @param name The job type name (must be registered)
+   * @param payloads Array of job data to process
+   * @param options Job configuration options (applied to all jobs)
+   * @returns Promise resolving to the created jobs
+   */
+  async addJobs<TJobPayload>(
+    name: string,
+    payloads: TJobPayload[],
+    options: JobOptions = {},
+  ): Promise<BatchJob<TJobPayload>[]> {
+    const jobOptions = { ...this.config.defaultJobOptions, ...options }
+
+    const jobs = payloads.map((payload) => ({
+      name,
+      payload,
+      status: "pending" as JobStatus,
+      priority: jobOptions.priority ?? 2,
+      attempts: 0,
+      maxAttempts: jobOptions.maxAttempts ?? 3,
+      timeout: jobOptions.timeout,
+      processAt: new Date(),
+    }))
+
+    const createdJobs = await this.adapter.addJobs(jobs)
+    createdJobs.forEach((job) => this.emit("job:added", job as BaseJob))
+    return createdJobs
+  }
+
+  /**
    * Start processing jobs from the queue.
    * Jobs will be processed according to priority and concurrency settings.
    */
@@ -263,6 +320,18 @@ export class Queue {
    */
   getConfig(): Required<QueueConfig> {
     return { ...this.config }
+  }
+
+  /**
+   * Returns the batch config for processing jobs in batches.
+   */
+  private getBatchConfig(): { minSize: number; maxSize: number; waitFor: number } {
+    const batch = this.config.batch
+    return {
+      minSize: typeof batch.minSize === "number" && batch.minSize > 0 ? batch.minSize : 5,
+      maxSize: typeof batch.maxSize === "number" && batch.maxSize > 0 ? batch.maxSize : 10,
+      waitFor: typeof batch.waitFor === "number" && batch.waitFor > 0 ? batch.waitFor : 30000,
+    }
   }
 
   /**
@@ -393,32 +462,110 @@ export class Queue {
       }
 
       let queueSize = await this.adapter.size()
-
       if (queueSize === 0) {
         await waitFor(pollInterval)
         continue
       }
 
-      while (queueSize > 0) {
-        while (queueSize > 0 && this.activeJobs < concurrency) {
+      // Batch-Processing: Für jeden Batch-Handler werden bis zu maxSize Jobs gemeinsam verarbeitet
+      const { minSize, maxSize } = this.getBatchConfig()
+      const batchJobTypes = Array.from(this.batchHandlers.keys())
+
+      // Versuche für jeden Batch-Handler einen Batch zu holen und zu verarbeiten
+      for (const type of batchJobTypes) {
+        if (this.activeJobs >= concurrency) break
+        // Hole bis zu maxSize Jobs dieses Typs effizient per Adapter
+        const jobs: BatchJob[] = (await this.adapter.getNextJobs(maxSize)).filter(
+          (job) => job.name === type,
+        )
+        if (jobs.length >= minSize) {
           this.activeJobs++
           setImmediate(() => {
-            void this.dequeueAndProcess()
-              .then((processed) => {
-                if (!processed) queueSize = 0
-                else queueSize--
-              })
-              .catch((error) => {
-                this.emit("queue:error", error)
-              })
+            void this.processBatchJobs(type, jobs)
+              .catch((error) => this.emit("queue:error", error))
               .finally(() => {
                 this.activeJobs--
               })
           })
-          await waitFor(jobInterval)
         }
-        await waitFor(jobInterval * 2)
       }
+
+      // Normales Einzel-Job-Processing für alle anderen Jobs
+      while (queueSize > 0 && this.activeJobs < concurrency) {
+        this.activeJobs++
+        setImmediate(() => {
+          void this.dequeueAndProcess()
+            .then((processed) => {
+              if (!processed) queueSize = 0
+              else queueSize--
+            })
+            .catch((error) => {
+              this.emit("queue:error", error)
+            })
+            .finally(() => {
+              this.activeJobs--
+            })
+        })
+        await waitFor(jobInterval)
+      }
+      await waitFor(jobInterval * 2)
+    }
+  }
+  /**
+   * Interne Methode: Verarbeitet einen Batch von Jobs mit dem registrierten Batch-Handler.
+   */
+  private async processBatchJobs(type: string, jobs: BatchJob[]): Promise<void> {
+    const handler = this.batchHandlers.get(type)
+    if (!handler) return
+
+    // Status auf processing setzen und Wrapper erzeugen
+    await Promise.all(jobs.map((job) => this.adapter.updateJobStatus(job.id, "processing")))
+    jobs.forEach((job) => {
+      this.emit("job:processing", { ...job, status: "processing" } as BaseJob)
+    })
+
+    // Batch-Event: processing
+    this.emit("batch:processing", jobs as BaseJob[])
+
+    // Job-Wrapper mit updateProgress
+    const wrappedJobs = jobs.map((job) => createJobWrapper(job as BaseJob, this))
+
+    try {
+      const result = await handler(wrappedJobs)
+      // Ergebnisse auf Jobs mappen (optional)
+      await Promise.all(
+        jobs.map((job, i) =>
+          this.adapter.updateJobStatus(job.id, "completed", undefined, result?.[i]),
+        ),
+      )
+      jobs.forEach((job, i) => {
+        this.emit("job:completed", {
+          ...job,
+          status: "completed",
+          completedAt: new Date(),
+          result: result?.[i],
+        } as BaseJob)
+      })
+      // Batch-Event: completed
+      this.emit(
+        "batch:completed",
+        jobs.map(
+          (job, i) =>
+            ({
+              ...job,
+              status: "completed",
+              completedAt: new Date(),
+              result: result?.[i],
+            }) as BaseJob,
+        ),
+      )
+      await this.cleanupCompletedJob()
+    } catch (error) {
+      // Fehlerbehandlung für alle Jobs im Batch
+      const serializedError = serializeError(error)
+      await Promise.all((jobs as BaseJob[]).map((job) => this.handleJobError(job, error)))
+      // Batch-Event: failed
+      this.emit("batch:failed", { jobs: jobs as BaseJob[], error: serializedError })
     }
   }
 

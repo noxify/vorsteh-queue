@@ -1,4 +1,4 @@
-import type { BaseJob, JobStatus, QueueStats } from "../../types"
+import type { BaseJob, BatchJob, JobStatus, QueueStats } from "../../types"
 import { serializeError } from "../utils/error"
 import { BaseQueueAdapter } from "./base"
 
@@ -46,6 +46,24 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
     this.jobs.set(id, newJob)
     return Promise.resolve(newJob)
+  }
+
+  addJobs<TJobPayload, TJobResult = unknown>(
+    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
+  ): Promise<BatchJob<TJobPayload, TJobResult>[]> {
+    const created: BatchJob<TJobPayload, TJobResult>[] = jobs.map((job) => {
+      const id = this.generateId()
+      const createdAt = new Date()
+      // Scheduling-Felder sind im BatchJob-Typ nicht enthalten
+      const newJob: BatchJob<TJobPayload, TJobResult> = {
+        ...job,
+        id,
+        createdAt,
+      }
+      this.jobs.set(id, newJob as BaseJob)
+      return newJob
+    })
+    return Promise.resolve(created)
   }
 
   updateJobStatus(id: string, status: JobStatus, error?: unknown, result?: unknown): Promise<void> {
@@ -156,5 +174,18 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       })
 
     return Promise.resolve(pendingJobs[0] ?? null)
+  }
+
+  getNextJobs(count: number): Promise<BatchJob[]> {
+    const pendingJobs = Array.from(this.jobs.values())
+      .filter((job) => job.status === "pending")
+      .sort((a, b) => {
+        const priorityDiff = a.priority - b.priority
+        return priorityDiff !== 0 ? priorityDiff : a.createdAt.getTime() - b.createdAt.getTime()
+      })
+      .slice(0, count)
+      .map((job) => job as BatchJob)
+
+    return Promise.resolve(pendingJobs)
   }
 }

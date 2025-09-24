@@ -1,3 +1,33 @@
+export type MaybePromise<T> = T | Promise<T>
+
+/**
+ * BatchJob: BaseJob without scheduling fields (cron, repeat, delay, processAt)
+ */
+export type BatchJob<TJobPayload = unknown, TJobResult = unknown> = Omit<
+  BaseJob<TJobPayload, TJobResult>,
+  "cron" | "repeatEvery" | "repeatLimit" | "repeatCount" | "processAt"
+>
+
+/**
+ * Function type for batch job handlers.
+ *
+ * @template TJobPayload Type of job payload
+ * @template TJobResult Type of return value
+ */
+export type BatchJobHandler<TJobPayload = unknown, TJobResult = unknown> = (
+  jobs: BatchJobWithProgress<TJobPayload, TJobResult>[],
+) => MaybePromise<TJobResult[]>
+
+/**
+ * Batch job interface with progress update capability.
+ *
+ * @template TJobPayload Type of the job payload
+ * @template TJobResult Type of the job result
+ */
+export interface BatchJobWithProgress<TJobPayload = unknown, TJobResult = unknown>
+  extends BaseJob<TJobPayload, TJobResult> {
+  updateProgress(value: number): Promise<void>
+}
 // Using built-in TypeScript utility instead of type-fest
 type Simplify<T> = { [K in keyof T]: T[K] } & {}
 
@@ -114,6 +144,16 @@ export interface QueueConfig {
   readonly pollInterval?: number
   /** Delay in milliseconds between processing individual jobs (default: 10) */
   readonly jobInterval?: number
+
+  /** Batch processing configuration (optional) */
+  readonly batch?: {
+    /** Minimum number of jobs before a batch is processed (default: 1) */
+    minSize?: number
+    /** Maximum number of jobs per batch (default: 10) */
+    maxSize?: number
+    /** Maximum wait time in ms before processing a batch, even if minSize is not reached (default: 30000) */
+    waitFor?: number
+  }
 }
 
 /**
@@ -164,6 +204,14 @@ export interface QueueAdapter {
   addJob<TJobPayload, TJobResult = unknown>(
     job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload, TJobResult>>
+
+  /** Add multiple jobs in a single batch operation */
+  addJobs<TJobPayload, TJobResult = unknown>(
+    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
+  ): Promise<BatchJob<TJobPayload, TJobResult>[]>
+
+  /** Retrieve up to `count` jobs for batch processing */
+  getNextJobs(count: number): Promise<BatchJob[]>
   getNextJob(): Promise<BaseJob | null>
   updateJobStatus(id: string, status: JobStatus, error?: unknown, result?: unknown): Promise<void>
   updateJobProgress(id: string, progress: number): Promise<void>
@@ -184,6 +232,12 @@ export interface QueueAdapter {
  * Events emitted by the queue during job processing.
  */
 export interface QueueEvents {
+  /** Emitted when a batch of jobs is about to be processed */
+  "batch:processing": BaseJob[]
+  /** Emitted when a batch of jobs completes successfully */
+  "batch:completed": BaseJob[]
+  /** Emitted when a batch of jobs fails (includes error) */
+  "batch:failed": { jobs: BaseJob[]; error: SerializedError }
   /** Emitted when a job is added to the queue */
   "job:added": BaseJob
   /** Emitted when a job starts processing */

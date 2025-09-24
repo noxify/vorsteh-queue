@@ -1,4 +1,4 @@
-import type { BaseJob, JobStatus, QueueAdapter, QueueStats } from "../../types"
+import type { BaseJob, BatchJob, JobStatus, QueueAdapter, QueueStats } from "../../types"
 
 /**
  * Base class for queue adapters providing common functionality.
@@ -31,6 +31,16 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   abstract addJob<TJobPayload, TJobResult = unknown>(
     job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload, TJobResult>>
+
+  /**
+   * Add multiple jobs to the queue storage in a single batch operation
+   *
+   * @param jobs Array of job data without id and createdAt
+   * @returns Promise resolving to the created jobs with id and createdAt
+   */
+  abstract addJobs<TJobPayload, TJobResult = unknown>(
+    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
+  ): Promise<BatchJob<TJobPayload, TJobResult>[]>
 
   /**
    * Update job status and optionally set error or result
@@ -119,6 +129,14 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
     // Then get pending jobs by priority
     return this.getPendingJobByPriority()
   }
+
+  /**
+   * Get up to `count` jobs to process, considering priority and delayed jobs.
+   *
+   * @param count Maximum number of jobs to retrieve
+   * @returns Promise resolving to an array of batch jobs (may be fewer than count)
+   */
+  abstract getNextJobs(count: number): Promise<BatchJob[]>
 
   /**
    * Get a delayed job that is ready to be processed
