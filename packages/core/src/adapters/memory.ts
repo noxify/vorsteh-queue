@@ -54,7 +54,6 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     const created: BatchJob<TJobPayload, TJobResult>[] = jobs.map((job) => {
       const id = this.generateId()
       const createdAt = new Date()
-      // Scheduling-Felder sind im BatchJob-Typ nicht enthalten
       const newJob: BatchJob<TJobPayload, TJobResult> = {
         ...job,
         id,

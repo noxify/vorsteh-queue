@@ -131,7 +131,9 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   }
 
   /**
-   * Get up to `count` jobs to process, considering priority and delayed jobs.
+   * Get up to `count` pending jobs for batch processing, ordered by priority and creation time.
+   *
+   * Only jobs with status "pending" are returned (delayed jobs are not included).
    *
    * @param count Maximum number of jobs to retrieve
    * @returns Promise resolving to an array of batch jobs (may be fewer than count)
