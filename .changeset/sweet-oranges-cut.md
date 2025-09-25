@@ -5,14 +5,12 @@
 ### Added
 
 - Batch processing support: You can now register batch handlers via `queue.registerBatch`, allowing the queue to process multiple jobs at once according to configurable batch sizes and timing.
-- New batch configuration options: `minSize`, `maxSize`, and `waitFor` allow fine-grained control over when and how batches are processed.
-- Type-safe batch jobs: Batch jobs are strictly separated from scheduled jobs and **do not support** cron, delay, or repeat options.
+- New `batch` configuration options: `minSize`, `maxSize`, and `waitFor` allow fine-grained control over when and how batches are processed.
+- Type-safe batch jobs: Batch jobs are strictly separated from scheduled/single jobs and **do not support** cron, delay, or repeat options.
 - Adapter API extended: All core adapters now support efficient batch operations.
 - Events for batch lifecycle: The queue emits `batch:processing`, `batch:completed`, and `batch:failed` events for batch jobs.
 
 **Handler exclusivity:** A queue can handle only batch jobs or single jobs — not both. Attempting to register both handler types in the same queue will throw an error. This ensures clear and predictable processing.
-
-This enables efficient, high-throughput processing for workloads that benefit from batching, such as bulk database writes or external API calls.
 
 #### Example
 
@@ -20,7 +18,7 @@ This enables efficient, high-throughput processing for workloads that benefit fr
 import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
 
 type EmailPayload = { to: string; body: string }
-type EmailResult = { ok: true }
+type EmailResult = { ok: boolean }
 
 const adapter = new MemoryQueueAdapter()
 const queue = new Queue<EmailPayload, EmailResult>(adapter, {
