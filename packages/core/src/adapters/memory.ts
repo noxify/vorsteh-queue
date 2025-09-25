@@ -1,6 +1,6 @@
 import type { BaseJob, BatchJob, JobStatus, QueueStats } from "../../types"
-import { asUtc } from "~/utils/scheduler"
 import { serializeError } from "../utils/error"
+import { asUtc } from "../utils/scheduler"
 import { BaseQueueAdapter } from "./base"
 
 /**
