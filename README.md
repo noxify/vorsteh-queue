@@ -7,10 +7,11 @@
 ## Features
 
 - **Type-safe**: Full TypeScript support with generic job payloads
-- **Multiple adapters**: Drizzle ORM (PostgreSQL), Prisma ORM (PostgreSQL), and in-memory implementations
+- **Multiple adapters**: Drizzle ORM (PostgreSQL), Prisma ORM (PostgreSQL), Kysely (PostgreSQL) and in-memory implementations
 - **Priority queues**: Numeric priority system (lower = higher priority)
 - **Delayed jobs**: Schedule jobs for future execution
 - **Recurring jobs**: Cron expressions and interval-based repetition
+- **Batch processing**: Process multiple jobs concurrently for higher efficiency and better performance by supporting parallel execution and grouping of jobs.
 - **UTC-first timezone support**: Reliable timezone handling with UTC storage
 - **Progress tracking**: Real-time job progress updates
 - **Event system**: Listen to job lifecycle events
@@ -24,6 +25,7 @@
 │   ├── core/                # Core queue logic and interfaces
 │   ├── adapter-drizzle/     # Drizzle ORM adapter (PostgreSQL)
 │   └── adapter-prisma/      # Prisma ORM adapter (PostgreSQL)
+│   └── adapter-kysely/      # Kysely adapter (PostgreSQL)
 ├── examples/                # Standalone usage examples
 └── tooling/                # Shared development tools
 ```
@@ -49,9 +51,14 @@ pnpm add @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
 
 ```typescript
 // Drizzle ORM with PostgreSQL
+
+// Prisma ORM with PostgreSQL
+import { PrismaClient } from "@prisma/client"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
+
 import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
 import { Queue } from "@vorsteh-queue/core"
 
 interface EmailPayload {
@@ -68,10 +75,6 @@ interface EmailResult {
 const pool = new Pool({ connectionString: "postgresql://..." })
 const db = drizzle(pool)
 const queue = new Queue(new PostgresQueueAdapter(db), { name: "my-queue" })
-
-// Prisma ORM with PostgreSQL
-import { PrismaClient } from "@prisma/client"
-import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
 
 const prisma = new PrismaClient()
 const queue = new Queue(new PostgresPrismaQueueAdapter(prisma), { name: "my-queue" })
@@ -136,6 +139,26 @@ await queue.add("daily-report", payload, {
 // Interval with limit
 await queue.add("health-check", payload, {
   repeat: { every: 30000, limit: 10 }, // Every 30s, 10 times
+})
+```
+
+## Batch Processing
+
+Process multiple jobs in a single batch for higher throughput and efficiency.
+
+```typescript
+queue.registerBatch<{ file: string }, { ok: boolean }>("process-files", async (jobs) => {
+  console.log(`Processing batch of ${jobs.length} files...`)
+  return jobs.map(() => ({ ok: true }))
+})
+
+await queue.addJobs("process-files", [{ file: "a.csv" }, { file: "b.csv" }, { file: "c.csv" }])
+
+queue.on("batch:processing", (jobs) => {
+  console.log(`Batch started: ${jobs.length} jobs`)
+})
+queue.on("batch:completed", (jobs) => {
+  console.log(`Batch completed: ${jobs.length} jobs`)
 })
 ```
 
