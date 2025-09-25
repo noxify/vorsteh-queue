@@ -70,6 +70,7 @@
     "@types/react-dom": "19.1.9",
     "@types/serve-handler": "6.1.4",
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
+    "@vorsteh-queue/adapter-kysely": "workspace:*",
     "@vorsteh-queue/adapter-prisma": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
     "@vorsteh-queue/eslint-config": "workspace:*",

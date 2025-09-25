@@ -192,6 +192,9 @@ importers:
       '@vorsteh-queue/adapter-drizzle':
         specifier: workspace:*
         version: link:../../packages/adapter-drizzle
+      '@vorsteh-queue/adapter-kysely':
+        specifier: workspace:*
+        version: link:../../packages/adapter-kysely
       '@vorsteh-queue/adapter-prisma':
         specifier: workspace:*
         version: link:../../packages/adapter-prisma
