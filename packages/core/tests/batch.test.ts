@@ -1,13 +1,22 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import type { BaseJob } from "../types"
+import type { BatchJob } from "../types"
 import { MemoryQueueAdapter } from "../src/adapters/memory"
 import { Queue } from "../src/core/queue"
 
 describe("Queue Batch Processing", () => {
+  let queue: Queue
+  let adapter: MemoryQueueAdapter
+
+  beforeEach(async () => {
+    adapter = new MemoryQueueAdapter()
+    queue = new Queue(adapter, { name: "batch-test", batch: { minSize: 2, maxSize: 5 } })
+    await queue.connect()
+  })
+
   it("should process multiple batch job types with different handlers", async () => {
-    const fooBatches: BaseJob[][] = []
-    const barBatches: BaseJob[][] = []
+    const fooBatches: BatchJob[][] = []
+    const barBatches: BatchJob[][] = []
     queue.registerBatch("foo", (jobs) => {
       fooBatches.push(jobs.map((j) => ({ ...j })))
       return jobs.map(() => ({ ok: "foo" }))
@@ -19,8 +28,9 @@ describe("Queue Batch Processing", () => {
 
     await queue.addJobs("foo", [{ a: 1 }, { a: 2 }])
     await queue.addJobs("bar", [{ b: 1 }, { b: 2 }])
+
     queue.start()
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     expect(fooBatches.length).toBe(1)
     expect(barBatches.length).toBe(1)
@@ -29,17 +39,9 @@ describe("Queue Batch Processing", () => {
     expect(fooBatches[0]?.every((j) => j.name === "foo")).toBe(true)
     expect(barBatches[0]?.every((j) => j.name === "bar")).toBe(true)
   })
-  let queue: Queue
-  let adapter: MemoryQueueAdapter
-
-  beforeEach(async () => {
-    adapter = new MemoryQueueAdapter()
-    queue = new Queue(adapter, { name: "batch-test", batch: { minSize: 2, maxSize: 5 } })
-    await queue.connect()
-  })
 
   it("should process jobs in batches with the batch handler", async () => {
-    const processedBatches: BaseJob[][] = []
+    const processedBatches: BatchJob[][] = []
     queue.registerBatch("batch-job", (jobs) => {
       processedBatches.push(jobs.map((j) => ({ ...j })))
       // Simulate result array
@@ -85,21 +87,21 @@ describe("Queue Batch Processing", () => {
     await queue.addJobs("batch-job", [{ foo: 1 }, { foo: 2 }])
     queue.start()
     await new Promise((resolve) => setTimeout(resolve, 50))
-    let jobs: BaseJob[] = []
+    let jobs: BatchJob[] = []
     if (
       failedEvent &&
       typeof failedEvent === "object" &&
       "jobs" in failedEvent &&
       Array.isArray((failedEvent as Record<string, unknown>).jobs)
     ) {
-      jobs = (failedEvent as { jobs: BaseJob[] }).jobs
+      jobs = (failedEvent as { jobs: BatchJob[] }).jobs
     }
     expect(jobs.length).toBe(2)
     expect(failedEvent && typeof failedEvent === "object" && "error" in failedEvent).toBe(true)
   })
 
   it("should not process jobs in batch if below minSize", async () => {
-    const processedBatches: BaseJob[][] = []
+    const processedBatches: BatchJob[][] = []
     queue.registerBatch("batch-job", (jobs) => {
       processedBatches.push(jobs.map((j) => ({ ...j })))
       return Promise.resolve([])

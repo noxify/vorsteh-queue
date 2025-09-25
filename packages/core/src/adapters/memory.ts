@@ -1,4 +1,5 @@
 import type { BaseJob, BatchJob, JobStatus, QueueStats } from "../../types"
+import { asUtc } from "~/utils/scheduler"
 import { serializeError } from "../utils/error"
 import { BaseQueueAdapter } from "./base"
 
@@ -54,13 +55,21 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     const created: BatchJob<TJobPayload, TJobResult>[] = jobs.map((job) => {
       const id = this.generateId()
       const createdAt = new Date()
-      const newJob: BatchJob<TJobPayload, TJobResult> = {
+      const newJob: BaseJob<TJobPayload, TJobResult> = {
         ...job,
         id,
         createdAt,
+        processAt: asUtc(new Date()),
+        cron: undefined,
+        repeatEvery: undefined,
+        repeatLimit: undefined,
+        repeatCount: 0,
+        timeout: job.timeout ?? undefined,
       }
-      this.jobs.set(id, newJob as BaseJob)
-      return newJob
+      this.jobs.set(id, newJob)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { cron, repeatEvery, repeatLimit, repeatCount, processAt, ...batchJob } = newJob
+      return batchJob as BatchJob<TJobPayload, TJobResult>
     })
     return Promise.resolve(created)
   }
