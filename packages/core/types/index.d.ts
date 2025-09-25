@@ -198,6 +198,8 @@ export interface JobWithProgress<TJobPayload = unknown, TJobResult = unknown>
  * Provides database-agnostic job storage and retrieval.
  */
 export interface QueueAdapter {
+  /** Retrieve up to `count` jobs for a specific handler (job name) for batch processing */
+  getNextJobsForHandler(handlerName: string, count: number): Promise<BatchJob[]>
   connect(): Promise<void>
   disconnect(): Promise<void>
 
@@ -210,8 +212,6 @@ export interface QueueAdapter {
     jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
   ): Promise<BatchJob<TJobPayload, TJobResult>[]>
 
-  /** Retrieve up to `count` jobs for batch processing */
-  getNextJobs(count: number): Promise<BatchJob[]>
   getNextJob(): Promise<BaseJob | null>
   updateJobStatus(id: string, status: JobStatus, error?: unknown, result?: unknown): Promise<void>
   updateJobProgress(id: string, progress: number): Promise<void>

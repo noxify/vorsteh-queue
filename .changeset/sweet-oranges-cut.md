@@ -10,6 +10,8 @@
 - Adapter API extended: All core adapters now support efficient batch operations.
 - Events for batch lifecycle: The queue emits `batch:processing`, `batch:completed`, and `batch:failed` events for batch jobs.
 
+**Handler exclusivity:** A queue can handle only batch jobs or single jobs — not both. Attempting to register both handler types in the same queue will throw an error. This ensures clear and predictable processing.
+
 This enables efficient, high-throughput processing for workloads that benefit from batching, such as bulk database writes or external API calls.
 
 #### Example

@@ -175,9 +175,9 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     return Promise.resolve(pendingJobs[0] ?? null)
   }
 
-  getNextJobs(count: number): Promise<BatchJob[]> {
+  getNextJobsForHandler(handlerName: string, count: number): Promise<BatchJob[]> {
     const pendingJobs = Array.from(this.jobs.values())
-      .filter((job) => job.status === "pending")
+      .filter((job) => job.status === "pending" && job.name === handlerName)
       .sort((a, b) => {
         const priorityDiff = a.priority - b.priority
         return priorityDiff !== 0 ? priorityDiff : a.createdAt.getTime() - b.createdAt.getTime()

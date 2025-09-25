@@ -5,6 +5,30 @@ import { MemoryQueueAdapter } from "../src/adapters/memory"
 import { Queue } from "../src/core/queue"
 
 describe("Queue Batch Processing", () => {
+  it("should process multiple batch job types with different handlers", async () => {
+    const fooBatches: BaseJob[][] = []
+    const barBatches: BaseJob[][] = []
+    queue.registerBatch("foo", (jobs) => {
+      fooBatches.push(jobs.map((j) => ({ ...j })))
+      return jobs.map(() => ({ ok: "foo" }))
+    })
+    queue.registerBatch("bar", (jobs) => {
+      barBatches.push(jobs.map((j) => ({ ...j })))
+      return jobs.map(() => ({ ok: "bar" }))
+    })
+
+    await queue.addJobs("foo", [{ a: 1 }, { a: 2 }])
+    await queue.addJobs("bar", [{ b: 1 }, { b: 2 }])
+    queue.start()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(fooBatches.length).toBe(1)
+    expect(barBatches.length).toBe(1)
+    expect(fooBatches[0]?.length).toBe(2)
+    expect(barBatches[0]?.length).toBe(2)
+    expect(fooBatches[0]?.every((j) => j.name === "foo")).toBe(true)
+    expect(barBatches[0]?.every((j) => j.name === "bar")).toBe(true)
+  })
   let queue: Queue
   let adapter: MemoryQueueAdapter
 

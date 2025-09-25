@@ -131,14 +131,13 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   }
 
   /**
-   * Get up to `count` pending jobs for batch processing, ordered by priority and creation time.
+   * Get up to `count` pending jobs for a specific handler (job name), ordered by priority and creation time.
    *
-   * Only jobs with status "pending" are returned (delayed jobs are not included).
-   *
+   * @param handlerName Name of the registered handler (job name)
    * @param count Maximum number of jobs to retrieve
    * @returns Promise resolving to an array of batch jobs (may be fewer than count)
    */
-  abstract getNextJobs(count: number): Promise<BatchJob[]>
+  abstract getNextJobsForHandler(handlerName: string, count: number): Promise<BatchJob[]>
 
   /**
    * Get a delayed job that is ready to be processed

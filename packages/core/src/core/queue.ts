@@ -97,6 +97,16 @@ export class Queue {
     name: string,
     handler: JobHandler<TJobPayload, TJobResult>,
   ): void {
+    if (this.handlers.has(name)) {
+      throw new Error(
+        `A handler for '${name}' is already registered in this queue. Handler names must be unique.`,
+      )
+    }
+    if (this.batchHandlers.has(name)) {
+      throw new Error(
+        `Cannot register single job handler for '${name}': Batch handler already registered. Use either register or registerBatch, not both.`,
+      )
+    }
     this.handlers.set(name, handler as JobHandler)
   }
 
@@ -118,6 +128,16 @@ export class Queue {
     name: string,
     handler: BatchJobHandler<TJobPayload, TJobResult>,
   ): void {
+    if (this.batchHandlers.has(name)) {
+      throw new Error(
+        `A handler for '${name}' is already registered in this queue. Handler names must be unique.`,
+      )
+    }
+    if (this.handlers.has(name)) {
+      throw new Error(
+        `Cannot register batch job handler for '${name}': Single job handler already registered. Use either register or registerBatch, not both.`,
+      )
+    }
     this.batchHandlers.set(name, handler as BatchJobHandler)
   }
 
@@ -470,15 +490,13 @@ export class Queue {
       }
       const { minSize, maxSize } = this.getBatchConfig()
       const batchJobTypes = Array.from(this.batchHandlers.keys())
-      for (const type of batchJobTypes) {
+      for (const handlerName of batchJobTypes) {
         if (this.activeJobs >= concurrency) break
-        const jobs: BatchJob[] = (await this.adapter.getNextJobs(maxSize)).filter(
-          (job) => job.name === type,
-        )
+        const jobs: BatchJob[] = await this.adapter.getNextJobsForHandler(handlerName, maxSize)
         if (jobs.length >= minSize) {
           this.activeJobs++
           setImmediate(() => {
-            void this.processBatchJobs(type, jobs)
+            void this.processBatchJobs(handlerName, jobs)
               .catch((error) => this.emit("queue:error", error))
               .finally(() => {
                 this.activeJobs--
