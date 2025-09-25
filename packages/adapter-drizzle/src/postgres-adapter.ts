@@ -89,7 +89,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       attempts: job.attempts,
       maxAttempts: job.maxAttempts,
       timeout: job.timeout,
-      processAt: sql`${new Date().toISOString()}::timestamptz`,
+      processAt: sql`${asUtc(new Date()).toISOString()}::timestamptz`,
       cron: null,
       repeatEvery: null,
       repeatLimit: null,

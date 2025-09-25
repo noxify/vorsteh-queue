@@ -1,5 +1,5 @@
 import type { BaseJob, BatchJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
-import { BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
+import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import type { PrismaClient, PrismaClientInternal } from "../types"
 import type { QueueJobModel as QueueJob } from "./generated/prisma/models"
@@ -84,6 +84,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
           status: job.status,
           priority: job.priority,
           attempts: job.attempts,
+          processAt: asUtc(new Date()),
           maxAttempts: job.maxAttempts,
           progress: job.progress ?? 0,
           timeout: job.timeout,
