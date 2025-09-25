@@ -1,0 +1,22 @@
+{
+  "name": "batch-processing-example",
+  "version": "1.0.0",
+  "description": "batch processing example using Drizzle ORM with postgres.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@vorsteh-queue/adapter-drizzle": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "drizzle-orm": "^0.44.5",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.4",
+    "tsx": "4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
