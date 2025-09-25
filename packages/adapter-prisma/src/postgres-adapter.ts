@@ -1,4 +1,4 @@
-import type { BaseJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import type { BaseJob, BatchJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
 import { BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import type { PrismaClient, PrismaClientInternal } from "../types"
@@ -67,6 +67,32 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     })) as QueueJob
 
     return this.transformJob(result) as BaseJob<TJobPayload, TJobResult>
+  }
+
+  async addJobs<TJobPayload, TJobResult = unknown>(
+    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
+  ): Promise<BatchJob<TJobPayload, TJobResult>[]> {
+    if (!jobs.length) return []
+    const created: BatchJob<TJobPayload, TJobResult>[] = []
+    for (const job of jobs) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const result = (await this.db[this.modelName]!.create({
+        data: {
+          queueName: this.queueName,
+          name: job.name,
+          payload: JSON.stringify(job.payload),
+          status: job.status,
+          priority: job.priority,
+          attempts: job.attempts,
+          maxAttempts: job.maxAttempts,
+          progress: job.progress ?? 0,
+          timeout: job.timeout,
+        },
+      })) as QueueJob
+
+      created.push(this.transformJob(result) as BatchJob<TJobPayload, TJobResult>)
+    }
+    return created
   }
 
   async updateJobStatus(

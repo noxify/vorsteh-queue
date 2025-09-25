@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely"
 import { sql } from "kysely"
 
-import type { BaseJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import type { BaseJob, BatchJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
 import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import type { DB, InsertQueueJobValue, QueueJob } from "./types"
@@ -104,8 +104,8 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   }
 
   async addJobs<TJobPayload, TJobResult = unknown>(
-    jobs: readonly Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
-  ): Promise<readonly BaseJob<TJobPayload, TJobResult>[]> {
+    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
+  ): Promise<BatchJob<TJobPayload, TJobResult>[]> {
     if (!jobs.length) return []
 
     const values: InsertQueueJobValue[] = jobs.map((job) => ({
@@ -116,11 +116,11 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       priority: job.priority,
       attempts: job.attempts,
       max_attempts: job.maxAttempts,
-      process_at: sql`${job.processAt.toISOString()}::timestamptz`,
-      cron: job.cron,
-      repeat_every: job.repeatEvery,
-      repeat_limit: job.repeatLimit,
-      repeat_count: job.repeatCount,
+      process_at: sql`${asUtc(new Date()).toISOString()}::timestamptz`,
+      cron: null,
+      repeat_every: null,
+      repeat_limit: null,
+      repeat_count: 0,
       timeout: job.timeout,
     }))
 
@@ -134,7 +134,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       throw new Error("Failed to create jobs")
     }
 
-    return results.map((row) => this.transformJob(row) as BaseJob<TJobPayload, TJobResult>)
+    return results.map((row) => this.transformJob(row) as BatchJob<TJobPayload, TJobResult>)
   }
 
   async updateJobStatus(
@@ -272,9 +272,10 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     // BatchJob omits scheduling fields, so we strip them
     return jobs.map((job) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { cron, repeat_every, repeat_limit, repeat_count, process_at, ...rest } = job
+      const { cron, repeat_every, repeat_limit, repeat_count, process_at, status, ...rest } = job
       return {
         ...rest,
+        status: status as JobStatus,
         maxAttempts: job.max_attempts,
         createdAt: job.created_at,
         processAt: job.process_at,
@@ -284,7 +285,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
         error: job.error as SerializedError | undefined,
         result: job.result,
         progress: job.progress ?? 0,
-        // Remove scheduling fields for BatchJob
+        timeout: job.timeout ?? undefined,
       }
     })
   }

@@ -9,6 +9,7 @@ export { serializeError } from "./utils/error"
 
 export type {
   BaseJob,
+  BatchJob,
   JobHandler,
   JobOptions,
   JobPriority,

@@ -3,7 +3,7 @@ import type { PgliteDatabase } from "drizzle-orm/pglite"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { and, asc, count, eq, lte, sql } from "drizzle-orm"
 
-import type { BaseJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import type { BaseJob, BatchJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
 import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import * as schema from "./postgres-schema"
@@ -77,8 +77,8 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   }
 
   async addJobs<TJobPayload, TJobResult = unknown>(
-    jobs: readonly Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
-  ): Promise<readonly BaseJob<TJobPayload, TJobResult>[]> {
+    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
+  ): Promise<BatchJob<TJobPayload, TJobResult>[]> {
     if (!jobs.length) return []
     const values = jobs.map((job) => ({
       queueName: this.queueName,
@@ -88,18 +88,18 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       priority: job.priority,
       attempts: job.attempts,
       maxAttempts: job.maxAttempts,
-      processAt: sql`${job.processAt.toISOString()}::timestamptz`,
-      cron: job.cron,
-      repeatEvery: job.repeatEvery,
-      repeatLimit: job.repeatLimit,
-      repeatCount: job.repeatCount,
       timeout: job.timeout,
+      processAt: sql`${new Date().toISOString()}::timestamptz`,
+      cron: null,
+      repeatEvery: null,
+      repeatLimit: null,
+      repeatCount: 0,
     }))
     const results = await this.db.insert(schema.queueJobs).values(values).returning()
     if (!results.length) {
       throw new Error("Failed to create jobs")
     }
-    return results.map((row) => this.transformJob(row) as BaseJob<TJobPayload, TJobResult>)
+    return results.map((row) => this.transformJob(row) as BatchJob<TJobPayload, TJobResult>)
   }
 
   async updateJobStatus(
