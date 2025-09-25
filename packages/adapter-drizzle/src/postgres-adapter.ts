@@ -76,6 +76,32 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     return this.transformJob(result) as BaseJob<TJobPayload, TJobResult>
   }
 
+  async addJobs<TJobPayload, TJobResult = unknown>(
+    jobs: readonly Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
+  ): Promise<readonly BaseJob<TJobPayload, TJobResult>[]> {
+    if (!jobs.length) return []
+    const values = jobs.map((job) => ({
+      queueName: this.queueName,
+      name: job.name,
+      payload: job.payload,
+      status: job.status,
+      priority: job.priority,
+      attempts: job.attempts,
+      maxAttempts: job.maxAttempts,
+      processAt: sql`${job.processAt.toISOString()}::timestamptz`,
+      cron: job.cron,
+      repeatEvery: job.repeatEvery,
+      repeatLimit: job.repeatLimit,
+      repeatCount: job.repeatCount,
+      timeout: job.timeout,
+    }))
+    const results = await this.db.insert(schema.queueJobs).values(values).returning()
+    if (!results.length) {
+      throw new Error("Failed to create jobs")
+    }
+    return results.map((row) => this.transformJob(row) as BaseJob<TJobPayload, TJobResult>)
+  }
+
   async updateJobStatus(
     id: string,
     status: JobStatus,
@@ -196,6 +222,30 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       )
 
     return Number(result?.count ?? 0)
+  }
+
+  async getNextJobsForHandler(handlerName: string, count: number) {
+    const jobs = await this.db
+      .select()
+      .from(schema.queueJobs)
+      .where(
+        and(
+          eq(schema.queueJobs.queueName, this.queueName),
+          eq(schema.queueJobs.status, "pending"),
+          eq(schema.queueJobs.name, handlerName),
+        ),
+      )
+      .orderBy(asc(schema.queueJobs.priority), asc(schema.queueJobs.createdAt))
+      .limit(count)
+      .for("update", { skipLocked: true })
+
+    // BatchJob omits scheduling fields, so we strip them
+    return jobs.map((job) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { cron, repeatEvery, repeatLimit, repeatCount, processAt, ...rest } =
+        this.transformJob(job)
+      return rest
+    })
   }
 
   async transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult> {

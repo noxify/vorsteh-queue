@@ -242,6 +242,27 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       timeout: job.timeout as number | false | undefined,
     }
   }
+
+  async getNextJobsForHandler(handlerName: string, count: number) {
+    // Use raw SQL with SKIP LOCKED for concurrency safety
+    const result = await this.db.$queryRaw<QueueJob[]>`
+      SELECT * FROM queue_jobs
+      WHERE queue_name = ${this.queueName}
+        AND status = 'pending'
+        AND name = ${handlerName}
+      ORDER BY priority ASC, created_at ASC
+      LIMIT ${count}
+      FOR UPDATE SKIP LOCKED
+    `
+    const transformed = result.map(mapKeysToCamelCase)
+    // BatchJob omits scheduling fields, so we strip them
+    return transformed.map((job: QueueJob) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { cron, repeatEvery, repeatLimit, repeatCount, processAt, ...rest } =
+        this.transformJob(job)
+      return rest
+    })
+  }
 }
 
 function toCamelCaseKey(key: string): string {

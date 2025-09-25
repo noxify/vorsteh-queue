@@ -4,7 +4,7 @@ import { sql } from "kysely"
 import type { BaseJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
 import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
-import type { DB, QueueJob } from "./types"
+import type { DB, InsertQueueJobValue, QueueJob } from "./types"
 
 /**
  * PostgreSQL adapter for the queue system using Drizzle ORM.
@@ -101,6 +101,40 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     }
 
     return this.transformJob(result) as BaseJob<TJobPayload, TJobResult>
+  }
+
+  async addJobs<TJobPayload, TJobResult = unknown>(
+    jobs: readonly Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
+  ): Promise<readonly BaseJob<TJobPayload, TJobResult>[]> {
+    if (!jobs.length) return []
+
+    const values: InsertQueueJobValue[] = jobs.map((job) => ({
+      queue_name: this.queueName,
+      name: job.name,
+      payload: job.payload,
+      status: job.status,
+      priority: job.priority,
+      attempts: job.attempts,
+      max_attempts: job.maxAttempts,
+      process_at: sql`${job.processAt.toISOString()}::timestamptz`,
+      cron: job.cron,
+      repeat_every: job.repeatEvery,
+      repeat_limit: job.repeatLimit,
+      repeat_count: job.repeatCount,
+      timeout: job.timeout,
+    }))
+
+    const results = await this.customDbClient
+      .insertInto("queue_jobs")
+      .values(values)
+      .returningAll()
+      .execute()
+
+    if (!results.length) {
+      throw new Error("Failed to create jobs")
+    }
+
+    return results.map((row) => this.transformJob(row) as BaseJob<TJobPayload, TJobResult>)
   }
 
   async updateJobStatus(
@@ -219,6 +253,40 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       .executeTakeFirst()
 
     return Number(result?.count ?? 0)
+  }
+
+  async getNextJobsForHandler(handlerName: string, count: number) {
+    const jobs = await this.customDbClient
+      .selectFrom("queue_jobs")
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+      .where("status", "=", "pending")
+      .where("name", "=", handlerName)
+      .orderBy("priority", "asc")
+      .orderBy("created_at", "asc")
+      .limit(count)
+      .forUpdate()
+      .skipLocked()
+      .execute()
+
+    // BatchJob omits scheduling fields, so we strip them
+    return jobs.map((job) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { cron, repeat_every, repeat_limit, repeat_count, process_at, ...rest } = job
+      return {
+        ...rest,
+        maxAttempts: job.max_attempts,
+        createdAt: job.created_at,
+        processAt: job.process_at,
+        processedAt: job.processed_at ?? undefined,
+        completedAt: job.completed_at ?? undefined,
+        failedAt: job.failed_at ?? undefined,
+        error: job.error as SerializedError | undefined,
+        result: job.result,
+        progress: job.progress ?? 0,
+        // Remove scheduling fields for BatchJob
+      }
+    })
   }
 
   async transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult> {

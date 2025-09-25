@@ -1,7 +1,7 @@
 import postgres from "postgres"
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { BaseQueueAdapter } from "@vorsteh-queue/core"
+import type { QueueAdapter } from "@vorsteh-queue/core"
 
 import type { SharedTestContext } from "../types"
 import { initDatabase } from "../database"
@@ -10,7 +10,7 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
   describe("Adapter Tests", () => {
     let database: Awaited<ReturnType<typeof initDatabase>>
     let db: ReturnType<SharedTestContext<TDatabase>["initDbClient"]>
-    let adapter: BaseQueueAdapter
+    let adapter: QueueAdapter
 
     // the internal db client is based on postgres.js and will be used
     // to directly query the database for verification purposes
@@ -51,6 +51,144 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
 
       await adapter.connect()
       adapter.setQueueName("test-queue")
+    })
+
+    describe("batch operations", () => {
+      it("should add multiple jobs with addJobs", async () => {
+        const jobs = await adapter.addJobs([
+          {
+            name: "batch-job-1",
+            payload: { n: 1 },
+            status: "pending",
+            priority: 1,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+          {
+            name: "batch-job-2",
+            payload: { n: 2 },
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+        ])
+        expect(jobs).toHaveLength(2)
+        if (jobs.length >= 2) {
+          const [job0, job1] = jobs
+          expect(job0).toBeDefined()
+          expect(job1).toBeDefined()
+          if (job0 && job1) {
+            expect(job0.id).toBeDefined()
+            expect(job1.id).toBeDefined()
+            expect(job0.name).toBe("batch-job-1")
+            expect(job1.name).toBe("batch-job-2")
+          }
+        }
+      })
+
+      it("should get next jobs for handler (batch)", async () => {
+        await adapter.addJobs([
+          {
+            name: "batch-handler",
+            payload: { n: 1 },
+            status: "pending",
+            priority: 1,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+          {
+            name: "batch-handler",
+            payload: { n: 2 },
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+          {
+            name: "other-handler",
+            payload: { n: 3 },
+            status: "pending",
+            priority: 3,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+        ])
+        const jobs = await adapter.getNextJobsForHandler("batch-handler", 5)
+        expect(jobs).toHaveLength(2)
+        if (jobs.length >= 2) {
+          const [job0, job1] = jobs
+          expect(job0).toBeDefined()
+          expect(job1).toBeDefined()
+          if (job0 && job1) {
+            expect(job0.name).toBe("batch-handler")
+            expect(job1.name).toBe("batch-handler")
+            // Should be sorted by priority
+            expect(job0.priority).toBeLessThanOrEqual(job1.priority)
+          }
+        }
+      })
+
+      it("should respect batch size limit", async () => {
+        await adapter.addJobs([
+          {
+            name: "batch",
+            payload: { n: 1 },
+            status: "pending",
+            priority: 1,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+          {
+            name: "batch",
+            payload: { n: 2 },
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+          {
+            name: "batch",
+            payload: { n: 3 },
+            status: "pending",
+            priority: 3,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+        ])
+        const jobs = await adapter.getNextJobsForHandler("batch", 2)
+        expect(jobs).toHaveLength(2)
+      })
+
+      it("should isolate jobs by handler name", async () => {
+        await adapter.addJobs([
+          {
+            name: "handler-a",
+            payload: {},
+            status: "pending",
+            priority: 1,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+          {
+            name: "handler-b",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 2,
+          },
+        ])
+        const jobsA = await adapter.getNextJobsForHandler("handler-a", 5)
+        const jobsB = await adapter.getNextJobsForHandler("handler-b", 5)
+        expect(jobsA.every((j) => j.name === "handler-a")).toBe(true)
+        expect(jobsB.every((j) => j.name === "handler-b")).toBe(true)
+      })
+
+      it("should return empty array if no jobs for handler", async () => {
+        const jobs = await adapter.getNextJobsForHandler("nonexistent-handler", 3)
+        expect(jobs).toEqual([])
+      })
     })
 
     describe("basic operations", () => {
@@ -302,8 +440,6 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
 
         const [updated]: [{ result: unknown; status: string }?] =
           await internalDbClient`SELECT result, status FROM queue_jobs WHERE id=${job.id}`
-
-        console.dir({ updated })
 
         expect(updated?.result).toEqual(result)
         expect(updated?.status).toBe("completed")

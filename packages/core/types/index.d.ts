@@ -225,7 +225,7 @@ export interface QueueAdapter {
   transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult>
 
   /** @internal Set the queue name for job isolation */
-  setQueueName?(queueName: string): void
+  setQueueName(queueName: string): void
 }
 
 /**
