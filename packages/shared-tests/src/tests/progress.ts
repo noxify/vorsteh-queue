@@ -1,7 +1,7 @@
 import postgres from "postgres"
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { BaseQueueAdapter } from "@vorsteh-queue/core"
+import type { QueueAdapter } from "@vorsteh-queue/core"
 
 import type { SharedTestContext } from "../types"
 import { initDatabase } from "../database"
@@ -10,7 +10,7 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
   describe("Progress Tests", () => {
     let database: Awaited<ReturnType<typeof initDatabase>>
     let db: ReturnType<SharedTestContext<TDatabase>["initDbClient"]>
-    let adapter: BaseQueueAdapter
+    let adapter: QueueAdapter
 
     // the internal db client is based on postgres.js and will be used
     // to directly query the database for verification purposes

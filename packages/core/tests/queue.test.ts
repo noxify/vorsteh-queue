@@ -63,6 +63,24 @@ describe("Queue", () => {
   })
 
   describe("job processing", () => {
+    it("should process multiple job types with different handlers", async () => {
+      const fooHandler = vi.fn().mockResolvedValue({ foo: true })
+      const barHandler = vi.fn().mockResolvedValue({ bar: true })
+      queue.register("foo", fooHandler)
+      queue.register("bar", barHandler)
+
+      await queue.connect()
+      await queue.add("foo", { data: 1 })
+      await queue.add("bar", { data: 2 })
+      queue.start()
+
+      await waitFor(100)
+
+      expect(fooHandler).toHaveBeenCalledTimes(1)
+      expect(barHandler).toHaveBeenCalledTimes(1)
+
+      await queue.stop()
+    })
     it("should process jobs", async () => {
       const handler = vi.fn().mockResolvedValue({ result: "success" })
       queue.register("test-job", handler)

@@ -1,0 +1,18 @@
+---
+title: Batch Processing Example
+navTitle: Batch Processing
+description: Demonstrates batch job processing. Shows how to register batch handlers, dispatch jobs in batches, and monitor batch events for robust, event-driven workflows.
+---
+
+## Setup
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue@latest my-project --template batch-processing
+cd my-project
+cp .env.example .env
+# Edit .env with your PostgreSQL database URL
+pnpm db:push
+pnpm dev
+```

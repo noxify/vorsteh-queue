@@ -1,21 +1,21 @@
 {
-  "name": "drizzle-pglite-example",
-  "version": "0.0.0",
-  "description": "Zero-setup Vorsteh Queue example using Drizzle ORM with PGlite (embedded PostgreSQL)",
-  "private": true,
+  "name": "batch-processing-example",
+  "version": "1.0.0",
+  "description": "batch processing example using Drizzle ORM with postgres.js",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "tsx src/index.ts",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.3.10",
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
-    "drizzle-orm": "^0.44.5"
+    "drizzle-orm": "^0.44.5",
+    "postgres": "^3.4.7"
   },
   "devDependencies": {
-    "@types/node": "22.18.6",
+    "drizzle-kit": "^0.31.4",
     "tsx": "4.20.5",
     "typescript": "^5.9.2"
   }

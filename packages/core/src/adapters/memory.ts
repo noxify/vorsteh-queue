@@ -1,5 +1,6 @@
-import type { BaseJob, JobStatus, QueueStats } from "../../types"
+import type { BaseJob, BatchJob, JobStatus, QueueStats } from "../../types"
 import { serializeError } from "../utils/error"
+import { asUtc } from "../utils/scheduler"
 import { BaseQueueAdapter } from "./base"
 
 /**
@@ -46,6 +47,31 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
     this.jobs.set(id, newJob)
     return Promise.resolve(newJob)
+  }
+
+  addJobs<TJobPayload, TJobResult = unknown>(
+    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
+  ): Promise<BatchJob<TJobPayload, TJobResult>[]> {
+    const created: BatchJob<TJobPayload, TJobResult>[] = jobs.map((job) => {
+      const id = this.generateId()
+      const createdAt = new Date()
+      const newJob: BaseJob<TJobPayload, TJobResult> = {
+        ...job,
+        id,
+        createdAt,
+        processAt: asUtc(new Date()),
+        cron: undefined,
+        repeatEvery: undefined,
+        repeatLimit: undefined,
+        repeatCount: 0,
+        timeout: job.timeout ?? undefined,
+      }
+      this.jobs.set(id, newJob)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { cron, repeatEvery, repeatLimit, repeatCount, processAt, ...batchJob } = newJob
+      return batchJob as BatchJob<TJobPayload, TJobResult>
+    })
+    return Promise.resolve(created)
   }
 
   updateJobStatus(id: string, status: JobStatus, error?: unknown, result?: unknown): Promise<void> {
@@ -156,5 +182,18 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       })
 
     return Promise.resolve(pendingJobs[0] ?? null)
+  }
+
+  getNextJobsForHandler(handlerName: string, count: number): Promise<BatchJob[]> {
+    const pendingJobs = Array.from(this.jobs.values())
+      .filter((job) => job.status === "pending" && job.name === handlerName)
+      .sort((a, b) => {
+        const priorityDiff = a.priority - b.priority
+        return priorityDiff !== 0 ? priorityDiff : a.createdAt.getTime() - b.createdAt.getTime()
+      })
+      .slice(0, count)
+      .map((job) => job as BatchJob)
+
+    return Promise.resolve(pendingJobs)
   }
 }

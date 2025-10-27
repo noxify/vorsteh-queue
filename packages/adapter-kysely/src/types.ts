@@ -1,4 +1,4 @@
-import type { ColumnType, Insertable, Selectable, Updateable } from "kysely"
+import type { ColumnType, Insertable, InsertObject, Selectable, Updateable } from "kysely"
 
 type Generated<T> =
   T extends ColumnType<infer S, infer I, infer U>
@@ -37,3 +37,5 @@ export type QueueJobUpdate = Updateable<QueueJobTableDefinition>
 export interface DB {
   queue_jobs: QueueJobTableDefinition
 }
+
+export type InsertQueueJobValue = InsertObject<DB, "queue_jobs">
