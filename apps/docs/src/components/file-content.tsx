@@ -74,6 +74,7 @@ export async function FileContent({
                       className="prose mb-8 text-lg font-medium text-pretty text-muted-foreground sm:text-xl/8"
                     />
                   ),
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                   code: (props) => <code>{props.children ?? ""}</code>,
                 }}
               >
@@ -117,7 +118,7 @@ export async function FileContent({
             <Siblings transformedEntry={transformedEntry} />
           </div>
           {frontmatter?.toc ? (
-            <div className="hidden w-[19.5rem] xl:sticky xl:top-[6.55rem] xl:-mr-6 xl:block xl:h-[calc(100vh-6.55rem)] xl:flex-none xl:overflow-y-auto xl:pr-6 xl:pb-16">
+            <div className="hidden w-78 xl:sticky xl:top-[6.55rem] xl:-mr-6 xl:block xl:h-[calc(100vh-6.55rem)] xl:flex-none xl:overflow-y-auto xl:pr-6 xl:pb-16">
               <TableOfContents toc={headings} />
 
               <div

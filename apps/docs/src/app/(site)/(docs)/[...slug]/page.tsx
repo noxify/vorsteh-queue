@@ -13,11 +13,7 @@ export async function generateStaticParams() {
   return slugs
 }
 
-interface PageProps {
-  params: Promise<{ slug?: string[] }>
-}
-
-export async function generateMetadata(props: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps<"/[...slug]">): Promise<Metadata> {
   const params = await props.params
   const breadcrumbItems = await getBreadcrumbItems(params.slug)
 
@@ -28,9 +24,10 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   }
 }
 
-export default async function DocsPage(props: PageProps) {
+export default async function DocsPage(props: PageProps<"/[...slug]">) {
   const params = await props.params
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const searchParam = `/${params.slug?.join("/") ?? ""}`
 
   const transformedEntry = (await transformedEntries()).find(

@@ -43,16 +43,16 @@
     "terminal-link": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "22.18.6",
+    "@types/node": "22.18.12",
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.36.0",
+    "eslint": "^9.38.0",
     "prettier": "^3.6.2",
-    "rolldown": "1.0.0-beta.40",
+    "rolldown": "1.0.0-beta.45",
     "rollup-plugin-delete": "^3.0.1",
-    "tsx": "4.20.5",
-    "typescript": "^5.9.2"
+    "tsx": "4.20.6",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=18"
