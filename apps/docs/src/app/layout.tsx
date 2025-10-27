@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     "A powerful, ORM-agnostic queue engine for PostgreSQL 12. Handle background jobs, scheduled tasks, and recurring processes with ease.",
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <RenounProvider
       defaultPackageManager="pnpm"

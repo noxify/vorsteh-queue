@@ -14,14 +14,7 @@ export function AppSidebar({ items }: { items: TreeItem[] }) {
   )
 }
 
-export default async function DocsLayout(
-  props: Readonly<{
-    params: Promise<{
-      slug?: string[]
-    }>
-    children: React.ReactNode
-  }>,
-) {
+export default async function DocsLayout(props: LayoutProps<"/">) {
   const recursiveCollections = await AllDocumentation.getEntries({
     recursive: true,
   })
@@ -41,7 +34,10 @@ export default async function DocsLayout(
         <SidebarInset className="bg-white dark:bg-secondary">
           <div className="flex flex-1 flex-col gap-4 pb-[calc(var(--footer-height)+1rem)]">
             <main className="flex w-full flex-1 flex-col transition-all duration-300 ease-in-out">
-              {props.children}
+              {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                props.children
+              }
             </main>
           </div>
         </SidebarInset>
