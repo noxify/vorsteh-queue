@@ -1,6 +1,6 @@
 {
   "name": "@vorsteh-queue/core",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Core queue engine for Vorsteh Queue with TypeScript support, job scheduling, and event system",
   "keywords": [
     "queue",

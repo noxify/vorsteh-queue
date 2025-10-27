@@ -1,5 +1,18 @@
 # @vorsteh-queue/adapter-prisma
 
+## 0.3.0
+
+### Minor Changes
+
+- b18ec50: Added support for batch processing
+
+### Patch Changes
+
+- 35f7171: update dependencies
+- Updated dependencies [66c4848]
+- Updated dependencies [35f7171]
+  - @vorsteh-queue/core@0.4.0
+
 ## 0.2.3
 
 ### Patch Changes
