@@ -40,6 +40,9 @@ jobs:
       - name: Generate prisma client
         run: pnpm -F adapter-prisma prisma:generate
 
+      - name: Generate next routes
+        run: pnpm -F docs typegen
+
       - name: Lint
         run: pnpm lint
 
@@ -64,6 +67,9 @@ jobs:
 
       - name: Generate prisma client
         run: pnpm -F adapter-prisma prisma:generate
+
+      - name: Generate next routes
+        run: pnpm -F docs typegen
 
       - name: Typecheck
         run: pnpm typecheck

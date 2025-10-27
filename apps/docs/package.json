@@ -14,7 +14,8 @@
     "lint:links": "node --import ./src/register.js --import tsx/esm src/link-check.ts",
     "matchtest": "tsx src/match.ts",
     "preview": "tsx src/localserver.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typegen": "next typegen"
   },
   "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
