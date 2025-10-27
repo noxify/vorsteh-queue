@@ -1,6 +1,6 @@
 {
   "name": "@vorsteh-queue/adapter-drizzle",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Drizzle ORM adapter for Vorsteh Queue with PostgreSQL support",
   "keywords": [
     "queue",
