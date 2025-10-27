@@ -1,5 +1,7 @@
 import { PostgreSqlContainer } from "@testcontainers/postgresql"
 
+// TODO: make schema customizable
+// ref: https://github.com/dajudge/testcontainers-examples/blob/master/src/test/java/com/dajudge/testcontainers/examples/PostgreSQLTests.java
 export async function initDatabase(version = 17) {
   const container = await new PostgreSqlContainer(`postgres:${version}`)
     .withEnvironment({
