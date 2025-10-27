@@ -6,4 +6,4 @@
 "@vorsteh-queue/core": patch
 ---
 
-updated versions
+update dependencies
