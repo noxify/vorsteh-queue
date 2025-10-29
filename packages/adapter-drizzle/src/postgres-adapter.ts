@@ -35,10 +35,11 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
    *
    * @param db Drizzle PostgreSQL database instance
    */
-  constructor(private readonly db: DrizzleDatabase, dbConfig: {tableName?: string, schemaName?: string} = {}) {
+  constructor(
+    private readonly db: DrizzleDatabase,
+    //dbConfig: { tableName?: string; schemaName?: string } = {},
+  ) {
     super()
-
-    
   }
 
   async connect(): Promise<void> {
@@ -53,8 +54,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload, TJobResult>> {
     const [result] = await this.db
-    .
-      .insert(sql.identifier("queue_jobs"))
+      .insert(schema.queueJobs)
       .values({
         queueName: this.queueName,
         name: job.name,
