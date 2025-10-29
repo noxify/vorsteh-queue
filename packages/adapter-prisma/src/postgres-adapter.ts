@@ -22,16 +22,19 @@ import type { QueueJobModel as QueueJob } from "./generated/prisma/models"
 export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   private db: PrismaClientInternal
   private modelName: string
-  private tableName: string
+  private tableName?: string
   private schemaName?: string
 
   /**
    * Create a new PostgreSQL Prisma queue adapter.
    */
-  constructor(prisma: PrismaClient, dbConfig?: { tableName?: string; schemaName?: string }) {
+  constructor(
+    prisma: PrismaClient,
+    dbConfig?: { modelName?: string; tableName?: string; schemaName?: string },
+  ) {
     super()
     this.db = prisma as PrismaClientInternal
-    this.modelName = "queueJob"
+    this.modelName = dbConfig?.modelName ?? "queueJob"
     this.tableName = dbConfig?.tableName ?? "queue_jobs"
     this.schemaName = dbConfig?.schemaName
   }
@@ -217,8 +220,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     const processAt = now
     const fullTable = this.schemaName ? `${this.schemaName}.${this.tableName}` : this.tableName
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await this.db.$queryRawUnsafe<any[]>(
+    const result = await this.db.$queryRawUnsafe<QueueJob[]>(
       /* sql */ `SELECT * 
       FROM ${fullTable} 
       WHERE 
@@ -233,7 +235,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       processAt,
     )
 
-    const transformedResult = result.map(mapKeysToCamelCase<QueueJob>)
+    const transformedResult = result.map(mapKeysToCamelCase)
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return transformedResult.length > 0 ? this.transformJob(transformedResult[0]!) : null
@@ -245,8 +247,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     const queueName = this.queueName
     const fullTable = this.schemaName ? `${this.schemaName}.${this.tableName}` : this.tableName
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await this.db.$queryRawUnsafe<any[]>(
+    const result = await this.db.$queryRawUnsafe<QueueJob[]>(
       /* sql */ `SELECT * 
       FROM ${fullTable} 
       WHERE 
@@ -259,7 +260,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       queueName,
     )
 
-    const transformedResult = result.map(mapKeysToCamelCase<QueueJob>)
+    const transformedResult = result.map(mapKeysToCamelCase)
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return transformedResult.length > 0 ? this.transformJob(transformedResult[0]!) : null
@@ -296,8 +297,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     const queueName = this.queueName
     const fullTable = this.schemaName ? `${this.schemaName}.${this.tableName}` : this.tableName
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await this.db.$queryRawUnsafe<any[]>(
+    const result = await this.db.$queryRawUnsafe<QueueJob[]>(
       /* sql */ `SELECT * 
       FROM ${fullTable} 
       WHERE 

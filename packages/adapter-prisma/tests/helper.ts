@@ -9,8 +9,9 @@ export async function prepareTable() {
 
   try {
     const schemaPathResult = await PrismaInternals.getSchemaWithPath(
-      path.join(__dirname, "../prisma/schema.prisma"),
+      path.join(__dirname, "../prisma/schema.test.prisma"),
     )
+
     if (!schemaPathResult.schemaPath) {
       // eslint-disable-next-line no-console
       console.error("No schema found")
@@ -19,6 +20,7 @@ export async function prepareTable() {
 
     const migrationsDirPath = path.join(schemaPathResult.schemaRootDir, "migrations")
     const schemaContext = { schemaFiles: schemaPathResult.schemas } as PrismaInternals.SchemaContext
+
     migrate = await PrismaMigrate.Migrate.setup({
       migrationsDirPath,
       schemaContext,

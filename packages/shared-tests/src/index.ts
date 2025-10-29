@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest"
+
 import type { AdapterFactory } from "./types"
 
 export function runSharedAdapterTests(createAdapter: AdapterFactory) {

@@ -49,6 +49,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
     "lint": "eslint .",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
+    "prisma:generate_test": "prisma generate --schema=prisma/schema.test.prisma",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },

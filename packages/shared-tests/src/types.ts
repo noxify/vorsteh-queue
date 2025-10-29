@@ -9,6 +9,25 @@ export type DatabaseConnectionProps = Awaited<ReturnType<typeof initDatabase>>
 
 export interface SharedTestContext<TDatabase = unknown> {
   initDbClient: (props: DatabaseConnectionProps) => TDatabase
-  initAdapter: (db: TDatabase) => Promise<QueueAdapter> | QueueAdapter
+  initAdapter: (
+    db: TDatabase,
+    dbConfig?: { modelName?: string; tableName?: string; schemaName?: string },
+  ) => Promise<QueueAdapter> | QueueAdapter
   migrate: (db: TDatabase) => Promise<void>
 }
+
+export type TestCaseProps =
+  | {
+      modelName: string
+      tableName: string
+      schemaName: string
+      description: string
+      useDefault: false
+    }
+  | {
+      modelName?: never
+      tableName?: never
+      schemaName?: never
+      description: string
+      useDefault: true
+    }
