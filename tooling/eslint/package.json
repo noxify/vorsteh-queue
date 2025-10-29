@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@eslint/compat": "1.4.0",
-    "@next/eslint-plugin-next": "16.0.0",
+    "@next/eslint-plugin-next": "16.0.1",
     "eslint-config-turbo": "2.5.8",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-package-json": "0.59.0",
