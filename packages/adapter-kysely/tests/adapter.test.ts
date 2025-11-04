@@ -42,4 +42,5 @@ runTests<Kysely<DB>>({
       throw err
     }
   },
+  testCases: [{ useDefault: true, description: "default table and schema" }],
 })
