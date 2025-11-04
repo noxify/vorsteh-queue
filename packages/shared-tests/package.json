@@ -18,10 +18,10 @@
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.1",
     "postgres": "^3.4.7",
     "prettier": "^3.6.2",
     "testcontainers": "^11.7.2",
-    "vitest": "^4.0.4"
+    "vitest": "^4.0.7"
   }
 }

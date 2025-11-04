@@ -70,21 +70,21 @@
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.3.11",
+    "@electric-sql/pglite": "^0.3.12",
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.1",
     "kysely": "^0.28.8",
     "kysely-ctl": "^0.19.0",
     "kysely-postgres-js": "^3.0.0",
     "postgres": "^3.4.7",
     "prettier": "^3.6.2",
-    "rolldown": "1.0.0-beta.45",
+    "rolldown": "1.0.0-beta.46",
     "rollup-plugin-delete": "^3.0.1",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.4"
+    "vitest": "^4.0.7"
   },
   "peerDependencies": {
     "kysely": ">=0.28.0"

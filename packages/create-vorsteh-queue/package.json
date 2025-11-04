@@ -43,13 +43,13 @@
     "terminal-link": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "22.18.12",
+    "@types/node": "22.19.0",
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.1",
     "prettier": "^3.6.2",
-    "rolldown": "1.0.0-beta.45",
+    "rolldown": "1.0.0-beta.46",
     "rollup-plugin-delete": "^3.0.1",
     "tsx": "4.20.6",
     "typescript": "^5.9.3"
