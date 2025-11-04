@@ -7,18 +7,9 @@ export type AdapterFactory = () => Promise<unknown>
 
 export type DatabaseConnectionProps = Awaited<ReturnType<typeof initDatabase>>
 
-export interface SharedTestContext<TDatabase = unknown> {
-  initDbClient: (props: DatabaseConnectionProps) => TDatabase
-  initAdapter: (
-    db: TDatabase,
-    dbConfig?: { modelName?: string; tableName?: string; schemaName?: string },
-  ) => Promise<QueueAdapter> | QueueAdapter
-  migrate: (db: TDatabase) => Promise<void>
-}
-
 export type TestCaseProps =
   | {
-      modelName: string
+      modelName?: string
       tableName: string
       schemaName: string
       description: string
@@ -31,3 +22,13 @@ export type TestCaseProps =
       description: string
       useDefault: true
     }
+
+export interface SharedTestContext<TDatabase = unknown> {
+  initDbClient: (props: DatabaseConnectionProps) => TDatabase
+  initAdapter: (
+    db: TDatabase,
+    adapterConfig?: { modelName?: string; tableName?: string; schemaName?: string },
+  ) => Promise<QueueAdapter> | QueueAdapter
+  migrate: (db: TDatabase) => Promise<void>
+  testCases: TestCaseProps[]
+}

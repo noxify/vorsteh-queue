@@ -6,12 +6,25 @@ import { and, asc, count, eq, lte, sql } from "drizzle-orm"
 import type { BaseJob, BatchJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
 import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
-import * as schema from "./postgres-schema"
+import type * as schema from "./postgres-schema"
 
 type DrizzleDatabase =
   | NodePgDatabase<typeof schema>
   | PostgresJsDatabase<typeof schema>
   | PgliteDatabase<typeof schema>
+
+function getModelByModelName<TDb extends DrizzleDatabase = DrizzleDatabase>(
+  db: TDb,
+  modelName: string,
+) {
+  const schema = db._.fullSchema[modelName as keyof typeof db._.fullSchema]
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!schema) {
+    throw new Error(`Model with name ${modelName} not found in database schema`)
+  }
+  return schema
+}
 
 /**
  * PostgreSQL adapter for the queue system using Drizzle ORM.
@@ -29,17 +42,36 @@ type DrizzleDatabase =
  * const queue = new Queue(adapter, { name: "my-queue" })
  * ```
  */
-export class PostgresQueueAdapter extends BaseQueueAdapter {
+export class PostgresQueueAdapter<
+  TDb extends DrizzleDatabase = DrizzleDatabase,
+> extends BaseQueueAdapter {
+  private db: TDb
+  private modelName?: string
+  private tableName?: string
+  private schemaName?: string
+  private model: ReturnType<typeof getModelByModelName>
   /**
    * Create a new PostgreSQL queue adapter.
    *
    * @param db Drizzle PostgreSQL database instance
    */
   constructor(
-    private readonly db: DrizzleDatabase,
-    //dbConfig: { tableName?: string; schemaName?: string } = {},
+    db: TDb,
+    adapterConfig?: {
+      modelName?: string
+      tableName?: string
+      schemaName?: string
+    },
   ) {
     super()
+
+    this.db = db
+    this.tableName = adapterConfig?.tableName
+    this.schemaName = adapterConfig?.schemaName
+
+    db.select().from(sql`${this.schemaName}.${this.tableName}`)
+
+    this.model = getModelByModelName(db, adapterConfig?.modelName ?? "queueJobs")
   }
 
   async connect(): Promise<void> {
@@ -54,7 +86,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload, TJobResult>> {
     const [result] = await this.db
-      .insert(schema.queueJobs)
+      .insert(this.model)
       .values({
         queueName: this.queueName,
         name: job.name,
@@ -98,7 +130,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       repeatLimit: null,
       repeatCount: 0,
     }))
-    const results = await this.db.insert(schema.queueJobs).values(values).returning()
+    const results = await this.db.insert(this.model).values(values).returning()
     if (!results.length) {
       throw new Error("Failed to create jobs")
     }
@@ -120,14 +152,14 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     if (status === "completed") updates.completedAt = asUtc(now)
     if (status === "failed") updates.failedAt = asUtc(now)
 
-    await this.db.update(schema.queueJobs).set(updates).where(eq(schema.queueJobs.id, id))
+    await this.db.update(this.model).set(updates).where(eq(this.model.id, id))
   }
 
   async incrementJobAttempts(id: string): Promise<void> {
     await this.db
-      .update(schema.queueJobs)
-      .set({ attempts: sql`${schema.queueJobs.attempts} + 1` })
-      .where(eq(schema.queueJobs.id, id))
+      .update(this.model)
+      .set({ attempts: sql`${this.model.attempts} + 1` })
+      .where(eq(this.model.id, id))
   }
 
   async updateJobProgress(id: string, progress: number): Promise<void> {
@@ -135,20 +167,20 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     const normalizedProgress = Math.max(0, Math.min(100, progress))
 
     await this.db
-      .update(schema.queueJobs)
+      .update(this.model)
       .set({ progress: normalizedProgress })
-      .where(eq(schema.queueJobs.id, id))
+      .where(eq(this.model.id, id))
   }
 
   async getQueueStats(): Promise<QueueStats> {
     const stats = await this.db
       .select({
-        status: schema.queueJobs.status,
+        status: this.model.status,
         count: count(),
       })
-      .from(schema.queueJobs)
-      .where(eq(schema.queueJobs.queueName, this.queueName))
-      .groupBy(schema.queueJobs.status)
+      .from(this.model)
+      .where(eq(this.model.queueName, this.queueName))
+      .groupBy(this.model.status)
 
     const result = {
       pending: 0,
@@ -166,9 +198,9 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   }
 
   async clearJobs(status?: JobStatus): Promise<number> {
-    const conditions = [eq(schema.queueJobs.queueName, this.queueName)]
+    const conditions = [eq(this.model.queueName, this.queueName)]
     if (status) {
-      conditions.push(eq(schema.queueJobs.status, status))
+      conditions.push(eq(this.model.status, status))
     }
 
     // Define the expected return type from delete operation
@@ -176,9 +208,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       rowCount: number
     }
 
-    const result = (await this.db
-      .delete(schema.queueJobs)
-      .where(and(...conditions))) as DeleteResult
+    const result = (await this.db.delete(this.model).where(and(...conditions))) as DeleteResult
 
     return result.rowCount
   }
@@ -186,12 +216,10 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   async cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
     // Get jobs to delete (all except the most recent N)
     const jobsToDelete = await this.db
-      .select({ id: schema.queueJobs.id })
-      .from(schema.queueJobs)
-      .where(
-        and(eq(schema.queueJobs.queueName, this.queueName), eq(schema.queueJobs.status, status)),
-      )
-      .orderBy(sql`${schema.queueJobs.createdAt} DESC`)
+      .select({ id: this.model.id })
+      .from(this.model)
+      .where(and(eq(this.model.queueName, this.queueName), eq(this.model.status, status)))
+      .orderBy(sql`${this.model.createdAt} DESC`)
       .offset(keepCount)
 
     if (jobsToDelete.length === 0) {
@@ -205,12 +233,9 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     }
 
     const result = (await this.db
-      .delete(schema.queueJobs)
+      .delete(this.model)
       .where(
-        and(
-          eq(schema.queueJobs.queueName, this.queueName),
-          sql`${schema.queueJobs.id} = ANY(${idsToDelete})`,
-        ),
+        and(eq(this.model.queueName, this.queueName), sql`${this.model.id} = ANY(${idsToDelete})`),
       )) as DeleteResult
 
     return result.rowCount
@@ -219,10 +244,8 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   async size(): Promise<number> {
     const [result] = await this.db
       .select({ count: count() })
-      .from(schema.queueJobs)
-      .where(
-        and(eq(schema.queueJobs.queueName, this.queueName), eq(schema.queueJobs.status, "pending")),
-      )
+      .from(this.model)
+      .where(and(eq(this.model.queueName, this.queueName), eq(this.model.status, "pending")))
 
     return Number(result?.count ?? 0)
   }
@@ -230,15 +253,15 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   async getNextJobsForHandler(handlerName: string, count: number) {
     const jobs = await this.db
       .select()
-      .from(schema.queueJobs)
+      .from(this.model)
       .where(
         and(
-          eq(schema.queueJobs.queueName, this.queueName),
-          eq(schema.queueJobs.status, "pending"),
-          eq(schema.queueJobs.name, handlerName),
+          eq(this.model.queueName, this.queueName),
+          eq(this.model.status, "pending"),
+          eq(this.model.name, handlerName),
         ),
       )
-      .orderBy(asc(schema.queueJobs.priority), asc(schema.queueJobs.createdAt))
+      .orderBy(asc(this.model.priority), asc(this.model.createdAt))
       .limit(count)
       .for("update", { skipLocked: true })
 
@@ -258,15 +281,15 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   protected async getDelayedJobReady(now: Date): Promise<BaseJob | null> {
     const [job] = await this.db
       .select()
-      .from(schema.queueJobs)
+      .from(this.model)
       .where(
         and(
-          eq(schema.queueJobs.queueName, this.queueName),
-          eq(schema.queueJobs.status, "delayed"),
-          lte(schema.queueJobs.processAt, now),
+          eq(this.model.queueName, this.queueName),
+          eq(this.model.status, "delayed"),
+          lte(this.model.processAt, now),
         ),
       )
-      .orderBy(asc(schema.queueJobs.priority), asc(schema.queueJobs.createdAt))
+      .orderBy(asc(this.model.priority), asc(this.model.createdAt))
       .limit(1)
       .for("update", { skipLocked: true })
 
@@ -276,11 +299,9 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   protected async getPendingJobByPriority(): Promise<BaseJob | null> {
     const [job] = await this.db
       .select()
-      .from(schema.queueJobs)
-      .where(
-        and(eq(schema.queueJobs.queueName, this.queueName), eq(schema.queueJobs.status, "pending")),
-      )
-      .orderBy(asc(schema.queueJobs.priority), asc(schema.queueJobs.createdAt))
+      .from(this.model)
+      .where(and(eq(this.model.queueName, this.queueName), eq(this.model.status, "pending")))
+      .orderBy(asc(this.model.priority), asc(this.model.createdAt))
       .limit(1)
       .for("update", { skipLocked: true })
 

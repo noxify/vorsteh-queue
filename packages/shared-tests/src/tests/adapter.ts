@@ -3,14 +3,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import type { QueueAdapter } from "@vorsteh-queue/core"
 
-import type { SharedTestContext, TestCaseProps } from "../types"
+import type { SharedTestContext } from "../types"
 import { initDatabase } from "../database"
 
-export function runTests<TDatabase = unknown>(
-  ctx: SharedTestContext<TDatabase>,
-  cases: TestCaseProps[],
-) {
-  describe.each(cases)(
+export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>) {
+  describe.each(ctx.testCases)(
     "Adapter Tests - $description",
     ({ modelName, schemaName, tableName, useDefault }) => {
       let database: Awaited<ReturnType<typeof initDatabase>>

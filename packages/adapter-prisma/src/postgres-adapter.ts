@@ -30,13 +30,13 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
    */
   constructor(
     prisma: PrismaClient,
-    dbConfig?: { modelName?: string; tableName?: string; schemaName?: string },
+    adapterConfig?: { modelName?: string; tableName?: string; schemaName?: string },
   ) {
     super()
     this.db = prisma as PrismaClientInternal
-    this.modelName = dbConfig?.modelName ?? "queueJob"
-    this.tableName = dbConfig?.tableName ?? "queue_jobs"
-    this.schemaName = dbConfig?.schemaName
+    this.modelName = adapterConfig?.modelName ?? "queueJob"
+    this.tableName = adapterConfig?.tableName ?? "queue_jobs"
+    this.schemaName = adapterConfig?.schemaName
   }
 
   async connect(): Promise<void> {

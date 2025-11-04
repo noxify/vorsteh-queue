@@ -15,39 +15,37 @@ global.require = createRequire(import.meta.url)
 
 const { generateDrizzleJson, generateMigration } = await import("drizzle-kit/api")
 
-runTests<PostgresJsDatabase<typeof schema>>(
-  {
-    initDbClient: (props: DatabaseConnectionProps): PostgresJsDatabase<typeof schema> => {
-      const client = postgres(props.container.getConnectionUri(), {
-        max: 10, // Connection pool size
-      })
-      return drizzle(client, { schema })
-    },
-    initAdapter: (db) => {
-      return new PostgresQueueAdapter(db)
-    },
-    migrate: async (db) => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const [previous, current] = await Promise.all(
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-          [{}, schema].map((schemaObject) => generateDrizzleJson(schemaObject)),
-        )
-
-        const statements = await generateMigration(previous, current)
-        const migration = statements.join("\n")
-
-        await db.execute(migration)
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error("Migration error:", err)
-        throw err
-      }
-    },
+runTests<PostgresJsDatabase<typeof schema>>({
+  initDbClient: (props: DatabaseConnectionProps): PostgresJsDatabase<typeof schema> => {
+    const client = postgres(props.container.getConnectionUri(), {
+      max: 10, // Connection pool size
+    })
+    return drizzle(client, { schema })
   },
-  [
+  initAdapter: (db, adapterConfig) => {
+    return new PostgresQueueAdapter(db, adapterConfig)
+  },
+  migrate: async (db) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const [previous, current] = await Promise.all(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        [{}, schema].map((schemaObject) => generateDrizzleJson(schemaObject)),
+      )
+
+      const statements = await generateMigration(previous, current)
+      const migration = statements.join("\n")
+
+      await db.execute(migration)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Migration error:", err)
+      throw err
+    }
+  },
+  testCases: [
     {
-      modelName: "customQueueJob",
+      modelName: "customQueueJobs",
       tableName: "custom_queue_jobs",
       schemaName: "custom_schema",
       useDefault: false,
@@ -55,4 +53,4 @@ runTests<PostgresJsDatabase<typeof schema>>(
     },
     { useDefault: true, description: "default table and schema" },
   ],
-)
+})
