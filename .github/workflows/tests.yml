@@ -136,7 +136,7 @@ jobs:
 
       - name: Test PostgreSQL (Postgres ${{ matrix.pg-version }})
         run: |
-          pnpm -F adapter-prisma prisma:generate
+          pnpm -F adapter-prisma prisma:generate_test
           pnpm test:prisma
         env:
           # Ensure Docker is available for Testcontainers
