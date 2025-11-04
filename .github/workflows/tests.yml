@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [20, 22, 24]
     name: Test (Node.js ${{ matrix.node-version }})
     steps:
       - uses: actions/checkout@v4
