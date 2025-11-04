@@ -53,7 +53,7 @@ jobs:
 
       - name: Build packages
         run: |
-          pnpm -F adapter-prisma prisma:generate
+          pnpm -F adapter-prisma prisma:generate_test
           pnpm --filter "./packages/*" build
 
       - name: Test Core Package
