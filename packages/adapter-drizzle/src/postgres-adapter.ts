@@ -46,7 +46,6 @@ export class PostgresQueueAdapter<
   TDb extends DrizzleDatabase = DrizzleDatabase,
 > extends BaseQueueAdapter {
   private db: TDb
-  private modelName?: string
   private tableName?: string
   private schemaName?: string
   private model: ReturnType<typeof getModelByModelName>
@@ -68,8 +67,6 @@ export class PostgresQueueAdapter<
     this.db = db
     this.tableName = adapterConfig?.tableName
     this.schemaName = adapterConfig?.schemaName
-
-    db.select().from(sql`${this.schemaName}.${this.tableName}`)
 
     this.model = getModelByModelName(db, adapterConfig?.modelName ?? "queueJobs")
   }

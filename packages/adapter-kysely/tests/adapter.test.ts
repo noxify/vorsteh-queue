@@ -22,8 +22,8 @@ runTests<Kysely<DB>>({
 
     return db
   },
-  initAdapter: (db) => {
-    return new PostgresQueueAdapter(db)
+  initAdapter: (db, adapterConfig) => {
+    return new PostgresQueueAdapter(db, adapterConfig)
   },
   migrate: async (db) => {
     try {
@@ -42,5 +42,14 @@ runTests<Kysely<DB>>({
       throw err
     }
   },
-  testCases: [{ useDefault: true, description: "default table and schema" }],
+  testCases: [
+    {
+      useDefault: false,
+      description: "custom schema and tablename",
+      modelName: "custom_queue_jobs",
+      schemaName: "custom_schema",
+      tableName: "custom_queue_jobs",
+    },
+    { useDefault: true, description: "default table and schema" },
+  ],
 })

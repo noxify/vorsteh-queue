@@ -35,7 +35,7 @@ export type NewQueueJob = Insertable<QueueJobTableDefinition>
 export type QueueJobUpdate = Updateable<QueueJobTableDefinition>
 
 export interface DB {
-  queue_jobs: QueueJobTableDefinition
+  tablename: QueueJobTableDefinition
 }
 
-export type InsertQueueJobValue = InsertObject<DB, "queue_jobs">
+export type InsertQueueJobValue = InsertObject<DB, "tablename">
