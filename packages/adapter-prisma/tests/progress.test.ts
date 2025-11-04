@@ -24,4 +24,5 @@ runTests<PrismaClient>({
       throw err
     }
   },
+  testCases: [{ useDefault: true, description: "default table and schema" }],
 })
