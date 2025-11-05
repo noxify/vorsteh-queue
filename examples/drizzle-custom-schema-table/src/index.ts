@@ -1,12 +1,12 @@
 import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 
-import { db, client } from "./database"
+import { client, db } from "./database"
 
 // Job payload types
 interface ReportJob {
   userId: string
-  type: 'daily' | 'weekly' | 'monthly'
+  type: "daily" | "weekly" | "monthly"
   includeCharts?: boolean
 }
 
@@ -18,7 +18,7 @@ interface CleanupJob {
 // Job result types
 interface ReportResult {
   reportId: string
-  status: 'completed' | 'failed'
+  status: "completed" | "failed"
   fileSize?: number
 }
 
@@ -28,40 +28,42 @@ interface CleanupResult {
 }
 
 // Queue setup
-const queue = new Queue(new PostgresQueueAdapter(db), { 
+const queue = new Queue(new PostgresQueueAdapter(db, { modelName: "customQueueJobs" }), {
   name: "advanced-queue",
   removeOnComplete: 20,
-  removeOnFail: 10
+  removeOnFail: 10,
 })
 
 // Job handlers with proper types
 queue.register<ReportJob, ReportResult>("generate-report", async (job) => {
   const { userId, type, includeCharts = false } = job.payload
-  console.log(`📈 Generating ${type} report for user ${userId}${includeCharts ? ' with charts' : ''}`)
-  
+  console.log(
+    `📈 Generating ${type} report for user ${userId}${includeCharts ? " with charts" : ""}`,
+  )
+
   // Simulate report generation with progress
-  const steps = ['Collecting data', 'Processing metrics', 'Generating charts', 'Finalizing report']
+  const steps = ["Collecting data", "Processing metrics", "Generating charts", "Finalizing report"]
   for (let i = 0; i < steps.length; i++) {
     console.log(`   ${steps[i]}...`)
     await new Promise((resolve) => setTimeout(resolve, 1000))
     await job.updateProgress(Math.round(((i + 1) / steps.length) * 100))
   }
-  
-  return { 
-    reportId: `report_${Date.now()}`, 
+
+  return {
+    reportId: `report_${Date.now()}`,
     status: "completed",
-    fileSize: Math.floor(Math.random() * 1000000) + 100000
+    fileSize: Math.floor(Math.random() * 1000000) + 100000,
   }
 })
 
 queue.register<CleanupJob, CleanupResult>("cleanup-files", async (job) => {
-  const { olderThan, fileTypes = ['tmp', 'log'] } = job.payload
-  console.log(`🧽 Cleaning up ${fileTypes.join(', ')} files older than ${olderThan}`)
-  
+  const { olderThan, fileTypes = ["tmp", "log"] } = job.payload
+  console.log(`🧽 Cleaning up ${fileTypes.join(", ")} files older than ${olderThan}`)
+
   await new Promise((resolve) => setTimeout(resolve, 1500))
   const deletedCount = Math.floor(Math.random() * 50) + 10
   const freedSpace = deletedCount * Math.floor(Math.random() * 1000000)
-  
+
   return { deletedCount, freedSpace }
 })
 
@@ -94,21 +96,33 @@ async function main() {
   console.log("🚀 Starting Advanced Drizzle PostgreSQL Queue Example")
 
   // Add jobs with different priorities and features
-  await queue.add<ReportJob>("generate-report", { 
-    userId: "user123", 
-    type: "monthly",
-    includeCharts: true
-  }, { priority: 1 })
-  
-  await queue.add<CleanupJob>("cleanup-files", { 
-    olderThan: "30d",
-    fileTypes: ['tmp', 'log', 'cache']
-  }, { priority: 3 })
-  
-  await queue.add<ReportJob>("generate-report", { 
-    userId: "user456", 
-    type: "weekly"
-  }, { priority: 2, delay: 5000 })
+  await queue.add<ReportJob>(
+    "generate-report",
+    {
+      userId: "user123",
+      type: "monthly",
+      includeCharts: true,
+    },
+    { priority: 1 },
+  )
+
+  await queue.add<CleanupJob>(
+    "cleanup-files",
+    {
+      olderThan: "30d",
+      fileTypes: ["tmp", "log", "cache"],
+    },
+    { priority: 3 },
+  )
+
+  await queue.add<ReportJob>(
+    "generate-report",
+    {
+      userId: "user456",
+      type: "weekly",
+    },
+    { priority: 2, delay: 5000 },
+  )
 
   // Add recurring cleanup job
   await queue.add<CleanupJob>(
@@ -125,7 +139,7 @@ async function main() {
     { userId: "system", type: "daily" },
     {
       cron: "0 9 * * *", // Every day at 9 AM
-    }
+    },
   )
 
   // Start processing
@@ -137,7 +151,7 @@ async function main() {
     const stats = await queue.getStats()
     console.log("📊 Detailed Queue Stats:", {
       ...stats,
-      total: Object.values(stats).reduce((sum, count) => sum + count, 0)
+      total: Object.values(stats).reduce((sum, count) => sum + count, 0),
     })
   }, 15000)
 

@@ -30,7 +30,6 @@ interface CleanupJobResult {
 // Queue setup
 const queue = new Queue(
   new PostgresQueueAdapter(db, {
-    modelName: "custom_queue_jobs",
     schemaName: "custom_schema",
     tableName: "custom_queue_jobs",
   }),
