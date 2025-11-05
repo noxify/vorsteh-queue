@@ -55,13 +55,11 @@ If you don't want to use the pre-defined schema, you can create your own schema 
 
 ### Custom Table & Schema Names
 
-You can customize the table and schema names used by the adapter by providing them in the adapter configuration:
+To create a table with custom name and schema, you can use the `createQueueJobsTable` helper, which will create the table without taking care about the field definitions:
 
 ```typescript path="drizzle-schema.ts"
 import { createQueueJobsTable } from "@vorsteh-queue/adapter-drizzle"
 
-// createQueueJobsTable allows to create a table with custom name and schema
-// without taking care about the field definitions
 export const { table: customQueueJobs, schema: customSchema } = createQueueJobsTable(
   "custom_queue_jobs", // your custom table name
   "custom_schema", // your custom schema name
@@ -76,10 +74,6 @@ import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
 const adapter = new PostgresQueueAdapter(db, {
   // Your custom model name ( based on the example above - `table: customQueueJobs`)
   modelName: "customQueueJobs",
-  // Your custom schema name
-  schemaName: "custom_schema",
-  // Your custom table name
-  tableName: "custom_queue_jobs",
 })
 ```
 

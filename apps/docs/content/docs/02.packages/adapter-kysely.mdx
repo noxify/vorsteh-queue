@@ -71,13 +71,11 @@ If you don't want to use the pre-defined schema, you can create your own migrati
 
 ### Custom Table & Schema Names
 
-You can customize the table and schema names used by the adapter by providing them in the adapter configuration:
+To create a table with custom name and schema, you can use the `createQueueJobsTable` helper, which will create the table without taking care about the field definitions:
 
 ```typescript path="migrations/queue-jobs.ts"
 import { createQueueJobsTable } from "@vorsteh-queue/adapter-kysely"
 
-// createQueueJobsTable allows to create a table with custom name and schema
-// without taking care about the field definitions
 export const { up, down } = createQueueJobsTable(
   // your custom table name
   "custom_queue_jobs",
@@ -103,8 +101,6 @@ const db = new Kysely<DB>({
 })
 
 const adapter = new PostgresQueueAdapter(db, {
-  // Your custom model name ( based on the example above - `custom_queue_jobs: QueueJobTableDefinition`)
-  modelName: "custom_queue_jobs",
   // Your custom schema name
   schemaName: "custom_schema",
   // Your custom table name
