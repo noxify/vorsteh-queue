@@ -1,0 +1,47 @@
+generator client {
+  // Required
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+
+
+  // Optional
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas = ["public", "custom_schema"]
+}
+
+model CustomQueueJob {
+  id           String    @id @default(uuid())
+  queueName    String    @map("queue_name") @db.VarChar(255)
+  name         String    @db.VarChar(255)
+  payload      Json      @db.JsonB
+  status       String    @db.VarChar(50)
+  priority     Int
+  attempts     Int       @default(0)
+  maxAttempts  Int       @map("max_attempts")
+  createdAt    DateTime  @default(dbgenerated("timezone('utc', now())")) @map("created_at") @db.Timestamptz(6)
+  processAt    DateTime  @map("process_at") @db.Timestamptz(6)
+  processedAt  DateTime? @map("processed_at") @db.Timestamptz(6)
+  completedAt  DateTime? @map("completed_at") @db.Timestamptz(6)
+  failedAt     DateTime? @map("failed_at") @db.Timestamptz(6)
+  error        Json?     @db.JsonB
+  result       Json?     @db.JsonB
+  progress     Int?      @default(0)
+  timeout      Json?     @db.JsonB
+  cron         String?   @db.VarChar(255)
+  repeatEvery  Int?      @map("repeat_every")
+  repeatLimit  Int?      @map("repeat_limit")
+  repeatCount  Int?      @default(0) @map("repeat_count")
+
+  @@index([queueName, status, priority, createdAt], map: "idx_custom_queue_jobs_status_priority")
+  @@index([processAt], map: "idx_custom_queue_jobs_process_at")
+  @@map("custom_queue_jobs")
+  @@schema("custom_schema")
+}

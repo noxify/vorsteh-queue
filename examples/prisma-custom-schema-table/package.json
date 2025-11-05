@@ -1,0 +1,25 @@
+{
+  "name": "prisma-client-example",
+  "version": "1.0.0",
+  "description": "Vorsteh Queue example using Prisma with prisma-client provider and PostgreSQL (TypeScript generation)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm with-env tsx src/index.ts",
+    "prisma:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "with-env": "dotenv -e .env --"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^6.18.0",
+    "@prisma/client": "^6.18.0",
+    "@vorsteh-queue/adapter-prisma": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*"
+  },
+  "devDependencies": {
+    "dotenv-cli": "11.0.0",
+    "prisma": "^6.18.0",
+    "tsx": "4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
