@@ -69,9 +69,9 @@
     "eslint": "^9.39.1",
     "prettier": "^3.6.2",
     "prisma": "^6.18.0",
-    "rolldown": "1.0.0-beta.46",
+    "rolldown": "1.0.0-beta.47",
     "rollup-plugin-delete": "^3.0.1",
-    "testcontainers": "^11.7.2",
+    "testcontainers": "^11.8.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.7"
   },

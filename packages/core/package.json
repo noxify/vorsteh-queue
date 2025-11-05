@@ -72,7 +72,7 @@
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "eslint": "^9.39.1",
-    "rolldown": "1.0.0-beta.46",
+    "rolldown": "1.0.0-beta.47",
     "rollup-plugin-delete": "^3.0.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.7"
