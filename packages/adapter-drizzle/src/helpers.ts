@@ -43,24 +43,30 @@ export const createQueueJobsTable = (tableName: string, schemaName?: string) => 
   const schema = schemaName ? pgSchema(schemaName) : undefined
 
   if (isPgSchema(schema)) {
-    return schema.table(tableName, columns, (table) => [
-      index(`idx_${tableName}_status_priority`).on(
-        table.queueName,
-        table.status,
-        table.priority,
-        table.createdAt,
-      ),
-      index(`idx_${tableName}_process_at`).on(table.processAt),
-    ])
+    return {
+      schema,
+      table: schema.table(tableName, columns, (table) => [
+        index(`idx_${tableName}_status_priority`).on(
+          table.queueName,
+          table.status,
+          table.priority,
+          table.createdAt,
+        ),
+        index(`idx_${tableName}_process_at`).on(table.processAt),
+      ]),
+    }
   } else {
-    return pgTable(tableName, columns, (table) => [
-      index(`idx_${tableName}_status_priority`).on(
-        table.queueName,
-        table.status,
-        table.priority,
-        table.createdAt,
-      ),
-      index(`idx_${tableName}_process_at`).on(table.processAt),
-    ])
+    return {
+      schema: undefined,
+      table: pgTable(tableName, columns, (table) => [
+        index(`idx_${tableName}_status_priority`).on(
+          table.queueName,
+          table.status,
+          table.priority,
+          table.createdAt,
+        ),
+        index(`idx_${tableName}_process_at`).on(table.processAt),
+      ]),
+    }
   }
 }
