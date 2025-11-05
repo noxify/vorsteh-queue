@@ -37,7 +37,8 @@
       "default": "./dist/index.js"
     },
     "./migrations": {
-      "default": "./src/migrations.js"
+      "default": "./dist/migrations.js",
+      "types": "./dist/migrations/queue_table.d.ts"
     },
     "./postgres-adapter": {
       "types": "./dist/postgres-adapter.d.ts",
