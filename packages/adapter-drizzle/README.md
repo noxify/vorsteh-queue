@@ -122,28 +122,6 @@ npx drizzle-kit migrate
 - **postgres.js** (`postgres`)
 - **PGlite** (for embedded/testing)
 
-## Custom tablename & schema
-
-Previously, we had static values for the table and assumed that the table is located in the `public` schema.
-
-Now, you can customize these values.
-
-```typescript
-// src/schema/index.ts - Your application schema
-import { pgSchema, pgTable, serial, varchar } from "drizzle-orm/pg-core"
-
-import { postgresSchema } from "@vorsteh-queue/adapter-drizzle"
-
-// Your existing tables
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }),
-})
-
-// Export queue schema alongside your schema
-export const customQueueJobs = postgresSchema.queueJobs
-```
-
 ## Testing
 
 ```bash
