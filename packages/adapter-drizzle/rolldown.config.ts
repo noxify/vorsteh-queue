@@ -16,7 +16,6 @@ export default defineConfig({
   external: [
     "@vorsteh-queue/core",
     "drizzle-orm",
-    "drizzle-orm/mysql2",
     "drizzle-orm/node-postgres",
     "drizzle-orm/pglite",
     "drizzle-orm/postgres-js",

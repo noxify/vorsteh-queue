@@ -27,9 +27,9 @@ const queue = new Queue(adapter)
 
 ## Supported providers
 
-- PGlite
-- Postgres.JS
-- Node Progress
+- PGlite - https://orm.drizzle.team/docs/connect-pglite
+- Postgres.JS - https://orm.drizzle.team/docs/get-started-postgresql#postgresjs
+- Node Progress - https://orm.drizzle.team/docs/get-started-postgresql#node-postgres
 
 ## Database Setup
 
@@ -52,6 +52,35 @@ If you don't want to use the pre-defined schema, you can create your own schema 
   showToolbar={true}
   path="queue-jobs.ts"
 />
+
+### Custom Table & Schema Names
+
+To create a table with custom name and schema, you can use the `createQueueJobsTable` helper, which will create the table without taking care about the field definitions:
+
+```typescript path="drizzle-schema.ts"
+import { createQueueJobsTable } from "@vorsteh-queue/adapter-drizzle"
+
+export const { table: customQueueJobs, schema: customSchema } = createQueueJobsTable(
+  "custom_queue_jobs", // your custom table name
+  "custom_schema", // your custom schema name
+)
+```
+
+To use the custom table and schema in the adapter, pass the adapter configuration to the `PostgresQueueAdapter`:
+
+```typescript
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+
+const adapter = new PostgresQueueAdapter(db, {
+  // Your custom model name ( based on the example above - `table: customQueueJobs`)
+  modelName: "customQueueJobs",
+})
+```
+
+<Note title="Want to see it in action?">
+  Checkout our drizzle example with [custom schema and
+  table](/docs/examples/drizzle-custom-schema-table/).
+</Note>
 
 ### Migration
 

@@ -9,7 +9,7 @@ import type { DatabaseConnectionProps } from "@vorsteh-queue/shared-tests/types"
 import { runTests } from "@vorsteh-queue/shared-tests/tests/adapter"
 
 import { PostgresQueueAdapter } from "../src"
-import * as schema from "../src/postgres-schema"
+import * as schema from "../src/postgres-test-schema"
 
 global.require = createRequire(import.meta.url)
 
@@ -22,8 +22,8 @@ runTests<PostgresJsDatabase<typeof schema>>({
     })
     return drizzle(client, { schema })
   },
-  initAdapter: (db) => {
-    return new PostgresQueueAdapter(db)
+  initAdapter: (db, adapterConfig) => {
+    return new PostgresQueueAdapter(db, adapterConfig)
   },
   migrate: async (db) => {
     try {
@@ -43,4 +43,14 @@ runTests<PostgresJsDatabase<typeof schema>>({
       throw err
     }
   },
+  testCases: [
+    {
+      modelName: "customQueueJobs",
+      tableName: "custom_queue_jobs",
+      schemaName: "custom_schema",
+      useDefault: false,
+      description: "custom table and schema",
+    },
+    { useDefault: true, description: "default table and schema" },
+  ],
 })

@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [20, 22, 24]
     name: Test (Node.js ${{ matrix.node-version }})
     steps:
       - uses: actions/checkout@v4
@@ -67,7 +67,7 @@ jobs:
 
       - name: Test Prisma
         run: |
-          pnpm -F adapter-prisma prisma:generate
+          pnpm -F adapter-prisma prisma:generate_test
           pnpm test:prisma
         env:
           # Ensure Docker is available for Testcontainers
@@ -136,7 +136,7 @@ jobs:
 
       - name: Test PostgreSQL (Postgres ${{ matrix.pg-version }})
         run: |
-          pnpm -F adapter-prisma prisma:generate
+          pnpm -F adapter-prisma prisma:generate_test
           pnpm test:prisma
         env:
           # Ensure Docker is available for Testcontainers

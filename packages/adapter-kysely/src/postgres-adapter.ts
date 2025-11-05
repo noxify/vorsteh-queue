@@ -1,7 +1,14 @@
 import type { Kysely } from "kysely"
 import { sql } from "kysely"
 
-import type { BaseJob, BatchJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import type {
+  AdapterProps,
+  BaseJob,
+  BatchJob,
+  JobStatus,
+  QueueStats,
+  SerializedError,
+} from "@vorsteh-queue/core"
 import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import type { DB, InsertQueueJobValue, QueueJob } from "./types"
@@ -50,21 +57,29 @@ import type { DB, InsertQueueJobValue, QueueJob } from "./types"
  */
 export class PostgresQueueAdapter extends BaseQueueAdapter {
   private customDbClient: Kysely<DB>
+  private tableName: string
+  private schemaName: string
+
   /**
    * Create a new PostgreSQL queue adapter.
    *
    * @param db Kysely database instance
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(private readonly db: Kysely<any>) {
+  constructor(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    db: Kysely<any>,
+    adapterConfig?: AdapterProps<"kysely">,
+  ) {
     super()
 
+    // to get the type-safety, we cast the db to Kysely<DB>
     this.customDbClient = db as Kysely<DB>
+    this.tableName = adapterConfig?.tableName ?? "queue_jobs"
+    this.schemaName = adapterConfig?.schemaName ?? "public"
   }
 
   async connect(): Promise<void> {
     // kysely doesn't require explicit connection
-    // TODO: check if `this.db.connection()` should be used here
   }
 
   async disconnect(): Promise<void> {
@@ -77,7 +92,12 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload, TJobResult>> {
     const result = await this.customDbClient
-      .insertInto("queue_jobs")
+      // this is needed to convince kysely's type system that the table name is correct
+      // we cast to unknown and then to "tablename" to bypass the string literal type check
+      // I know, it's a bit hacky, but it works
+      // tried it also via `sql.id()` but that didn't work and I got some runtime errors
+      // we're doing this in all places where we reference the table name dynamically
+      .insertInto(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .values({
         queue_name: this.queueName,
         name: job.name,
@@ -125,7 +145,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     }))
 
     const results = await this.customDbClient
-      .insertInto("queue_jobs")
+      .insertInto(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .values(values)
       .returningAll()
       .execute()
@@ -152,12 +172,16 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     if (status === "completed") updates.completed_at = asUtc(now)
     if (status === "failed") updates.failed_at = asUtc(now)
 
-    await this.customDbClient.updateTable("queue_jobs").set(updates).where("id", "=", id).execute()
+    await this.customDbClient
+      .updateTable(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .set(updates)
+      .where("id", "=", id)
+      .execute()
   }
 
   async incrementJobAttempts(id: string): Promise<void> {
     await this.customDbClient
-      .updateTable("queue_jobs")
+      .updateTable(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .set({ attempts: sql`${"attempts"} + 1` })
       .where("id", "=", id)
       .execute()
@@ -168,7 +192,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     const normalizedProgress = Math.max(0, Math.min(100, progress))
 
     await this.customDbClient
-      .updateTable("queue_jobs")
+      .updateTable(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .set({ progress: normalizedProgress })
       .where("id", "=", id)
       .execute()
@@ -176,15 +200,12 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
   async getQueueStats(): Promise<QueueStats> {
     const stats = await this.customDbClient
-      .selectFrom("queue_jobs")
+      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .select(({ fn }) => [
         "status",
-
-        // The `fn` module contains the most common
-        // functions.
+        // The `fn` module contains the most common functions.
         fn.countAll<number>().as("count"),
       ])
-
       .where("queue_name", "=", this.queueName)
       .groupBy("status")
       .execute()
@@ -206,7 +227,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
   async clearJobs(status?: JobStatus): Promise<number> {
     const query = this.customDbClient
-      .deleteFrom("queue_jobs")
+      .deleteFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .where("queue_name", "=", this.queueName)
 
     if (status) {
@@ -223,7 +244,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   async cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
     // Get jobs to delete (all except the most recent N)
     const jobsToDelete = await this.customDbClient
-      .selectFrom("queue_jobs")
+      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .select("id")
       .where("queue_name", "=", this.queueName)
       .where("status", "=", status)
@@ -238,7 +259,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     const idsToDelete = jobsToDelete.map((job) => job.id)
 
     const result = await this.customDbClient
-      .deleteFrom("queue_jobs")
+      .deleteFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .where("queue_name", "=", this.queueName)
       .where("id", "in", idsToDelete)
       .executeTakeFirst()
@@ -248,7 +269,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
   async size(): Promise<number> {
     const result = await this.customDbClient
-      .selectFrom("queue_jobs")
+      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .select(this.customDbClient.fn.count("id").as("count"))
       .executeTakeFirst()
 
@@ -257,7 +278,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
   async getNextJobsForHandler(handlerName: string, count: number) {
     const jobs = await this.customDbClient
-      .selectFrom("queue_jobs")
+      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .selectAll()
       .where("queue_name", "=", this.queueName)
       .where("status", "=", "pending")
@@ -296,7 +317,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
   protected async getDelayedJobReady(now: Date): Promise<BaseJob | null> {
     const job = await this.customDbClient
-      .selectFrom("queue_jobs")
+      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .selectAll()
       .where("queue_name", "=", this.queueName)
       .where("status", "=", "delayed")
@@ -313,7 +334,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
   protected async getPendingJobByPriority(): Promise<BaseJob | null> {
     const job = await this.customDbClient
-      .selectFrom("queue_jobs")
+      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
       .selectAll()
       .where("queue_name", "=", this.queueName)
       .where("status", "=", "pending")

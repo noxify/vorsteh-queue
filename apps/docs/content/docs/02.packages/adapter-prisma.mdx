@@ -12,6 +12,8 @@ The Prisma adapter provides PostgreSQL support using Prisma ORM, offering genera
 
 ## Quick Start
 
+### With prisma-client-js
+
 ```typescript
 import { PrismaClient } from "@prisma/client"
 
@@ -19,6 +21,21 @@ import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
 import { Queue } from "@vorsteh-queue/core"
 
 const prisma = new PrismaClient()
+const adapter = new PostgresPrismaQueueAdapter(prisma)
+const queue = new Queue(adapter)
+```
+
+### With prisma-client
+
+```typescript
+import { PrismaPg } from "@prisma/adapter-pg"
+import { PrismaClient } from "src/generated/prisma/client"
+
+import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+import { Queue } from "@vorsteh-queue/core"
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+const prisma = new PrismaClient({ adapter })
 const adapter = new PostgresPrismaQueueAdapter(prisma)
 const queue = new Queue(adapter)
 ```
@@ -36,6 +53,49 @@ Add the queue job model to your `schema.prisma`:
   path="prisma/schema.prisma"
   focusedLines="17-43"
 />
+
+### Custom Table & Schema Names
+
+To use the custom table and schema with prisma, you have to customize the prisma schema.
+Here an example with custom schema and table name ( the relevant parts are highlighted ):
+
+<RemoteCodeBlock
+  source="./examples/prisma-custom-schema-table/prisma/schema.prisma"
+  language="prisma"
+  showToolbar={true}
+  showLineNumbers={true}
+  path="prisma/schema.prisma"
+  focusedLines="16,19,44-45"
+/>
+
+To use the custom table and schema in the adapter, pass the adapter configuration to the `PostgresQueueAdapter`:
+
+```typescript
+import { PrismaPg } from "@prisma/adapter-pg"
+import { PrismaClient } from "src/generated/prisma/client"
+
+import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+import { Queue } from "@vorsteh-queue/core"
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+const prisma = new PrismaClient({ adapter })
+
+const adapter = new PostgresQueueAdapter(prisma, {
+  // Your custom model name ( based on the example above )
+  modelName: "CustomQueueJobs",
+  // Your custom schema name
+  schemaName: "custom_schema",
+  // Your custom table name
+  tableName: "custom_queue_jobs",
+})
+
+const queue = new Queue(adapter)
+```
+
+<Note title="Want to see it in action?">
+  Checkout our prisma example with [custom schema and
+  table](/docs/examples/prisma-custom-schema-table/).
+</Note>
 
 ### Migration
 

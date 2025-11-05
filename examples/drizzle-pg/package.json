@@ -15,8 +15,8 @@
     "pg": "8.16.3"
   },
   "devDependencies": {
-    "@types/pg": "8.15.5",
-    "drizzle-kit": "^0.31.5",
+    "@types/pg": "8.15.6",
+    "drizzle-kit": "^0.31.6",
     "tsx": "4.20.6",
     "typescript": "^5.9.3"
   }

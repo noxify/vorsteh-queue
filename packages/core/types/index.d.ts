@@ -259,3 +259,34 @@ export interface QueueEvents {
   /** Emitted when an unexpected error occurs in the queue */
   "queue:error": unknown
 }
+
+export interface PrismaAdapterProps {
+  /**  model name in schema.prisma - Default: QueueJob */
+  modelName?: string
+  /** specifies the table name in the database - Default: queue_jobs */
+  tableName?: string
+  /*+ specifies the schema name in the database - Default: undefined (no schema), uses default schema ( `public` ) */
+  schemaName?: string
+}
+
+export interface KyselyAdapterProps {
+  /**  specifies the table name in the database - Default: queue_jobs */
+  tableName?: string
+  /** specifies the schema name in the database - Default: undefined (no schema), uses default schema ( `public` ) */
+  schemaName?: string
+}
+
+export interface DrizzleAdapterProps {
+  /** used export name in the `schema.ts` file - Default: queueJobs  */
+  modelName?: string
+}
+
+export type AdapterKind = "prisma" | "drizzle" | "kysely"
+
+export type AdapterProps<T extends AdapterKind> = T extends "prisma"
+  ? PrismaAdapterProps
+  : T extends "kysely"
+    ? KyselyAdapterProps
+    : T extends "drizzle"
+      ? DrizzleAdapterProps
+      : never

@@ -46,9 +46,9 @@ const queue = new Queue(adapter)
 
 ## Supported providers
 
-- PGlite
-- Postgres.JS
-- Node Progress
+- PGlite - https://github.com/czeidler/kysely-pglite-dialect
+- Postgres.JS - https://github.com/kysely-org/kysely-postgres-js
+- Node Progress - https://kysely-org.github.io/kysely-apidoc/classes/PostgresDialect.html
 
 ## Database Setup
 
@@ -56,12 +56,8 @@ const queue = new Queue(adapter)
 
 The adapter includes a pre-defined migration:
 
-```typescript
-// migrations/queue-jobs.ts
-import { down, up } from "@vorsteh-queue/adapter-kysely/migrations"
-
-// Use in your schema file
-export { up, down }
+```typescript path="migrations/queue-jobs.ts"
+export { down, up } from "@vorsteh-queue/adapter-kysely/migrations"
 ```
 
 If you don't want to use the pre-defined schema, you can create your own migration.
@@ -70,8 +66,52 @@ If you don't want to use the pre-defined schema, you can create your own migrati
   source="./packages/adapter-kysely/src/migrations/queue_table.ts"
   language="ts"
   showToolbar={true}
-  path="queue-jobs.ts"
+  path="/migrations/queue-jobs.ts"
 />
+
+### Custom Table & Schema Names
+
+To create a table with custom name and schema, you can use the `createQueueJobsTable` helper, which will create the table without taking care about the field definitions:
+
+```typescript path="migrations/queue-jobs.ts"
+import { createQueueJobsTable } from "@vorsteh-queue/adapter-kysely"
+
+export const { up, down } = createQueueJobsTable(
+  // your custom table name
+  "custom_queue_jobs",
+  // your custom schema name
+  "custom_schema",
+)
+```
+
+To use the custom table and schema in the adapter, pass the adapter configuration to the `PostgresQueueAdapter`:
+
+```typescript
+import { Kysely } from "kysely"
+
+import type { QueueJobTableDefinition } from "@vorsteh-queue/adapter-kysely/types"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+
+interface DB {
+  custom_queue_jobs: QueueJobTableDefinition
+}
+
+const db = new Kysely<DB>({
+  //... your Kysely configuration
+})
+
+const adapter = new PostgresQueueAdapter(db, {
+  // Your custom schema name
+  schemaName: "custom_schema",
+  // Your custom table name
+  tableName: "custom_queue_jobs",
+})
+```
+
+<Note title="Want to see it in action?">
+  Checkout our kysely example with [custom schema and
+  table](/docs/examples/kysely-custom-schema-table/).
+</Note>
 
 ### Migration
 

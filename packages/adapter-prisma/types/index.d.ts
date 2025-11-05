@@ -2,6 +2,9 @@
  * Generic Prisma client interface - accepts a PrismaClient
  * Inspired by better-auth's approach: https://github.com/better-auth/better-auth/blob/main/packages/better-auth/src/adapters/prisma-adapter/prisma-adapter.ts
  */
+
+import type { Prisma } from "~/generated/prisma/client"
+
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface PrismaClient {}
 
@@ -37,7 +40,9 @@ export type PrismaClientInternal = Record<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   $transaction: <T>(callback: (tx: any) => Promise<T>, options?: any) => Promise<T>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $queryRaw: <T = unknown>(query: TemplateStringsArray, ...values: any[]) => Promise<T>
+  $queryRaw: <T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]) => Promise<T>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $executeRaw: (query: TemplateStringsArray, ...values: any[]) => Promise<number>
+  $queryRawUnsafe: <T = unknown>(query: string, ...values: any[]) => Promise<T>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $executeRaw: (query: TemplateStringsArray | Prisma.Sql, ...values: any[]) => Promise<number>
 }

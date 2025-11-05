@@ -5,7 +5,7 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "pnpm@10.19.0",
+  "packageManager": "pnpm@10.20.0",
   "author": {
     "name": "Marcus Reinhardt",
     "url": "https://github.com/noxify"
@@ -41,15 +41,15 @@
   },
   "devDependencies": {
     "@changesets/cli": "2.29.7",
-    "@vitest/coverage-v8": "4.0.4",
-    "@vitest/ui": "4.0.4",
+    "@vitest/coverage-v8": "4.0.7",
+    "@vitest/ui": "4.0.7",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "prettier": "^3.6.2",
-    "sherif": "1.7.0",
-    "turbo": "2.5.8",
+    "sherif": "1.8.0",
+    "turbo": "2.6.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.4"
+    "vitest": "^4.0.7"
   },
   "prettier": "@vorsteh-queue/prettier-config",
   "pnpm": {

@@ -12,8 +12,8 @@ runTests<PrismaClient>({
     const prismaAdapter = new PrismaPg({ connectionString: props.container.getConnectionUri() })
     return new PrismaClient({ adapter: prismaAdapter })
   },
-  initAdapter: (db) => {
-    return new PostgresQueueAdapter(db)
+  initAdapter: (db, adapterConfig) => {
+    return new PostgresQueueAdapter(db, adapterConfig)
   },
   migrate: async () => {
     try {
@@ -24,4 +24,14 @@ runTests<PrismaClient>({
       throw err
     }
   },
+  testCases: [
+    {
+      modelName: "customQueueJob",
+      tableName: "custom_queue_jobs",
+      schemaName: "custom_schema",
+      useDefault: false,
+      description: "custom table and schema",
+    },
+    { useDefault: true, description: "default table and schema" },
+  ],
 })

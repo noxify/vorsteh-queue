@@ -22,8 +22,8 @@ runTests<PostgresJsDatabase<typeof schema>>({
     })
     return drizzle(client, { schema })
   },
-  initAdapter: (db) => {
-    return new PostgresQueueAdapter(db)
+  initAdapter: (db, adapterConfig) => {
+    return new PostgresQueueAdapter(db, adapterConfig)
   },
   migrate: async (db) => {
     try {
@@ -43,4 +43,5 @@ runTests<PostgresJsDatabase<typeof schema>>({
       throw err
     }
   },
+  testCases: [{ useDefault: true, description: "default table and schema" }],
 })

@@ -1,0 +1,18 @@
+---
+title: Drizzle with custom schema & table
+navTitle: Drizzle with custom schema & table
+description: Demonstrates Vorsteh Queue with Drizzle ORM and postgres.js driver. Uses custom schema and table names for queue jobs.
+---
+
+## Setup
+
+Use the CLI to create this example:
+
+```bash
+npx create-vorsteh-queue@latest my-project --template drizzle-custom-schema-table
+cd my-project
+cp .env.example .env
+# Edit .env with your PostgreSQL database URL
+pnpm db:push
+pnpm dev
+```

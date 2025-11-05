@@ -1,0 +1,25 @@
+{
+  "name": "kysely-custom-schema-table",
+  "version": "1.0.0",
+  "description": "Advanced Vorsteh Queue example using kysely with postgres.js and a custom schema and table name.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm with-env tsx src/index.ts",
+    "db:push": "pnpm with-env kysely migrate:latest",
+    "with-env": "dotenv -e .env --"
+  },
+  "dependencies": {
+    "@vorsteh-queue/adapter-kysely": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "kysely": "^0.28.8",
+    "kysely-postgres-js": "^3.0.0",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "dotenv-cli": "11.0.0",
+    "kysely-ctl": "^0.19.0",
+    "tsx": "4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

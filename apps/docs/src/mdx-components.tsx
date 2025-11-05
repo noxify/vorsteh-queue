@@ -129,7 +129,7 @@ export function useMDXComponents() {
       return (
         <Alert variant={"default"} className="my-4">
           {title && <AlertTitle>{title}</AlertTitle>}
-          <AlertDescription>{children}</AlertDescription>
+          <AlertDescription className="block">{children}</AlertDescription>
         </Alert>
       )
     },
@@ -137,7 +137,7 @@ export function useMDXComponents() {
       return (
         <Alert variant={"destructive"} className="my-4">
           {title && <AlertTitle>{title}</AlertTitle>}
-          <AlertDescription>{children}</AlertDescription>
+          <AlertDescription className="block">{children}</AlertDescription>
         </Alert>
       )
     },
