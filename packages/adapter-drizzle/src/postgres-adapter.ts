@@ -1,4 +1,5 @@
 import type { NodePgDatabase } from "drizzle-orm/node-postgres"
+import type { PgTable } from "drizzle-orm/pg-core"
 import type { PgliteDatabase } from "drizzle-orm/pglite"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { and, asc, count, eq, lte, sql } from "drizzle-orm"
@@ -8,24 +9,25 @@ import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import type * as schema from "./postgres-schema"
 
-type DrizzleDatabase =
-  | NodePgDatabase<typeof schema>
-  | PostgresJsDatabase<typeof schema>
-  | PgliteDatabase<typeof schema>
+type FullSchema = typeof schema
 
-function getModelByModelName<TDb extends DrizzleDatabase = DrizzleDatabase>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DrizzleDatabase = NodePgDatabase<any> | PostgresJsDatabase<any> | PgliteDatabase<any>
+
+function getModelByModelName<TModel extends Record<string, PgTable>, TDb extends DrizzleDatabase>(
   db: TDb,
-  modelName: string,
+  modelName: keyof TModel,
 ) {
-  const schema = db._.fullSchema[modelName as keyof typeof db._.fullSchema]
-
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (!schema) {
-    throw new Error(`Model with name ${modelName} not found in database schema`)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+  const model = db._.fullSchema[modelName]
+  if (!model) {
+    throw new Error(`Model with name ${String(modelName)} not found in database schema`)
   }
-  return schema
-}
 
+  // to keep the type-safety internally, we're set the type manually
+  // this has no impact on runtime, but helps while developing/customizing the adapter
+  return model as FullSchema["queueJobs"]
+}
 /**
  * PostgreSQL adapter for the queue system using Drizzle ORM.
  * Supports PostgreSQL databases through Drizzle ORM with node-postgres, postgres.js, or PGlite.
@@ -68,6 +70,7 @@ export class PostgresQueueAdapter<
     this.tableName = adapterConfig?.tableName
     this.schemaName = adapterConfig?.schemaName
 
+    // Get the model based on the provided model name
     this.model = getModelByModelName(db, adapterConfig?.modelName ?? "queueJobs")
   }
 
@@ -82,7 +85,7 @@ export class PostgresQueueAdapter<
   async addJob<TJobPayload, TJobResult = unknown>(
     job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
   ): Promise<BaseJob<TJobPayload, TJobResult>> {
-    const [result] = await this.db
+    const [result] = (await this.db
       .insert(this.model)
       .values({
         queueName: this.queueName,
@@ -99,7 +102,7 @@ export class PostgresQueueAdapter<
         repeatCount: job.repeatCount,
         timeout: job.timeout,
       })
-      .returning()
+      .returning()) as [schema.QueueJob | undefined]
 
     if (!result) {
       throw new Error("Failed to create job")
@@ -156,6 +159,7 @@ export class PostgresQueueAdapter<
     await this.db
       .update(this.model)
       .set({ attempts: sql`${this.model.attempts} + 1` })
+
       .where(eq(this.model.id, id))
   }
 
@@ -166,6 +170,7 @@ export class PostgresQueueAdapter<
     await this.db
       .update(this.model)
       .set({ progress: normalizedProgress })
+
       .where(eq(this.model.id, id))
   }
 
@@ -176,7 +181,9 @@ export class PostgresQueueAdapter<
         count: count(),
       })
       .from(this.model)
+
       .where(eq(this.model.queueName, this.queueName))
+
       .groupBy(this.model.status)
 
     const result = {
@@ -213,8 +220,10 @@ export class PostgresQueueAdapter<
   async cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
     // Get jobs to delete (all except the most recent N)
     const jobsToDelete = await this.db
+
       .select({ id: this.model.id })
       .from(this.model)
+
       .where(and(eq(this.model.queueName, this.queueName), eq(this.model.status, status)))
       .orderBy(sql`${this.model.createdAt} DESC`)
       .offset(keepCount)
@@ -242,6 +251,7 @@ export class PostgresQueueAdapter<
     const [result] = await this.db
       .select({ count: count() })
       .from(this.model)
+
       .where(and(eq(this.model.queueName, this.queueName), eq(this.model.status, "pending")))
 
     return Number(result?.count ?? 0)
@@ -254,10 +264,13 @@ export class PostgresQueueAdapter<
       .where(
         and(
           eq(this.model.queueName, this.queueName),
+
           eq(this.model.status, "pending"),
+
           eq(this.model.name, handlerName),
         ),
       )
+
       .orderBy(asc(this.model.priority), asc(this.model.createdAt))
       .limit(count)
       .for("update", { skipLocked: true })
@@ -265,8 +278,9 @@ export class PostgresQueueAdapter<
     // BatchJob omits scheduling fields, so we strip them
     return jobs.map((job) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { cron, repeatEvery, repeatLimit, repeatCount, processAt, ...rest } =
-        this.transformJob(job)
+      const { cron, repeatEvery, repeatLimit, repeatCount, processAt, ...rest } = this.transformJob(
+        job as schema.QueueJob,
+      )
       return rest
     })
   }
@@ -282,27 +296,32 @@ export class PostgresQueueAdapter<
       .where(
         and(
           eq(this.model.queueName, this.queueName),
+
           eq(this.model.status, "delayed"),
+
           lte(this.model.processAt, now),
         ),
       )
+
       .orderBy(asc(this.model.priority), asc(this.model.createdAt))
       .limit(1)
       .for("update", { skipLocked: true })
 
-    return job ? this.transformJob(job) : null
+    return job ? this.transformJob(job as schema.QueueJob) : null
   }
 
   protected async getPendingJobByPriority(): Promise<BaseJob | null> {
     const [job] = await this.db
       .select()
       .from(this.model)
+
       .where(and(eq(this.model.queueName, this.queueName), eq(this.model.status, "pending")))
+
       .orderBy(asc(this.model.priority), asc(this.model.createdAt))
       .limit(1)
       .for("update", { skipLocked: true })
 
-    return job ? this.transformJob(job) : null
+    return job ? this.transformJob(job as schema.QueueJob) : null
   }
 
   private transformJob(job: schema.QueueJob): BaseJob {
