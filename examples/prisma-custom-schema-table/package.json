@@ -1,7 +1,7 @@
 {
-  "name": "prisma-client-example",
+  "name": "prisma-custom-schema-table",
   "version": "1.0.0",
-  "description": "Vorsteh Queue example using Prisma with prisma-client provider and PostgreSQL (TypeScript generation)",
+  "description": "Vorsteh Queue example using Prisma with prisma-client provider and PostgreSQL (TypeScript generation) with a custom schema and table name.",
   "private": true,
   "type": "module",
   "scripts": {
