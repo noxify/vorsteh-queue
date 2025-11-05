@@ -1,0 +1,25 @@
+{
+  "name": "drizzle-custom-schema-table",
+  "version": "1.0.0",
+  "description": "Advanced Vorsteh Queue example using Drizzle ORM with postgres.js and custom schema and table names.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm with-env tsx src/index.ts",
+    "db:push": "pnpm with-env drizzle-kit push",
+    "db:migrate": "pnpm with-env drizzle-kit migrate",
+    "with-env": "dotenv -e .env --"
+  },
+  "dependencies": {
+    "@vorsteh-queue/adapter-drizzle": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "drizzle-orm": "^0.44.7",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "dotenv-cli": "11.0.0",
+    "drizzle-kit": "^0.31.6",
+    "tsx": "4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
