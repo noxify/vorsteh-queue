@@ -1,5 +1,13 @@
 # @vorsteh-queue/core
 
+## 0.5.0
+
+### Minor Changes
+
+- aa22a40: **Dynamic Schema & Table Names**
+  - All adapters (Drizzle, Kysely, Prisma) now support configurable schema and table names for queue jobs.
+  - Enables an easier integration in existing DB setups.
+
 ## 0.4.0
 
 ### Minor Changes
