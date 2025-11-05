@@ -4,7 +4,14 @@ import type { PgliteDatabase } from "drizzle-orm/pglite"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { and, asc, count, eq, lte, sql } from "drizzle-orm"
 
-import type { BaseJob, BatchJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import type {
+  AdapterProps,
+  BaseJob,
+  BatchJob,
+  JobStatus,
+  QueueStats,
+  SerializedError,
+} from "@vorsteh-queue/core"
 import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import type * as schema from "./postgres-schema"
@@ -48,27 +55,17 @@ export class PostgresQueueAdapter<
   TDb extends DrizzleDatabase = DrizzleDatabase,
 > extends BaseQueueAdapter {
   private db: TDb
-  private tableName?: string
-  private schemaName?: string
+
   private model: ReturnType<typeof getModelByModelName>
   /**
    * Create a new PostgreSQL queue adapter.
    *
    * @param db Drizzle PostgreSQL database instance
    */
-  constructor(
-    db: TDb,
-    adapterConfig?: {
-      modelName?: string
-      tableName?: string
-      schemaName?: string
-    },
-  ) {
+  constructor(db: TDb, adapterConfig?: AdapterProps<"drizzle">) {
     super()
 
     this.db = db
-    this.tableName = adapterConfig?.tableName
-    this.schemaName = adapterConfig?.schemaName
 
     // Get the model based on the provided model name
     this.model = getModelByModelName(db, adapterConfig?.modelName ?? "queueJobs")

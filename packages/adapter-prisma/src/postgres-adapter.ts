@@ -1,4 +1,11 @@
-import type { BaseJob, BatchJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import type {
+  AdapterProps,
+  BaseJob,
+  BatchJob,
+  JobStatus,
+  QueueStats,
+  SerializedError,
+} from "@vorsteh-queue/core"
 import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import type { PrismaClient, PrismaClientInternal } from "../types"
@@ -28,13 +35,10 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   /**
    * Create a new PostgreSQL Prisma queue adapter.
    */
-  constructor(
-    prisma: PrismaClient,
-    adapterConfig?: { modelName?: string; tableName?: string; schemaName?: string },
-  ) {
+  constructor(prisma: PrismaClient, adapterConfig?: AdapterProps<"prisma">) {
     super()
     this.db = prisma as PrismaClientInternal
-    this.modelName = adapterConfig?.modelName ?? "queueJob"
+    this.modelName = adapterConfig?.modelName ?? "QueueJob"
     this.tableName = adapterConfig?.tableName ?? "queue_jobs"
     this.schemaName = adapterConfig?.schemaName
   }

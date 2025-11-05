@@ -5,7 +5,6 @@
   "description": "Shared tests for Vorsteh Queue adapters",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./*": "./src/*.ts",
     "./tests/*": "./src/tests/*.ts"
   },

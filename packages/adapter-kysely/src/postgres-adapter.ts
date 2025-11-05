@@ -1,7 +1,14 @@
 import type { Kysely } from "kysely"
 import { sql } from "kysely"
 
-import type { BaseJob, BatchJob, JobStatus, QueueStats, SerializedError } from "@vorsteh-queue/core"
+import type {
+  AdapterProps,
+  BaseJob,
+  BatchJob,
+  JobStatus,
+  QueueStats,
+  SerializedError,
+} from "@vorsteh-queue/core"
 import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
 
 import type { DB, InsertQueueJobValue, QueueJob } from "./types"
@@ -61,11 +68,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   constructor(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     db: Kysely<any>,
-    adapterConfig?: {
-      modelName?: string
-      tableName?: string
-      schemaName?: string
-    },
+    adapterConfig?: AdapterProps<"kysely">,
   ) {
     super()
 

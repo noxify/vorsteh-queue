@@ -20,6 +20,8 @@ export type {
   QueueEvents,
   QueueStats,
   SerializedError,
+  AdapterProps,
+  AdapterKind,
 } from "../types"
 
 export { asUtc } from "./utils/scheduler"
