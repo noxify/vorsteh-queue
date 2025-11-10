@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "typescript": "^5.9.3"
+    "typescript": "5.9.3"
   },
   "prettier": "@vorsteh-queue/prettier-config"
 }
