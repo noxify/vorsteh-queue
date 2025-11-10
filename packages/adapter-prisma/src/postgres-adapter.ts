@@ -167,6 +167,29 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     return result
   }
 
+  async getQueueJobs(): Promise<BaseJob[]> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const jobs = (await this.db[this.modelName]!.findMany({
+      where: { queueName: this.queueName },
+      orderBy: { createdAt: "desc" },
+    })) as QueueJob[]
+
+    return jobs.map((job) => this.transformJob(job))
+  }
+
+  async getJobDetails(id: string): Promise<BaseJob> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const job = (await this.db[this.modelName]!.findFirst({
+      where: { id },
+    })) as QueueJob | null
+
+    if (!job) {
+      throw new Error(`Job with ID ${id} not found in queue ${this.queueName}`)
+    }
+
+    return this.transformJob(job)
+  }
+
   async clearJobs(status?: JobStatus): Promise<number> {
     const where: Record<string, unknown> = { queueName: this.queueName }
     if (status) where.status = status

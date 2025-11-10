@@ -69,11 +69,11 @@
     "eslint": "^9.39.1",
     "prettier": "^3.6.2",
     "prisma": "^6.19.0",
-    "rolldown": "1.0.0-beta.47",
+    "rolldown": "1.0.0-beta.49",
     "rollup-plugin-delete": "^3.0.1",
     "testcontainers": "^11.8.0",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.7"
+    "typescript": "5.9.3",
+    "vitest": "^4.0.8"
   },
   "peerDependencies": {
     "@prisma/client": ">=6.1.0"
