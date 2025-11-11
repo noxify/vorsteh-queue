@@ -226,6 +226,10 @@ export interface QueueAdapter {
 
   /** @internal Set the queue name for job isolation */
   setQueueName(queueName: string): void
+
+  getQueueJobs(): Promise<BaseJob[]>
+
+  getJobDetails(id: string): Promise<BaseJob>
 }
 
 /**

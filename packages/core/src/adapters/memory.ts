@@ -120,6 +120,20 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     return Promise.resolve(stats)
   }
 
+  getQueueJobs(): Promise<BaseJob[]> {
+    return Promise.resolve(Array.from(this.jobs.values()))
+  }
+
+  getJobDetails(id: string): Promise<BaseJob> {
+    {
+      const job = this.jobs.get(id)
+      if (!job) {
+        return Promise.reject(new Error(`Job with ID ${id} not found`))
+      }
+      return Promise.resolve(job)
+    }
+  }
+
   clearJobs(status?: JobStatus): Promise<number> {
     if (!status) {
       const count = this.jobs.size

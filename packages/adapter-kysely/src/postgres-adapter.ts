@@ -225,6 +225,30 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     return result
   }
 
+  async getQueueJobs(): Promise<BaseJob[]> {
+    const jobs = await this.customDbClient
+      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+      .execute()
+
+    return jobs.map((job) => this.transformJob(job))
+  }
+
+  async getJobDetails(id: string): Promise<BaseJob> {
+    const job = await this.customDbClient
+      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+      .where("id", "=", id)
+      .executeTakeFirst()
+
+    if (!job) {
+      throw new Error(`Job with ID ${id} not found in queue ${this.queueName}`)
+    }
+    return this.transformJob(job)
+  }
+
   async clearJobs(status?: JobStatus): Promise<number> {
     const query = this.customDbClient
       .deleteFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")

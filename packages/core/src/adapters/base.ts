@@ -80,6 +80,21 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   abstract getQueueStats(): Promise<QueueStats>
 
   /**
+   * Get all jobs in the queue
+   *
+   * @returns Promise resolving to an array of all jobs in the queue
+   */
+  abstract getQueueJobs(): Promise<BaseJob[]>
+
+  /**
+   * Get detailed information about a specific job by ID
+   *
+   * @param id Job ID to retrieve
+   * @returns Promise resolving to the job details
+   */
+  abstract getJobDetails(id: string): Promise<BaseJob>
+
+  /**
    * Clear jobs from the queue
    *
    * @param status Optional status filter, clears all jobs if not provided

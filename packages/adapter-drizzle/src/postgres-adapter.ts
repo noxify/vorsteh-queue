@@ -198,6 +198,28 @@ export class PostgresQueueAdapter<
     return result
   }
 
+  async getQueueJobs(): Promise<BaseJob[]> {
+    const jobs = await this.db
+      .select()
+      .from(this.model)
+      .where(eq(this.model.queueName, this.queueName))
+
+    return jobs.map((job) => this.transformJob(job as schema.QueueJob))
+  }
+
+  async getJobDetails(id: string): Promise<BaseJob> {
+    const [job] = await this.db
+      .select()
+      .from(this.model)
+      .where(and(eq(this.model.queueName, this.queueName), eq(this.model.id, id)))
+
+    if (!job) {
+      throw new Error(`Job with ID ${id} not found in queue ${this.queueName}`)
+    }
+
+    return this.transformJob(job as schema.QueueJob)
+  }
+
   async clearJobs(status?: JobStatus): Promise<number> {
     const conditions = [eq(this.model.queueName, this.queueName)]
     if (status) {

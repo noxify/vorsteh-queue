@@ -21,6 +21,6 @@
     "postgres": "^3.4.7",
     "prettier": "^3.6.2",
     "testcontainers": "^11.8.0",
-    "vitest": "^4.0.7"
+    "vitest": "^4.0.8"
   }
 }

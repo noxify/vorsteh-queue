@@ -352,6 +352,25 @@ export class Queue {
   }
 
   /**
+   * Get all jobs in the queue.
+   *
+   * @return Promise resolving to an array of all jobs in the queue
+   */
+  async getQueueJobs(): Promise<BaseJob[]> {
+    return this.adapter.getQueueJobs()
+  }
+
+  /**
+   * Get detailed information about a specific job by ID.
+   *
+   * @param id Job ID to retrieve
+   * @return Promise resolving to the job details
+   */
+  async getJobDetails(id: string): Promise<BaseJob> {
+    return this.adapter.getJobDetails(id)
+  }
+
+  /**
    * Returns the batch config for processing jobs in batches.
    */
   private getBatchConfig(): { minSize: number; maxSize: number; waitFor: number } {
