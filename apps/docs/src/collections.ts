@@ -1,21 +1,24 @@
 // import type { FileSystemEntry } from "renoun/file-system"
 import type { z } from "zod"
 import { cache } from "react"
-import { Collection, Directory, isDirectory, isFile, withSchema } from "renoun/file-system"
+import { Collection, Directory, isDirectory, isFile } from "renoun/file-system"
 
 import type { frontmatterSchema } from "./validations"
 import { removeFromArray } from "./lib/utils"
 import { docSchema, featuresSchema } from "./validations"
 
+export type Frontmatter = z.infer<typeof frontmatterSchema>
+
 export const features = new Directory({
   path: "content/features",
   filter: "*.mdx",
-
+  schema: {
+    mdx: {
+      frontmatter: featuresSchema,
+    },
+  },
   loader: {
-    mdx: withSchema(
-      { frontmatter: featuresSchema },
-      (path) => import(`../content/features/${path}.mdx`),
-    ),
+    mdx: (path) => import(`../content/features/${path}.mdx`),
   },
 })
 
@@ -30,10 +33,12 @@ export const DocumentationDirectory = new Directory({
     baseUrl: "https://github.com",
   },
   // hide hidden files ( starts with `_` ) and all asset directories ( `_assets` )
-  filter: (entry) =>
-    !entry.getBaseName().startsWith("_") && !entry.getAbsolutePath().includes("_assets"),
+  filter: (entry) => !entry.baseName.startsWith("_") && !entry.absolutePath.includes("_assets"),
+  schema: {
+    mdx: docSchema,
+  },
   loader: {
-    mdx: withSchema(docSchema, (path) => import(`../content/docs/${path}.mdx`)),
+    mdx: (path) => import(`../content/docs/${path}.mdx`),
   },
 })
 
@@ -49,18 +54,21 @@ export const ExampleDirectory = new Directory({
   },
   filter: (entry) => {
     return (
-      !entry.getBaseName().startsWith("_") &&
-      !entry.getBaseName().startsWith(".") &&
-      !entry.getAbsolutePath().includes("_assets") &&
+      !entry.baseName.startsWith("_") &&
+      !entry.baseName.startsWith(".") &&
+      !entry.absolutePath.includes("_assets") &&
       // do not fetch all files in the example
       // `depth == 0` - include the root `examples/readme.mdx`
       // `depth == 1` - include only the `examples/<example>/readme.mdx
-      (entry.getDepth() == 1 || entry.getDepth() == 0) &&
+      (entry.depth == 1 || entry.depth == 0) &&
       (isDirectory(entry) || isFile(entry, "mdx"))
     )
   },
+  schema: {
+    mdx: docSchema,
+  },
   loader: {
-    mdx: withSchema(docSchema, (path) => import(`../../../examples/${path}.mdx`)),
+    mdx: (path) => import(`../../../examples/${path}.mdx`),
   },
 })
 
@@ -84,8 +92,8 @@ export function getTitle(
   includeTitle = false,
 ): string {
   return includeTitle
-    ? (frontmatter.navTitle ?? frontmatter.title ?? entry.getTitle())
-    : (frontmatter.navTitle ?? entry.getTitle())
+    ? (frontmatter.navTitle ?? frontmatter.title ?? entry.title)
+    : (frontmatter.navTitle ?? entry.title)
 }
 
 /**
@@ -98,13 +106,13 @@ export function getTitle(
  * @returns
  */
 export async function getSections(source: EntryType) {
-  if (source.getDepth() > -1) {
+  if (source.depth > -1) {
     if (isDirectory(source)) {
       const parent = await (await getDirectory(source)).getEntries()
       return await Promise.all(parent.map(async (ele) => await getTransformedEntry(ele)))
     }
 
-    if (isFile(source) && source.getBaseName() === "index") {
+    if (isFile(source) && source.baseName === "index") {
       const parent = await (await getDirectory(source.getParent())).getEntries()
       return await Promise.all(parent.map(async (ele) => await getTransformedEntry(ele)))
     }
@@ -152,7 +160,7 @@ export const getBreadcrumbItems = async (slug: string[] = []) => {
  * @param entry {EntryType} the entry to check for visibility
  */
 export function isHidden(entry: EntryType) {
-  return entry.getBaseName().startsWith("_")
+  return entry.baseName.startsWith("_")
 }
 
 /**
@@ -218,7 +226,7 @@ export async function getDirectory(source: EntryType) {
  * @returns The frontmatter metadata if it exists
  */
 export async function getMetadata(source: Awaited<ReturnType<typeof getFile>>) {
-  return await source?.getExportValue("frontmatter")
+  return (await source?.getExportValue("frontmatter")) as Frontmatter | undefined
 }
 
 /**
@@ -264,8 +272,8 @@ export async function getTransformedEntry(source: EntryType) {
     raw_pathname: source.getPathname({ includeBasePathname: true }),
     pathname: source.getPathname({ includeBasePathname: false }),
     segments: source.getPathnameSegments({ includeBasePathname: true }),
-    title: metadata ? getTitle(source, metadata, true) : source.getTitle(),
-    path: source.getAbsolutePath(),
+    title: metadata ? getTitle(source, metadata, true) : source.title,
+    path: source.absolutePath,
     entry: source,
     file,
     isDirectory: isDirectory(source),
@@ -273,18 +281,47 @@ export async function getTransformedEntry(source: EntryType) {
 }
 
 /**
+ * Recursively builds a flat list of all entries in the documentation.
+ * Traverses the entry tree and filters out hidden entries (those starting with underscore).
+ *
+ * @param entry - The root entry to start flattening from
+ * @returns Promise resolving to a flat array of all visible entries in the tree
+ */
+export async function flattenEntries(entry: EntryType): Promise<EntryType[]> {
+  if (isHidden(entry)) {
+    return []
+  }
+
+  const entries: EntryType[] = [entry]
+
+  if ("getEntries" in entry) {
+    const children = await entry.getEntries()
+    const childEntries = await Promise.all(children.map((child) => flattenEntries(child)))
+    entries.push(...childEntries.flat())
+  }
+
+  return entries
+}
+
+/**
  * Caches and returns an array of transformed entries from the AllDocumentation collection
  * Recursively gets all entries including index and readme files and transforms them
  */
 export const transformedEntries = cache(async () => {
-  const entries = await AllDocumentation.getEntries({
-    recursive: true,
+  const collections = await AllDocumentation.getEntries({
+    recursive: false,
     includeIndexAndReadmeFiles: true,
   })
 
-  return await Promise.all(
-    entries.map(async (doc) => {
-      return await getTransformedEntry(doc)
-    }),
-  )
+  // Flatten all entries from all collections
+  const allEntries: EntryType[] = []
+  for (const collection of collections) {
+    const flattened = await flattenEntries(collection)
+    allEntries.push(...flattened)
+  }
+
+  // Transform to serializable format
+  const entries = await Promise.all(allEntries.map((entry) => getTransformedEntry(entry)))
+
+  return entries
 })

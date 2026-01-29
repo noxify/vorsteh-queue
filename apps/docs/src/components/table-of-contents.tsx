@@ -67,7 +67,7 @@ export function MobileTableOfContents({ toc }: TocProps) {
   return (
     <div
       className={cn(
-        "fixed top-16 left-0 z-20 h-[calc(theme(height.12)+1px)] w-full border-b bg-background px-2 py-2.5 lg:left-[20rem] lg:w-[calc(theme(width.full)-20rem)]",
+        "fixed top-16 left-0 z-20 h-[calc(theme(height.12)+1px)] w-full border-b bg-background px-2 py-2.5 lg:left-80 lg:w-[calc(theme(width.full)-20rem)]",
         {
           "lg:hidden": filteredToc.length === 0,
           "xl:hidden": filteredToc.length > 0,

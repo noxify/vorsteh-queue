@@ -5,7 +5,7 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "pnpm@10.20.0",
+  "packageManager": "pnpm@10.28.2",
   "author": {
     "name": "Marcus Reinhardt",
     "url": "https://github.com/noxify"
@@ -40,16 +40,16 @@
     "ci:version": "pnpm changeset version && pnpm install --no-frozen-lockfile && git add ."
   },
   "devDependencies": {
-    "@changesets/cli": "2.29.7",
-    "@vitest/coverage-v8": "4.0.7",
-    "@vitest/ui": "4.0.7",
+    "@changesets/cli": "2.29.8",
+    "@vitest/coverage-v8": "4.0.18",
+    "@vitest/ui": "4.0.18",
     "@vorsteh-queue/prettier-config": "workspace:*",
-    "prettier": "^3.6.2",
-    "sherif": "1.8.0",
-    "turbo": "2.6.0",
+    "prettier": "^3.8.1",
+    "sherif": "1.10.0",
+    "turbo": "2.8.0",
     "typescript": "^5.9.3",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.7"
+    "vite-tsconfig-paths": "^6.0.5",
+    "vitest": "^4.0.18"
   },
   "prettier": "@vorsteh-queue/prettier-config",
   "pnpm": {

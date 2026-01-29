@@ -71,11 +71,11 @@
     "@vorsteh-queue/eslint-config": "workspace:*",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.39.1",
-    "rolldown": "1.0.0-beta.47",
-    "rollup-plugin-delete": "^3.0.1",
+    "eslint": "^9.39.2",
+    "rolldown": "1.0.0-rc.2",
+    "rollup-plugin-delete": "^3.0.2",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.7"
+    "vitest": "^4.0.18"
   },
   "publishConfig": {
     "exports": {

@@ -6,7 +6,7 @@ import type { MDXComponents } from "renoun/mdx"
 import Image from "next/image"
 import Link from "next/link"
 import { ExternalLinkIcon } from "lucide-react"
-import { CodeBlock, CodeInline, Command } from "renoun/components"
+import { CodeBlock, Command } from "renoun/components"
 
 import { Heading } from "~/components/heading"
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert"
@@ -114,7 +114,6 @@ export function useMDXComponents() {
       </section>
     ),
 
-    CodeInline,
     CodeBlock,
     Command,
 

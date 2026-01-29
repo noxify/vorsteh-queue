@@ -8,7 +8,7 @@ const withMDX = createMDXPlugin({
       "rehype-mdx-import-media",
     ],
     remarkPlugins: [
-      "@renoun/mdx/remark/add-headings",
+      "@renoun/mdx/remark/add-sections",
       "remark-frontmatter",
       "remark-mdx-frontmatter",
       "remark-squeeze-paragraphs",

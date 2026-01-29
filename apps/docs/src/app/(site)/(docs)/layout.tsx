@@ -23,7 +23,7 @@ export default async function DocsLayout(props: LayoutProps<"/">) {
   // it's used to provide a short link for the user to switch easily between the different collections
   // it expects an `index.mdx` file in each collection at the root level ( e.g. `aria-docs/index.mdx`)
 
-  const tree = recursiveCollections.filter((ele) => ele.getDepth() === 0)
+  const tree = recursiveCollections.filter((ele) => ele.depth === 0)
 
   const sidebarItems = await getTree(tree)
 

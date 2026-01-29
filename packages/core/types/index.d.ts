@@ -24,8 +24,10 @@ export type BatchJobHandler<TJobPayload = unknown, TJobResult = unknown> = (
  * @template TJobPayload Type of the job payload
  * @template TJobResult Type of the job result
  */
-export interface BatchJobWithProgress<TJobPayload = unknown, TJobResult = unknown>
-  extends BaseJob<TJobPayload, TJobResult> {
+export interface BatchJobWithProgress<TJobPayload = unknown, TJobResult = unknown> extends BaseJob<
+  TJobPayload,
+  TJobResult
+> {
   updateProgress(value: number): Promise<void>
 }
 // Using built-in TypeScript utility instead of type-fest
@@ -188,8 +190,10 @@ export type JobHandler<TJobPayload = unknown, TJobResult = unknown> = (
  * @template TJobPayload Type of the job payload
  * @template TJobResult Type of the job result
  */
-export interface JobWithProgress<TJobPayload = unknown, TJobResult = unknown>
-  extends BaseJob<TJobPayload, TJobResult> {
+export interface JobWithProgress<TJobPayload = unknown, TJobResult = unknown> extends BaseJob<
+  TJobPayload,
+  TJobResult
+> {
   updateProgress(value: number): Promise<void>
 }
 
