@@ -84,7 +84,7 @@ function CollapsibleItem({ pathname, item }: { pathname: string; item: TreeItem 
             {current({ pathname, item }) && item.depth > 1 && (
               <div
                 aria-hidden="true"
-                className="absolute top-0 bottom-0 -left-[9px] z-50 w-[1px] bg-indigo-400"
+                className="absolute top-0 bottom-0 -left-[9px] z-50 w-px bg-indigo-400"
               ></div>
             )}
             <div className="line-clamp-1 pr-6">{item.title}</div>
@@ -127,7 +127,7 @@ function CollapsibleItem({ pathname, item }: { pathname: string; item: TreeItem 
                     {current({ pathname, item: subItem }) && (
                       <div
                         aria-hidden="true"
-                        className="absolute top-0 bottom-0 -left-[9px] z-50 w-[1px] bg-orange-primary"
+                        className="absolute top-0 bottom-0 -left-[9px] z-50 w-px bg-orange-primary"
                       ></div>
                     )}
                     <div className="line-clamp-1">{subItem.title}</div>

@@ -17,13 +17,19 @@ export async function FileContent({
 }) {
   if (!transformedEntry.file) return notFound()
 
-  const [Content, frontmatter, headings, breadcrumbItems, sections] = await Promise.all([
+  const [Content, frontmatter, headingSections, breadcrumbItems, sections] = await Promise.all([
     transformedEntry.file.getExportValue("default"),
     getMetadata(transformedEntry.file),
-    transformedEntry.file.getExportValue("headings"),
+    transformedEntry.file.getSections(),
     getBreadcrumbItems(transformedEntry.segments),
     getSections(transformedEntry.entry),
   ])
+
+  const headings = headingSections.map((section) => ({
+    id: section.id,
+    text: section.title,
+    level: section.depth,
+  }))
 
   const pagefindProps = !frontmatter?.ignoreSearch
     ? {

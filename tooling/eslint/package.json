@@ -15,22 +15,22 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@eslint/compat": "1.4.1",
-    "@next/eslint-plugin-next": "16.0.1",
-    "eslint-config-turbo": "2.6.0",
+    "@eslint/compat": "2.0.1",
+    "@next/eslint-plugin-next": "16.1.6",
+    "eslint-config-turbo": "2.8.0",
     "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-package-json": "0.64.0",
+    "eslint-plugin-package-json": "0.88.2",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.0.1",
-    "jsonc-eslint-parser": "2.4.1",
-    "typescript-eslint": "8.46.3"
+    "jsonc-eslint-parser": "2.4.2",
+    "typescript-eslint": "8.54.0"
   },
   "devDependencies": {
-    "@eslint/js": "9.39.1",
+    "@eslint/js": "9.39.2",
     "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.39.1",
-    "prettier": "^3.6.2",
+    "eslint": "^9.39.2",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   },
   "prettier": "@vorsteh-queue/prettier-config"

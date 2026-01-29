@@ -1,6 +1,6 @@
 import { isDirectory, isFile } from "renoun/file-system"
 
-import type { EntryType } from "~/collections"
+import type { EntryType, Frontmatter } from "~/collections"
 import { getFile } from "~/collections"
 
 export interface TreeItem {
@@ -18,7 +18,7 @@ export interface TreeItem {
  * @param entry {EntryType} the entry to check for visibility
  */
 export function isHidden(entry: EntryType) {
-  return entry.getBaseName().startsWith("_")
+  return entry.baseName.startsWith("_")
 }
 
 // source:
@@ -29,16 +29,16 @@ async function buildTreeNavigation(entry: EntryType): Promise<TreeItem | null> {
   }
   if (isDirectory(entry)) {
     const file = await getFile(entry)
-    let frontmatter = null
+    let frontmatter: Frontmatter | undefined = undefined
     if (file) {
-      frontmatter = await file.getExportValue("frontmatter")
+      frontmatter = (await file.getExportValue("frontmatter")) as Frontmatter | undefined
     }
     return {
-      title: frontmatter?.navTitle ?? entry.getTitle(),
+      title: frontmatter?.navTitle ?? entry.title,
       path: `${entry.getPathname()}`,
       isFile: isFile(entry),
       slug: entry.getPathnameSegments(),
-      depth: entry.getDepth(),
+      depth: entry.depth,
       children: isDirectory(entry)
         ? (
             await Promise.all(((await entry.getEntries()) as EntryType[]).map(buildTreeNavigation))
@@ -51,13 +51,13 @@ async function buildTreeNavigation(entry: EntryType): Promise<TreeItem | null> {
       return null
     }
 
-    const frontmatter = await file.getExportValue("frontmatter")
+    const frontmatter = (await file.getExportValue("frontmatter")) as Frontmatter | undefined
     return {
-      title: frontmatter.navTitle ?? entry.getTitle(),
+      title: frontmatter?.navTitle ?? entry.title,
       path: `${entry.getPathname()}`,
       isFile: isFile(entry),
       slug: entry.getPathnameSegments(),
-      depth: entry.getDepth(),
+      depth: entry.depth,
       children: [],
     }
   }
