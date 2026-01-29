@@ -29,6 +29,7 @@ jobs:
         uses: changesets/action@v1
         with:
           version: pnpm ci:version
-          publish: NODE_AUTH_TOKEN="" pnpm ci:publish
+          publish: pnpm ci:publish
         env:
           GITHUB_TOKEN: ${{ secrets.CHANGESETS_TOKEN }}
+          NPM_TOKEN: ""
