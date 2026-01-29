@@ -1,5 +1,11 @@
 # create-vorsteh-queue
 
+## 0.1.7
+
+### Patch Changes
+
+- 5c2119d: update dependencies
+
 ## 0.1.6
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @vorsteh-queue/adapter-kysely
 
+## 0.3.1
+
+### Patch Changes
+
+- 5c2119d: update dependencies
+- Updated dependencies [5c2119d]
+  - @vorsteh-queue/core@0.5.1
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @vorsteh-queue/adapter-drizzle
 
+## 0.5.1
+
+### Patch Changes
+
+- 5c2119d: update dependencies
+- Updated dependencies [5c2119d]
+  - @vorsteh-queue/core@0.5.1
+
 ## 0.5.0
 
 ### Minor Changes
