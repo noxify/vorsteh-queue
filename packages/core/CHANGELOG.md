@@ -1,5 +1,11 @@
 # @vorsteh-queue/core
 
+## 0.5.1
+
+### Patch Changes
+
+- 5c2119d: update dependencies
+
 ## 0.5.0
 
 ### Minor Changes
