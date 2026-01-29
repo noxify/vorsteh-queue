@@ -36,10 +36,10 @@ jobs:
         node-version: [20, 22, 24]
     name: Test (Node.js ${{ matrix.node-version }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -86,7 +86,7 @@ jobs:
         pg-version: [12, 13, 14, 15, 16, 17]
     name: Test Drizzle Adapter (Postgres ${{ matrix.pg-version }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup
         uses: ./.github/setup
@@ -117,7 +117,7 @@ jobs:
         pg-version: [12, 13, 14, 15, 16, 17]
     name: Test Prisma Adapter (Postgres ${{ matrix.pg-version }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup
         uses: ./.github/setup
@@ -150,7 +150,7 @@ jobs:
         pg-version: [12, 13, 14, 15, 16, 17]
     name: Test Kysely Adapter (Postgres ${{ matrix.pg-version }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup
         uses: ./.github/setup
