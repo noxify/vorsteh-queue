@@ -29,11 +29,8 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "dev": "tsx src/index.ts",
-    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
-    "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
-  "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
     "@antfu/install-pkg": "^1.1.0",
     "@clack/prompts": "^1.0.0",
@@ -43,12 +40,8 @@
     "terminal-link": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "22.19.0",
-    "@vorsteh-queue/eslint-config": "workspace:*",
-    "@vorsteh-queue/prettier-config": "workspace:*",
+    "@types/node": "24.13.2",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.39.2",
-    "prettier": "^3.8.1",
     "rolldown": "1.0.0-rc.2",
     "rollup-plugin-delete": "^3.0.2",
     "tsx": "4.21.0",

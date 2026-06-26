@@ -1,8 +1,0 @@
-{
-  "extends": "@vorsteh-queue/tsconfig/base.json",
-  "compilerOptions": {
-    "tsBuildInfoFile": ".cache/tsbuildinfo.json"
-  },
-  "include": ["."],
-  "exclude": ["node_modules", "dist"]
-}

@@ -46,14 +46,11 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
-    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
-    "lint": "eslint .",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
     "prisma:generate_test": "prisma generate --schema=prisma/schema.test.prisma",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
-  "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
     "@vorsteh-queue/core": "workspace:*"
   },
@@ -62,12 +59,8 @@
     "@prisma/client": "^6.19.0",
     "@prisma/internals": "^6.19.0",
     "@prisma/migrate": "^6.19.0",
-    "@vorsteh-queue/eslint-config": "workspace:*",
-    "@vorsteh-queue/prettier-config": "workspace:*",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.39.2",
-    "prettier": "^3.8.1",
     "prisma": "^6.19.0",
     "rolldown": "1.0.0-rc.2",
     "rollup-plugin-delete": "^3.0.2",
