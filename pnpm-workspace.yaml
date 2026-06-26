@@ -3,3 +3,12 @@ packages:
   - packages/*
   - tooling/*
   - examples/*
+allowBuilds:
+  '@prisma/client': false
+  '@prisma/engines': false
+  cpu-features: false
+  esbuild: false
+  prisma: false
+  protobufjs: false
+  sharp: false
+  ssh2: false

@@ -11,13 +11,11 @@
   "main": "src/index.ts",
   "types": "src/types.ts",
   "devDependencies": {
-    "@testcontainers/postgresql": "^11.11.0",
+    "@testcontainers/postgresql": "^12.0.3",
     "@vorsteh-queue/core": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    
     "postgres": "^3.4.8",
-    
-    "testcontainers": "^11.11.0",
+    "testcontainers": "^12.0.3",
     "vitest": "^4.0.18"
   }
 }

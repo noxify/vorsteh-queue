@@ -40,12 +40,12 @@
     "terminal-link": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "24.13.2",
+    "@types/node": "26.0.1",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "rolldown": "1.0.0-rc.2",
+    "rolldown": "1.1.3",
     "rollup-plugin-delete": "^3.0.2",
-    "tsx": "4.21.0",
-    "typescript": "^5.9.3"
+    "tsx": "4.22.4",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=18"
