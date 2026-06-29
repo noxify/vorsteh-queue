@@ -29,23 +29,23 @@
     "types"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     },
     "./postgres-adapter": {
-      "types": "./dist/postgres-adapter.d.ts",
-      "default": "./dist/postgres-adapter.js"
+      "types": "./dist/postgres-adapter.d.mts",
+      "default": "./dist/postgres-adapter.mjs"
     }
   },
   "scripts": {
-    "build": "pnpm prisma:generate && rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "build": "pnpm prisma:generate && tsdown",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
+    "dev": "tsdown --watch",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
     "prisma:generate_test": "prisma generate --schema=prisma/schema.test.prisma",
     "test": "vitest",
@@ -62,9 +62,8 @@
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "prisma": "^7.8.0",
-    "rolldown": "1.1.3",
-    "rollup-plugin-delete": "^3.0.2",
     "testcontainers": "^12.0.3",
+    "tsdown": "0.22.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   },

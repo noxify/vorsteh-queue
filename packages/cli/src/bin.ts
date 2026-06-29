@@ -4,7 +4,7 @@
  * vorsteh-queue CLI entry point.
  */
 
-import { defineCommand, runMain } from "citty"
+import { Command } from "@commander-js/extra-typings"
 
 import { createCancelCommand } from "./commands/cancel"
 import { createClearCommand } from "./commands/clear"
@@ -14,6 +14,7 @@ import { createInspectCommand } from "./commands/inspect"
 import { createRedriveCommand } from "./commands/redrive"
 import { createRetryCommand } from "./commands/retry"
 import { createRunNowCommand } from "./commands/run-now"
+import { createServeCommand } from "./commands/serve"
 import { createStatusCommand } from "./commands/status"
 import { createGraphQLTransport } from "./transport/graphql"
 
@@ -25,23 +26,28 @@ const token = process.env.VORSTEH_QUEUE_TOKEN
 
 const transport = createGraphQLTransport(url, token)
 
-const main = defineCommand({
-  meta: {
-    name: "vorsteh-queue",
-    version: "0.1.0",
-    description: "CLI for monitoring and managing vorsteh-queue jobs",
-  },
-  subCommands: {
-    status: createStatusCommand(transport),
-    inspect: createInspectCommand(transport),
-    cancel: createCancelCommand(transport),
-    retry: createRetryCommand(transport),
-    redrive: createRedriveCommand(transport),
-    "run-now": createRunNowCommand(transport),
-    delete: createDeleteCommand(transport),
-    clear: createClearCommand(transport),
-    flow: createFlowCommand(transport),
-  },
-})
+const program = new Command()
 
-void runMain(main)
+program
+  .name("vorsteh-queue")
+  .version("0.1.0")
+  .description("CLI for monitoring and managing vorsteh-queue jobs")
+  .configureHelp({ sortSubcommands: true })
+  .addCommand(createServeCommand())
+  .addCommand(createStatusCommand(transport))
+  .addCommand(createInspectCommand(transport))
+  .addCommand(createCancelCommand(transport))
+  .addCommand(createRetryCommand(transport))
+  .addCommand(createRedriveCommand(transport))
+  .addCommand(createRunNowCommand(transport))
+  .addCommand(createDeleteCommand(transport))
+  .addCommand(createClearCommand(transport))
+  .addCommand(createFlowCommand(transport))
+
+try {
+  await program.parseAsync()
+} catch (error: unknown) {
+  // eslint-disable-next-line no-restricted-properties
+  process.exitCode = 1
+  throw error
+}

@@ -1,34 +1,27 @@
-import { defineCommand } from "citty"
 import consola from "consola"
 
+import { buildDeleteCommandStructure } from "../metadata/delete-metadata"
 import type { Transport } from "../transport/types"
 
 export function createDeleteCommand(transport: Transport) {
-  return defineCommand({
-    meta: { name: "delete", description: "Delete a single job" },
-    args: {
-      id: {
-        type: "positional",
-        description: "Job ID to delete",
-        required: true,
-      },
-      json: { type: "boolean", description: "Output as JSON", default: false },
-    },
-    async run({ args }) {
-      await transport.connect()
-      const success = await transport.deleteJob(args.id)
-      await transport.disconnect()
+  const command = buildDeleteCommandStructure()
 
-      if (args.json) {
-        consola.log(JSON.stringify({ success, id: args.id }))
-        return
-      }
+  command.action(async (id, options) => {
+    await transport.connect()
+    const success = await transport.deleteJob(id)
+    await transport.disconnect()
 
-      if (success) {
-        consola.success(`Job "${args.id}" deleted`)
-      } else {
-        consola.warn(`Could not delete job "${args.id}" (not found)`)
-      }
-    },
+    if (options.json) {
+      consola.log(JSON.stringify({ success, id }))
+      return
+    }
+
+    if (success) {
+      consola.success(`Job "${id}" deleted`)
+    } else {
+      consola.warn(`Could not delete job "${id}" (not found)`)
+    }
   })
+
+  return command
 }

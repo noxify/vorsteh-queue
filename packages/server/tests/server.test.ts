@@ -353,7 +353,7 @@ describe("GraphQL Server", () => {
       const app = createQueueMiddleware({
         adapter,
         queueName: "test-queue",
-        auth: { type: "token", token: "secret-token" },
+        auth: { tokens: ["secret-token"] },
       })
 
       const res = await app.request("/health")
@@ -364,7 +364,7 @@ describe("GraphQL Server", () => {
       const app = createQueueMiddleware({
         adapter,
         queueName: "test-queue",
-        auth: { type: "token", token: "secret-token" },
+        auth: { tokens: ["secret-token"] },
       })
 
       const res = await app.request("/health", {
@@ -373,30 +373,17 @@ describe("GraphQL Server", () => {
       expect(res.status).toBe(200)
     })
 
-    it("should reject requests with invalid basic auth", async () => {
+    it("should reject requests with invalid token", async () => {
       const app = createQueueMiddleware({
         adapter,
         queueName: "test-queue",
-        auth: { type: "basic", username: "admin", password: "pass" },
+        auth: { tokens: ["secret-token"] },
       })
 
       const res = await app.request("/health", {
-        headers: { Authorization: `Basic ${btoa("admin:wrong")}` },
+        headers: { Authorization: "Bearer wrong-token" },
       })
       expect(res.status).toBe(401)
-    })
-
-    it("should accept requests with valid basic auth", async () => {
-      const app = createQueueMiddleware({
-        adapter,
-        queueName: "test-queue",
-        auth: { type: "basic", username: "admin", password: "pass" },
-      })
-
-      const res = await app.request("/health", {
-        headers: { Authorization: `Basic ${btoa("admin:pass")}` },
-      })
-      expect(res.status).toBe(200)
     })
   })
 })

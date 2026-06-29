@@ -1,12 +1,14 @@
 /**
- * CLI configuration types.
+ * CLI configuration loading.
  *
- * Supports both direct adapter connections and remote GraphQL transport.
+ * Uses the same `queue.config.ts` as the server for direct adapter access.
+ * Also supports remote GraphQL transport for connecting to a running server.
  */
 
 import type { QueueAdapter } from "@vorsteh-queue/core"
+import { loadConfig as c12LoadConfig } from "c12"
 
-/** Direct transport configuration (local adapter) */
+/** Direct transport configuration (local adapter from queue.config.ts) */
 export interface DirectTransportConfig {
   readonly type: "direct"
   readonly adapter: QueueAdapter
@@ -20,27 +22,66 @@ export interface GraphQLTransportConfig {
   readonly token?: string
 }
 
-/** CLI configuration */
-export type CliConfig = DirectTransportConfig | GraphQLTransportConfig
+/** Resolved CLI transport */
+export type CliTransport = DirectTransportConfig | GraphQLTransportConfig
+
+/** Raw config file shape (superset of ServerConfig) */
+interface QueueConfigFile {
+  readonly adapter?: QueueAdapter
+  readonly queueName?: string
+  readonly url?: string
+  readonly token?: string
+  readonly auth?: unknown
+  readonly port?: number
+  readonly dashboard?: boolean
+}
 
 /**
- * Define a CLI configuration.
+ * Load CLI transport configuration from `queue.config.ts` via c12.
  *
- * @param config - CLI configuration
- * @returns The configuration object
+ * - If the config has an `adapter`, uses direct transport
+ * - If the config has a `url`, uses GraphQL transport
+ * - Falls back to localhost GraphQL if neither is found
+ *
+ * @param cwd - Directory to search for config (defaults to process.cwd())
+ * @returns Resolved CLI transport configuration
  *
  * @example
  * ```typescript
- * // vorsteh-queue.config.ts
- * import { defineCliConfig } from "@vorsteh-queue/cli"
- *
- * export default defineCliConfig({
- *   type: "graphql",
- *   url: "http://localhost:3000/queue/graphql",
- *   token: process.env.QUEUE_TOKEN,
- * })
+ * const transport = await loadCliConfig()
+ * if (transport.type === "direct") {
+ *   // Use adapter directly
+ * } else {
+ *   // Use GraphQL client
+ * }
  * ```
  */
-export function defineCliConfig(config: CliConfig): CliConfig {
-  return config
+export async function loadCliConfig(cwd?: string): Promise<CliTransport> {
+  const { config } = await c12LoadConfig<QueueConfigFile>({
+    name: "queue",
+    cwd,
+  })
+
+  if (config?.adapter && config.queueName) {
+    return {
+      type: "direct",
+      adapter: config.adapter,
+      queueName: config.queueName,
+    }
+  }
+
+  if (config?.url) {
+    return {
+      type: "graphql",
+      url: config.url,
+      token: config.token,
+    }
+  }
+
+  // Default: try local server
+  return {
+    type: "graphql",
+    url: "http://localhost:3000/graphql",
+    token: undefined,
+  }
 }

@@ -1,36 +1,27 @@
-import { defineCommand } from "citty"
 import consola from "consola"
 
+import { buildRetryCommandStructure } from "../metadata/retry-metadata"
 import type { Transport } from "../transport/types"
 
 export function createRetryCommand(transport: Transport) {
-  return defineCommand({
-    meta: { name: "retry", description: "Retry a failed job" },
-    args: {
-      id: {
-        type: "positional",
-        description: "Job ID to retry",
-        required: true,
-      },
-      json: { type: "boolean", description: "Output as JSON", default: false },
-    },
-    async run({ args }) {
-      await transport.connect()
-      const success = await transport.retryJob(args.id)
-      await transport.disconnect()
+  const command = buildRetryCommandStructure()
 
-      if (args.json) {
-        consola.log(JSON.stringify({ success, id: args.id }))
-        return
-      }
+  command.action(async (id, options) => {
+    await transport.connect()
+    const success = await transport.retryJob(id)
+    await transport.disconnect()
 
-      if (success) {
-        consola.success(`Job "${args.id}" retried (reset to pending)`)
-      } else {
-        consola.warn(
-          `Could not retry job "${args.id}" (must be in "failed" status)`
-        )
-      }
-    },
+    if (options.json) {
+      consola.log(JSON.stringify({ success, id }))
+      return
+    }
+
+    if (success) {
+      consola.success(`Job "${id}" retried (reset to pending)`)
+    } else {
+      consola.warn(`Could not retry job "${id}" (must be in "failed" status)`)
+    }
   })
+
+  return command
 }

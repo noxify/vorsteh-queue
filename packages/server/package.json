@@ -24,36 +24,58 @@
     "dist"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
       "default": "./src/index.ts"
     }
   },
   "scripts": {
-    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "build": "pnpm build:api && pnpm build:ui",
+    "build:api": "tsdown",
+    "build:ui": "vite build --config vite.config.ts",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
+    "dev": "tsdown --watch & vite build --config vite.config.ts --watch",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -p tsconfig.api.json --noEmit && tsc -p tsconfig.ui.json --noEmit"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.6",
     "@pothos/core": "^4.9.0",
     "@vorsteh-queue/core": "workspace:*",
+    "c12": "^2.0.4",
     "graphql": "^16.10.0",
     "graphql-yoga": "^5.10.0",
     "hono": "^4.7.0"
   },
   "devDependencies": {
+    "@base-ui/react": "1.6.0",
+    "@tailwindcss/vite": "^4.1.11",
+    "@tanstack/react-query": "^5.80.7",
+    "@tanstack/react-router": "^1.131.44",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "rolldown": "1.1.3",
-    "rollup-plugin-delete": "^3.0.2",
+    "@xyflow/react": "^12.9.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "gql.tada": "^1.8.0",
+    "graphql-request": "^7.1.0",
+    "lucide-react": "^0.525.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.3.0",
+    "tailwindcss": "^4.1.11",
+    "tsdown": "0.22.3",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "vite": "^6.3.5",
+    "vitest": "^4.1.9",
+    "zod": "^3.24.0"
   }
 }

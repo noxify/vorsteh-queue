@@ -36,33 +36,33 @@
     "dist"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
       "default": "./src/index.ts"
     },
     "./adapters/memory": {
-      "types": "./dist/adapters/memory.d.ts",
-      "import": "./dist/adapters/memory.js",
+      "types": "./dist/adapters/memory.d.mts",
+      "import": "./dist/adapters/memory.mjs",
       "default": "./src/adapters/memory.ts"
     }
   },
   "publishConfig": {
     "exports": {
       ".": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
       }
     }
   },
   "scripts": {
-    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "build": "tsdown",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
+    "dev": "tsdown --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
@@ -72,9 +72,9 @@
     "date-fns": "^4.1.0"
   },
   "devDependencies": {
+    "@types/node": "24.13.2",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "rolldown": "1.1.3",
-    "rollup-plugin-delete": "^3.0.2",
+    "tsdown": "0.22.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   }

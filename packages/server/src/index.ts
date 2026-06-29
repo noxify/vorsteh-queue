@@ -8,13 +8,13 @@
  * ```typescript
  * import { createQueueServer } from "@vorsteh-queue/server"
  *
- * const app = createQueueServer({
+ * const server = createQueueServer({
  *   adapter: myAdapter,
  *   queueName: "my-queue",
- *   auth: { type: "token", token: process.env.QUEUE_TOKEN },
+ *   auth: { tokens: [process.env.QUEUE_TOKEN] },
  * })
  *
- * await app.start()
+ * await server.start()
  * ```
  *
  * @example
@@ -31,20 +31,21 @@
  */
 
 import { serve } from "@hono/node-server"
+import { serveStatic } from "@hono/node-server/serve-static"
 import { createYoga } from "graphql-yoga"
 import { Hono } from "hono"
 
-import { createAuthMiddleware } from "./auth/middleware"
+import { createAuthMiddleware } from "./api/auth"
+import { PubSub } from "./api/pubsub"
+import type { SchemaContext } from "./api/schema"
+import { schema } from "./api/schema"
 import type { ServerConfig } from "./config"
-import type { SchemaContext } from "./graphql/schema"
-import { schema } from "./graphql/schema"
-import { PubSub } from "./pubsub"
 
 export type { AuthConfig, ServerConfig } from "./config"
-export { defineConfig } from "./config"
-export { createAuthMiddleware } from "./auth/middleware"
-export { PubSub } from "./pubsub"
-export type { PubSubEvents } from "./pubsub"
+export { defineConfig, loadConfig } from "./config"
+export { createAuthMiddleware } from "./api/auth"
+export { PubSub } from "./api/pubsub"
+export type { PubSubEvents } from "./api/pubsub"
 
 /**
  * Create a Hono app configured as a queue management middleware.
@@ -59,7 +60,7 @@ export type { PubSubEvents } from "./pubsub"
  * app.route("/queue", createQueueMiddleware({
  *   adapter: myAdapter,
  *   queueName: "my-queue",
- *   auth: { type: "token", token: "secret" },
+ *   auth: { tokens: ["secret"] },
  * }))
  * ```
  */
@@ -67,12 +68,10 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
   const app = new Hono()
   const pubsub = new PubSub()
 
-  // Apply auth middleware
-  if (config.auth === undefined) {
-    app.use("*", createAuthMiddleware(false))
-  } else {
-    app.use("*", createAuthMiddleware(config.auth))
-  }
+  // Apply auth middleware to API routes
+  const authMiddleware = createAuthMiddleware(config.auth ?? false)
+  app.use("/graphql", authMiddleware)
+  app.use("/health", authMiddleware)
 
   // Set up GraphQL Yoga
   const yoga = createYoga<SchemaContext>({
@@ -100,6 +99,13 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
     c.json({ status: "ok", queueName: config.queueName })
   )
 
+  // Serve dashboard UI (static assets)
+  if (config.dashboard !== false) {
+    app.use("/*", serveStatic({ root: "./dist/ui" }))
+    // SPA fallback — serve index.html for unmatched routes
+    app.get("/*", serveStatic({ root: "./dist/ui", path: "index.html" }))
+  }
+
   return app
 }
 
@@ -115,7 +121,7 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
  *   adapter: myAdapter,
  *   queueName: "my-queue",
  *   port: 3000,
- *   auth: { type: "token", token: process.env.QUEUE_TOKEN },
+ *   auth: { tokens: [process.env.QUEUE_TOKEN] },
  * })
  *
  * await server.start()
@@ -137,10 +143,15 @@ export function createQueueServer(config: ServerConfig) {
       config.adapter.setQueueName(config.queueName)
 
       server = serve({ fetch: app.fetch, port })
+      const dashboardEnabled = config.dashboard !== false
       // eslint-disable-next-line no-console
       console.log(`vorsteh-queue server running on http://localhost:${port}`)
       // eslint-disable-next-line no-console
-      console.log(`GraphQL endpoint: http://localhost:${port}/graphql`)
+      console.log(`  GraphQL:  http://localhost:${port}/graphql`)
+      if (dashboardEnabled) {
+        // eslint-disable-next-line no-console
+        console.log(`  Dashboard: http://localhost:${port}/`)
+      }
     },
 
     /** Stop the server */

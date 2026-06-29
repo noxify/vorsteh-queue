@@ -394,6 +394,61 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     })
   }
 
+  async getJobs(options: {
+    status?: JobStatus
+    name?: string
+    limit?: number
+    offset?: number
+  }): Promise<readonly Job[]> {
+    const limit = options.limit ?? 20
+    const offset = options.offset ?? 0
+    const where: Record<string, unknown> = { queueName: this.queueName }
+
+    if (options.status) {
+      where.status = options.status
+    }
+    if (options.name) {
+      where.name = options.name
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const rows = await this.db[this.modelName]!.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
+    })
+
+    return (rows as unknown[]).map((r) =>
+      PostgresPrismaQueueAdapter.transformPrismaJob(r)
+    )
+  }
+
+  async getFlows(
+    options?: PaginationOptions
+  ): Promise<readonly { flowId: string; rootJob: Job }[]> {
+    const limit = options?.limit ?? 20
+    const offset = options?.offset ?? 0
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const rows = await this.db[this.modelName]!.findMany({
+      where: {
+        queueName: this.queueName,
+        flowId: { not: null },
+        parentId: null,
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
+    })
+
+    return (rows as unknown[]).map((r) => {
+      const job = PostgresPrismaQueueAdapter.transformPrismaJob(r)
+      // oxlint-disable-next-line typescript/no-non-null-assertion
+      return { flowId: job.flowId!, rootJob: job }
+    })
+  }
+
   async clearJobs(status?: JobStatus): Promise<number> {
     const where: Record<string, unknown> = { queueName: this.queueName }
     if (status) {

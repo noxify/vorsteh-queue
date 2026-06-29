@@ -1,7 +1,7 @@
 import type { Job, QueueStats } from "@vorsteh-queue/core"
 import { describe, expect, it } from "vitest"
 
-import { PubSub } from "../src/pubsub"
+import { PubSub } from "../src/api/pubsub"
 
 describe(PubSub, () => {
   it("should deliver events to subscribers", async () => {

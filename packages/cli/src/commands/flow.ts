@@ -1,7 +1,7 @@
 import type { FlowNode } from "@vorsteh-queue/core"
-import { defineCommand } from "citty"
 import consola from "consola"
 
+import { buildFlowCommandStructure } from "../metadata/flow-metadata"
 import type { Transport } from "../transport/types"
 
 const STATUS_ICONS: Record<string, string> = {
@@ -42,37 +42,27 @@ function renderTree(node: FlowNode, prefix = "", isLast = true): string {
 }
 
 export function createFlowCommand(transport: Transport) {
-  return defineCommand({
-    meta: {
-      name: "flow",
-      description: "Show a flow tree (parent-child job hierarchy)",
-    },
-    args: {
-      id: {
-        type: "positional",
-        description: "Flow ID to inspect",
-        required: true,
-      },
-      json: { type: "boolean", description: "Output as JSON", default: false },
-    },
-    async run({ args }) {
-      await transport.connect()
-      const tree = await transport.getFlowTree(args.id)
-      await transport.disconnect()
+  const command = buildFlowCommandStructure()
 
-      if (!tree) {
-        consola.error(`Flow "${args.id}" not found`)
-        return
-      }
+  command.action(async (id, options) => {
+    await transport.connect()
+    const tree = await transport.getFlowTree(id)
+    await transport.disconnect()
 
-      if (args.json) {
-        consola.log(JSON.stringify(tree, null, 2))
-        return
-      }
+    if (!tree) {
+      consola.error(`Flow "${id}" not found`)
+      return
+    }
 
-      consola.info(`Flow: ${tree.job.name}  [flow-id: ${args.id}]`)
-      consola.log("")
-      consola.log(renderTree(tree))
-    },
+    if (options.json) {
+      consola.log(JSON.stringify(tree, null, 2))
+      return
+    }
+
+    consola.info(`Flow: ${tree.job.name}  [flow-id: ${id}]`)
+    consola.log("")
+    consola.log(renderTree(tree))
   })
+
+  return command
 }

@@ -18,14 +18,14 @@
     "directory": "packages/create-vorsteh-queue"
   },
   "bin": {
-    "create-vorsteh-queue": "dist/index.js"
+    "create-vorsteh-queue": "dist/index.mjs"
   },
   "files": [
     "dist/*"
   ],
   "type": "module",
   "scripts": {
-    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "build": "tsdown",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "dev": "tsx src/index.ts",
@@ -42,12 +42,11 @@
   "devDependencies": {
     "@types/node": "26.0.1",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "rolldown": "1.1.3",
-    "rollup-plugin-delete": "^3.0.2",
+    "tsdown": "0.22.3",
     "tsx": "4.22.4",
     "typescript": "^6.0.3"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }

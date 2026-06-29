@@ -608,6 +608,22 @@ export interface QueueAdapter {
   /** Get total number of pending + delayed jobs */
   size: () => Promise<number>
 
+  /** Get paginated job list with optional status/name filters */
+  getJobs: (options: {
+    status?: JobStatus
+    name?: string
+    limit?: number
+    offset?: number
+  }) => Promise<readonly Job[]>
+
+  /** Get paginated list of flows (root jobs that have a flowId) */
+  getFlows: (options?: PaginationOptions) => Promise<
+    readonly {
+      flowId: string
+      rootJob: Job
+    }[]
+  >
+
   // ─── Cleanup ───────────────────────────────────────────────
 
   /** Delete jobs by status */

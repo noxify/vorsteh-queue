@@ -83,6 +83,18 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
 
   abstract getQueueStats(): Promise<QueueStats>
   abstract size(): Promise<number>
+  abstract getJobs(options: {
+    status?: JobStatus
+    name?: string
+    limit?: number
+    offset?: number
+  }): Promise<readonly Job[]>
+  abstract getFlows(options?: PaginationOptions): Promise<
+    readonly {
+      flowId: string
+      rootJob: Job
+    }[]
+  >
 
   // ─── Cleanup ───────────────────────────────────────────────
 

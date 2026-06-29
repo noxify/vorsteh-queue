@@ -1,37 +1,29 @@
-import { defineCommand } from "citty"
 import consola from "consola"
 
+import { buildCancelCommandStructure } from "../metadata/cancel-metadata"
 import type { Transport } from "../transport/types"
 
 export function createCancelCommand(transport: Transport) {
-  return defineCommand({
-    meta: { name: "cancel", description: "Cancel a job" },
-    args: {
-      id: {
-        type: "positional",
-        description: "Job ID to cancel",
-        required: true,
-      },
-      reason: { type: "string", description: "Cancellation reason" },
-      json: { type: "boolean", description: "Output as JSON", default: false },
-    },
-    async run({ args }) {
-      await transport.connect()
-      const success = await transport.cancelJob(args.id, args.reason)
-      await transport.disconnect()
+  const command = buildCancelCommandStructure()
 
-      if (args.json) {
-        consola.log(JSON.stringify({ success, id: args.id }))
-        return
-      }
+  command.action(async (id, options) => {
+    await transport.connect()
+    const success = await transport.cancelJob(id, options.reason)
+    await transport.disconnect()
 
-      if (success) {
-        consola.success(`Job "${args.id}" cancelled`)
-      } else {
-        consola.warn(
-          `Could not cancel job "${args.id}" (may already be in terminal state)`
-        )
-      }
-    },
+    if (options.json) {
+      consola.log(JSON.stringify({ success, id }))
+      return
+    }
+
+    if (success) {
+      consola.success(`Job "${id}" cancelled`)
+    } else {
+      consola.warn(
+        `Could not cancel job "${id}" (may already be in terminal state)`
+      )
+    }
   })
+
+  return command
 }

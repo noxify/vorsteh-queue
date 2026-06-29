@@ -18,38 +18,45 @@
     "directory": "packages/cli"
   },
   "bin": {
-    "vorsteh-queue": "./dist/bin.js"
+    "vorsteh-queue": "./dist/bin.mjs"
   },
   "files": [
     "dist"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
       "default": "./src/index.ts"
+    },
+    "./commands-metadata": {
+      "types": "./dist/commands-metadata.d.mts",
+      "import": "./dist/commands-metadata.mjs",
+      "default": "./src/commands-metadata.ts"
     }
   },
   "scripts": {
-    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "build": "tsdown",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
+    "dev": "tsdown --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@commander-js/extra-typings": "15.0.0",
     "@vorsteh-queue/core": "workspace:*",
-    "citty": "^0.2.2",
+    "@vorsteh-queue/server": "workspace:*",
+    "c12": "^2.0.4",
+    "commander": "15.0.0",
     "consola": "^3.4.0"
   },
   "devDependencies": {
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "rolldown": "1.1.3",
-    "rollup-plugin-delete": "^3.0.2",
+    "tsdown": "0.22.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   }

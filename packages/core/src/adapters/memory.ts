@@ -353,6 +353,48 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     return count
   }
 
+  async getJobs(options: {
+    status?: JobStatus
+    name?: string
+    limit?: number
+    offset?: number
+  }): Promise<readonly Job[]> {
+    const limit = options.limit ?? 20
+    const offset = options.offset ?? 0
+
+    let results = [...this.jobs.values()]
+
+    if (options.status) {
+      results = results.filter((job) => job.status === options.status)
+    }
+    if (options.name) {
+      results = results.filter((job) => job.name === options.name)
+    }
+
+    return results
+      .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(offset, offset + limit)
+  }
+
+  async getFlows(
+    options?: PaginationOptions
+  ): Promise<readonly { flowId: string; rootJob: Job }[]> {
+    const limit = options?.limit ?? 20
+    const offset = options?.offset ?? 0
+
+    const flowMap = new Map<string, Job>()
+    for (const job of this.jobs.values()) {
+      if (job.flowId && !job.parentId) {
+        flowMap.set(job.flowId, job)
+      }
+    }
+
+    return [...flowMap.entries()]
+      .toSorted(([, a], [, b]) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(offset, offset + limit)
+      .map(([flowId, job]) => ({ flowId, rootJob: job }))
+  }
+
   // ─── Cleanup ───────────────────────────────────────────────
 
   async clearJobs(status?: JobStatus): Promise<number> {

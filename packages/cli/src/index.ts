@@ -24,9 +24,9 @@
  * ```
  */
 
-export { defineCliConfig } from "./config"
+export { loadCliConfig } from "./config"
 export type {
-  CliConfig,
+  CliTransport,
   DirectTransportConfig,
   GraphQLTransportConfig,
 } from "./config"
@@ -44,3 +44,10 @@ export { createRunNowCommand } from "./commands/run-now"
 export { createDeleteCommand } from "./commands/delete"
 export { createClearCommand } from "./commands/clear"
 export { createFlowCommand } from "./commands/flow"
+
+export { availableCommands, getCommandConfig } from "./commands-metadata"
+export type {
+  CommandArgumentMeta,
+  CommandConfig,
+  CommandOptionMeta,
+} from "./commands-metadata"

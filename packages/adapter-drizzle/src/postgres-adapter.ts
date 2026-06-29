@@ -443,6 +443,61 @@ export class PostgresQueueAdapter<
     return Number(result?.count ?? 0)
   }
 
+  async getJobs(options: {
+    status?: JobStatus
+    name?: string
+    limit?: number
+    offset?: number
+  }): Promise<readonly Job[]> {
+    const limit = options.limit ?? 20
+    const offset = options.offset ?? 0
+    const conditions = [eq(this.model.queueName, this.queueName)]
+
+    if (options.status) {
+      conditions.push(eq(this.model.status, options.status))
+    }
+    if (options.name) {
+      conditions.push(eq(this.model.name, options.name))
+    }
+
+    const jobs = await this.db
+      .select()
+      .from(this.model)
+      .where(and(...conditions))
+      .orderBy(sql`${this.model.createdAt} DESC`)
+      .limit(limit)
+      .offset(offset)
+
+    return jobs.map((row) => this.transformJob(row as schema.QueueJob))
+  }
+
+  async getFlows(
+    options?: PaginationOptions
+  ): Promise<readonly { flowId: string; rootJob: Job }[]> {
+    const limit = options?.limit ?? 20
+    const offset = options?.offset ?? 0
+
+    const jobs = await this.db
+      .select()
+      .from(this.model)
+      .where(
+        and(
+          eq(this.model.queueName, this.queueName),
+          sql`${this.model.flowId} IS NOT NULL`,
+          sql`${this.model.parentId} IS NULL`
+        )
+      )
+      .orderBy(sql`${this.model.createdAt} DESC`)
+      .limit(limit)
+      .offset(offset)
+
+    return jobs.map((row) => {
+      const job = this.transformJob(row as schema.QueueJob)
+      // oxlint-disable-next-line typescript/no-non-null-assertion
+      return { flowId: job.flowId!, rootJob: job }
+    })
+  }
+
   async clearJobs(status?: JobStatus): Promise<number> {
     const conditions = [eq(this.model.queueName, this.queueName)]
     if (status) {

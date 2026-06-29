@@ -412,6 +412,60 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     return Number(result?.count ?? 0)
   }
 
+  async getJobs(options: {
+    status?: JobStatus
+    name?: string
+    limit?: number
+    offset?: number
+  }): Promise<readonly Job[]> {
+    const limit = options.limit ?? 20
+    const offset = options.offset ?? 0
+
+    let query = this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+
+    if (options.status) {
+      query = query.where("status", "=", options.status)
+    }
+    if (options.name) {
+      query = query.where("name", "=", options.name)
+    }
+
+    const rows = await query
+      .orderBy("created_at", "desc")
+      .limit(limit)
+      .offset(offset)
+      .execute()
+
+    return rows.map((row) => this.transformJob(row as QueueJob))
+  }
+
+  async getFlows(
+    options?: PaginationOptions
+  ): Promise<readonly { flowId: string; rootJob: Job }[]> {
+    const limit = options?.limit ?? 20
+    const offset = options?.offset ?? 0
+
+    const rows = await this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+      .where("flow_id", "is not", null)
+      .where("parent_id", "is", null)
+      .orderBy("created_at", "desc")
+      .limit(limit)
+      .offset(offset)
+      .execute()
+
+    return rows.map((row) => {
+      const job = this.transformJob(row as QueueJob)
+      // oxlint-disable-next-line typescript/no-non-null-assertion
+      return { flowId: job.flowId!, rootJob: job }
+    })
+  }
+
   async clearJobs(status?: JobStatus): Promise<number> {
     let query = this.customDbClient
       .deleteFrom(this.table)
