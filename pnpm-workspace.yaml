@@ -4,8 +4,8 @@ packages:
   - tooling/*
   - examples/*
 allowBuilds:
-  '@prisma/client': false
-  '@prisma/engines': false
+  "@prisma/client": false
+  "@prisma/engines": false
   cpu-features: false
   esbuild: false
   prisma: false

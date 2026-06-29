@@ -46,14 +46,14 @@ After making code changes, verify with these commands (in this order):
 
 Always use the pnpm scripts from the root `package.json`. Never call tools directly via `npx` or `pnpm dlx`.
 
-| Tool | Check | Fix |
-|------|-------|-----|
-| Formatter (oxfmt) | `pnpm format` | `pnpm format:fix` |
-| Linter (oxlint) | `pnpm lint` | `pnpm lint:fix` |
-| Types (TypeScript) | `pnpm typecheck` | — |
-| Tests (Vitest) | `vitest --run` | — |
-| Build (Turborepo) | `pnpm build` | — |
-| Workspace (sherif) | `pnpm lint:ws` | — |
+| Tool               | Check            | Fix               |
+| ------------------ | ---------------- | ----------------- |
+| Formatter (oxfmt)  | `pnpm format`    | `pnpm format:fix` |
+| Linter (oxlint)    | `pnpm lint`      | `pnpm lint:fix`   |
+| Types (TypeScript) | `pnpm typecheck` | —                 |
+| Tests (Vitest)     | `vitest --run`   | —                 |
+| Build (Turborepo)  | `pnpm build`     | —                 |
+| Workspace (sherif) | `pnpm lint:ws`   | —                 |
 
 ## Code Generation Guidelines
 

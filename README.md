@@ -77,7 +77,9 @@ const db = drizzle(pool)
 const queue = new Queue(new PostgresQueueAdapter(db), { name: "my-queue" })
 
 const prisma = new PrismaClient()
-const queue = new Queue(new PostgresPrismaQueueAdapter(prisma), { name: "my-queue" })
+const queue = new Queue(new PostgresPrismaQueueAdapter(prisma), {
+  name: "my-queue",
+})
 
 // Register job handlers
 queue.register<EmailPayload, EmailResult>("send-email", async (job) => {
@@ -105,7 +107,7 @@ await queue.add(
   {
     priority: 1, // Higher priority
     delay: 5000, // Delay 5 seconds
-  },
+  }
 )
 
 // Start processing
@@ -147,12 +149,19 @@ await queue.add("health-check", payload, {
 Process multiple jobs in a single batch for higher throughput and efficiency.
 
 ```typescript
-queue.registerBatch<{ file: string }, { ok: boolean }>("process-files", async (jobs) => {
-  console.log(`Processing batch of ${jobs.length} files...`)
-  return jobs.map(() => ({ ok: true }))
-})
+queue.registerBatch<{ file: string }, { ok: boolean }>(
+  "process-files",
+  async (jobs) => {
+    console.log(`Processing batch of ${jobs.length} files...`)
+    return jobs.map(() => ({ ok: true }))
+  }
+)
 
-await queue.addJobs("process-files", [{ file: "a.csv" }, { file: "b.csv" }, { file: "c.csv" }])
+await queue.addJobs("process-files", [
+  { file: "a.csv" },
+  { file: "b.csv" },
+  { file: "c.csv" },
+])
 
 queue.on("batch:processing", (jobs) => {
   console.log(`Batch started: ${jobs.length} jobs`)
@@ -219,27 +228,30 @@ interface ProcessResult {
   duration: number
 }
 
-queue.register<{ items: string[] }, ProcessResult>("process-data", async (job) => {
-  const startTime = Date.now()
-  const errors: string[] = []
-  let processed = 0
+queue.register<{ items: string[] }, ProcessResult>(
+  "process-data",
+  async (job) => {
+    const startTime = Date.now()
+    const errors: string[] = []
+    let processed = 0
 
-  for (const item of job.payload.items) {
-    try {
-      await processItem(item)
-      processed++
-    } catch (error) {
-      errors.push(`Failed to process ${item}: ${error.message}`)
+    for (const item of job.payload.items) {
+      try {
+        await processItem(item)
+        processed++
+      } catch (error) {
+        errors.push(`Failed to process ${item}: ${error.message}`)
+      }
+    }
+
+    // Return result - automatically stored in job.result field
+    return {
+      processed,
+      errors,
+      duration: Date.now() - startTime,
     }
   }
-
-  // Return result - automatically stored in job.result field
-  return {
-    processed,
-    errors,
-    duration: Date.now() - startTime,
-  }
-})
+)
 
 // Access results in events
 queue.on("job:completed", (job) => {

@@ -1,15 +1,12 @@
 {
   "name": "vorsteh-queue",
-  "license": "MIT",
   "private": true,
-  "engines": {
-    "node": ">=20"
-  },
-  "packageManager": "pnpm@11.9.0",
+  "license": "MIT",
   "author": {
     "name": "Marcus Reinhardt",
     "url": "https://github.com/noxify"
   },
+  "type": "module",
   "scripts": {
     "dev": "turbo dev --filter='@vorsteh-queue/*'",
     "dev:docs": "turbo dev --filter docs",
@@ -25,7 +22,7 @@
     "format": "oxfmt --check",
     "format:fix": "oxfmt .",
     "lint:ws": "sherif",
-    "postinstall": "pnpm lint:ws",
+    "_postinstall": "pnpm lint:ws",
     "typecheck": "turbo typecheck",
     "deps:check": "pnpm outdated -r",
     "deps:update": "pnpm update -i -L -r",
@@ -50,5 +47,9 @@
     "typescript": "^6.0.3",
     "ultracite": "7.8.3",
     "vitest": "^4.1.9"
-  }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.9.0"
 }

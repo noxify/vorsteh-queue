@@ -13,6 +13,19 @@ export default defineConfig({
 
   overrides: [
     {
+      files: ["examples/**/*.ts"],
+      rules: {
+        "no-console": "off",
+        "no-restricted-properties": "off",
+        "no-await-in-loop": "off",
+        "no-plusplus": "off",
+        "no-promise-executor-return": "off",
+        "promise/avoid-new": "off",
+        "promise/prefer-await-to-then": "off",
+        "promise/prefer-await-to-callbacks": "off",
+      },
+    },
+    {
       files: [
         "apps/docs/src/app/**/*.{ts,tsx}",
         "packages/cli/src/**/*.ts",
