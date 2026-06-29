@@ -69,5 +69,8 @@
   },
   "peerDependencies": {
     "@prisma/client": ">=7.0.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
