@@ -80,14 +80,61 @@ vorsteh-queue is a TypeScript-based job queue library published as a set of pack
   4. `@vorsteh-queue` packages
   5. Relative imports (`~/`, `../`, `./`)
 
+### Documentation (JSDoc)
+
+All public-facing code must have JSDoc headers:
+
+- Classes: describe purpose, include `@example` where useful
+- Functions/Methods: describe what it does, `@param`, `@returns`, `@throws`, `@example`
+- Interface properties: inline `/** description */` with `@default` where applicable
+- Type aliases: describe what the type represents
+- Enums/Constants: describe each member
+
+````typescript
+/**
+ * Register a job handler for a specific job type.
+ *
+ * @param name - The job type name (must be unique per queue)
+ * @param handler - Function to process jobs of this type
+ * @throws {Error} If a handler with this name is already registered
+ *
+ * @example
+ * ```typescript
+ * queue.register("send-email", async (job) => {
+ *   await sendEmail(job.payload.to)
+ *   return { sent: true }
+ * })
+ * ```
+ */
+````
+
+```typescript
+interface JobOptions {
+  /** Job priority (lower number = higher priority)
+   * @default 2
+   */
+  readonly priority?: number
+
+  /** Delay in milliseconds before job becomes available
+   * @default undefined (no delay)
+   */
+  readonly delay?: number
+}
+```
+
+Do NOT add JSDoc to:
+
+- Private/internal helpers (unless complex logic)
+- Test files
+- Obvious one-liner utility functions
+
 ### General
 
 - No `console.log` - remove debug statements
 - Prefer functional programming patterns
 - Prefer composition over inheritance
 - Use readonly arrays and objects where appropriate
-- Write self-documenting code; minimize comments
-- Add JSDoc for public APIs
+- Write self-documenting code; minimize inline comments
 - Use proper error handling (no generic `throw new Error`)
 - camelCase for variables/functions, PascalCase for types/interfaces/classes
 
@@ -104,20 +151,20 @@ Never use `npx`, `pnpm dlx`, or call tools directly (e.g. `oxlint`, `oxfmt`). Al
 
 ## Commands Reference
 
-| Task | Command |
-|------|---------|
-| Install | `pnpm install` |
-| Dev (packages) | `pnpm dev` |
-| Dev (docs) | `pnpm dev:docs` |
-| Build all | `pnpm build` |
-| Build packages | `pnpm build:pkg` |
-| Lint | `pnpm lint` |
-| Lint fix | `pnpm lint:fix` |
-| Format check | `pnpm format` |
-| Format fix | `pnpm format:fix` |
-| Typecheck | `pnpm typecheck` |
-| Test (watch) | `pnpm test` |
-| Test (single run) | `vitest --run` |
-| Changeset | `pnpm cs` |
-| Clean node_modules | `pnpm clean` |
-| Clean turbo cache | `pnpm clean:cache` |
+| Task               | Command            |
+| ------------------ | ------------------ |
+| Install            | `pnpm install`     |
+| Dev (packages)     | `pnpm dev`         |
+| Dev (docs)         | `pnpm dev:docs`    |
+| Build all          | `pnpm build`       |
+| Build packages     | `pnpm build:pkg`   |
+| Lint               | `pnpm lint`        |
+| Lint fix           | `pnpm lint:fix`    |
+| Format check       | `pnpm format`      |
+| Format fix         | `pnpm format:fix`  |
+| Typecheck          | `pnpm typecheck`   |
+| Test (watch)       | `pnpm test`        |
+| Test (single run)  | `vitest --run`     |
+| Changeset          | `pnpm cs`          |
+| Clean node_modules | `pnpm clean`       |
+| Clean turbo cache  | `pnpm clean:cache` |
