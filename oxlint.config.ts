@@ -8,7 +8,8 @@ export default defineConfig({
   extends: [core, vitest, react, next],
   ignorePatterns: [
     "apps/docs/src/components/beautiful-mermaid/**",
-    "templates/stackblitz/**",
+    "packages/server/src/ui/routeTree.gen.ts",
+    "packages/server/src/ui/graphql-env.d.ts",
   ],
 
   overrides: [
