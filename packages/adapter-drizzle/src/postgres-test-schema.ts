@@ -7,12 +7,15 @@ export const queueJobs = pgTable("queue_jobs", columns, (table) => [
     table.queueName,
     table.status,
     table.priority,
-    table.createdAt,
+    table.createdAt
   ),
   index("idx_queue_jobs_process_at").on(table.processAt),
 ])
 
-const { schema, table } = createQueueJobsTable("custom_queue_jobs", "custom_schema")
+const { schema, table } = createQueueJobsTable(
+  "custom_queue_jobs",
+  "custom_schema"
+)
 
 export const customSchema = schema
 export const customQueueJobs = table
