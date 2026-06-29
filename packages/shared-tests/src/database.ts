@@ -1,5 +1,6 @@
 import { PostgreSqlContainer } from "@testcontainers/postgresql"
 
+// eslint-disable-next-line no-warning-comments
 // TODO: make schema customizable
 // ref: https://github.com/dajudge/testcontainers-examples/blob/master/src/test/java/com/dajudge/testcontainers/examples/PostgreSQLTests.java
 export async function initDatabase(version = 17) {
@@ -10,7 +11,7 @@ export async function initDatabase(version = 17) {
       POSTGRES_DB: "testdb",
     })
     .withExposedPorts(5432)
-    .withStartupTimeout(60000)
+    .withStartupTimeout(60_000)
     .start()
 
   return {

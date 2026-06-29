@@ -4,18 +4,18 @@
   "private": true,
   "description": "Shared tests for Vorsteh Queue adapters",
   "type": "module",
+  "main": "src/index.ts",
+  "types": "src/types.ts",
   "exports": {
     "./*": "./src/*.ts",
     "./tests/*": "./src/tests/*.ts"
   },
-  "main": "src/index.ts",
-  "types": "src/types.ts",
   "devDependencies": {
     "@testcontainers/postgresql": "^12.0.3",
     "@vorsteh-queue/core": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "postgres": "^3.4.8",
     "testcontainers": "^12.0.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.9"
   }
 }

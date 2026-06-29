@@ -1,41 +1,46 @@
-import postgres from "postgres"
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
-
 import type { QueueAdapter } from "@vorsteh-queue/core"
+import postgres from "postgres"
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest"
 
-import type { SharedTestContext } from "../types"
 import { initDatabase } from "../database"
+import type { SharedTestContext } from "../types"
 
-export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>) {
+export function runTests<TDatabase = unknown>(
+  ctx: SharedTestContext<TDatabase>
+) {
   describe.each(ctx.testCases)(
     "Adapter Tests - $description",
     ({ modelName, schemaName, tableName, useDefault }) => {
       let database: Awaited<ReturnType<typeof initDatabase>>
       let db: ReturnType<SharedTestContext<TDatabase>["initDbClient"]>
       let adapter: QueueAdapter
-
-      // the internal db client is based on postgres.js and will be used
-      // to directly query the database for verification purposes
-      // we have to use a separate client because the adapter's client have a different syntax to query data
-      // and it's easier to use postgres.js directly here, instead of trying to adapt to the adapter's query syntax
       let internalDbClient: postgres.Sql
 
       beforeAll(async () => {
-        // creating a new database container for each test suite
-        // eslint-disable-next-line turbo/no-undeclared-env-vars
-        database = await initDatabase(process.env.PG_VERSION ? Number(process.env.PG_VERSION) : 17)
+        database = await initDatabase(
+          // eslint-disable-next-line no-restricted-properties
+          process.env.PG_VERSION ? Number(process.env.PG_VERSION) : 17
+        )
 
+        // eslint-disable-next-line no-restricted-properties
         vi.stubEnv("DATABASE_URL", database.container.getConnectionUri())
 
         internalDbClient = postgres(database.container.getConnectionUri(), {
           max: 10,
         })
-
         db = ctx.initDbClient(database)
 
-        // fix `gen_random_uuid does not exists` error on postgres 12
         await internalDbClient`CREATE EXTENSION IF NOT EXISTS pgcrypto CASCADE;`
-        // ensure the database is clean before migration
+
+        // eslint-disable-next-line unicorn/prefer-ternary
         if (useDefault === false) {
           await internalDbClient`drop table if exists ${internalDbClient(schemaName)}.${internalDbClient(tableName)};`
         } else {
@@ -43,7 +48,7 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
         }
 
         await ctx.migrate(db)
-      }, 60000)
+      }, 60_000)
 
       afterAll(async () => {
         await adapter.disconnect()
@@ -51,6 +56,7 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
       })
 
       beforeEach(async () => {
+        // eslint-disable-next-line unicorn/prefer-ternary
         if (useDefault === false) {
           await internalDbClient`DELETE FROM ${internalDbClient(schemaName)}.${internalDbClient(tableName)};`
         } else {
@@ -59,153 +65,15 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
 
         adapter = await ctx.initAdapter(
           db,
-          useDefault === false ? { modelName, tableName, schemaName } : {},
+          useDefault === false ? { modelName, tableName, schemaName } : {}
         )
 
         await adapter.connect()
         adapter.setQueueName("test-queue")
       })
 
-      describe("batch operations", () => {
-        it("should add multiple jobs with addJobs", async () => {
-          const jobs = await adapter.addJobs([
-            {
-              name: "batch-job-1",
-              payload: { n: 1 },
-              status: "pending",
-              priority: 1,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-            {
-              name: "batch-job-2",
-              payload: { n: 2 },
-              status: "pending",
-              priority: 2,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-          ])
-          expect(jobs).toHaveLength(2)
-          if (jobs.length >= 2) {
-            const [job0, job1] = jobs
-            expect(job0).toBeDefined()
-            expect(job1).toBeDefined()
-            if (job0 && job1) {
-              expect(job0.id).toBeDefined()
-              expect(job1.id).toBeDefined()
-              expect(job0.name).toBe("batch-job-1")
-              expect(job1.name).toBe("batch-job-2")
-            }
-          }
-        })
-
-        it("should get next jobs for handler (batch)", async () => {
-          await adapter.addJobs([
-            {
-              name: "batch-handler",
-              payload: { n: 1 },
-              status: "pending",
-              priority: 1,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-            {
-              name: "batch-handler",
-              payload: { n: 2 },
-              status: "pending",
-              priority: 2,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-            {
-              name: "other-handler",
-              payload: { n: 3 },
-              status: "pending",
-              priority: 3,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-          ])
-          const jobs = await adapter.getNextJobsForHandler("batch-handler", 5)
-          expect(jobs).toHaveLength(2)
-          if (jobs.length >= 2) {
-            const [job0, job1] = jobs
-            expect(job0).toBeDefined()
-            expect(job1).toBeDefined()
-            if (job0 && job1) {
-              expect(job0.name).toBe("batch-handler")
-              expect(job1.name).toBe("batch-handler")
-              // Should be sorted by priority
-              expect(job0.priority).toBeLessThanOrEqual(job1.priority)
-            }
-          }
-        })
-
-        it("should respect batch size limit", async () => {
-          await adapter.addJobs([
-            {
-              name: "batch",
-              payload: { n: 1 },
-              status: "pending",
-              priority: 1,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-            {
-              name: "batch",
-              payload: { n: 2 },
-              status: "pending",
-              priority: 2,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-            {
-              name: "batch",
-              payload: { n: 3 },
-              status: "pending",
-              priority: 3,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-          ])
-          const jobs = await adapter.getNextJobsForHandler("batch", 2)
-          expect(jobs).toHaveLength(2)
-        })
-
-        it("should isolate jobs by handler name", async () => {
-          await adapter.addJobs([
-            {
-              name: "handler-a",
-              payload: {},
-              status: "pending",
-              priority: 1,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-            {
-              name: "handler-b",
-              payload: {},
-              status: "pending",
-              priority: 2,
-              attempts: 0,
-              maxAttempts: 2,
-            },
-          ])
-          const jobsA = await adapter.getNextJobsForHandler("handler-a", 5)
-          const jobsB = await adapter.getNextJobsForHandler("handler-b", 5)
-          expect(jobsA.every((j) => j.name === "handler-a")).toBe(true)
-          expect(jobsB.every((j) => j.name === "handler-b")).toBe(true)
-        })
-
-        it("should return empty array if no jobs for handler", async () => {
-          const jobs = await adapter.getNextJobsForHandler("nonexistent-handler", 3)
-          expect(jobs).toEqual([])
-        })
-      })
-
-      describe("basic operations", () => {
-        it("should add a job", async () => {
+      describe("addJob / getJobById", () => {
+        it("should add a job and retrieve it by ID", async () => {
           const job = await adapter.addJob({
             name: "test-job",
             payload: { data: "test" },
@@ -214,260 +82,795 @@ export function runTests<TDatabase = unknown>(ctx: SharedTestContext<TDatabase>)
             attempts: 0,
             maxAttempts: 3,
             processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
           })
 
           expect(job.id).toBeDefined()
           expect(job.name).toBe("test-job")
           expect(job.payload).toEqual({ data: "test" })
           expect(job.status).toBe("pending")
+
+          const retrieved = await adapter.getJobById(job.id)
+          expect(retrieved).not.toBeNull()
+          expect(retrieved?.id).toBe(job.id)
+          expect(retrieved?.name).toBe("test-job")
         })
 
-        it("should get next pending job with SKIP LOCKED", async () => {
+        it("should return null for unknown ID", async () => {
+          const result = await adapter.getJobById(
+            "00000000-0000-0000-0000-000000000000"
+          )
+          expect(result).toBeNull()
+        })
+      })
+
+      describe("addJobs (batch)", () => {
+        it("should add multiple jobs", async () => {
+          const jobs = await adapter.addJobs([
+            {
+              name: "batch-1",
+              payload: { n: 1 },
+              status: "pending",
+              priority: 1,
+              attempts: 0,
+              maxAttempts: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+            {
+              name: "batch-2",
+              payload: { n: 2 },
+              status: "pending",
+              priority: 2,
+              attempts: 0,
+              maxAttempts: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+          ])
+
+          expect(jobs).toHaveLength(2)
+          expect(jobs[0]?.name).toBe("batch-1")
+          expect(jobs[1]?.name).toBe("batch-2")
+        })
+      })
+
+      describe("getNextJob", () => {
+        it("should return highest priority job", async () => {
           await adapter.addJob({
-            name: "job-1",
-            payload: { order: 1 },
+            name: "low",
+            payload: {},
+            status: "pending",
+            priority: 5,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.addJob({
+            name: "high",
+            payload: {},
             status: "pending",
             priority: 1,
             attempts: 0,
             maxAttempts: 3,
             processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
           })
 
-          await adapter.addJob({
-            name: "job-2",
-            payload: { order: 2 },
-            status: "pending",
-            priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
-            processAt: new Date(),
+          const job = await adapter.getNextJob({
+            handlerNames: ["low", "high"],
+            activeGroups: [],
           })
-
-          const job = await adapter.getNextJob()
-          expect(job).toBeTruthy()
-
-          expect(job?.name).toBe("job-1") // High priority first
+          expect(job?.name).toBe("high")
         })
 
-        it("should update job status", async () => {
-          const job = await adapter.addJob({
-            name: "test-job",
-            payload: { data: "test" },
-            status: "pending",
-            priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
-            processAt: new Date(),
+        it("should return null when no jobs available", async () => {
+          const job = await adapter.getNextJob({
+            handlerNames: ["nonexistent"],
+            activeGroups: [],
           })
-
-          await adapter.updateJobStatus(job.id, "processing")
-
-          const [updated]: [{ processed_at: Date; status: string }?] =
-            useDefault === false
-              ? await internalDbClient`SELECT processed_at, status FROM ${internalDbClient(schemaName)}.${internalDbClient(tableName)} WHERE id=${job.id}`
-              : await internalDbClient`SELECT processed_at, status FROM queue_jobs WHERE id=${job.id}`
-
-          expect(updated?.status).toBe("processing")
-          expect(updated?.processed_at).toBeTruthy()
+          expect(job).toBeNull()
         })
 
-        it("should get queue stats", async () => {
+        it("should only return jobs for registered handlers", async () => {
           await adapter.addJob({
-            name: "job-1",
+            name: "unregistered",
             payload: {},
             status: "pending",
             priority: 2,
             attempts: 0,
             maxAttempts: 3,
             processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
           })
 
-          await adapter.addJob({
-            name: "job-2",
-            payload: {},
-            status: "completed",
-            priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
-            processAt: new Date(),
+          const job = await adapter.getNextJob({
+            handlerNames: ["other-handler"],
+            activeGroups: [],
           })
-
-          const stats = await adapter.getQueueStats()
-          expect(stats.pending).toBe(1)
-          expect(stats.completed).toBe(1)
-        })
-
-        it("should handle delayed jobs", async () => {
-          const futureTime = new Date(Date.now() + 60000)
-
-          await adapter.addJob({
-            name: "delayed-job",
-            payload: { data: "delayed" },
-            status: "delayed",
-            priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
-            processAt: futureTime,
-          })
-
-          // Should not get delayed job that's not ready
-          const job1 = await adapter.getNextJob()
-          expect(job1).toBeNull()
-
-          // Should get delayed job that's ready
-          const pastTime = new Date(Date.now() - 60000)
-          await adapter.addJob({
-            name: "ready-job",
-            payload: { data: "ready" },
-            status: "delayed",
-            priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
-            processAt: pastTime,
-          })
-
-          const job2 = await adapter.getNextJob()
-          expect(job2).toBeTruthy()
-
-          expect(job2?.name).toBe("ready-job")
+          expect(job).toBeNull()
         })
       })
 
-      describe("scheduling features", () => {
-        it("should handle cron jobs", async () => {
+      describe("getNextJobsForHandler", () => {
+        it("should return jobs for a specific handler", async () => {
+          await adapter.addJobs([
+            {
+              name: "target",
+              payload: { n: 1 },
+              status: "pending",
+              priority: 1,
+              attempts: 0,
+              maxAttempts: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+            {
+              name: "target",
+              payload: { n: 2 },
+              status: "pending",
+              priority: 2,
+              attempts: 0,
+              maxAttempts: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+            {
+              name: "other",
+              payload: { n: 3 },
+              status: "pending",
+              priority: 1,
+              attempts: 0,
+              maxAttempts: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+          ])
+
+          const jobs = await adapter.getNextJobsForHandler("target", 10, [])
+          expect(jobs).toHaveLength(2)
+          expect(jobs.every((j) => j.name === "target")).toBe(true)
+        })
+
+        it("should respect count limit", async () => {
+          await adapter.addJobs([
+            {
+              name: "x",
+              payload: {},
+              status: "pending",
+              priority: 1,
+              attempts: 0,
+              maxAttempts: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+            {
+              name: "x",
+              payload: {},
+              status: "pending",
+              priority: 2,
+              attempts: 0,
+              maxAttempts: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+            {
+              name: "x",
+              payload: {},
+              status: "pending",
+              priority: 3,
+              attempts: 0,
+              maxAttempts: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+          ])
+
+          const jobs = await adapter.getNextJobsForHandler("x", 2, [])
+          expect(jobs).toHaveLength(2)
+        })
+      })
+
+      describe("updateJobStatus", () => {
+        it("should update status to processing", async () => {
           const job = await adapter.addJob({
-            name: "cron-job",
-            payload: { data: "cron" },
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          await adapter.updateJobStatus(job.id, { status: "processing" })
+
+          const updated = await adapter.getJobById(job.id)
+          expect(updated?.status).toBe("processing")
+          expect(updated?.processedAt).toBeTruthy()
+        })
+
+        it("should update status to completed with result", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          await adapter.updateJobStatus(job.id, {
+            status: "completed",
+            result: { ok: true },
+          })
+
+          const updated = await adapter.getJobById(job.id)
+          expect(updated?.status).toBe("completed")
+          expect(updated?.completedAt).toBeTruthy()
+          expect(updated?.result).toEqual({ ok: true })
+        })
+
+        it("should update status to failed with error", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          await adapter.updateJobStatus(job.id, {
+            status: "failed",
+            error: { name: "Error", message: "test error" },
+          })
+
+          const updated = await adapter.getJobById(job.id)
+          expect(updated?.status).toBe("failed")
+          expect(updated?.failedAt).toBeTruthy()
+          expect(updated?.error?.message).toBe("test error")
+        })
+      })
+
+      describe("incrementJobAttempts", () => {
+        it("should increment attempts", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          await adapter.incrementJobAttempts(job.id)
+          const updated = await adapter.getJobById(job.id)
+          expect(updated?.attempts).toBe(1)
+        })
+      })
+
+      describe("updateJobProgress", () => {
+        it("should update progress", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "processing",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          await adapter.updateJobProgress(job.id, 50)
+          const updated = await adapter.getJobById(job.id)
+          expect(updated?.progress).toBe(50)
+        })
+
+        it("should clamp progress to 0-100", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "processing",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          await adapter.updateJobProgress(job.id, -10)
+          let updated = await adapter.getJobById(job.id)
+          expect(updated?.progress).toBe(0)
+
+          await adapter.updateJobProgress(job.id, 150)
+          updated = await adapter.getJobById(job.id)
+          expect(updated?.progress).toBe(100)
+        })
+      })
+
+      describe("cancelJob / cancelJobs", () => {
+        it("should cancel a pending job", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          const result = await adapter.cancelJob(job.id, "no longer needed")
+          expect(result).toBe(true)
+
+          const updated = await adapter.getJobById(job.id)
+          expect(updated?.status).toBe("cancelled")
+          expect(updated?.cancellationReason).toBe("no longer needed")
+          expect(updated?.cancelledAt).toBeTruthy()
+        })
+
+        it("should not cancel a completed job", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.updateJobStatus(job.id, { status: "completed" })
+
+          const result = await adapter.cancelJob(job.id)
+          expect(result).toBe(false)
+        })
+
+        it("should cancel multiple jobs by filter", async () => {
+          await adapter.addJobs([
+            {
+              name: "email",
+              payload: {},
+              status: "pending",
+              priority: 2,
+              attempts: 0,
+              maxAttempts: 3,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+            {
+              name: "email",
+              payload: {},
+              status: "pending",
+              priority: 2,
+              attempts: 0,
+              maxAttempts: 3,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+            {
+              name: "sms",
+              payload: {},
+              status: "pending",
+              priority: 2,
+              attempts: 0,
+              maxAttempts: 3,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+          ])
+
+          const count = await adapter.cancelJobs({ name: "email" })
+          expect(count).toBe(2)
+        })
+      })
+
+      describe("DLQ: getDeadJobs / redriveJob / redriveJobs", () => {
+        it("should get dead jobs", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.updateJobStatus(job.id, { status: "dead" })
+
+          const dead = await adapter.getDeadJobs()
+          expect(dead.length).toBeGreaterThanOrEqual(1)
+          expect(dead.some((j) => j.id === job.id)).toBe(true)
+        })
+
+        it("should redrive a dead job", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 3,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.updateJobStatus(job.id, { status: "dead" })
+
+          await adapter.redriveJob(job.id)
+          const updated = await adapter.getJobById(job.id)
+          expect(updated?.status).toBe("pending")
+          expect(updated?.attempts).toBe(0)
+        })
+
+        it("should redrive all dead jobs", async () => {
+          const j1 = await adapter.addJob({
+            name: "a",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          const j2 = await adapter.addJob({
+            name: "b",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.updateJobStatus(j1.id, { status: "dead" })
+          await adapter.updateJobStatus(j2.id, { status: "dead" })
+
+          const count = await adapter.redriveJobs()
+          expect(count).toBe(2)
+        })
+      })
+
+      describe("getQueueStats", () => {
+        it("should return counts by status", async () => {
+          await adapter.addJob({
+            name: "a",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.addJob({
+            name: "b",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          const j3 = await adapter.addJob({
+            name: "c",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.updateJobStatus(j3.id, { status: "completed" })
+
+          const stats = await adapter.getQueueStats()
+          expect(stats.pending).toBe(2)
+          expect(stats.completed).toBe(1)
+        })
+      })
+
+      describe("size", () => {
+        it("should count pending + delayed jobs", async () => {
+          await adapter.addJob({
+            name: "a",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.addJob({
+            name: "b",
+            payload: {},
             status: "delayed",
             priority: 2,
             attempts: 0,
             maxAttempts: 3,
-            processAt: new Date(Date.now() + 60000),
+            processAt: new Date(Date.now() + 60_000),
+            progress: 0,
+            repeatCount: 0,
+          })
+          const j3 = await adapter.addJob({
+            name: "c",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.updateJobStatus(j3.id, { status: "completed" })
+
+          const size = await adapter.size()
+          expect(size).toBe(2)
+        })
+      })
+
+      describe("clearJobs / cleanupJobs", () => {
+        it("should clear all jobs", async () => {
+          await adapter.addJob({
+            name: "a",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.addJob({
+            name: "b",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          const count = await adapter.clearJobs()
+          expect(count).toBe(2)
+        })
+
+        it("should clear jobs by status", async () => {
+          await adapter.addJob({
+            name: "a",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          const j2 = await adapter.addJob({
+            name: "b",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+          await adapter.updateJobStatus(j2.id, { status: "completed" })
+
+          const count = await adapter.clearJobs("completed")
+          expect(count).toBe(1)
+        })
+      })
+
+      describe("findJobByUniqueKey", () => {
+        it("should find active job by unique key", async () => {
+          await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+            uniqueKey: "unique-123",
+          })
+
+          const found = await adapter.findJobByUniqueKey("unique-123")
+          expect(found).not.toBeNull()
+          expect(found?.uniqueKey).toBe("unique-123")
+        })
+
+        it("should not find completed job by unique key", async () => {
+          const job = await adapter.addJob({
+            name: "test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+            uniqueKey: "done-key",
+          })
+          await adapter.updateJobStatus(job.id, { status: "completed" })
+
+          const found = await adapter.findJobByUniqueKey("done-key")
+          expect(found).toBeNull()
+        })
+      })
+
+      describe("groups", () => {
+        it("should skip active groups in getNextJob", async () => {
+          await adapter.addJob({
+            name: "grouped",
+            payload: { n: 1 },
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+            groupKey: "g1",
+          })
+          await adapter.addJob({
+            name: "grouped",
+            payload: { n: 2 },
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+            groupKey: "g2",
+          })
+
+          const job = await adapter.getNextJob({
+            handlerNames: ["grouped"],
+            activeGroups: ["g1"],
+          })
+          expect(job?.groupKey).toBe("g2")
+        })
+      })
+
+      describe("delayed jobs", () => {
+        it("should not pick future delayed jobs", async () => {
+          await adapter.addJob({
+            name: "delayed",
+            payload: {},
+            status: "delayed",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(Date.now() + 60_000),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          const job = await adapter.getNextJob({
+            handlerNames: ["delayed"],
+            activeGroups: [],
+          })
+          expect(job).toBeNull()
+        })
+      })
+
+      describe("cron fields", () => {
+        it("should store and retrieve cron expression", async () => {
+          const job = await adapter.addJob({
+            name: "cron-job",
+            payload: {},
+            status: "delayed",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(Date.now() + 60_000),
+            progress: 0,
+            repeatCount: 0,
             cron: "0 9 * * *",
           })
 
-          expect(job.cron).toBe("0 9 * * *")
+          const retrieved = await adapter.getJobById(job.id)
+          expect(retrieved?.cron).toBe("0 9 * * *")
         })
 
-        it("should handle recurring jobs", async () => {
+        it("should store repeat fields", async () => {
           const job = await adapter.addJob({
-            name: "recurring-job",
-            payload: { data: "recurring" },
-            status: "pending",
+            name: "repeat-job",
+            payload: {},
+            status: "delayed",
             priority: 2,
             attempts: 0,
             maxAttempts: 3,
-            processAt: new Date(),
-            repeatEvery: 60000,
-            repeatLimit: 5,
+            processAt: new Date(Date.now() + 60_000),
+            progress: 0,
             repeatCount: 2,
+            repeatEvery: 5000,
+            repeatLimit: 10,
           })
 
-          expect(job.repeatEvery).toBe(60000)
-          expect(job.repeatLimit).toBe(5)
-          expect(job.repeatCount).toBe(2)
+          const retrieved = await adapter.getJobById(job.id)
+          expect(retrieved?.repeatEvery).toBe(5000)
+          expect(retrieved?.repeatLimit).toBe(10)
+          expect(retrieved?.repeatCount).toBe(2)
         })
       })
 
-      describe("Result storage", () => {
-        it("should store job result when job completes", async () => {
+      describe("timeout", () => {
+        it("should store timeout value", async () => {
           const job = await adapter.addJob({
-            name: "test-job",
-            payload: { input: "test" },
+            name: "timeout-job",
+            payload: {},
             status: "pending",
             priority: 2,
             attempts: 0,
             maxAttempts: 3,
             processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+            timeout: 5000,
           })
 
-          const result = { success: true, output: "processed" }
-          await adapter.updateJobStatus(job.id, "completed", undefined, result)
-
-          const [updated]: [{ completed_at: Date; status: string; result: unknown }?] =
-            useDefault === false
-              ? await internalDbClient`SELECT completed_at, status, result FROM ${internalDbClient(schemaName)}.${internalDbClient(tableName)} WHERE id=${job.id}`
-              : await internalDbClient`SELECT completed_at, status, result FROM queue_jobs WHERE id=${job.id}`
-
-          expect(updated?.status).toBe("completed")
-          expect(updated?.result).toEqual(result)
-          expect(updated?.completed_at).toBeTruthy()
-        })
-
-        it("should handle null/undefined results", async () => {
-          const job = await adapter.addJob({
-            name: "test-job",
-            payload: { input: "test" },
-            status: "pending",
-            priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
-            processAt: new Date(),
-          })
-
-          await adapter.updateJobStatus(job.id, "completed", undefined, null)
-
-          const tableNameWithSchema =
-            useDefault === false ? `${schemaName}.${tableName}` : "queue_jobs"
-
-          const [updated]: [{ result: unknown }?] =
-            await internalDbClient`SELECT result FROM ${internalDbClient(tableNameWithSchema)} WHERE id=${job.id}`
-
-          expect(updated?.result).toBeNull()
-        })
-
-        it("should preserve result in transformJob method", async () => {
-          const job = await adapter.addJob({
-            name: "test-job",
-            payload: { input: "test" },
-            status: "pending",
-            priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
-            processAt: new Date(),
-          })
-
-          const result = { data: "test-result", count: 42 }
-          await adapter.updateJobStatus(job.id, "completed", undefined, result)
-
-          const nextJob = await adapter.getNextJob()
-          expect(nextJob).toBeNull() // No pending jobs
-
-          const [dbJob]: [{ result: unknown }?] =
-            useDefault === false
-              ? await internalDbClient`SELECT result FROM ${internalDbClient(schemaName)}.${internalDbClient(tableName)} WHERE id=${job.id}`
-              : await internalDbClient`SELECT result FROM queue_jobs WHERE id=${job.id}`
-
-          expect(dbJob?.result).toEqual(result)
-        })
-
-        it("should not update result when not provided", async () => {
-          const job = await adapter.addJob({
-            name: "test-job",
-            payload: { input: "test" },
-            status: "pending",
-            priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
-            processAt: new Date(),
-          })
-
-          // First update with result
-          const result = { initial: "result" }
-          await adapter.updateJobStatus(job.id, "processing", undefined, result)
-
-          // Second update without result (should preserve existing result)
-          await adapter.updateJobStatus(job.id, "completed")
-
-          const [updated]: [{ result: unknown; status: string }?] =
-            useDefault === false
-              ? await internalDbClient`SELECT result, status FROM ${internalDbClient(schemaName)}.${internalDbClient(tableName)} WHERE id=${job.id}`
-              : await internalDbClient`SELECT result, status FROM queue_jobs WHERE id=${job.id}`
-
-          expect(updated?.result).toEqual(result)
-          expect(updated?.status).toBe("completed")
+          const retrieved = await adapter.getJobById(job.id)
+          expect(retrieved?.timeout).toBe(5000)
         })
       })
-    },
+    }
   )
 }
