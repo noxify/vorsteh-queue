@@ -1,58 +1,32 @@
-import type { Kysely } from "kysely"
-import { sql } from "kysely"
-
 import type {
   AdapterProps,
-  BaseJob,
-  BatchJob,
+  CancelJobsFilter,
+  FlowNode,
+  GetNextJobOptions,
+  Job,
   JobStatus,
+  JobStatusUpdate,
+  NewJob,
+  PaginationOptions,
   QueueStats,
   SerializedError,
+  StepState,
 } from "@vorsteh-queue/core"
-import { asUtc, BaseQueueAdapter, serializeError } from "@vorsteh-queue/core"
+import { BaseQueueAdapter } from "@vorsteh-queue/core"
+import type { Kysely } from "kysely"
+import { sql } from "kysely"
 
 import type { DB, InsertQueueJobValue, QueueJob } from "./types"
 
 /**
- * PostgreSQL adapter for the queue system using Drizzle ORM.
- * Supports PostgreSQL databases through Drizzle ORM with node-postgres, postgres.js, or PGlite.
- * Provides persistent job storage with ACID transactions and optimized job selection.
+ * PostgreSQL adapter for the queue system using Kysely.
  *
  * @example
  * ```typescript
  * import { Kysely } from "kysely"
- * import { PostgresJSDialect } from "kysely-postgres-js"
- * import postgres from "postgres"
- *
- * import type { QueueJobTableDefinition } from "@vorsteh-queue/adapter-kysely/types"
- *
  * import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
- * import { Queue } from "@vorsteh-queue/core"
  *
- * interface DB {
- *   queue_jobs: QueueJobTableDefinition
- *   other_table: {
- *     name: string
- *   }
- * }
- *
- * const client = postgres(
- *   process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/queue_db",
- *   { max: 10 }, // Connection pool
- * )
- *
- * const db = new Kysely<DB>({
- *   dialect: new PostgresJSDialect({
- *     postgres: client,
- *   }),
- * })
- *
- *
- * const queue = new Queue(new PostgresQueueAdapter(db), {
- *   name: "advanced-queue",
- *   removeOnComplete: 20,
- *   removeOnFail: 10,
- * })
+ * const adapter = new PostgresQueueAdapter(db)
  * ```
  */
 export class PostgresQueueAdapter extends BaseQueueAdapter {
@@ -60,44 +34,31 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   private tableName: string
   private schemaName: string
 
-  /**
-   * Create a new PostgreSQL queue adapter.
-   *
-   * @param db Kysely database instance
-   */
   constructor(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     db: Kysely<any>,
-    adapterConfig?: AdapterProps<"kysely">,
+    adapterConfig?: AdapterProps<"kysely">
   ) {
     super()
-
-    // to get the type-safety, we cast the db to Kysely<DB>
     this.customDbClient = db as Kysely<DB>
     this.tableName = adapterConfig?.tableName ?? "queue_jobs"
     this.schemaName = adapterConfig?.schemaName ?? "public"
   }
 
-  async connect(): Promise<void> {
-    // kysely doesn't require explicit connection
+  private get table() {
+    return `${this.schemaName}.${this.tableName}` as unknown as "tablename"
   }
 
-  async disconnect(): Promise<void> {
-    // Releases all resources and disconnects from the database.
+  // eslint-disable-next-line class-methods-use-this, no-empty-function
+  async connect(): Promise<void> {}
 
+  async disconnect(): Promise<void> {
     await this.customDbClient.destroy()
   }
 
-  async addJob<TJobPayload, TJobResult = unknown>(
-    job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
-  ): Promise<BaseJob<TJobPayload, TJobResult>> {
+  async addJob(job: NewJob): Promise<Job> {
     const result = await this.customDbClient
-      // this is needed to convince kysely's type system that the table name is correct
-      // we cast to unknown and then to "tablename" to bypass the string literal type check
-      // I know, it's a bit hacky, but it works
-      // tried it also via `sql.id()` but that didn't work and I got some runtime errors
-      // we're doing this in all places where we reference the table name dynamically
-      .insertInto(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .insertInto(this.table)
       .values({
         queue_name: this.queueName,
         name: job.name,
@@ -107,11 +68,14 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
         attempts: job.attempts,
         max_attempts: job.maxAttempts,
         process_at: sql`${job.processAt.toISOString()}::timestamptz`,
-        cron: job.cron,
-        repeat_every: job.repeatEvery,
-        repeat_limit: job.repeatLimit,
-        repeat_count: job.repeatCount,
-        timeout: job.timeout,
+        progress: job.progress ?? 0,
+        cron: job.cron ?? null,
+        repeat_every: job.repeatEvery ?? null,
+        repeat_limit: job.repeatLimit ?? null,
+        repeat_count: job.repeatCount ?? 0,
+        timeout: typeof job.timeout === "number" ? job.timeout : null,
+        group_key: job.groupKey ?? null,
+        unique_key: job.uniqueKey ?? null,
       })
       .returningAll()
       .executeTakeFirst()
@@ -119,14 +83,13 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     if (!result) {
       throw new Error("Failed to create job")
     }
-
-    return this.transformJob(result) as BaseJob<TJobPayload, TJobResult>
+    return this.transformJob(result)
   }
 
-  async addJobs<TJobPayload, TJobResult = unknown>(
-    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
-  ): Promise<BatchJob<TJobPayload, TJobResult>[]> {
-    if (!jobs.length) return []
+  async addJobs(jobs: readonly NewJob[]): Promise<readonly Job[]> {
+    if (jobs.length === 0) {
+      return []
+    }
 
     const values: InsertQueueJobValue[] = jobs.map((job) => ({
       queue_name: this.queueName,
@@ -136,44 +99,154 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       priority: job.priority,
       attempts: job.attempts,
       max_attempts: job.maxAttempts,
-      process_at: sql`${asUtc(new Date()).toISOString()}::timestamptz`,
-      cron: null,
-      repeat_every: null,
-      repeat_limit: null,
-      repeat_count: 0,
-      timeout: job.timeout,
+      process_at: sql`${job.processAt.toISOString()}::timestamptz`,
+      progress: job.progress ?? 0,
+      cron: job.cron ?? null,
+      repeat_every: job.repeatEvery ?? null,
+      repeat_limit: job.repeatLimit ?? null,
+      repeat_count: job.repeatCount ?? 0,
+      timeout: typeof job.timeout === "number" ? job.timeout : null,
+      group_key: job.groupKey ?? null,
+      unique_key: job.uniqueKey ?? null,
     }))
 
     const results = await this.customDbClient
-      .insertInto(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .insertInto(this.table)
       .values(values)
       .returningAll()
       .execute()
 
-    if (!results.length) {
-      throw new Error("Failed to create jobs")
-    }
-
-    return results.map((row) => this.transformJob(row) as BatchJob<TJobPayload, TJobResult>)
+    return results.map((row) => this.transformJob(row))
   }
 
-  async updateJobStatus(
-    id: string,
-    status: JobStatus,
-    error?: unknown,
-    result?: unknown,
-  ): Promise<void> {
-    const now = new Date()
-    const updates: Record<string, unknown> = { status }
+  async getJobById(id: string): Promise<Job | null> {
+    const job = await this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("id", "=", id)
+      .where("queue_name", "=", this.queueName)
+      .executeTakeFirst()
 
-    if (error) updates.error = serializeError(error)
-    if (result !== undefined) updates.result = result
-    if (status === "processing") updates.processed_at = asUtc(now)
-    if (status === "completed") updates.completed_at = asUtc(now)
-    if (status === "failed") updates.failed_at = asUtc(now)
+    return job ? this.transformJob(job) : null
+  }
+
+  async getNextJob(options: GetNextJobOptions): Promise<Job | null> {
+    const now = new Date()
+
+    // Promote delayed jobs that are ready
+    const delayed = await this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+      .where("status", "=", "delayed")
+      .where("process_at", "<=", now)
+      .where("name", "in", [...options.handlerNames])
+      .orderBy("priority", "asc")
+      .orderBy("created_at", "asc")
+      .limit(1)
+      .forUpdate()
+      .skipLocked()
+      .executeTakeFirst()
+
+    if (delayed) {
+      await this.customDbClient
+        .updateTable(this.table)
+        .set({ status: "pending" })
+        .where("id", "=", delayed.id)
+        .execute()
+    }
+
+    // Pick next pending job
+    let query = this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+      .where("status", "=", "pending")
+      .where("name", "in", [...options.handlerNames])
+
+    if (options.activeGroups.length > 0) {
+      query = query.where((eb) =>
+        eb.or([
+          eb("group_key", "is", null),
+          eb("group_key", "not in", [...options.activeGroups]),
+        ])
+      )
+    }
+
+    const job = await query
+      .orderBy("priority", "asc")
+      .orderBy("created_at", "asc")
+      .limit(1)
+      .forUpdate()
+      .skipLocked()
+      .executeTakeFirst()
+
+    return job ? this.transformJob(job) : null
+  }
+
+  async getNextJobsForHandler(
+    handlerName: string,
+    count: number,
+    groupConstraints: readonly string[]
+  ): Promise<readonly Job[]> {
+    let query = this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+      .where("status", "=", "pending")
+      .where("name", "=", handlerName)
+
+    if (groupConstraints.length > 0) {
+      query = query.where((eb) =>
+        eb.or([
+          eb("group_key", "is", null),
+          eb("group_key", "not in", [...groupConstraints]),
+        ])
+      )
+    }
+
+    const jobs = await query
+      .orderBy("priority", "asc")
+      .orderBy("created_at", "asc")
+      .limit(count)
+      .forUpdate()
+      .skipLocked()
+      .execute()
+
+    return jobs.map((row) => this.transformJob(row))
+  }
+
+  async updateJobStatus(id: string, update: JobStatusUpdate): Promise<void> {
+    const now = new Date()
+    const updates: Record<string, unknown> = { status: update.status }
+
+    if (update.error) {
+      updates.error = update.error
+    }
+    if (update.result !== undefined) {
+      updates.result = update.result
+    }
+    if (update.processAt) {
+      updates.process_at = update.processAt
+    }
+    if (update.cancellationReason) {
+      updates.cancellation_reason = update.cancellationReason
+    }
+    if (update.status === "processing") {
+      updates.processed_at = now
+    }
+    if (update.status === "completed") {
+      updates.completed_at = now
+    }
+    if (update.status === "failed") {
+      updates.failed_at = now
+    }
+    if (update.status === "cancelled") {
+      updates.cancelled_at = now
+    }
 
     await this.customDbClient
-      .updateTable(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .updateTable(this.table)
       .set(updates)
       .where("id", "=", id)
       .execute()
@@ -181,70 +254,180 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
   async incrementJobAttempts(id: string): Promise<void> {
     await this.customDbClient
-      .updateTable(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
-      .set({ attempts: sql`${"attempts"} + 1` })
+      .updateTable(this.table)
+      .set({ attempts: sql`attempts + 1` })
       .where("id", "=", id)
       .execute()
   }
 
   async updateJobProgress(id: string, progress: number): Promise<void> {
-    // Ensure progress is between 0-100
-    const normalizedProgress = Math.max(0, Math.min(100, progress))
-
+    const normalized = Math.max(0, Math.min(100, progress))
     await this.customDbClient
-      .updateTable(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
-      .set({ progress: normalizedProgress })
+      .updateTable(this.table)
+      .set({ progress: normalized })
       .where("id", "=", id)
       .execute()
   }
 
+  async cancelJob(id: string, reason?: string): Promise<boolean> {
+    const job = await this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("id", "=", id)
+      .where("queue_name", "=", this.queueName)
+      .executeTakeFirst()
+
+    if (!job) {
+      return false
+    }
+    const cancellable = ["pending", "delayed", "processing", "failed"]
+    if (!cancellable.includes(job.status)) {
+      return false
+    }
+
+    await this.customDbClient
+      .updateTable(this.table)
+      .set({
+        status: "cancelled",
+        cancelled_at: new Date(),
+        cancellation_reason: reason ?? null,
+      })
+      .where("id", "=", id)
+      .execute()
+
+    return true
+  }
+
+  async cancelJobs(filter: CancelJobsFilter): Promise<number> {
+    let query = this.customDbClient
+      .updateTable(this.table)
+      .set({ status: "cancelled", cancelled_at: new Date() })
+      .where("queue_name", "=", this.queueName)
+      .where("status", "in", ["pending", "delayed", "processing", "failed"])
+
+    if (filter.name) {
+      query = query.where("name", "=", filter.name)
+    }
+    if (filter.status) {
+      query = query.where("status", "=", filter.status)
+    }
+    if (filter.group) {
+      query = query.where("group_key", "=", filter.group)
+    }
+
+    const result = await query.executeTakeFirst()
+    return Number(result.numUpdatedRows)
+  }
+
+  async getDeadJobs(options?: PaginationOptions): Promise<readonly Job[]> {
+    const limit = options?.limit ?? 50
+    const offset = options?.offset ?? 0
+
+    const jobs = await this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+      .where("status", "=", "dead")
+      .orderBy("created_at", "desc")
+      .limit(limit)
+      .offset(offset)
+      .execute()
+
+    return jobs.map((row) => this.transformJob(row))
+  }
+
+  async redriveJob(id: string): Promise<void> {
+    await this.customDbClient
+      .updateTable(this.table)
+      .set({
+        status: "pending",
+        attempts: 0,
+        error: null,
+        failed_at: null,
+        process_at: new Date(),
+        progress: 0,
+      })
+      .where("id", "=", id)
+      .where("queue_name", "=", this.queueName)
+      .where("status", "=", "dead")
+      .execute()
+  }
+
+  async redriveJobs(filter?: { name?: string }): Promise<number> {
+    let query = this.customDbClient
+      .updateTable(this.table)
+      .set({
+        status: "pending",
+        attempts: 0,
+        error: null,
+        failed_at: null,
+        process_at: new Date(),
+        progress: 0,
+      })
+      .where("queue_name", "=", this.queueName)
+      .where("status", "=", "dead")
+
+    if (filter?.name) {
+      query = query.where("name", "=", filter.name)
+    }
+
+    const result = await query.executeTakeFirst()
+    return Number(result.numUpdatedRows)
+  }
+
   async getQueueStats(): Promise<QueueStats> {
     const stats = await this.customDbClient
-      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
-      .select(({ fn }) => [
-        "status",
-        // The `fn` module contains the most common functions.
-        fn.countAll<number>().as("count"),
-      ])
+      .selectFrom(this.table)
+      .select(({ fn }) => ["status", fn.countAll<number>().as("count")])
       .where("queue_name", "=", this.queueName)
       .groupBy("status")
       .execute()
 
     const result = {
       pending: 0,
+      delayed: 0,
       processing: 0,
       completed: 0,
       failed: 0,
-      delayed: 0,
+      cancelled: 0,
+      dead: 0,
+      "waiting-children": 0,
     }
-
     for (const stat of stats) {
-      result[stat.status as JobStatus] = Number(stat.count)
+      if (stat.status in result) {
+        result[stat.status as keyof typeof result] = Number(stat.count)
+      }
     }
-
     return result
   }
 
+  async size(): Promise<number> {
+    const result = await this.customDbClient
+      .selectFrom(this.table)
+      .select(({ fn }) => [fn.countAll<number>().as("count")])
+      .where("queue_name", "=", this.queueName)
+      .where("status", "in", ["pending", "delayed"])
+      .executeTakeFirst()
+
+    return Number(result?.count ?? 0)
+  }
+
   async clearJobs(status?: JobStatus): Promise<number> {
-    const query = this.customDbClient
-      .deleteFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+    let query = this.customDbClient
+      .deleteFrom(this.table)
       .where("queue_name", "=", this.queueName)
 
     if (status) {
-      query.where("status", "=", status)
+      query = query.where("status", "=", status)
     }
 
-    // const result = (await this.customDbClient
-    //   .delete(schema.queueJobs)
     const result = await query.executeTakeFirst()
-
     return Number(result.numDeletedRows)
   }
 
   async cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
-    // Get jobs to delete (all except the most recent N)
     const jobsToDelete = await this.customDbClient
-      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .selectFrom(this.table)
       .select("id")
       .where("queue_name", "=", this.queueName)
       .where("status", "=", status)
@@ -256,99 +439,184 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       return 0
     }
 
-    const idsToDelete = jobsToDelete.map((job) => job.id)
+    const idsToDelete = jobsToDelete.map((j) => j.id)
 
     const result = await this.customDbClient
-      .deleteFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .deleteFrom(this.table)
       .where("queue_name", "=", this.queueName)
       .where("id", "in", idsToDelete)
       .executeTakeFirst()
 
-    return Number(result)
+    return Number(result.numDeletedRows)
   }
 
-  async size(): Promise<number> {
-    const result = await this.customDbClient
-      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
-      .select(this.customDbClient.fn.count("id").as("count"))
-      .executeTakeFirst()
-
-    return Number(result?.count ?? 0)
-  }
-
-  async getNextJobsForHandler(handlerName: string, count: number) {
-    const jobs = await this.customDbClient
-      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+  async findJobByUniqueKey(uniqueKey: string): Promise<Job | null> {
+    const job = await this.customDbClient
+      .selectFrom(this.table)
       .selectAll()
       .where("queue_name", "=", this.queueName)
-      .where("status", "=", "pending")
-      .where("name", "=", handlerName)
-      .orderBy("priority", "asc")
-      .orderBy("created_at", "asc")
-      .limit(count)
-      .forUpdate()
-      .skipLocked()
-      .execute()
+      .where("unique_key", "=", uniqueKey)
+      .where("status", "not in", ["completed", "cancelled", "dead"])
+      .executeTakeFirst()
 
-    // BatchJob omits scheduling fields, so we strip them
-    return jobs.map((job) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { cron, repeat_every, repeat_limit, repeat_count, process_at, status, ...rest } = job
-      return {
-        ...rest,
-        status: status as JobStatus,
-        maxAttempts: job.max_attempts,
-        createdAt: job.created_at,
-        processAt: job.process_at,
-        processedAt: job.processed_at ?? undefined,
-        completedAt: job.completed_at ?? undefined,
-        failedAt: job.failed_at ?? undefined,
-        error: job.error as SerializedError | undefined,
-        result: job.result,
-        progress: job.progress ?? 0,
-        timeout: job.timeout ?? undefined,
-      }
-    })
+    return job ? this.transformJob(job) : null
   }
 
   async transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult> {
     return this.customDbClient.transaction().execute(async () => fn())
   }
 
-  protected async getDelayedJobReady(now: Date): Promise<BaseJob | null> {
+  async updateJobSteps(id: string, steps: readonly StepState[]): Promise<void> {
+    await this.customDbClient
+      .updateTable(this.table)
+      .set({ steps: JSON.stringify(steps) })
+      .where("id", "=", id)
+      .execute()
+  }
+
+  async retryJob(id: string): Promise<boolean> {
     const job = await this.customDbClient
-      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .selectFrom(this.table)
       .selectAll()
+      .where("id", "=", id)
+      .where("queue_name", "=", this.queueName)
+      .where("status", "=", "failed")
+      .executeTakeFirst()
+    if (!job) {
+      return false
+    }
+
+    await this.customDbClient
+      .updateTable(this.table)
+      .set({
+        status: "pending",
+        attempts: 0,
+        error: null,
+        failed_at: null,
+        process_at: new Date(),
+        progress: 0,
+      })
+      .where("id", "=", id)
+      .execute()
+    return true
+  }
+
+  async runJobNow(id: string): Promise<boolean> {
+    const job = await this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("id", "=", id)
       .where("queue_name", "=", this.queueName)
       .where("status", "=", "delayed")
-      .where("process_at", "<=", now)
-      .orderBy("priority", "asc")
-      .orderBy("created_at", "asc")
-      .limit(1)
-      .forUpdate()
-      .skipLocked()
       .executeTakeFirst()
+    if (!job) {
+      return false
+    }
 
-    return job ? this.transformJob(job) : null
+    await this.customDbClient
+      .updateTable(this.table)
+      .set({ status: "pending", process_at: new Date() })
+      .where("id", "=", id)
+      .execute()
+    return true
   }
 
-  protected async getPendingJobByPriority(): Promise<BaseJob | null> {
+  async deleteJob(id: string): Promise<boolean> {
+    const result = await this.customDbClient
+      .deleteFrom(this.table)
+      .where("id", "=", id)
+      .where("queue_name", "=", this.queueName)
+      .executeTakeFirst()
+    return Number(result.numDeletedRows) > 0
+  }
+
+  async setJobSignal(
+    id: string,
+    event: string,
+    data: unknown
+  ): Promise<boolean> {
     const job = await this.customDbClient
-      .selectFrom(`${this.schemaName}.${this.tableName}` as unknown as "tablename")
+      .selectFrom(this.table)
+      .selectAll()
+      .where("id", "=", id)
+      .where("queue_name", "=", this.queueName)
+      .executeTakeFirst()
+    if (!job) {
+      return false
+    }
+
+    const existing = (job.signals as Record<string, unknown>) ?? {}
+    const signals = { ...existing, [event]: data }
+    await this.customDbClient
+      .updateTable(this.table)
+      .set({
+        signals: JSON.stringify(signals),
+        status: "pending",
+        process_at: new Date(),
+      })
+      .where("id", "=", id)
+      .execute()
+    return true
+  }
+
+  async getFlowTree(flowId: string): Promise<FlowNode | null> {
+    const jobs = await this.customDbClient
+      .selectFrom(this.table)
       .selectAll()
       .where("queue_name", "=", this.queueName)
-      .where("status", "=", "pending")
-      .orderBy("priority", "asc")
-      .orderBy("created_at", "asc")
-      .limit(1)
-      .forUpdate()
-      .skipLocked()
-      .executeTakeFirst()
+      .where("flow_id", "=", flowId)
+      .execute()
+    if (jobs.length === 0) {
+      return null
+    }
 
-    return job ? this.transformJob(job) : null
+    const allJobs = jobs.map((j) => this.transformJob(j))
+    const root = allJobs.find((j) => !j.parentId)
+    if (!root) {
+      return null
+    }
+
+    const buildNode = (job: Job): FlowNode => {
+      const children = allJobs.filter((j) => j.parentId === job.id)
+      return { job, children: children.map((c) => buildNode(c)) }
+    }
+    return buildNode(root)
   }
 
-  private transformJob(job: QueueJob): BaseJob {
+  async incrementChildrenCompleted(
+    parentId: string
+  ): Promise<{ completed: number; total: number }> {
+    await this.customDbClient
+      .updateTable(this.table)
+      .set({ children_completed: sql`children_completed + 1` })
+      .where("id", "=", parentId)
+      .execute()
+    const updated = await this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("id", "=", parentId)
+      .executeTakeFirst()
+    if (!updated) {
+      return { completed: 0, total: 0 }
+    }
+    return {
+      completed: updated.children_completed ?? 0,
+      total: updated.children_count ?? 0,
+    }
+  }
+
+  async getChildrenJobs(parentId: string): Promise<readonly Job[]> {
+    const jobs = await this.customDbClient
+      .selectFrom(this.table)
+      .selectAll()
+      .where("queue_name", "=", this.queueName)
+      .where("parent_id", "=", parentId)
+      .execute()
+    return jobs.map((j) => this.transformJob(j))
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private transformJob(job: QueueJob): Job {
     return {
       id: job.id,
       name: job.name,
@@ -362,14 +630,23 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       processedAt: job.processed_at ?? undefined,
       completedAt: job.completed_at ?? undefined,
       failedAt: job.failed_at ?? undefined,
+      cancelledAt: job.cancelled_at ?? undefined,
       error: job.error as SerializedError | undefined,
-      result: job.result,
+      result: job.result ?? undefined,
       progress: job.progress ?? 0,
       cron: job.cron ?? undefined,
       repeatEvery: job.repeat_every ?? undefined,
       repeatLimit: job.repeat_limit ?? undefined,
       repeatCount: job.repeat_count ?? 0,
-      timeout: job.timeout as number | false | undefined,
+      timeout: job.timeout ?? undefined,
+      groupKey: job.group_key ?? undefined,
+      uniqueKey: job.unique_key ?? undefined,
+      cancellationReason: job.cancellation_reason ?? undefined,
+      parentId: job.parent_id ?? undefined,
+      flowId: job.flow_id ?? undefined,
+      childrenCount: job.children_count ?? 0,
+      childrenCompleted: job.children_completed ?? 0,
+      failParentOnFailure: (job.fail_parent_on_failure ?? 0) > 0,
     }
   }
 }

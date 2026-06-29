@@ -1,6 +1,19 @@
 import type { Kysely } from "kysely"
 import { sql } from "kysely"
 
+/**
+ * Create migration helpers for the queue jobs table.
+ *
+ * @param tableName - Table name to use
+ * @param schemaName - Optional PostgreSQL schema name
+ * @returns Object with up/down migration functions
+ *
+ * @example
+ * ```typescript
+ * const { up, down } = createQueueJobsTable("queue_jobs")
+ * await up(db)
+ * ```
+ */
 export function createQueueJobsTable(tableName: string, schemaName?: string) {
   return {
     up: async (db: Kysely<unknown>) => {
@@ -26,14 +39,16 @@ async function generateUp({
   db: Kysely<unknown>
 }) {
   if (schemaName) {
-    await db.schema.createSchema("custom_schema").ifNotExists().execute()
+    await db.schema.createSchema(schemaName).ifNotExists().execute()
   }
 
   const schema = schemaName ? db.schema.withSchema(schemaName) : db.schema
 
   await schema
     .createTable(tableName)
-    .addColumn("id", "uuid", (col) => col.defaultTo(sql`gen_random_uuid()`).notNull())
+    .addColumn("id", "uuid", (col) =>
+      col.defaultTo(sql`gen_random_uuid()`).notNull()
+    )
     .addColumn("queue_name", "varchar(255)", (col) => col.notNull())
     .addColumn("name", "varchar(255)", (col) => col.notNull())
     .addColumn("payload", "jsonb", (col) => col.notNull())
@@ -41,32 +56,48 @@ async function generateUp({
     .addColumn("priority", "int4", (col) => col.notNull())
     .addColumn("attempts", "int4", (col) => col.defaultTo(0).notNull())
     .addColumn("max_attempts", "int4", (col) => col.notNull())
-    .addColumn("timeout", "jsonb")
+    .addColumn("timeout", "int4")
+    .addColumn("progress", "int4", (col) => col.defaultTo(0).notNull())
+    .addColumn("group_key", "varchar(255)")
+    .addColumn("unique_key", "varchar(255)")
     .addColumn("cron", "varchar(255)")
+    .addColumn("repeat_every", "int4")
+    .addColumn("repeat_limit", "int4")
+    .addColumn("repeat_count", "int4", (col) => col.defaultTo(0).notNull())
+    .addColumn("cancellation_reason", "text")
+    .addColumn("error", "jsonb")
+    .addColumn("result", "jsonb")
     .addColumn("created_at", "timestamptz", (col) =>
-      col.defaultTo(sql`timezone('utc'::text, now())`).notNull(),
+      col.defaultTo(sql`timezone('utc'::text, now())`).notNull()
     )
     .addColumn("process_at", "timestamptz", (col) => col.notNull())
     .addColumn("processed_at", "timestamptz")
     .addColumn("completed_at", "timestamptz")
     .addColumn("failed_at", "timestamptz")
-    .addColumn("error", "jsonb")
-    .addColumn("result", "jsonb")
-    .addColumn("progress", "int4")
-    .addColumn("repeat_every", "int4")
-    .addColumn("repeat_limit", "int4")
-    .addColumn("repeat_count", "int4")
+    .addColumn("cancelled_at", "timestamptz")
     .execute()
 
   await schema
-    .createIndex(`idx_${tableName}_status_priority`)
+    .createIndex(`idx_${tableName}_polling`)
     .on(tableName)
     .columns(["queue_name", "status", "priority", "created_at"])
     .execute()
 
   await schema
-    .createIndex(`idx_${tableName}_process_at`)
+    .createIndex(`idx_${tableName}_delayed`)
     .on(tableName)
-    .column("process_at")
+    .columns(["queue_name", "process_at"])
+    .execute()
+
+  await schema
+    .createIndex(`idx_${tableName}_active_groups`)
+    .on(tableName)
+    .columns(["queue_name", "group_key"])
+    .execute()
+
+  await schema
+    .createIndex(`idx_${tableName}_stats`)
+    .on(tableName)
+    .columns(["queue_name", "status"])
     .execute()
 }

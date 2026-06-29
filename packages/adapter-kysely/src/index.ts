@@ -1,4 +1,3 @@
-// PostgreSQL adapter
 export {
   PostgresQueueAdapter,
   PostgresQueueAdapter as PostgresKyselyQueueAdapter,

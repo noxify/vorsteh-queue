@@ -106,7 +106,9 @@ import { sql } from "kysely"
 export async function up(db: Kysely<unknown>) {
   await db.schema
     .createTable("queue_jobs")
-    .addColumn("id", "uuid", (col) => col.defaultTo(sql`gen_random_uuid()`).notNull())
+    .addColumn("id", "uuid", (col) =>
+      col.defaultTo(sql`gen_random_uuid()`).notNull()
+    )
     .addColumn("queue_name", "varchar(255)", (col) => col.notNull())
     .addColumn("name", "varchar(255)", (col) => col.notNull())
     .addColumn("payload", "jsonb", (col) => col.notNull())
@@ -116,7 +118,7 @@ export async function up(db: Kysely<unknown>) {
     .addColumn("max_attempts", "int4", (col) => col.notNull())
     .addColumn("cron", "varchar(255)")
     .addColumn("created_at", "timestamptz", (col) =>
-      col.defaultTo(sql`timezone('utc'::text, now())`).notNull(),
+      col.defaultTo(sql`timezone('utc'::text, now())`).notNull()
     )
     .addColumn("process_at", "timestamptz", (col) => col.notNull())
     .addColumn("processed_at", "timestamptz")

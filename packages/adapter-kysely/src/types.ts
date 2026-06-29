@@ -1,4 +1,10 @@
-import type { ColumnType, Insertable, InsertObject, Selectable, Updateable } from "kysely"
+import type {
+  ColumnType,
+  Insertable,
+  InsertObject,
+  Selectable,
+  Updateable,
+} from "kysely"
 
 type Generated<T> =
   T extends ColumnType<infer S, infer I, infer U>
@@ -15,19 +21,30 @@ export interface QueueJobTableDefinition {
   priority: number
   attempts: Generated<number>
   max_attempts: number
+  timeout: number | null
+  progress: Generated<number>
+  group_key: string | null
+  unique_key: string | null
+  cron: string | null
+  repeat_every: number | null
+  repeat_limit: number | null
+  repeat_count: Generated<number>
+  cancellation_reason: string | null
+  error: unknown
+  result: unknown
+  steps: unknown
+  signals: unknown
+  parent_id: string | null
+  flow_id: string | null
+  children_count: Generated<number>
+  children_completed: Generated<number>
+  fail_parent_on_failure: Generated<number>
   created_at: Generated<Timestamp>
   process_at: Timestamp
   processed_at: Timestamp | null
   completed_at: Timestamp | null
   failed_at: Timestamp | null
-  error: unknown
-  result: unknown
-  progress: Generated<number | null>
-  timeout: number | false | null
-  cron: string | null
-  repeat_every: number | null
-  repeat_limit: number | null
-  repeat_count: Generated<number | null>
+  cancelled_at: Timestamp | null
 }
 
 export type QueueJob = Selectable<QueueJobTableDefinition>
