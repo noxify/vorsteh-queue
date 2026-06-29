@@ -38,10 +38,13 @@ const queue = new Queue(adapter, {
 })
 
 // Register job handler
-queue.register("send-email", async (payload: { to: string; subject: string }) => {
-  // Your email sending logic
-  return { messageId: "abc123" }
-})
+queue.register(
+  "send-email",
+  async (payload: { to: string; subject: string }) => {
+    // Your email sending logic
+    return { messageId: "abc123" }
+  }
+)
 
 // Start processing
 await queue.connect()
@@ -159,7 +162,9 @@ export class MyCustomAdapter extends BaseQueueAdapter {
     // Connection logic
   }
 
-  async addJob<T>(job: Omit<BaseJob<T>, "id" | "createdAt">): Promise<BaseJob<T>> {
+  async addJob<T>(
+    job: Omit<BaseJob<T>, "id" | "createdAt">
+  ): Promise<BaseJob<T>> {
     // Add job to database
   }
 

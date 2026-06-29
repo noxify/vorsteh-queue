@@ -1,199 +1,521 @@
-import type { BaseJob, BatchJob, JobStatus, QueueStats } from "../../types"
-import { serializeError } from "../utils/error"
-import { asUtc } from "../utils/scheduler"
-import { BaseQueueAdapter } from "./base"
-
 /**
  * In-memory queue adapter for testing and development.
- * Stores all job data in memory - data is lost when the process exits.
+ *
+ * Stores all job data in memory — data is lost when the process exits.
+ * Implements the full QueueAdapter interface including group FIFO,
+ * unique key enforcement, DLQ, and cancellation.
  *
  * @example
  * ```typescript
  * const adapter = new MemoryQueueAdapter()
  * const queue = new Queue(adapter, { name: "test-queue" })
+ * const worker = new Worker(adapter, { name: "test-queue" })
  * ```
  */
+
+import type {
+  CancelJobsFilter,
+  FlowNode,
+  GetNextJobOptions,
+  Job,
+  JobStatus,
+  JobStatusUpdate,
+  NewJob,
+  PaginationOptions,
+  QueueStats,
+  StepState,
+} from "../types"
+import { BaseQueueAdapter } from "./base"
+
+const TERMINAL_STATUSES = new Set<JobStatus>(["completed", "cancelled", "dead"])
+const CANCELLABLE_STATUSES = new Set<JobStatus>([
+  "pending",
+  "delayed",
+  "processing",
+  "failed",
+])
+
 export class MemoryQueueAdapter extends BaseQueueAdapter {
-  private jobs = new Map<string, BaseJob>()
+  private jobs = new Map<string, Job>()
   private connected = false
 
-  connect(): Promise<void> {
+  async connect(): Promise<void> {
     this.connected = true
-    return Promise.resolve()
   }
 
-  disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     this.connected = false
     this.jobs.clear()
-    return Promise.resolve()
   }
 
-  addJob<TJobPayload, TJobResult = unknown>(
-    job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
-  ): Promise<BaseJob<TJobPayload, TJobResult>> {
-    const id = this.generateId()
+  // ─── Job CRUD ──────────────────────────────────────────────
+
+  async addJob(job: NewJob): Promise<Job> {
+    const id = BaseQueueAdapter.generateId()
     const createdAt = new Date()
 
-    const newJob: BaseJob<TJobPayload, TJobResult> = {
+    const newJob: Job = {
       ...job,
       id,
       createdAt,
-      cron: job.cron,
-      repeatEvery: job.repeatEvery,
-      repeatLimit: job.repeatLimit,
+      progress: job.progress ?? 0,
       repeatCount: job.repeatCount ?? 0,
-      timeout: job.timeout,
     }
 
     this.jobs.set(id, newJob)
-    return Promise.resolve(newJob)
+    return newJob
   }
 
-  addJobs<TJobPayload, TJobResult = unknown>(
-    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
-  ): Promise<BatchJob<TJobPayload, TJobResult>[]> {
-    const created: BatchJob<TJobPayload, TJobResult>[] = jobs.map((job) => {
-      const id = this.generateId()
+  async addJobs(jobs: readonly NewJob[]): Promise<readonly Job[]> {
+    return jobs.map((job) => {
+      const id = BaseQueueAdapter.generateId()
       const createdAt = new Date()
-      const newJob: BaseJob<TJobPayload, TJobResult> = {
+
+      const newJob: Job = {
         ...job,
         id,
         createdAt,
-        processAt: asUtc(new Date()),
-        cron: undefined,
-        repeatEvery: undefined,
-        repeatLimit: undefined,
-        repeatCount: 0,
-        timeout: job.timeout ?? undefined,
+        progress: job.progress ?? 0,
+        repeatCount: job.repeatCount ?? 0,
       }
+
       this.jobs.set(id, newJob)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { cron, repeatEvery, repeatLimit, repeatCount, processAt, ...batchJob } = newJob
-      return batchJob as BatchJob<TJobPayload, TJobResult>
+      return newJob
     })
-    return Promise.resolve(created)
   }
 
-  updateJobStatus(id: string, status: JobStatus, error?: unknown, result?: unknown): Promise<void> {
-    const job = this.jobs.get(id)
-    if (!job) return Promise.resolve()
+  async getJobById(id: string): Promise<Job | null> {
+    return this.jobs.get(id) ?? null
+  }
 
+  // ─── Job Picking ───────────────────────────────────────────
+
+  async getNextJob(options: GetNextJobOptions): Promise<Job | null> {
     const now = new Date()
-    const updatedJob: BaseJob = {
-      ...job,
-      status,
-      error: error ? serializeError(error) : undefined,
-      result: result !== undefined ? result : job.result,
-      processedAt: status === "processing" ? now : job.processedAt,
-      completedAt: status === "completed" ? now : job.completedAt,
-      failedAt: status === "failed" ? now : job.failedAt,
+
+    // First: promote delayed jobs that are ready
+    for (const job of this.jobs.values()) {
+      if (
+        job.status === "delayed" &&
+        job.processAt <= now &&
+        options.handlerNames.includes(job.name)
+      ) {
+        const updated: Job = { ...job, status: "pending" }
+        this.jobs.set(job.id, updated)
+      }
     }
 
-    this.jobs.set(id, updatedJob)
-    return Promise.resolve()
+    // Then: find the next pending job respecting handler names and group constraints
+    const candidates = [...this.jobs.values()]
+      .filter((job) => {
+        if (job.status !== "pending") {
+          return false
+        }
+        if (!options.handlerNames.includes(job.name)) {
+          return false
+        }
+        if (job.groupKey && options.activeGroups.includes(job.groupKey)) {
+          return false
+        }
+        return true
+      })
+      .toSorted((a, b) => {
+        const priorityDiff = a.priority - b.priority
+        return priorityDiff === 0
+          ? a.createdAt.getTime() - b.createdAt.getTime()
+          : priorityDiff
+      })
+
+    return candidates[0] ?? null
   }
 
-  incrementJobAttempts(id: string): Promise<void> {
+  async getNextJobsForHandler(
+    handlerName: string,
+    count: number,
+    groupConstraints: readonly string[]
+  ): Promise<readonly Job[]> {
+    const now = new Date()
+
+    // Promote delayed jobs that are ready for this handler
+    for (const job of this.jobs.values()) {
+      if (
+        job.status === "delayed" &&
+        job.processAt <= now &&
+        job.name === handlerName
+      ) {
+        const updated: Job = { ...job, status: "pending" }
+        this.jobs.set(job.id, updated)
+      }
+    }
+
+    return [...this.jobs.values()]
+      .filter((job) => {
+        if (job.status !== "pending") {
+          return false
+        }
+        if (job.name !== handlerName) {
+          return false
+        }
+        if (job.groupKey && groupConstraints.includes(job.groupKey)) {
+          return false
+        }
+        return true
+      })
+      .toSorted((a, b) => {
+        const priorityDiff = a.priority - b.priority
+        return priorityDiff === 0
+          ? a.createdAt.getTime() - b.createdAt.getTime()
+          : priorityDiff
+      })
+      .slice(0, count)
+  }
+
+  // ─── Status Updates ────────────────────────────────────────
+
+  async updateJobStatus(id: string, update: JobStatusUpdate): Promise<void> {
     const job = this.jobs.get(id)
-    if (!job) return Promise.resolve()
+    if (!job) {
+      return
+    }
+
+    const now = new Date()
+    const updated: Job = {
+      ...job,
+      status: update.status,
+      error: update.error ?? job.error,
+      result: update.result === undefined ? job.result : update.result,
+      processAt: update.processAt ?? job.processAt,
+      cancellationReason: update.cancellationReason ?? job.cancellationReason,
+      processedAt: update.status === "processing" ? now : job.processedAt,
+      completedAt: update.status === "completed" ? now : job.completedAt,
+      failedAt: update.status === "failed" ? now : job.failedAt,
+      cancelledAt: update.status === "cancelled" ? now : job.cancelledAt,
+    }
+
+    this.jobs.set(id, updated)
+  }
+
+  async incrementJobAttempts(id: string): Promise<void> {
+    const job = this.jobs.get(id)
+    if (!job) {
+      return
+    }
 
     this.jobs.set(id, { ...job, attempts: job.attempts + 1 })
-    return Promise.resolve()
   }
 
-  updateJobProgress(id: string, progress: number): Promise<void> {
+  async updateJobProgress(id: string, progress: number): Promise<void> {
     const job = this.jobs.get(id)
-    if (!job) return Promise.resolve()
+    if (!job) {
+      return
+    }
 
     const normalizedProgress = Math.max(0, Math.min(100, progress))
     this.jobs.set(id, { ...job, progress: normalizedProgress })
-    return Promise.resolve()
   }
 
-  getQueueStats(): Promise<QueueStats> {
-    const stats = { pending: 0, processing: 0, completed: 0, failed: 0, delayed: 0 }
+  // ─── Cancellation ──────────────────────────────────────────
 
-    for (const job of this.jobs.values()) {
-      stats[job.status]++
+  async cancelJob(id: string, reason?: string): Promise<boolean> {
+    const job = this.jobs.get(id)
+    if (!job) {
+      return false
+    }
+    if (!CANCELLABLE_STATUSES.has(job.status)) {
+      return false
     }
 
-    return Promise.resolve(stats)
+    const now = new Date()
+    this.jobs.set(id, {
+      ...job,
+      status: "cancelled",
+      cancelledAt: now,
+      cancellationReason: reason,
+    })
+
+    return true
   }
 
-  clearJobs(status?: JobStatus): Promise<number> {
+  async cancelJobs(filter: CancelJobsFilter): Promise<number> {
+    let count = 0
+
+    for (const [id, job] of this.jobs.entries()) {
+      if (filter.name && job.name !== filter.name) {
+        continue
+      }
+      if (filter.status && job.status !== filter.status) {
+        continue
+      }
+      if (filter.group && job.groupKey !== filter.group) {
+        continue
+      }
+      if (!CANCELLABLE_STATUSES.has(job.status)) {
+        continue
+      }
+
+      const now = new Date()
+      this.jobs.set(id, {
+        ...job,
+        status: "cancelled",
+        cancelledAt: now,
+      })
+      count += 1
+    }
+
+    return count
+  }
+
+  // ─── Dead-Letter Queue ─────────────────────────────────────
+
+  async getDeadJobs(options?: PaginationOptions): Promise<readonly Job[]> {
+    const limit = options?.limit ?? 50
+    const offset = options?.offset ?? 0
+
+    return [...this.jobs.values()]
+      .filter((job) => job.status === "dead")
+      .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(offset, offset + limit)
+  }
+
+  async redriveJob(id: string): Promise<void> {
+    const job = this.jobs.get(id)
+    if (!job || job.status !== "dead") {
+      return
+    }
+
+    this.jobs.set(id, {
+      ...job,
+      status: "pending",
+      attempts: 0,
+      error: undefined,
+      failedAt: undefined,
+      processAt: new Date(),
+      progress: 0,
+    })
+  }
+
+  async redriveJobs(filter?: { name?: string }): Promise<number> {
+    let count = 0
+
+    for (const [id, job] of this.jobs.entries()) {
+      if (job.status !== "dead") {
+        continue
+      }
+      if (filter?.name && job.name !== filter.name) {
+        continue
+      }
+
+      this.jobs.set(id, {
+        ...job,
+        status: "pending",
+        attempts: 0,
+        error: undefined,
+        failedAt: undefined,
+        processAt: new Date(),
+        progress: 0,
+      })
+      count += 1
+    }
+
+    return count
+  }
+
+  // ─── Statistics & Queries ──────────────────────────────────
+
+  async getQueueStats(): Promise<QueueStats> {
+    const stats = {
+      pending: 0,
+      delayed: 0,
+      processing: 0,
+      completed: 0,
+      failed: 0,
+      cancelled: 0,
+      dead: 0,
+      "waiting-children": 0,
+    }
+
+    for (const job of this.jobs.values()) {
+      if (job.status in stats) {
+        stats[job.status as keyof typeof stats] += 1
+      }
+    }
+
+    return stats
+  }
+
+  async size(): Promise<number> {
+    let count = 0
+    for (const job of this.jobs.values()) {
+      if (job.status === "pending" || job.status === "delayed") {
+        count += 1
+      }
+    }
+    return count
+  }
+
+  // ─── Cleanup ───────────────────────────────────────────────
+
+  async clearJobs(status?: JobStatus): Promise<number> {
     if (!status) {
       const count = this.jobs.size
       this.jobs.clear()
-      return Promise.resolve(count)
+      return count
     }
 
     let count = 0
     for (const [id, job] of this.jobs.entries()) {
       if (job.status === status) {
         this.jobs.delete(id)
-        count++
+        count += 1
       }
     }
 
-    return Promise.resolve(count)
+    return count
   }
 
-  cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
-    const jobsWithStatus = Array.from(this.jobs.values())
+  async cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
+    const jobsToDelete = [...this.jobs.values()]
       .filter((job) => job.status === status)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) // Most recent first
-
-    const jobsToDelete = jobsWithStatus.slice(keepCount)
+      .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(keepCount)
 
     for (const job of jobsToDelete) {
       this.jobs.delete(job.id)
     }
 
-    return Promise.resolve(jobsToDelete.length)
+    return jobsToDelete.length
   }
 
-  size(): Promise<number> {
-    const count = Array.from(this.jobs.values()).filter(
-      (job) => job.status === "pending" || job.status === "delayed",
-    ).length
-    return Promise.resolve(count)
+  // ─── Unique Jobs ───────────────────────────────────────────
+
+  async findJobByUniqueKey(uniqueKey: string): Promise<Job | null> {
+    for (const job of this.jobs.values()) {
+      if (job.uniqueKey === uniqueKey && !TERMINAL_STATUSES.has(job.status)) {
+        return job
+      }
+    }
+
+    return null
   }
 
+  // ─── Single Job Operations ─────────────────────────────────
+
+  async retryJob(id: string): Promise<boolean> {
+    const job = this.jobs.get(id)
+    if (!job || job.status !== "failed") {
+      return false
+    }
+
+    this.jobs.set(id, {
+      ...job,
+      status: "pending",
+      attempts: 0,
+      error: undefined,
+      failedAt: undefined,
+      processAt: new Date(),
+      progress: 0,
+    })
+
+    return true
+  }
+
+  async runJobNow(id: string): Promise<boolean> {
+    const job = this.jobs.get(id)
+    if (!job || job.status !== "delayed") {
+      return false
+    }
+
+    this.jobs.set(id, {
+      ...job,
+      status: "pending",
+      processAt: new Date(),
+    })
+
+    return true
+  }
+
+  async deleteJob(id: string): Promise<boolean> {
+    return this.jobs.delete(id)
+  }
+
+  // ─── Transactions ──────────────────────────────────────────
+
+  // eslint-disable-next-line class-methods-use-this
   async transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult> {
-    // Memory adapter doesn't need real transactions
     return fn()
   }
 
-  protected getDelayedJobReady(now: Date): Promise<BaseJob | null> {
-    for (const job of this.jobs.values()) {
-      if (job.status === "delayed" && job.processAt <= now) {
-        return Promise.resolve(job)
+  // ─── Steps ─────────────────────────────────────────────────
+
+  async updateJobSteps(id: string, steps: readonly StepState[]): Promise<void> {
+    const job = this.jobs.get(id)
+    if (!job) {
+      return
+    }
+
+    this.jobs.set(id, { ...job, steps })
+  }
+
+  async setJobSignal(
+    id: string,
+    event: string,
+    data: unknown
+  ): Promise<boolean> {
+    const job = this.jobs.get(id)
+    if (!job) {
+      return false
+    }
+
+    const signals = { ...job.signals, [event]: data }
+    this.jobs.set(id, {
+      ...job,
+      signals,
+      status: "pending",
+      processAt: new Date(),
+    })
+    return true
+  }
+
+  // ─── Flows ─────────────────────────────────────────────────
+
+  async getFlowTree(flowId: string): Promise<FlowNode | null> {
+    const flowJobs = [...this.jobs.values()].filter((j) => j.flowId === flowId)
+    if (flowJobs.length === 0) {
+      return null
+    }
+
+    // Find root (no parentId)
+    const root = flowJobs.find((j) => !j.parentId)
+    if (!root) {
+      return null
+    }
+
+    const buildNode = (job: Job): FlowNode => {
+      const children = flowJobs.filter((j) => j.parentId === job.id)
+      return {
+        job,
+        children: children.map((child) => buildNode(child)),
       }
     }
-    return Promise.resolve(null)
+
+    return buildNode(root)
   }
 
-  protected getPendingJobByPriority(): Promise<BaseJob | null> {
-    const pendingJobs = Array.from(this.jobs.values())
-      .filter((job) => job.status === "pending")
-      .sort((a, b) => {
-        const priorityDiff = a.priority - b.priority
-        return priorityDiff !== 0 ? priorityDiff : a.createdAt.getTime() - b.createdAt.getTime()
-      })
+  async incrementChildrenCompleted(
+    parentId: string
+  ): Promise<{ completed: number; total: number }> {
+    const job = this.jobs.get(parentId)
+    if (!job) {
+      return { completed: 0, total: 0 }
+    }
 
-    return Promise.resolve(pendingJobs[0] ?? null)
+    const completed = (job.childrenCompleted ?? 0) + 1
+    this.jobs.set(parentId, { ...job, childrenCompleted: completed })
+
+    return { completed, total: job.childrenCount ?? 0 }
   }
 
-  getNextJobsForHandler(handlerName: string, count: number): Promise<BatchJob[]> {
-    const pendingJobs = Array.from(this.jobs.values())
-      .filter((job) => job.status === "pending" && job.name === handlerName)
-      .sort((a, b) => {
-        const priorityDiff = a.priority - b.priority
-        return priorityDiff !== 0 ? priorityDiff : a.createdAt.getTime() - b.createdAt.getTime()
-      })
-      .slice(0, count)
-      .map((job) => job as BatchJob)
-
-    return Promise.resolve(pendingJobs)
+  async getChildrenJobs(parentId: string): Promise<readonly Job[]> {
+    return [...this.jobs.values()].filter((j) => j.parentId === parentId)
   }
 }

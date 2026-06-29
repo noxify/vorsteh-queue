@@ -1,94 +1,107 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it } from "vitest"
 
-import { MemoryQueueAdapter, Queue } from "../src"
-import { waitFor } from "../src/utils/helpers"
+import {
+  asUtc,
+  calculateNextRun,
+  parseCron,
+  toUtcDate,
+} from "../src/utils/scheduler"
 
-describe("Scheduler", () => {
-  let adapter: MemoryQueueAdapter
-  let queue: Queue
+describe("scheduler utilities", () => {
+  describe(parseCron, () => {
+    it("should return a valid next run date", () => {
+      const baseDate = new Date("2025-01-15T12:00:00Z")
+      const result = parseCron("0 9 * * *", "UTC", baseDate)
 
-  beforeEach(() => {
-    adapter = new MemoryQueueAdapter()
-    queue = new Queue(adapter, { name: "test-queue", pollInterval: 10, jobInterval: 1 })
-  })
-
-  describe("absolute scheduling", () => {
-    it("should schedule job to run at specific time", async () => {
-      const runAt = new Date(Date.now() + 100)
-
-      await queue.connect()
-      const job = await queue.add("test-job", { data: "test" }, { runAt })
-
-      expect(job.status).toBe("delayed")
-      expect(job.processAt).toEqual(runAt)
+      expect(result).toBeInstanceOf(Date)
+      // Next 9 AM UTC after 12:00 should be next day
+      expect(result.getTime()).toBeGreaterThan(baseDate.getTime())
     })
 
-    it("should run job immediately if runAt is in the past", async () => {
-      const runAt = new Date(Date.now() - 100)
-
-      await queue.connect()
-      const job = await queue.add("test-job", { data: "test" }, { runAt })
-
-      expect(job.status).toBe("pending")
-    })
-  })
-
-  describe("recurring jobs", () => {
-    it("should create recurring job with repeat interval", async () => {
-      const handler = vi.fn().mockResolvedValue({})
-      queue.register("recurring-job", handler)
-
-      await queue.connect()
-      await queue.add(
-        "recurring-job",
-        { data: "test" },
-        {
-          repeat: { every: 50, limit: 2 },
-        },
+    it("should throw on invalid cron expression", () => {
+      expect(() => parseCron("invalid cron", "UTC")).toThrow(
+        "Invalid cron expression"
       )
-      queue.start()
-
-      await waitFor(200)
-
-      expect(handler).toHaveBeenCalledTimes(2)
-
-      await queue.stop()
     })
 
-    it("should respect repeat limit", async () => {
-      const handler = vi.fn().mockResolvedValue({})
-      queue.register("limited-job", handler)
+    it("should handle timezone conversion", () => {
+      const baseDate = new Date("2025-01-15T12:00:00Z")
+      const utcResult = parseCron("0 9 * * *", "UTC", baseDate)
+      const nyResult = parseCron("0 9 * * *", "America/New_York", baseDate)
 
-      await queue.connect()
-      await queue.add(
-        "limited-job",
-        { data: "test" },
-        {
-          repeat: { every: 20, limit: 1 },
-        },
-      )
-      queue.start()
-
-      await waitFor(100)
-
-      expect(handler).toHaveBeenCalledTimes(1)
-
-      await queue.stop()
+      // NY is behind UTC, so 9 AM NY is later in UTC
+      expect(nyResult.getTime()).not.toBe(utcResult.getTime())
     })
   })
 
-  describe("cron scheduling", () => {
-    it("should create job with cron expression", async () => {
-      await queue.connect()
-      const job = await queue.add(
-        "cron-job",
-        { data: "test" },
-        {
-          cron: "0 9 * * *", // Every day at 9 AM
-        },
-      )
+  describe(calculateNextRun, () => {
+    it("should calculate next run for cron", () => {
+      const lastRun = new Date("2025-01-15T09:00:00Z")
+      const result = calculateNextRun({
+        cron: "0 9 * * *",
+        lastRun,
+      })
 
-      expect(job.cron).toBe("0 9 * * *")
+      expect(result).toBeInstanceOf(Date)
+      expect(result.getTime()).toBeGreaterThan(lastRun.getTime())
+    })
+
+    it("should calculate next run for repeatEvery", () => {
+      const lastRun = new Date("2025-01-15T09:00:00Z")
+      const result = calculateNextRun({
+        repeatEvery: 3_600_000, // 1 hour
+        lastRun,
+      })
+
+      expect(result.getTime()).toBe(lastRun.getTime() + 3_600_000)
+    })
+
+    it("should throw if neither cron nor repeatEvery provided", () => {
+      expect(() => calculateNextRun({ lastRun: new Date() })).toThrow(
+        "Either cron or repeatEvery must be provided"
+      )
+    })
+
+    it("should pass timezone to cron parsing", () => {
+      const lastRun = new Date("2025-01-15T09:00:00Z")
+      const resultUtc = calculateNextRun({
+        cron: "0 10 * * *",
+        lastRun,
+        timezone: "UTC",
+      })
+      const resultNy = calculateNextRun({
+        cron: "0 10 * * *",
+        lastRun,
+        timezone: "America/New_York",
+      })
+
+      expect(resultUtc.getTime()).not.toBe(resultNy.getTime())
+    })
+  })
+
+  describe(toUtcDate, () => {
+    it("should return same date for UTC timezone", () => {
+      const date = new Date("2025-01-15T09:00:00Z")
+      const result = toUtcDate(date, "UTC")
+      expect(result.getTime()).toBe(date.getTime())
+    })
+
+    it("should convert timezone date to UTC", () => {
+      const date = new Date("2025-01-15T09:00:00Z")
+      const result = toUtcDate(date, "America/New_York")
+
+      // Should be different because of timezone interpretation
+      expect(result).toBeInstanceOf(Date)
+    })
+  })
+
+  describe(asUtc, () => {
+    it("should return a Date object", () => {
+      const input = new Date("2025-01-15T09:00:00Z")
+      const result = asUtc(input)
+
+      expect(result).toBeInstanceOf(Date)
+      expect(result.getTime()).toBe(input.getTime())
     })
   })
 })

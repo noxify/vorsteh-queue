@@ -3,36 +3,41 @@
   "version": "0.5.1",
   "description": "Core queue engine for Vorsteh Queue with TypeScript support, job scheduling, and event system",
   "keywords": [
-    "queue",
-    "job-queue",
-    "background-jobs",
-    "task-queue",
-    "typescript",
-    "cron",
-    "scheduler",
-    "worker",
-    "async",
-    "redis-alternative",
-    "bull-alternative",
     "agenda-alternative",
-    "timezone",
-    "progress-tracking",
-    "event-driven",
+    "async",
+    "background-jobs",
+    "bull-alternative",
+    "cron",
     "database-backed",
+    "delayed-jobs",
+    "event-driven",
+    "job-queue",
+    "priority-queue",
+    "progress-tracking",
+    "queue",
+    "redis-alternative",
     "reliable",
     "retry",
-    "priority-queue",
-    "delayed-jobs"
+    "scheduler",
+    "task-queue",
+    "timezone",
+    "typescript",
+    "worker"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/noxify/vorsteh-queue",
     "directory": "packages/core"
   },
-  "license": "MIT",
+  "files": [
+    "dist"
+  ],
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -45,12 +50,14 @@
       "default": "./src/adapters/memory.ts"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "types"
-  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
   "scripts": {
     "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -69,14 +76,6 @@
     "rolldown": "1.1.3",
     "rollup-plugin-delete": "^3.0.2",
     "typescript": "^6.0.3",
-    "vitest": "^4.0.18"
-  },
-  "publishConfig": {
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
-    }
+    "vitest": "^4.1.9"
   }
 }
