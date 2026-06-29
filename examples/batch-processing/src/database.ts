@@ -5,7 +5,8 @@ import * as schema from "./schema"
 
 // Shared database connection
 const client = postgres(
-  process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/queue_tracking",
+  process.env.DATABASE_URL ||
+    "postgresql://postgres:password@localhost:5432/queue_tracking",
   { max: 10 } // Connection pool
 )
 

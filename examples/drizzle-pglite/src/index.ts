@@ -1,13 +1,15 @@
 import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue } from "@vorsteh-queue/core"
+import { Queue, Worker } from "@vorsteh-queue/core"
 
 import { db, client } from "./database"
 import * as schema from "./schema"
 
 // Import pushSchema from drizzle-kit/api
 // Source: https://github.com/drizzle-team/drizzle-orm/issues/4205
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports
-const { pushSchema } = require("drizzle-kit/api") as typeof import("drizzle-kit/api")
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports, node/global-require, unicorn/prefer-module */
+const { pushSchema } =
+  require("drizzle-kit/api") as typeof import("drizzle-kit/api")
+/* eslint-enable @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports, node/global-require, unicorn/prefer-module */
 
 // Job payload types
 interface EmailJob {
@@ -32,106 +34,127 @@ interface DataProcessingResult {
   results: unknown[]
 }
 
-// Queue setup
-const queue = new Queue(new PostgresQueueAdapter(db), { 
+// Shared adapter
+const adapter = new PostgresQueueAdapter(db)
+
+// Queue setup (producer)
+const queue = new Queue(adapter, {
   name: "example-queue",
   removeOnComplete: 10,
-  removeOnFail: 5
+  removeOnFail: 5,
+})
+
+// Worker setup (consumer)
+const worker = new Worker(adapter, {
+  name: "example-queue",
+  concurrency: 2,
 })
 
 // Job handlers with proper types
-queue.register<EmailJob, EmailResult>("send-email", async (job) => {
-  console.log(`📧 Sending email to ${job.payload.to}: ${job.payload.subject}`)
+worker.register<EmailJob, EmailResult>("send-email", async (job) => {
+  console.log(`Sending email to ${job.payload.to}: ${job.payload.subject}`)
   await new Promise((resolve) => setTimeout(resolve, 1000))
-  return { 
-    sent: true, 
-    messageId: `msg_${Date.now()}` 
+  return {
+    sent: true,
+    messageId: `msg_${Date.now()}`,
   }
 })
 
-queue.register<DataProcessingJob, DataProcessingResult>("process-data", async (job) => {
-  const { data, batchSize = 10 } = job.payload
-  console.log(`📊 Processing ${data.length} items in batches of ${batchSize}`)
-  
-  const results = []
-  for (let i = 0; i < data.length; i += batchSize) {
-    const batch = data.slice(i, i + batchSize)
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    results.push(...batch)
-    
-    // Update progress
-    const progress = Math.round(((i + batch.length) / data.length) * 100)
-    await job.updateProgress(progress)
+worker.register<DataProcessingJob, DataProcessingResult>(
+  "process-data",
+  async (job) => {
+    const { data, batchSize = 10 } = job.payload
+    console.log(`Processing ${data.length} items in batches of ${batchSize}`)
+
+    const results = []
+    for (let i = 0; i < data.length; i += batchSize) {
+      const batch = data.slice(i, i + batchSize)
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      results.push(...batch)
+
+      // Update progress
+      const progress = Math.round(((i + batch.length) / data.length) * 100)
+      await job.updateProgress(progress)
+    }
+
+    return { processed: results.length, results }
   }
-  
-  return { processed: results.length, results }
-})
+)
 
 async function main() {
-  console.log("🚀 Starting PGlite Queue Example (Embedded PostgreSQL)")
-  
+  console.log("Starting PGlite Queue Example (Embedded PostgreSQL)")
+
   // Initialize database schema (PGlite starts empty)
-  console.log("📋 Initializing database schema...")
+  console.log("Initializing database schema...")
   const { apply } = await pushSchema(schema, db as never)
   await apply()
-  console.log("✅ Database schema initialized")
+  console.log("Database schema initialized")
 
-  // Add event listeners
+  // Queue events (producer-side)
   queue.on("job:added", (job) => {
-    console.log(`✅ Job added: ${job.name} (${job.id})`)
+    console.log(`Job added: ${job.name} (${job.id})`)
   })
-  
-  queue.on("job:processing", (job) => {
-    console.log(`⚡ Processing: ${job.name} (${job.id})`)
+
+  // Worker events (consumer-side)
+  worker.on("job:processing", (job) => {
+    console.log(`Processing: ${job.name} (${job.id})`)
   })
-  
-  queue.on("job:completed", (job) => {
-    console.log(`🎉 Completed: ${job.name} (${job.id})`)
+
+  worker.on("job:completed", (job) => {
+    console.log(`Completed: ${job.name} (${job.id})`)
   })
-  
-  queue.on("job:failed", (job) => {
-    console.error(`❌ Failed: ${job.name} (${job.id}) - ${job.error}`)
+
+  worker.on("job:failed", (job) => {
+    console.error(`Failed: ${job.name} (${job.id}) - ${job.error}`)
   })
-  
-  queue.on("job:progress", (job) => {
-    console.log(`📈 Progress: ${job.name} - ${job.progress}%`)
+
+  worker.on("job:progress", (job) => {
+    console.log(`Progress: ${job.name} - ${job.progress}%`)
   })
 
   // Add some jobs
-  await queue.add<EmailJob>("send-email", { 
-    to: "user@example.com", 
+  await queue.add<EmailJob>("send-email", {
+    to: "user@example.com",
     subject: "Welcome!",
-    body: "Thanks for joining us!"
+    body: "Thanks for joining us!",
   })
-  
-  await queue.add<DataProcessingJob>("process-data", { 
-    data: Array.from({ length: 20 }, (_, i) => `item-${i + 1}`),
-    batchSize: 5
-  }, { priority: 1 })
-  
-  await queue.add<EmailJob>("send-email", { 
-    to: "admin@example.com", 
-    subject: "System Report",
-    body: "Daily system status"
-  }, { delay: 5000 })
+
+  await queue.add<DataProcessingJob>(
+    "process-data",
+    {
+      data: Array.from({ length: 20 }, (_, i) => `item-${i + 1}`),
+      batchSize: 5,
+    },
+    { priority: 1 }
+  )
+
+  await queue.add<EmailJob>(
+    "send-email",
+    {
+      to: "admin@example.com",
+      subject: "System Report",
+      body: "Daily system status",
+    },
+    { delay: 5000 }
+  )
 
   // Start processing
-  queue.start()
-  console.log("🔄 Queue processing started. Press Ctrl+C to stop.")
+  worker.start()
+  console.log("Queue processing started. Press Ctrl+C to stop.")
 
   // Show stats periodically
   const statsInterval = setInterval(async () => {
     const stats = await queue.getStats()
-    console.log("📊 Queue Stats:", stats)
-  }, 10000)
+    console.log("Queue Stats:", stats)
+  }, 10_000)
 
   // Graceful shutdown
   process.on("SIGINT", async () => {
-    console.log("\n🛑 Shutting down...")
+    console.log("\nShutting down...")
     clearInterval(statsInterval)
-    await queue.stop()
+    await worker.stop()
     await client.close()
-    console.log("✅ Shutdown complete")
+    console.log("Shutdown complete")
     process.exit(0)
   })
 }

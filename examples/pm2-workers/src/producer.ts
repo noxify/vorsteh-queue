@@ -7,7 +7,7 @@ async function addSampleJobs() {
   await imageQueue.connect()
   await reportQueue.connect()
 
-  console.log("🎯 Adding sample jobs to queues...")
+  console.log("Adding sample jobs to queues...")
 
   // Add email jobs
   await emailQueue.add("send-welcome-email", {
@@ -23,7 +23,7 @@ async function addSampleJobs() {
       subject: "New user registration",
       body: "A new user has registered...",
     },
-    { priority: 1 },
+    { priority: 1 }
   )
 
   // Add image processing jobs
@@ -55,7 +55,7 @@ async function addSampleJobs() {
 
   // Add recurring jobs
   await emailQueue.add(
-    "send-newsletter",
+    "send-notification",
     {
       to: "subscribers@example.com",
       subject: "Weekly Newsletter",
@@ -64,11 +64,11 @@ async function addSampleJobs() {
     {
       cron: "0 9 * * 1", // Every Monday at 9 AM
       timezone: "America/New_York",
-    },
+    }
   )
 
   await reportQueue.add(
-    "generate-weekly-summary",
+    "generate-monthly-report",
     {
       reportType: "summary",
       dateRange: { start: "2024-01-01", end: "2024-01-07" },
@@ -78,25 +78,24 @@ async function addSampleJobs() {
     {
       cron: "0 8 * * 0", // Every Sunday at 8 AM
       timezone: "UTC",
-    },
+    }
   )
 
-  console.log("✅ Sample jobs added successfully!", new Date().toISOString())
-  console.log("\n📊 Queue Status:")
+  console.log("Sample jobs added successfully!", new Date().toISOString())
+  console.log("\nQueue Status:")
 
   const emailStats = await emailQueue.getStats()
   const imageStats = await imageQueue.getStats()
   const reportStats = await reportQueue.getStats()
 
   console.log(
-    `Email Queue: ${emailStats.pending} pending, ${emailStats.delayed} delayed, ${emailStats.completed} completed, ${emailStats.failed} failed, ${emailStats.processing} processing`,
+    `Email Queue: ${emailStats.pending} pending, ${emailStats.delayed} delayed, ${emailStats.completed} completed, ${emailStats.failed} failed, ${emailStats.processing} processing`
   )
   console.log(
-    `Image Queue: ${imageStats.pending} pending, ${imageStats.delayed} delayed, ${imageStats.completed} completed, ${imageStats.failed} failed, ${imageStats.processing} processing`,
+    `Image Queue: ${imageStats.pending} pending, ${imageStats.delayed} delayed, ${imageStats.completed} completed, ${imageStats.failed} failed, ${imageStats.processing} processing`
   )
-
   console.log(
-    `Report Queue: ${reportStats.pending} pending, ${reportStats.delayed} delayed ${reportStats.completed} completed, ${reportStats.failed} failed, ${reportStats.processing} processing`,
+    `Report Queue: ${reportStats.pending} pending, ${reportStats.delayed} delayed, ${reportStats.completed} completed, ${reportStats.failed} failed, ${reportStats.processing} processing`
   )
 
   await emailQueue.disconnect()
@@ -106,7 +105,7 @@ async function addSampleJobs() {
 
 // Add jobs periodically for demo
 async function startProducer() {
-  console.log("🏭 Producer started - adding jobs every 30 seconds")
+  console.log("Producer started - adding jobs every 30 seconds")
 
   // Add initial batch
   await addSampleJobs()
@@ -118,7 +117,7 @@ async function startProducer() {
     } catch (error) {
       console.error("Error adding jobs:", error)
     }
-  }, 30000)
+  }, 30_000)
 }
 
 if (process.argv.includes("--continuous")) {

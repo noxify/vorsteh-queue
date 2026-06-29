@@ -1,0 +1,17 @@
+{
+  "name": "flow-producer-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Parent-child job flow (deploy pipeline)",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@vorsteh-queue/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

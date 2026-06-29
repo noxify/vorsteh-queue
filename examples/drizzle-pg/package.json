@@ -1,9 +1,9 @@
 {
   "name": "drizzle-pg-example",
   "version": "1.0.0",
+  "private": true,
   "description": "Basic Vorsteh Queue example using Drizzle ORM with node-postgres (pg)",
   "type": "module",
-  "private": true,
   "scripts": {
     "dev": "tsx src/index.ts",
     "db:push": "drizzle-kit push"
@@ -11,7 +11,7 @@
   "dependencies": {
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "pg": "8.22.0"
   },
   "devDependencies": {

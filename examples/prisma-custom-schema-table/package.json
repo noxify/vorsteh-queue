@@ -1,8 +1,8 @@
 {
   "name": "prisma-custom-schema-table",
   "version": "1.0.0",
-  "description": "Vorsteh Queue example using Prisma with prisma-client provider and PostgreSQL (TypeScript generation) with a custom schema and table name.",
   "private": true,
+  "description": "Vorsteh Queue example using Prisma with prisma-client provider and PostgreSQL (TypeScript generation) with a custom schema and table name.",
   "type": "module",
   "scripts": {
     "dev": "pnpm with-env tsx src/index.ts",
@@ -11,14 +11,14 @@
     "with-env": "dotenv -e .env --"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^6.19.0",
-    "@prisma/client": "^6.19.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@vorsteh-queue/adapter-prisma": "workspace:*",
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
     "dotenv-cli": "11.0.0",
-    "prisma": "^6.19.0",
+    "prisma": "^7.8.0",
     "tsx": "4.22.4",
     "typescript": "^6.0.3"
   }

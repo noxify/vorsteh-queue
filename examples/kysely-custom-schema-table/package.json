@@ -1,9 +1,9 @@
 {
   "name": "kysely-custom-schema-table",
   "version": "1.0.0",
+  "private": true,
   "description": "Advanced Vorsteh Queue example using kysely with postgres.js and a custom schema and table name.",
   "type": "module",
-  "private": true,
   "scripts": {
     "dev": "pnpm with-env tsx src/index.ts",
     "db:push": "pnpm with-env kysely migrate:latest",

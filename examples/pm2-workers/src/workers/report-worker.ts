@@ -1,115 +1,59 @@
-import { reportQueue as queue } from "../shared/queue"
+import { Worker } from "@vorsteh-queue/core"
 
-interface GenerateReportPayload {
+import { adapter } from "../shared/queue"
+
+interface ReportPayload {
   reportType: string
   dateRange: { start: string; end: string }
   userId: string
   format: "pdf" | "csv" | "xlsx"
 }
 
-interface GenerateReportResult {
+interface ReportResult {
   reportId: string
   url: string
-  size: number
 }
 
-// Report generation job handlers
-queue.register<GenerateReportPayload, GenerateReportResult>(
+const worker = new Worker(adapter, {
+  name: "report-queue",
+  concurrency: 1,
+  removeOnComplete: 20,
+  removeOnFail: 10,
+})
+
+worker.register<ReportPayload, ReportResult>(
   "generate-monthly-report",
   async (job) => {
-    const { reportType, dateRange, userId, format } = job.payload
+    const { reportType, userId, format } = job.payload
+    console.log(`Generating ${reportType} report for ${userId} (${format})`)
 
-    console.log(`📊 Generating ${reportType} report for user ${userId} (${format})`)
-    console.log(`   Date range: ${dateRange.start} to ${dateRange.end}`)
-
-    // Simulate report generation steps
-    const steps = [
-      "Fetching data",
-      "Processing analytics",
-      "Generating charts",
-      "Formatting document",
-      "Finalizing report",
-    ]
-
-    for (let i = 0; i < steps.length; i++) {
-      console.log(`   ${steps[i]}...`)
+    const steps = ["Fetching data", "Processing", "Generating", "Finalizing"]
+    for (let i = 0; i < steps.length; i += 1) {
+      console.log(`  ${steps[i]}...`)
       await new Promise((resolve) => setTimeout(resolve, 3000))
-
-      const progress = Math.round(((i + 1) / steps.length) * 100)
-      await job.updateProgress(progress)
+      await job.updateProgress(Math.round(((i + 1) / steps.length) * 100))
     }
 
     const reportId = `report_${Date.now()}`
-
     return {
       reportId,
       url: `https://reports.example.com/${reportId}.${format}`,
-      size: Math.floor(Math.random() * 5000000) + 1000000, // 1-5MB
     }
-  },
+  }
 )
 
-queue.register<GenerateReportPayload, GenerateReportResult>(
-  "generate-analytics-dashboard",
-  async (job) => {
-    const { reportType, userId } = job.payload
-
-    console.log(`📈 Generating analytics dashboard for user ${userId}`)
-
-    // Simulate dashboard generation
-    const widgets = [
-      "Revenue Chart",
-      "User Growth",
-      "Conversion Funnel",
-      "Geographic Data",
-      "Performance Metrics",
-    ]
-
-    for (let i = 0; i < widgets.length; i++) {
-      console.log(`   Building ${widgets[i]}...`)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      const progress = Math.round(((i + 1) / widgets.length) * 100)
-      await job.updateProgress(progress)
-    }
-
-    const reportId = `dashboard_${Date.now()}`
-
-    return {
-      reportId,
-      url: `https://dashboards.example.com/${reportId}`,
-      size: 2500000, // ~2.5MB
-    }
-  },
-)
-
-// Event monitoring
-queue.on("job:completed", (job) => {
-  console.log(`✅ Report job completed: ${job.name} (${job.id})`)
+worker.on("job:completed", (job) => {
+  console.log(`Report completed: ${job.name} (${job.id})`)
 })
 
-queue.on("job:failed", (job) => {
-  console.error(`❌ Report job failed: ${job.name} (${job.id}) - ${job.error}`)
-})
+async function start() {
+  worker.start()
+  console.log(`Report worker started (PID: ${process.pid}, concurrency: 1)`)
 
-async function startReportWorker() {
-  await queue.connect()
-  queue.start()
-
-  const config = queue.getConfig()
-  console.log(`🚀 Report worker started (PID: ${process.pid})`)
-  console.log(`📊 Queue: ${config.name}, Concurrency: ${config.concurrency}`)
-  console.log(
-    `⚙️  Config: removeOnComplete=${config.removeOnComplete}, removeOnFail=${config.removeOnFail}`,
-  )
-
-  // Graceful shutdown
   process.on("SIGINT", async () => {
-    console.log("📊 Report worker shutting down...")
-    await queue.stop()
-    await queue.disconnect()
+    await worker.stop()
     process.exit(0)
   })
 }
 
-startReportWorker().catch(console.error)
+start().catch(console.error)

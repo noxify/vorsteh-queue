@@ -1,151 +1,79 @@
 import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue } from "@vorsteh-queue/core"
+import { Queue, Worker } from "@vorsteh-queue/core"
 
 import { client, db } from "./database"
 
-// Queue setup
-const queue = new Queue(new PostgresQueueAdapter(db), { name: "event-queue" })
-
-// Job statistics tracking
-const stats = {
-  added: 0,
-  processing: 0,
-  completed: 0,
-  failed: 0,
-  retried: 0,
-}
-
-// Register various job types to demonstrate different scenarios
-queue.register("reliable-task", async (payload) => {
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-  return { success: true, data: payload }
+// Setup
+const adapter = new PostgresQueueAdapter(db)
+const queue = new Queue(adapter, { name: "event-queue" })
+const worker = new Worker(adapter, {
+  name: "event-queue",
+  concurrency: 2,
+  pollInterval: 50,
 })
 
-queue.register("unreliable-task", async (payload) => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
+// Register handlers
+worker.register("reliable-task", async (job) => {
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+  return { success: true, data: job.payload }
+})
 
-  // 50% chance of failure to demonstrate retry logic
+worker.register("unreliable-task", async () => {
+  await new Promise((resolve) => setTimeout(resolve, 500))
   if (Math.random() < 0.5) {
     throw new Error("Random failure occurred")
   }
-
-  return { success: true, data: payload }
+  return { success: true }
 })
 
-queue.register("slow-task", async (payload) => {
-  await new Promise((resolve) => setTimeout(resolve, 3000))
-  return { success: true, processed: payload }
-})
-
-// Comprehensive event monitoring
+// Producer events (emitted on Queue)
 queue.on("job:added", (job) => {
-  stats.added++
-  console.log(`✅ [${new Date().toISOString()}] Job added: ${job.name} (ID: ${job.id})`)
-  console.log(`   Priority: ${job.priority}, Status: ${job.status}`)
+  console.log(`[event] job:added - ${job.name} (${job.id})`)
 })
 
-queue.on("job:processing", (job) => {
-  stats.processing++
-  console.log(`⚡ [${new Date().toISOString()}] Job started: ${job.name} (ID: ${job.id})`)
-  console.log(`   Attempt: ${job.attempts + 1}/${job.maxAttempts}`)
+// Consumer events (emitted on Worker)
+worker.on("job:processing", (job) => {
+  console.log(`[event] job:processing - ${job.name} (${job.id})`)
 })
 
-queue.on("job:completed", (job) => {
-  stats.completed++
-  const duration =
-    job.completedAt && job.processedAt ? job.completedAt.getTime() - job.processedAt.getTime() : 0
-
-  console.log(`🎉 [${new Date().toISOString()}] Job completed: ${job.name} (ID: ${job.id})`)
-  console.log(`   Duration: ${duration}ms`)
+worker.on("job:completed", (job) => {
+  console.log(`[event] job:completed - ${job.name} (${job.id})`)
 })
 
-queue.on("job:failed", (job) => {
-  stats.failed++
-  console.log(`❌ [${new Date().toISOString()}] Job failed: ${job.name} (ID: ${job.id})`)
-  console.log(`   Error: ${job.error}`)
-  console.log(`   Attempts: ${job.attempts}/${job.maxAttempts}`)
+worker.on("job:failed", (job) => {
+  console.log(`[event] job:failed - ${job.name}: ${job.error?.message}`)
 })
 
-queue.on("job:retried", (job) => {
-  stats.retried++
-  console.log(`🔄 [${new Date().toISOString()}] Job retrying: ${job.name} (ID: ${job.id})`)
-  console.log(`   Attempt: ${job.attempts}/${job.maxAttempts}`)
+worker.on("job:retried", (job) => {
+  console.log(`[event] job:retried - ${job.name} (attempt ${job.attempts})`)
 })
 
-// Queue-level events
-queue.on("queue:paused", () => {
-  console.log(`⏸️  [${new Date().toISOString()}] Queue paused`)
+worker.on("job:progress", (job) => {
+  console.log(`[event] job:progress - ${job.name}: ${job.progress}%`)
 })
 
-queue.on("queue:resumed", () => {
-  console.log(`▶️  [${new Date().toISOString()}] Queue resumed`)
+worker.on("worker:started", () => {
+  console.log("[event] worker:started")
 })
 
-queue.on("queue:stopped", () => {
-  console.log(`⏹️  [${new Date().toISOString()}] Queue stopped`)
+worker.on("worker:stopped", () => {
+  console.log("[event] worker:stopped")
 })
-
-queue.on("queue:error", (error) => {
-  console.log(`🚨 [${new Date().toISOString()}] Queue error:`, error)
-})
-
-// Print stats periodically
-function printStats() {
-  console.log("\n📊 Queue Statistics:")
-  console.log(`   Added: ${stats.added}`)
-  console.log(`   Processing: ${stats.processing}`)
-  console.log(`   Completed: ${stats.completed}`)
-  console.log(`   Failed: ${stats.failed}`)
-  console.log(`   Retried: ${stats.retried}`)
-  console.log("─".repeat(50))
-}
 
 async function main() {
+  console.log("Starting Event System Example")
   await queue.connect()
 
-  console.log("🚀 Event system example started!")
-  console.log("Watch the comprehensive event logging below:\n")
+  await queue.add("reliable-task", { message: "hello" })
+  await queue.add("unreliable-task", { attempt: 1 }, { maxAttempts: 3 })
 
-  // Add various jobs to demonstrate different events
-  await queue.add("reliable-task", { message: "This should work" }, { priority: 1 })
-  await queue.add("unreliable-task", { message: "This might fail" }, { maxAttempts: 3 })
-  await queue.add("slow-task", { message: "This takes time" }, { priority: 3 })
+  worker.start()
+  console.log("Press Ctrl+C to stop.\n")
 
-  // Add more unreliable tasks to show retry behavior
-  for (let i = 0; i < 3; i++) {
-    await queue.add("unreliable-task", { message: `Batch job ${i + 1}` }, { maxAttempts: 2 })
-  }
-
-  // Start processing
-  queue.start()
-
-  // Print stats every 5 seconds
-  const statsInterval = setInterval(printStats, 5000)
-
-  // Demonstrate queue control after 10 seconds
-  setTimeout(() => {
-    console.log("\n🔧 Demonstrating queue control...")
-    queue.pause()
-
-    setTimeout(() => {
-      queue.resume()
-    }, 2000)
-  }, 10000)
-
-  console.log("Press Ctrl+C to stop and see final statistics.")
-
-  // Graceful shutdown
   process.on("SIGINT", async () => {
-    clearInterval(statsInterval)
-    console.log("\n🛑 Shutting down...")
-
-    await queue.stop()
+    await worker.stop()
     await queue.disconnect()
     await client.end()
-
-    console.log("\n📈 Final Statistics:")
-    printStats()
-
     process.exit(0)
   })
 }

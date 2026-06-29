@@ -1,4 +1,6 @@
-import { imageQueue as queue } from "../shared/queue"
+import { Worker } from "@vorsteh-queue/core"
+
+import { adapter } from "../shared/queue"
 
 interface ProcessImagePayload {
   imageId: string
@@ -8,89 +10,46 @@ interface ProcessImagePayload {
 
 interface ProcessImageResult {
   imageId: string
-  processedSizes: number[]
   urls: string[]
 }
 
-// Image processing job handlers
-queue.register<ProcessImagePayload, ProcessImageResult>("resize-image", async (job) => {
-  const { imageId, sizes, format = "jpg" } = job.payload
-
-  console.log(`🖼️  Resizing image ${imageId} to sizes: ${sizes.join(", ")}`)
-
-  const urls: string[] = []
-
-  for (let i = 0; i < sizes.length; i++) {
-    const size = sizes[i]
-
-    // Simulate image processing
-    console.log(`   Processing ${size}x${size}...`)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    // Update progress
-    const progress = Math.round(((i + 1) / sizes.length) * 100)
-    await job.updateProgress(progress)
-
-    urls.push(`https://cdn.example.com/${imageId}_${size}x${size}.${format}`)
-  }
-
-  return {
-    imageId,
-    processedSizes: sizes,
-    urls,
-  }
+const worker = new Worker(adapter, {
+  name: "image-queue",
+  concurrency: 2,
+  removeOnComplete: 50,
+  removeOnFail: 20,
 })
 
-queue.register<ProcessImagePayload, ProcessImageResult>("optimize-image", async (job) => {
-  const { imageId } = job.payload
+worker.register<ProcessImagePayload, ProcessImageResult>(
+  "resize-image",
+  async (job) => {
+    const { imageId, sizes, format = "jpg" } = job.payload
+    console.log(`Resizing image ${imageId} to sizes: ${sizes.join(", ")}`)
 
-  console.log(`⚡ Optimizing image ${imageId}`)
-
-  // Simulate optimization steps
-  const steps = ["Loading", "Compressing", "Optimizing", "Saving"]
-
-  for (let i = 0; i < steps.length; i++) {
-    console.log(`   ${steps[i]}...`)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    const progress = Math.round(((i + 1) / steps.length) * 100)
-    await job.updateProgress(progress)
+    const urls: string[] = []
+    for (let i = 0; i < sizes.length; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      await job.updateProgress(Math.round(((i + 1) / sizes.length) * 100))
+      urls.push(
+        `https://cdn.example.com/${imageId}_${sizes[i]}x${sizes[i]}.${format}`
+      )
+    }
+    return { imageId, urls }
   }
+)
 
-  return {
-    imageId,
-    processedSizes: [1920],
-    urls: [`https://cdn.example.com/${imageId}_optimized.webp`],
-  }
+worker.on("job:completed", (job) => {
+  console.log(`Image job completed: ${job.name} (${job.id})`)
 })
 
-// Event monitoring
-queue.on("job:completed", (job) => {
-  console.log(`✅ Image job completed: ${job.name} (${job.id})`)
-})
+async function start() {
+  worker.start()
+  console.log(`Image worker started (PID: ${process.pid}, concurrency: 2)`)
 
-queue.on("job:failed", (job) => {
-  console.error(`❌ Image job failed: ${job.name} (${job.id}) - ${job.error}`)
-})
-
-async function startImageWorker() {
-  await queue.connect()
-  queue.start()
-
-  const config = queue.getConfig()
-  console.log(`🚀 Image worker started (PID: ${process.pid})`)
-  console.log(`📊 Queue: ${config.name}, Concurrency: ${config.concurrency}`)
-  console.log(
-    `⚙️  Config: removeOnComplete=${config.removeOnComplete}, removeOnFail=${config.removeOnFail}`,
-  )
-
-  // Graceful shutdown
   process.on("SIGINT", async () => {
-    console.log("🖼️  Image worker shutting down...")
-    await queue.stop()
-    await queue.disconnect()
+    await worker.stop()
     process.exit(0)
   })
 }
 
-startImageWorker().catch(console.error)
+start().catch(console.error)

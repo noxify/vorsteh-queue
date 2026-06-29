@@ -1,172 +1,78 @@
 import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
-import { Queue } from "@vorsteh-queue/core"
+import { Queue, Worker } from "@vorsteh-queue/core"
 
 import { client, db } from "./database"
 
-// Job payload types
-interface ReportJobPayload {
-  userId: string
-  type: "daily" | "weekly" | "monthly"
-  includeCharts?: boolean
-}
-
-interface CleanupJobPayload {
-  olderThan: string
-  fileTypes?: string[]
-}
-
-// Job result types
-interface ReportJobResult {
-  reportId: string
-  status: "completed" | "failed"
-  fileSize?: number
-}
-
-interface CleanupJobResult {
-  deletedCount: number
-  freedSpace: number
-}
-
-// Queue setup
-const queue = new Queue(new PostgresQueueAdapter(db), {
+// Setup
+const adapter = new PostgresQueueAdapter(db)
+const queue = new Queue(adapter, { name: "advanced-queue" })
+const worker = new Worker(adapter, {
   name: "advanced-queue",
+  concurrency: 3,
   removeOnComplete: 20,
   removeOnFail: 10,
 })
 
-// Job handlers with proper types
-queue.register<ReportJobPayload, ReportJobResult>("generate-report", async (job) => {
-  const { userId, type, includeCharts = false } = job.payload
-  console.log(
-    `📈 Generating ${type} report for user ${userId}${includeCharts ? " with charts" : ""}`,
-  )
+interface ReportPayload {
+  userId: string
+  type: "daily" | "weekly" | "monthly"
+}
 
-  // Simulate report generation with progress
-  const steps = ["Collecting data", "Processing metrics", "Generating charts", "Finalizing report"]
-  for (let i = 0; i < steps.length; i++) {
-    console.log(`   ${steps[i]}...`)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    await job.updateProgress(Math.round(((i + 1) / steps.length) * 100))
+worker.register<ReportPayload, { reportId: string }>(
+  "generate-report",
+  async (job) => {
+    const { userId, type } = job.payload
+    console.log(`Generating ${type} report for user ${userId}`)
+
+    const steps = ["Collecting data", "Processing", "Generating", "Done"]
+    for (let i = 0; i < steps.length; i += 1) {
+      console.log(`  ${steps[i]}...`)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await job.updateProgress(Math.round(((i + 1) / steps.length) * 100))
+    }
+
+    return { reportId: `report_${Date.now()}` }
   }
+)
 
-  return {
-    reportId: `report_${Date.now()}`,
-    status: "completed",
-    fileSize: Math.floor(Math.random() * 1000000) + 100000,
-  }
-})
-
-queue.register<CleanupJobPayload, CleanupJobResult>("cleanup-files", async (job) => {
-  const { olderThan, fileTypes = ["tmp", "log"] } = job.payload
-  console.log(`🧽 Cleaning up ${fileTypes.join(", ")} files older than ${olderThan}`)
-
-  await new Promise((resolve) => setTimeout(resolve, 1500))
-  const deletedCount = Math.floor(Math.random() * 50) + 10
-  const freedSpace = deletedCount * Math.floor(Math.random() * 1000000)
-
-  return { deletedCount, freedSpace }
-})
-
-// Event listeners
-queue.on("job:added", (job) => {
-  console.log(`✅ Job added: ${job.name} (${job.id})`)
-})
-
-queue.on("job:processing", (job) => {
-  console.log(`⚡ Processing: ${job.name} (${job.id})`)
-})
-
-queue.on("job:completed", (job) => {
-  console.log(`🎉 Completed: ${job.name} (${job.id})`)
-})
-
-queue.on("job:failed", (job) => {
-  console.error(`❌ Failed: ${job.name} (${job.id}) - ${job.error}`)
-})
-
-queue.on("job:progress", (job) => {
-  console.log(`📈 Progress: ${job.name} - ${job.progress}%`)
-})
-
-queue.on("job:retried", (job) => {
-  console.log(`🔄 Retrying: ${job.name} (attempt ${job.attempts})`)
-})
+// Events
+queue.on("job:added", (job) => console.log(`Added: ${job.name} (${job.id})`))
+worker.on("job:completed", (job) =>
+  console.log(`Completed: ${job.name} (${job.id})`)
+)
+worker.on("job:failed", (job) =>
+  console.error(`Failed: ${job.name} - ${job.error?.message}`)
+)
 
 async function main() {
-  console.log("🚀 Starting Kysely Postgres.JS Queue Example")
-
-  // Add jobs with different priorities and features
-  await queue.add(
-    "generate-report",
-    {
-      userId: "user123",
-      type: "monthly",
-      includeCharts: true,
-    },
-    { priority: 1 },
-  )
-
-  await queue.add(
-    "cleanup-files",
-    {
-      olderThan: "30d",
-      fileTypes: ["tmp", "log", "cache"],
-    },
-    { priority: 3 },
-  )
+  console.log("Starting Kysely PostgreSQL Queue Example")
+  await queue.connect()
 
   await queue.add(
     "generate-report",
-    {
-      userId: "user456",
-      type: "weekly",
-    },
-    { priority: 2, delay: 5000 },
+    { userId: "user123", type: "monthly" },
+    { priority: 1 }
   )
-
-  // Add recurring cleanup job
   await queue.add(
-    "cleanup-files",
-    { olderThan: "7d" },
-    {
-      repeat: { every: 30000, limit: 3 }, // Every 30 seconds, 3 times
-    },
+    "generate-report",
+    { userId: "user456", type: "weekly" },
+    { delay: 5000 }
   )
-
-  // Add cron job
   await queue.add(
     "generate-report",
     { userId: "system", type: "daily" },
-    {
-      cron: "0 9 * * *", // Every day at 9 AM
-    },
+    { cron: "0 9 * * *" }
   )
 
-  // Start processing
-  queue.start()
-  console.log("🔄 Advanced queue processing started. Press Ctrl+C to stop.")
+  worker.start()
+  console.log("Processing started. Press Ctrl+C to stop.")
 
-  // Show detailed stats every 15 seconds
-  const statsInterval = setInterval(async () => {
-    const stats = await queue.getStats()
-    console.log("📊 Detailed Queue Stats:", {
-      ...stats,
-      total: Object.values(stats).reduce((sum, count) => sum + count, 0),
-    })
-  }, 15000)
-
-  // Graceful shutdown
   process.on("SIGINT", async () => {
-    console.log("\n🛑 Shutting down advanced queue...")
-    clearInterval(statsInterval)
-    await queue.stop()
+    await worker.stop()
+    await queue.disconnect()
     await client.end()
-    console.log("✅ Advanced queue shutdown complete")
     process.exit(0)
   })
 }
 
-main().catch((error) => {
-  console.error("❌ Advanced queue error:", error)
-  process.exit(1)
-})
+main().catch(console.error)

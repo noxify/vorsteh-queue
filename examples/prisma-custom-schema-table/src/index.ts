@@ -1,24 +1,29 @@
 import { PrismaPg } from "@prisma/adapter-pg"
-
 import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
-import { Queue } from "@vorsteh-queue/core"
+import { Queue, Worker } from "@vorsteh-queue/core"
 
 import { PrismaClient } from "./generated/prisma/client"
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter })
+const pgAdapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+const prisma = new PrismaClient({ adapter: pgAdapter })
 
-const queue = new Queue(
-  new PostgresPrismaQueueAdapter(prisma, {
-    modelName: "CustomQueueJob",
-    schemaName: "custom_schema",
-    tableName: "custom_queue_jobs",
-  }),
-  {
-    name: "email-queue",
-    concurrency: 2,
-  },
-)
+// Shared adapter with custom schema and table
+const adapter = new PostgresPrismaQueueAdapter(prisma, {
+  modelName: "CustomQueueJob",
+  schemaName: "custom_schema",
+  tableName: "custom_queue_jobs",
+})
+
+// Queue setup (producer)
+const queue = new Queue(adapter, {
+  name: "email-queue",
+})
+
+// Worker setup (consumer)
+const worker = new Worker(adapter, {
+  name: "email-queue",
+  concurrency: 2,
+})
 
 interface EmailPayload {
   to: string
@@ -30,8 +35,8 @@ interface EmailResult {
   sent: boolean
 }
 
-queue.register<EmailPayload, EmailResult>("send-email", async (job) => {
-  console.log(`📧 Sending email to ${job.payload.to}`)
+worker.register<EmailPayload, EmailResult>("send-email", async (job) => {
+  console.log(`Sending email to ${job.payload.to}`)
   console.log(`Subject: ${job.payload.subject}`)
 
   await job.updateProgress(50)
@@ -39,21 +44,21 @@ queue.register<EmailPayload, EmailResult>("send-email", async (job) => {
 
   await job.updateProgress(100)
 
-  console.log(`✅ Email sent to ${job.payload.to}`)
+  console.log(`Email sent to ${job.payload.to}`)
   return { sent: true }
 })
 
-queue.on("job:completed", (job) => {
-  console.log(`🎉 Job ${job.name} completed`)
+worker.on("job:completed", (job) => {
+  console.log(`Job ${job.name} completed`)
 })
 
-queue.on("job:failed", (job) => {
-  console.error(`❌ Job ${job.name} failed:`, job.error)
+worker.on("job:failed", (job) => {
+  console.error(`Job ${job.name} failed:`, job.error)
 })
 
 async function main() {
   await queue.connect()
-  console.log("🔌 Connected to database")
+  console.log("Connected to database")
 
   await queue.add("send-email", {
     to: "user@example.com",
@@ -61,27 +66,23 @@ async function main() {
     body: "Welcome to our service!",
   })
 
-  queue.start()
-  console.log("🚀 Queue started")
-
-  // Start processing
-  queue.start()
-  console.log("🔄 Queue processing started. Press Ctrl+C to stop.")
+  worker.start()
+  console.log("Queue started")
+  console.log("Queue processing started. Press Ctrl+C to stop.")
 
   // Show stats periodically
   const statsInterval = setInterval(async () => {
     const stats = await queue.getStats()
-    console.log("📊 Queue Stats:", stats)
-  }, 10000)
+    console.log("Queue Stats:", stats)
+  }, 10_000)
 
   // Graceful shutdown
   process.on("SIGINT", async () => {
-    console.log("\n🛑 Shutting down...")
+    console.log("\nShutting down...")
     clearInterval(statsInterval)
-    await queue.stop()
-
+    await worker.stop()
     await queue.disconnect()
-    console.log("✅ Shutdown complete")
+    console.log("Shutdown complete")
     process.exit(0)
   })
 }

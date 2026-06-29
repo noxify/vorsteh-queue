@@ -6,6 +6,8 @@ export default defineConfig({
   out: "./drizzle",
   schemaFilter: ["custom_schema", "public"],
   dbCredentials: {
-    url: process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/queue_db",
+    url:
+      process.env.DATABASE_URL ||
+      "postgresql://postgres:password@localhost:5432/queue_db",
   },
 })
