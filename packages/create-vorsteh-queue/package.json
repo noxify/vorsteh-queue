@@ -3,27 +3,27 @@
   "version": "0.1.7",
   "description": "Create Vorsteh Queue applications with one command",
   "keywords": [
-    "vorsteh-queue",
-    "queue",
-    "jobs",
     "cli",
-    "create"
+    "create",
+    "jobs",
+    "queue",
+    "vorsteh-queue"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/noxify/vorsteh-queue.git",
     "directory": "packages/create-vorsteh-queue"
   },
-  "license": "MIT",
-  "type": "module",
   "bin": {
     "create-vorsteh-queue": "dist/index.js"
   },
   "files": [
     "dist/*"
   ],
+  "type": "module",
   "scripts": {
     "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
     "clean": "git clean -xdf .cache .turbo dist node_modules",

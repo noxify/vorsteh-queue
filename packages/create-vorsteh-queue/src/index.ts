@@ -1,9 +1,21 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
-import { existsSync, mkdirSync, writeFileSync } from "fs"
-import { resolve } from "path"
+/* eslint-disable complexity */
+/* eslint-disable no-negated-condition */
+import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import path from "node:path"
+
 import { installPackage } from "@antfu/install-pkg"
-import { cancel, confirm, intro, isCancel, outro, select, spinner, text } from "@clack/prompts"
+import {
+  cancel,
+  confirm,
+  intro,
+  isCancel,
+  outro,
+  select,
+  spinner,
+  text,
+} from "@clack/prompts"
 import { downloadTemplate as download } from "giget"
 import pc from "picocolors"
 import { readPackage } from "read-pkg"
@@ -38,7 +50,7 @@ async function fetchTemplates(): Promise<Template[]> {
     return responseBody.templates
   } catch (error: unknown) {
     s.stop(
-      `Failed to fetch templates - ${error instanceof Error ? error.toString() : String(error)}`,
+      `Failed to fetch templates - ${error instanceof Error ? error.toString() : String(error)}`
     )
     // Fallback to hardcoded templates
 
@@ -62,18 +74,29 @@ async function fetchTemplates(): Promise<Template[]> {
 
 async function getLatestVersion(packageName: string): Promise<string> {
   try {
-    const response = await fetch(`https://registry.npmjs.org/${packageName}/latest`)
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const response = await fetch(
+      `https://registry.npmjs.org/${packageName}/latest`
+    )
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
     const data = (await response.json()) as NpmPackageData
     return `^${data.version}`
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
-    console.warn(pc.yellow(`⚠️  Could not fetch latest version for ${packageName}, using '*'`))
+  } catch {
+    console.warn(
+      pc.yellow(
+        `⚠️  Could not fetch latest version for ${packageName}, using '*'`
+      )
+    )
     return "*"
   }
 }
 
-async function downloadTemplate(template: Template, targetDir: string): Promise<void> {
+async function downloadTemplate(
+  template: Template,
+  targetDir: string
+): Promise<void> {
   const s = spinner()
   s.start("Downloading template...")
 
@@ -89,7 +112,10 @@ async function downloadTemplate(template: Template, targetDir: string): Promise<
   }
 }
 
-async function updatePackageJson(targetDir: string, projectName: string): Promise<void> {
+async function updatePackageJson(
+  targetDir: string,
+  projectName: string
+): Promise<void> {
   const s = spinner()
   s.start("Updating package.json...")
 
@@ -119,14 +145,18 @@ async function updatePackageJson(targetDir: string, projectName: string): Promis
         updatedPackageJson.dependencies["@vorsteh-queue/core"] = coreVersion
       }
       if (updatedPackageJson.dependencies["@vorsteh-queue/adapter-drizzle"]) {
-        updatedPackageJson.dependencies["@vorsteh-queue/adapter-drizzle"] = adapterVersion
+        updatedPackageJson.dependencies["@vorsteh-queue/adapter-drizzle"] =
+          adapterVersion
       }
     }
 
     // Remove workspace-specific fields
     delete updatedPackageJson.private
 
-    writeFileSync(resolve(targetDir, "package.json"), JSON.stringify(updatedPackageJson, null, 2))
+    writeFileSync(
+      path.resolve(targetDir, "package.json"),
+      JSON.stringify(updatedPackageJson, null, 2)
+    )
     s.stop("Package.json updated!")
   } catch (error) {
     s.stop("Failed to update package.json")
@@ -138,8 +168,12 @@ async function main() {
   // Parse CLI arguments
   const args = process.argv.slice(2)
   let projectName = args.find((arg) => !arg.startsWith("-"))
-  const pmFlag = args.find((arg) => arg.startsWith("--package-manager=") || arg.startsWith("-pm="))
-  const templateFlag = args.find((arg) => arg.startsWith("--template=") || arg.startsWith("-t="))
+  const pmFlag = args.find(
+    (arg) => arg.startsWith("--package-manager=") || arg.startsWith("-pm=")
+  )
+  const templateFlag = args.find(
+    (arg) => arg.startsWith("--template=") || arg.startsWith("-t=")
+  )
   const quietMode = args.includes("--quiet") || args.includes("-q")
   const noInstall = args.includes("--no-install")
   const cliPackageManager = pmFlag?.split("=")[1]
@@ -150,9 +184,7 @@ async function main() {
     console.clear = () => null
     console.log = () => null
     console.warn = () => null
-  }
-
-  if (!quietMode) {
+  } else {
     console.clear()
     intro(pc.bgCyan(pc.black(" create-vorsteh-queue ")))
   }
@@ -162,10 +194,12 @@ async function main() {
       message: "What is your project name?",
       placeholder: "my-queue-app",
       validate: (value) => {
-        if (!value) return "Project name is required"
-        if (!/^[a-z0-9-_]+$/.test(value))
+        if (!value) {
+          return "Project name is required"
+        }
+        if (!/^[a-z0-9-_]+$/u.test(value)) {
           return "Project name must contain only lowercase letters, numbers, hyphens, and underscores"
-        return undefined
+        }
       },
     })
 
@@ -175,12 +209,12 @@ async function main() {
     }
 
     projectName = result
-  } else {
+  } else if (!/^[a-z0-9-_]+$/u.test(projectName)) {
     // Validate CLI argument
-    if (!/^[a-z0-9-_]+$/.test(projectName)) {
-      cancel("Project name must contain only lowercase letters, numbers, hyphens, and underscores")
-      return process.exit(1)
-    }
+    cancel(
+      "Project name must contain only lowercase letters, numbers, hyphens, and underscores"
+    )
+    return process.exit(1)
   }
 
   // Fetch available templates dynamically
@@ -198,12 +232,14 @@ async function main() {
       (t) =>
         t.name === cliTemplate ||
         t.path.endsWith(cliTemplate) ||
-        t.path === `examples/${cliTemplate}`,
+        t.path === `examples/${cliTemplate}`
     )
 
     if (!template) {
       const availableTemplates = templates.map((t) => t.name).join(", ")
-      cancel(`Template "${cliTemplate}" not found. Available templates: ${availableTemplates}`)
+      cancel(
+        `Template "${cliTemplate}" not found. Available templates: ${availableTemplates}`
+      )
       return process.exit(1)
     }
   } else {
@@ -247,7 +283,7 @@ async function main() {
         packageManager = cliPackageManager
       } else {
         cancel(
-          `Invalid package manager: ${cliPackageManager}. Valid options: ${validManagers.join(", ")}`,
+          `Invalid package manager: ${cliPackageManager}. Valid options: ${validManagers.join(", ")}`
         )
         return process.exit(1)
       }
@@ -258,7 +294,11 @@ async function main() {
           { value: "npm", label: "npm" },
           { value: "pnpm", label: "pnpm" },
           { value: "yarn", label: "yarn" },
-          { value: "bun", label: "bun", hint: "Experimental - some database drivers may not work" },
+          {
+            value: "bun",
+            label: "bun",
+            hint: "Experimental - some database drivers may not work",
+          },
         ],
       })
 
@@ -272,7 +312,7 @@ async function main() {
   }
 
   // Create project directory
-  const targetDir = resolve(projectName)
+  const targetDir = path.resolve(projectName)
 
   if (existsSync(targetDir)) {
     cancel(`Directory ${projectName} already exists`)
@@ -297,11 +337,11 @@ async function main() {
         await installPackage([], {
           cwd: targetDir,
           silent: true,
-          packageManager: packageManager,
+          packageManager,
         })
         s.stop("Dependencies installed!")
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error) {
+      } catch {
         s.stop("Failed to install dependencies")
         console.log(pc.yellow("You can install them manually with:"))
         console.log(pc.cyan(`  cd ${projectName}`))
@@ -323,10 +363,10 @@ async function main() {
       console.log()
       console.log("Learn more:")
       console.log(
-        `  ${terminalLink("Documentation", "https://github.com/vorsteh-queue/vorsteh-queue")}`,
+        `  ${terminalLink("Documentation", "https://github.com/vorsteh-queue/vorsteh-queue")}`
       )
       console.log(
-        `  ${terminalLink("Examples", "https://github.com/vorsteh-queue/vorsteh-queue/tree/main/examples")}`,
+        `  ${terminalLink("Examples", "https://github.com/vorsteh-queue/vorsteh-queue/tree/main/examples")}`
       )
     }
   } catch (error) {
@@ -337,4 +377,5 @@ async function main() {
   }
 }
 
+// eslint-disable-next-line promise/prefer-await-to-then
 main().catch(console.error)
