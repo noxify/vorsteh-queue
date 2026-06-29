@@ -2,9 +2,8 @@
   "extends": "@vorsteh-queue/tsconfig/base.json",
   "compilerOptions": {
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
-    "baseUrl": ".",
     "paths": {
-      "~/*": ["src/*"]
+      "~/*": ["./src/*"]
     }
   },
   "include": ["*.ts", "src", "tests", "types/index.d.ts"],
