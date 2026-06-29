@@ -1,0 +1,241 @@
+---
+title: Alternatives
+description: Other job queue libraries for Node.js and when they might be a better fit.
+---
+
+Vorsteh Queue isn't the only option — and depending on your stack, it may not even be the best one.
+
+This page compares other established queue engines and where they shine. Vorsteh Queue is inspired by multiple projects in this space: we've learned a lot from Redis-first queues, Postgres-native workers, and scheduler-focused libraries. The goal is to bring those patterns together into one cohesive package — PostgreSQL durability, TypeScript-first DX, ORM adapters, and modern ops tooling — while staying honest about when a dedicated alternative is the better fit.
+
+## BullMQ
+
+[BullMQ](https://bullmq.io/) is the most popular Node.js job queue, backed by Redis.
+
+- **Backend:** Redis
+- **TypeScript:** First-class
+- **Flows (DAG):** Yes (FlowProducer)
+- **Web Dashboard:** community / paid
+  - community: [Bull Board](https://github.com/felixmosh/bull-board)
+  - paid: [Taskforce](https://taskforce.sh/)
+- **Cron:** Yes (repeatable jobs)
+- **Rate Limiting:** Yes
+
+**Choose BullMQ when:**
+
+- You already run Redis in production
+- You need extremely high throughput (10k+ jobs/sec)
+- You want the largest community and ecosystem
+
+**Choose Vorsteh Queue instead when:**
+
+- You want a **PostgreSQL-only stack** (no Redis) for queueing
+- You want **enqueue + app data writes in the same PostgreSQL transaction**
+- You want **first-class ORM adapters** (Drizzle, Prisma, Kysely) and typed DX around your schema
+
+## pg-boss
+
+[pg-boss](https://github.com/timgit/pg-boss) is a PostgreSQL-based job queue built on `SKIP LOCKED`.
+
+- **Backend:** PostgreSQL
+- **TypeScript:** First-class
+- **Flows (DAG):** No (supports dependency/workflow orchestration, but not a FlowProducer-style tree model)
+- **Web Dashboard:** official (add-on)
+  - [@pg-boss/dashboard](https://github.com/timgit/pg-boss/tree/master/packages/dashboard)
+- **CLI:** Yes
+- **Cron:** Yes
+- **Rate Limiting:** Yes (throttling)
+- **DLQ:** Yes
+- **ORM integration:** Transaction adapters (Drizzle, Prisma, Kysely, Knex)
+
+**Choose pg-boss when:**
+
+- You want a battle-tested, mature PostgreSQL queue
+- You want strong operational fundamentals (DLQ, throttling, retries)
+- You don't need FlowProducer-style DAG flows
+
+**Choose Vorsteh Queue instead when:**
+
+- You need **FlowProducer-style parent-child DAG trees** (children-first, parent waits, tree introspection)
+- You want **end-to-end typed payload + typed result contracts** (not just "types exist")
+- You want **built-in** monitoring/ops UX (dashboard/CLI) rather than relying on add-ons
+
+## Graphile Worker
+
+[Graphile Worker](https://github.com/graphile/worker) is a high-performance PostgreSQL job queue focused on simplicity and low latency.
+
+- **Backend:** PostgreSQL
+- **TypeScript:** Types available
+- **Flows (DAG):** No
+- **Web Dashboard:** none
+- **Cron:** Yes
+- **Rate Limiting:** No (community package exists)
+
+**Choose Graphile Worker when:**
+
+- You want minimal dependencies and proven Postgres fundamentals
+- You like a SQL-first approach
+- You care about low latency (LISTEN/NOTIFY)
+
+**Choose Vorsteh Queue instead when:**
+
+- You want **built-in** progress tracking and richer job state APIs (not DIY via tables/logs)
+- You need **FlowProducer-style DAG flows**
+- You want **ORM adapters + schema-managed setup** rather than hand-managed SQL
+
+## Agenda
+
+[Agenda](https://github.com/agenda/agenda) is a job scheduler with pluggable persistence backends.
+
+- **Backend:** Pluggable (MongoDB, PostgreSQL, Redis)
+- **TypeScript:** Types available
+- **Flows (DAG):** No
+- **Web Dashboard:** community
+  - [Agendash](https://github.com/agenda/agendash)
+- **Cron:** Yes
+- **Rate Limiting:** No (not a core feature)
+
+**Choose Agenda when:**
+
+- You want scheduler-first recurring jobs
+- You're already in an ecosystem where Agenda is a good fit
+
+**Choose Vorsteh Queue instead when:**
+
+- You want a **queue-first system** (workers, retries/DLQ, visibility) rather than mainly a scheduler
+- You want **PostgreSQL-backed durability** aligned with application data
+- You need **flows / group FIFO / progress tracking** as first-class features
+
+## GroupMQ
+
+[GroupMQ](https://github.com/Openpanel-dev/groupmq) is a Redis-backed queue with first-class **per-group FIFO** ordering.
+
+- **Backend:** Redis
+- **TypeScript:** First-class
+- **Flows (DAG):** No
+- **Web Dashboard:** community / paid
+  - community: [Bull Board integration](https://github.com/Openpanel-dev/groupmq)
+  - paid: [QueueDash integration](https://www.queuedash.com/docs/integrations/groupmq)
+- **Cron:** Yes (repeatable jobs / cron patterns)
+- **Group FIFO:** Yes
+- **Rate Limiting:** No (not a core feature)
+
+**Choose GroupMQ when:**
+
+- Per-group FIFO ordering is the main requirement
+- You already run Redis and want strict sequential processing per group
+
+**Choose Vorsteh Queue instead when:**
+
+- You want **PostgreSQL** instead of Redis for queue storage
+- You want **one system** that combines **flows + cron + progress + monitoring** on Postgres
+- You want **ORM adapters** and schema management integrated with your app
+
+## Platformatic Job Queue
+
+[Platformatic Job Queue](https://github.com/platformatic/job-queue) is a TypeScript queue with pluggable storage and a request/response pattern.
+
+- **Backend:** Pluggable (Memory, Redis/Valkey, Filesystem)
+- **TypeScript:** First-class
+- **Flows (DAG):** No
+- **Web Dashboard:** none
+- **CLI:** none
+- **Cron:** No
+- **Deduplication:** Yes
+- **Request/Response:** Yes (enqueue and await result)
+
+**Choose Platformatic Job Queue when:**
+
+- You want enqueue-and-wait request/response semantics
+- You need deduplication built-in
+- You're in the Platformatic ecosystem
+
+**Choose Vorsteh Queue instead when:**
+
+- You want **PostgreSQL-backed durability** and multi-instance workers
+- You need **cron scheduling** and **flow orchestration** (DAG flows)
+- You want **monitoring UX** (dashboard/CLI) designed for ops, not just an API
+
+## prisma-queue
+
+[prisma-queue](https://github.com/mgcrea/prisma-queue) is a lightweight Prisma-based PostgreSQL queue.
+
+- **Backend:** PostgreSQL
+- **TypeScript:** First-class
+- **ORM Integration:** Prisma
+- **Flows (DAG):** No
+- **Web Dashboard:** none
+- **CLI:** none
+- **Cron:** Yes (cron syntax scheduling)
+- **Rate Limiting:** No
+
+**Choose prisma-queue when:**
+
+- You want a small Prisma-only queue with minimal surface area
+- You're happy to bring your own monitoring/ops
+
+**Choose Vorsteh Queue instead when:**
+
+- You want **multiple ORM adapters** (not Prisma-only)
+- You need **FlowProducer-style DAG flows** and built-in progress reporting
+- You want **dashboard + CLI** for monitoring instead of building your own
+
+## BunQueue
+
+[BunQueue](https://bunqueue.dev/) is a high-performance queue for the Bun runtime using SQLite persistence.
+
+- **Backend:** SQLite (Bun-native)
+- **TypeScript:** First-class
+- **Flows (DAG):** Yes (workflows / parent-child flows)
+- **Web Dashboard:** official (beta / early access)
+- **CLI:** Yes
+- **Cron:** Yes
+- **DLQ:** Yes
+- **Rate Limiting:** Yes
+
+**Choose BunQueue when:**
+
+- You run Bun in production and want a native Bun queue
+- You like SQLite persistence (single-file deployments)
+- You want workflows in the Bun ecosystem
+
+**Choose Vorsteh Queue instead when:**
+
+- You need **Node.js** compatibility (not Bun-only)
+- You want **PostgreSQL** for multi-instance / HA worker setups
+- You want **ORM adapters** (Drizzle, Prisma, Kysely) in a Postgres-first design
+
+## Comparison
+
+**Terminology**
+
+- **Flows (DAG):** FlowProducer-style parent-child job trees (children run first; parent waits; flow tree can be inspected).
+- **Web Dashboard:** browser-based monitoring UI (not logs/metrics).
+- **Progress:** built-in API for reporting and querying job progress.
+
+### Backend & Developer Experience
+
+| Library         | Backend                                | TypeScript   | ORM Integration                             |
+| --------------- | -------------------------------------- | ------------ | ------------------------------------------- |
+| Vorsteh Queue   | PostgreSQL                             | First-class  | Drizzle, Prisma, Kysely                     |
+| BullMQ          | Redis                                  | First-class  | —                                           |
+| pg-boss         | PostgreSQL                             | First-class  | Tx adapters (Drizzle, Prisma, Kysely, Knex) |
+| Graphile Worker | PostgreSQL                             | Types avail. | —                                           |
+| Agenda          | Pluggable (MongoDB, PostgreSQL, Redis) | Types avail. | —                                           |
+| GroupMQ         | Redis                                  | First-class  | —                                           |
+| Platformatic    | Pluggable (Memory, Redis/Valkey, FS)   | First-class  | —                                           |
+| prisma-queue    | PostgreSQL                             | First-class  | Prisma                                      |
+| BunQueue        | SQLite                                 | First-class  | —                                           |
+
+### Features
+
+| Library         | Flows (DAG) | Progress | Web Dashboard     | CLI | Cron | Rate Limit | Group FIFO |
+| --------------- | ----------- | -------- | ----------------- | --- | ---- | ---------- | ---------- |
+| Vorsteh Queue   | Yes         | Yes      | built-in          | Yes | Yes  | Yes        | Yes        |
+| BullMQ          | Yes         | Yes      | community / paid  | No  | Yes  | Yes        | No         |
+| pg-boss         | No          | No       | official (add-on) | Yes | Yes  | Yes        | No         |
+| Graphile Worker | No          | No       | none              | No  | Yes  | No         | No         |
+| Agenda          | No          | No       | community         | No  | Yes  | No         | No         |
+| GroupMQ         | No          | No       | community / paid  | No  | Yes  | No         | Yes        |
+| Platformatic    | No          | No       | none              | No  | No   | No         | No         |
+| prisma-queue    | No          | No       | none              | No  | Yes  | No         | No         |
+| BunQueue        | Yes         | No       | official (beta)   | Yes | Yes  | Yes        | No         |

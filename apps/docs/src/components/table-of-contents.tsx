@@ -1,170 +1,333 @@
+// oxlint-disable react/no-unstable-nested-components
 "use client"
 
-import type { z } from "zod"
-import { useEffect, useState } from "react"
-import { CheckIcon, ChevronRightIcon, ChevronsUpDown, SquareChartGanttIcon } from "lucide-react"
+import { CheckIcon, ChevronsUpDown, SquareChartGanttIcon } from "lucide-react"
+import type { ReactNode } from "react"
+import { useEffect, useReducer, useRef } from "react"
+import type { TableOfContentsProps } from "renoun"
 
-import type { headingSchema } from "~/validations"
+import { TableOfContents as RenounTableOfContents } from "@/components/toc"
+import { cn } from "@/lib/utils"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu"
-import { cn } from "~/lib/utils"
-import { Button } from "./ui/button"
+} from "./ui/dropdown-menu"
 import { useSidebar } from "./ui/sidebar"
 
-interface TocProps {
-  toc: z.infer<typeof headingSchema>
-}
+type DocsTableOfContentsProps = Omit<
+  TableOfContentsProps,
+  "children" | "components"
+>
 
-export function TableOfContents({ toc }: TocProps) {
-  const itemIds = toc.map((item) => item.id)
-  const activeHeading = useActiveItem(itemIds)
+export function TableOfContents({ sections }: DocsTableOfContentsProps) {
+  const { isMobile } = useSidebar()
 
-  if (toc.length === 0) {
+  if (isMobile) {
     return null
   }
 
-  const filteredToc = toc.filter((item) => item.level > 1 && item.level < 4)
-
   return (
-    <div className="space-y-4">
-      <p className="font-bold">On This Page</p>
-      <ul>
-        {filteredToc.map((item, index) => {
-          return (
-            <li key={index} className={cn("mt-0 pt-2 first:pt-0")}>
-              <a
-                href={`#${item.id}`}
-                className={cn(
-                  item.level == 2 ? "pl-0" : "",
-                  item.level == 3 ? "pl-4" : "",
-                  "inline-block text-sm no-underline transition-colors hover:text-foreground",
-                  item.id === `${activeHeading}` ? "text-orange-primary" : "text-muted-foreground",
-                )}
-              >
-                {item.text}
-              </a>
-            </li>
-          )
-        })}
-      </ul>
-    </div>
+    <RenounTableOfContents
+      sections={sections}
+      components={{
+        Item: (props) => (
+          <li className="mb-1 text-sm leading-6 last:mb-0" {...props} />
+        ),
+        Link: (props) => (
+          // oxlint-disable-next-line jsx-a11y/anchor-has-content
+          <a
+            {...props}
+            className="text-foreground/80 hover:text-foreground aria-[current]:text-foreground aria-[current]:font-bold"
+          />
+        ),
+        List: ({ depth, children }) => (
+          <ol
+            data-depth={depth}
+            className={cn("mt-1", {
+              "pl-0": depth === 0,
+              "pl-4": depth >= 1,
+            })}
+          >
+            {children}
+          </ol>
+        ),
+        Root: (props) => (
+          <nav
+            className="pointer-events-auto sticky top-8 flex max-h-[calc(100vh-3.5rem-2rem)] shrink-0 flex-col gap-3 overflow-y-auto pr-6"
+            {...props}
+          />
+        ),
+        Title: (props) => (
+          <h4 className="mt-0 mb-4 text-xs font-medium uppercase" {...props}>
+            On this page
+          </h4>
+        ),
+      }}
+    />
   )
 }
 
-export function MobileTableOfContents({ toc }: TocProps) {
-  const { toggleSidebar } = useSidebar()
+function collectAllSectionIds(
+  sections: DocsTableOfContentsProps["sections"],
+  ids: string[] = []
+): string[] {
+  for (const section of sections) {
+    ids.push(section.id)
+    if (section.children) {
+      collectAllSectionIds(section.children, ids)
+    }
+  }
+  return ids
+}
 
-  const itemIds = toc.map((item) => item.id)
-  const activeHeading = useActiveItem(itemIds)
+export function MobileTableOfContents({ sections }: DocsTableOfContentsProps) {
+  const allItemIds = collectAllSectionIds(sections)
+  const activeHeading = useActiveItem(allItemIds)
 
-  const filteredToc = toc.filter((item) => item.level > 1 && item.level <= 4)
+  const { isMobile } = useSidebar()
+
+  const activeSectionTitle = activeHeading
+    ? findSectionTitle(sections, activeHeading)
+    : undefined
+
+  function renderSections(
+    items: DocsTableOfContentsProps["sections"],
+    depth = 0
+  ): React.ReactNode {
+    if (items.length === 0) {
+      return null
+    }
+
+    return (
+      <ol
+        className={cn("grid gap-1", {
+          "ml-2 border-l pl-2": depth >= 1,
+          "px-1.5": depth === 0,
+        })}
+      >
+        {items.map((section) => (
+          <li key={section.id} className="list-none">
+            <DropdownMenuItem className="p-0">
+              <a
+                href={`#${section.id}`}
+                className={cn(
+                  "focus:bg-accent focus:text-accent-foreground flex w-full items-start gap-2 rounded-sm px-1.5 py-1.5 outline-hidden",
+                  section.id === activeHeading &&
+                    "bg-accent text-accent-foreground"
+                )}
+              >
+                <span className="min-w-0 flex-1">
+                  {"jsx" in section && section.jsx !== undefined
+                    ? section.jsx
+                    : section.title}
+                </span>
+                <span className="relative top-0.5 flex items-center justify-center">
+                  <CheckIcon
+                    className={cn(
+                      "h-4 w-4",
+                      section.id === activeHeading ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                </span>
+              </a>
+            </DropdownMenuItem>
+            {section.children &&
+              section.children.length > 0 &&
+              renderSections(section.children, depth + 1)}
+          </li>
+        ))}
+      </ol>
+    )
+  }
 
   return (
     <div
       className={cn(
-        "fixed top-16 left-0 z-20 h-[calc(theme(height.12)+1px)] w-full border-b bg-background px-2 py-2.5 lg:left-80 lg:w-[calc(theme(width.full)-20rem)]",
+        "bg-background sticky flex h-[calc(theme(height.12)+1px)] w-full items-center border-b px-2 transition-[top] duration-300 ease-in-out xl:hidden",
         {
-          "lg:hidden": filteredToc.length === 0,
-          "xl:hidden": filteredToc.length > 0,
-        },
+          "top-0": !isMobile,
+          "top-14": isMobile,
+        }
       )}
     >
-      <div className="flex">
-        <Button size={"sm"} className="mr-2 flex lg:hidden" onClick={toggleSidebar}>
-          <ChevronRightIcon className="size-4" />
-          Menu
-        </Button>
-        {filteredToc.length > 0 ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="w-full rounded-md ring-ring hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:outline-hidden data-[state=open]:bg-accent">
-              <div className="flex items-center gap-1.5 overflow-hidden px-2 py-1.5 text-left text-sm transition-all">
-                <SquareChartGanttIcon className="ml-auto h-4 w-4 text-muted-foreground/50" />
-                <div className="line-clamp-1 flex-1 pr-2 font-medium">
-                  {filteredToc.find((item) => item.id === activeHeading)?.text ??
-                    "Table of contents"}
-                </div>
-                <ChevronsUpDown className="ml-auto h-4 w-4 text-muted-foreground/50" />
+      <div className="flex w-full items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="ring-ring hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent w-full rounded-md focus-visible:ring-2 focus-visible:outline-hidden">
+            <div className="flex items-center gap-1.5 overflow-hidden px-2 py-1.5 text-left text-sm transition-all">
+              <SquareChartGanttIcon className="text-muted-foreground/50 h-4 w-4 shrink-0" />
+              <div className="line-clamp-1 flex-1 pr-2 font-medium">
+                {activeSectionTitle ?? "Table of contents"}
               </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="max-w-auto w-full min-w-full"
-              align="start"
-              side="bottom"
-              sideOffset={4}
-              style={{ width: "var(--radix-dropdown-menu-trigger-width)" }}
-            >
-              <DropdownMenuLabel>Table of contents</DropdownMenuLabel>
-              {filteredToc.map((tocItem, index) => (
-                <DropdownMenuItem
-                  key={index}
-                  className="items-start justify-between gap-2 px-1.5"
-                  asChild
-                >
-                  <a
-                    href={`#${tocItem.id}`}
-                    className={cn(
-                      "cursor-pointer",
-                      tocItem.level == 2 ? "pl-2" : "",
-                      tocItem.level == 3 ? "pl-4" : "",
-                      tocItem.level == 4 ? "pl-6" : "",
-                    )}
-                  >
-                    {tocItem.text}
-                    <span className="relative top-0.5 flex items-center justify-center">
-                      <CheckIcon
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          tocItem.id === `${activeHeading}` ? "opacity-100" : "opacity-0",
-                        )}
-                      />
-                    </span>
-                  </a>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
+              <ChevronsUpDown className="text-muted-foreground/50 h-4 w-4 shrink-0" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="max-h-[calc(100vh-8rem)] w-full! overflow-y-auto"
+            align="start"
+            side="bottom"
+            sideOffset={4}
+          >
+            <div className="text-muted-foreground px-1.5 py-1 text-xs font-medium">
+              Table of contents
+            </div>
+            {renderSections(sections)}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )
 }
 
-function useActiveItem(itemIds: string[]) {
-  const [activeId, setActiveId] = useState<string>("")
+function findSectionTitle(
+  sections: DocsTableOfContentsProps["sections"],
+  id: string
+): ReactNode | undefined {
+  for (const section of sections) {
+    if (section.id === id) {
+      return "jsx" in section && section.jsx !== undefined
+        ? section.jsx
+        : section.title
+    }
+
+    if (section.children) {
+      const childTitle = findSectionTitle(section.children, id)
+      if (childTitle) {
+        return childTitle
+      }
+    }
+  }
+
+  return undefined
+}
+
+function useActiveItem(itemIds: string[], activationRatio = 0.2) {
+  const [activeId, setActiveId] = useReducer(
+    (_current: string | null, next: string | null) => next,
+    null
+  )
+  const clickedIdRef = useRef<string | null>(null)
 
   useEffect(() => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+    const smoothScrollBehavior: ScrollBehavior = prefersReducedMotion
+      ? "auto"
+      : "smooth"
+
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id)
+      (_entries) => {
+        const vh = window.innerHeight || document.documentElement.clientHeight
+        const clickedId = clickedIdRef.current
+
+        // Keep a clicked TOC heading active while it is visible to avoid
+        // flicker near the end of long pages where headings cannot reach the
+        // activation line anymore.
+        if (clickedId) {
+          // oxlint-disable-next-line unicorn/prefer-query-selector
+          const clickedElement = document.getElementById(clickedId)
+          if (clickedElement) {
+            const clickedRect = clickedElement.getBoundingClientRect()
+            const isClickedVisible =
+              clickedRect.top < vh && clickedRect.bottom > 0
+
+            if (isClickedVisible) {
+              setActiveId(clickedId)
+              return
+            }
           }
-        })
+
+          clickedIdRef.current = null
+        }
+
+        const offsetTop = vh * activationRatio
+        let bestIndex = -1
+        let bestTop = -Infinity
+
+        // Finde das oberste sichtbare Element
+        for (let index = 0; index < itemIds.length; index += 1) {
+          const id = itemIds[index]
+          if (!id) {
+            continue
+          }
+          // oxlint-disable-next-line unicorn/prefer-query-selector
+          const element = document.getElementById(id)
+          if (!element) {
+            continue
+          }
+
+          const rect = element.getBoundingClientRect()
+          if (rect.top <= offsetTop && rect.top > bestTop) {
+            bestTop = rect.top
+            bestIndex = index
+          }
+        }
+
+        const bestElementId = bestIndex >= 0 ? itemIds[bestIndex] : undefined
+        if (bestElementId) {
+          setActiveId(bestElementId)
+        } else if (window.scrollY < 50) {
+          setActiveId(null)
+        }
       },
-      { rootMargin: `0% 0% -80% 0%` },
+      {
+        rootMargin: `-${activationRatio * 100}% 0px 0px 0px`,
+        threshold: [0, 1],
+      }
     )
 
-    itemIds.forEach((id) => {
+    for (const id of itemIds) {
+      // oxlint-disable-next-line unicorn/prefer-query-selector
       const element = document.getElementById(id)
       if (element) {
         observer.observe(element)
       }
-    })
+    }
+
+    // Click Handler für Links
+    const handleClick = (event: MouseEvent) => {
+      if (!(event.target instanceof Element)) {
+        return
+      }
+
+      const target = event.target.closest("a[href*='#']")
+      if (!(target instanceof HTMLAnchorElement)) {
+        return
+      }
+
+      const { href } = target
+      if (!href.includes("#")) {
+        return
+      }
+
+      const id = href.slice(href.indexOf("#") + 1)
+      // oxlint-disable-next-line unicorn/prefer-query-selector
+      const section = document.getElementById(id)
+      if (!section) {
+        return
+      }
+
+      event.preventDefault()
+
+      // Scroll into view
+      section.scrollIntoView({ behavior: smoothScrollBehavior, block: "start" })
+      clickedIdRef.current = id
+      setActiveId(id)
+
+      // Update URL
+      window.history.pushState(null, "", `#${id}`)
+    }
+
+    document.addEventListener("click", handleClick)
 
     return () => {
-      itemIds.forEach((id) => {
-        const element = document.getElementById(id)
-        if (element) {
-          observer.unobserve(element)
-        }
-      })
+      observer.disconnect()
+      document.removeEventListener("click", handleClick)
     }
-  }, [itemIds])
+  }, [itemIds, activationRatio])
 
   return activeId
 }

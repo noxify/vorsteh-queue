@@ -1,0 +1,34 @@
+---
+title: Workflow Saga
+description: Multi-step workflow with Saga compensation pattern for distributed transactions.
+tags: ["workflow", "saga", "compensation"]
+---
+
+Implements the Saga pattern for multi-step workflows where each step has a compensation action that runs on failure.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=workflow-saga
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- Multi-step workflow orchestration
+- Compensation actions for rollback
+- Step-by-step execution with error boundaries
+- Distributed transaction patterns without 2PC
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/workflow-saga)

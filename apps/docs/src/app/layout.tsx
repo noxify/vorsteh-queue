@@ -1,66 +1,112 @@
-import type { Metadata } from "next"
-import type React from "react"
-import { RootProvider as RenounProvider } from "renoun"
-
 import "./globals.css"
+import type { Metadata } from "next"
+import { RootProvider } from "renoun"
 
-import { ThemeProvider } from "~/components/theme-provider"
+import Analytics from "@/components/analytics"
+import { SearchCommandProvider } from "@/components/search-command"
+import { TailwindIndicator } from "@/components/tailwind-indicator"
+import { ThemeProvider } from "@/components/theme-provider"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
-export const metadata: Metadata = {
-  title: "Vorsteh Queue - Reliable Job Queue for Modern Applications",
-  description:
-    "A powerful, ORM-agnostic queue engine for PostgreSQL 12. Handle background jobs, scheduled tasks, and recurring processes with ease.",
+const SITE_URL = "https://vorsteh-queue.dev"
+
+function toJsonLd(value: unknown) {
+  return JSON.stringify(value).replaceAll("</", "<\\/")
 }
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export const metadata: Metadata = {
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Vorsteh Queue",
+  },
+  alternates: {
+    types: {
+      "application/x-ndjson": "/docs.snapshot.jsonl",
+    },
+  },
+  description:
+    "A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle background jobs, scheduled tasks, and recurring processes with ease.",
+  icons: {
+    apple: [
+      { sizes: "180x180", type: "image/png", url: "/apple-touch-icon.png" },
+    ],
+    icon: [{ type: "image/svg+xml", url: "/icon.svg" }],
+    shortcut: "/favicon.ico",
+  },
+  title: {
+    default: "Vorsteh Queue",
+    template: "%s | Vorsteh Queue",
+  },
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    inLanguage: "en",
+    name: "Vorsteh Queue",
+    potentialAction: {
+      "@type": "SearchAction",
+      query: "required name=search_term_string",
+      target: `${SITE_URL}/docs?search={search_term_string}`,
+    },
+    url: SITE_URL,
+  }
+
   return (
-    <RenounProvider
-      defaultPackageManager="pnpm"
-      git={{
-        source: "https://github.com/noxify/vorsteh-queue",
-        branch: "main",
-        host: "github",
-        owner: "noxify",
-        repository: "vorsteh-queue",
-        baseUrl: "https://github.com",
-      }}
-      siteUrl="https://vorsteh-queue.dev"
-      languages={[
-        "css",
-        "javascript",
-        "jsx",
-        "typescript",
-        "tsx",
-        "markdown",
-        "mdx",
-        "shellscript",
-        "json",
-        "html",
-        "python",
-        "graphql",
-        "yaml",
-        "sql",
-        "xml",
-        "docker",
-        "prisma",
-      ]}
+    <RootProvider
       theme={{
-        dark: "one-dark-pro",
-        light: "one-dark-pro",
+        dark: [
+          "github-dark",
+          {
+            colors: {
+              "editor.background": "#211d1a",
+              "panel.border": "#211d1a",
+              "activityBar.background": "#211d1a",
+            },
+          },
+        ],
+        light: [
+          "min-light",
+
+          {
+            colors: {
+              "editor.background": "#faf9f7",
+              "panel.border": "#faf9f7",
+              "activityBar.background": "#faf9f7",
+            },
+          },
+        ],
       }}
+      languages={["ts", "tsx", "mdx", "bash", "sql", "json", "dockerfile"]}
+      siteUrl={SITE_URL}
     >
-      <html lang="en" suppressHydrationWarning>
+      <html lang="en" suppressHydrationWarning className={cn("antialiased")}>
         <body>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: toJsonLd(websiteJsonLd) }}
+          />
+          <Analytics />
           <ThemeProvider
             attribute={["class", "data-theme"]}
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <TooltipProvider>
+              <SearchCommandProvider>{children}</SearchCommandProvider>
+            </TooltipProvider>
+            <TailwindIndicator />
           </ThemeProvider>
         </body>
       </html>
-    </RenounProvider>
+    </RootProvider>
   )
 }

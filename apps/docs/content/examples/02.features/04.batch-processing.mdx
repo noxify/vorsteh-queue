@@ -1,0 +1,33 @@
+---
+title: Batch Processing
+description: Process large datasets in batches with progress tracking.
+tags: ["batch", "progress"]
+---
+
+Shows how to split large workloads into batches and process them with progress reporting.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=batch-processing
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- Splitting large payloads into manageable batches
+- Progress reporting across batch iterations
+- Job result aggregation
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/batch-processing)

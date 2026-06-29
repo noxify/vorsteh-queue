@@ -1,0 +1,34 @@
+---
+title: Drizzle + PGlite
+description: Zero-setup example using Drizzle ORM with PGlite (embedded PostgreSQL).
+tags: ["drizzle", "pglite", "beginner"]
+---
+
+A zero-dependency-on-external-services example that uses PGlite as an embedded PostgreSQL database. Great for quick experimentation without running a Postgres server.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=drizzle-pglite
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+npm install
+npm run dev
+```
+
+## What it demonstrates
+
+- Basic queue setup with Drizzle ORM
+- Embedded PGlite database (no external PostgreSQL needed)
+- Job registration and processing
+- Simple job handler returning results
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/drizzle-pglite)

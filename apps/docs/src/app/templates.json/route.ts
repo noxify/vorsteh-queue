@@ -1,6 +1,7 @@
-import * as path from "path"
-import { NextResponse } from "next/server"
+import path from "node:path"
+
 import { globby } from "globby"
+import { NextResponse } from "next/server"
 import pMap from "p-map"
 import { readPackage } from "read-pkg"
 

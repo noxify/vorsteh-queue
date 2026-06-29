@@ -1,0 +1,63 @@
+---
+title: Server & Dashboard
+navTitle: Server
+description: GraphQL API server and web dashboard for monitoring and managing queues.
+---
+
+The `@vorsteh-queue/server` package provides a standalone GraphQL API and web dashboard for managing Vorsteh Queue jobs.
+
+## Installation
+
+<Command variant="install">@vorsteh-queue/server</Command>
+
+## Quick Start
+
+```typescript
+import { createQueueServer } from "@vorsteh-queue/server"
+
+const server = createQueueServer({
+  adapter: yourAdapter,
+  queueName: "my-queue",
+  port: 3000,
+  dashboard: true,
+})
+
+await server.start()
+```
+
+## Features
+
+- **GraphQL API** — query queue stats, inspect jobs, cancel, retry, redrive
+- **Web Dashboard** — real-time monitoring with flow visualization
+- **Authentication** — optional token-based auth
+
+## Configuration
+
+Create a `queue.config.ts` in your project root:
+
+```typescript
+import { defineConfig } from "@vorsteh-queue/server"
+
+export default defineConfig({
+  adapter: yourAdapter,
+  queueName: "my-queue",
+  port: 3000,
+  dashboard: true,
+})
+```
+
+Then start with the CLI:
+
+```bash
+vorsteh-queue serve
+```
+
+## GraphQL API
+
+The server exposes a GraphQL endpoint at `/graphql` with queries and mutations for:
+
+- Queue statistics (`stats`, `size`)
+- Job inspection (`job`, `deadJobs`)
+- Job management (`cancelJob`, `retryJob`, `runJobNow`, `deleteJob`)
+- Bulk operations (`redriveAll`, `clearJobs`)
+- Flow tree visualization (`flowTree`)

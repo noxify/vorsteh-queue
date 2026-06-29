@@ -1,0 +1,34 @@
+---
+title: Workflow Signals
+description: Human-in-the-loop workflow with waitFor signals for external approvals.
+tags: ["workflow", "signals", "human-in-the-loop"]
+---
+
+Demonstrates workflows that pause and wait for external signals (e.g. human approval, webhook callback) before continuing.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=workflow-signals
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- `waitFor` signal mechanism
+- Pausing a workflow until external input arrives
+- Human-in-the-loop approval patterns
+- Signal timeout handling
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/workflow-signals)

@@ -1,0 +1,63 @@
+---
+title: Error Handling
+description: Retry logic, timeouts, dead letter queue, and job failure management.
+---
+
+Vorsteh Queue provides multiple layers of error handling to ensure reliable job processing.
+
+## Retry Logic
+
+Jobs are retried automatically when they fail, up to the configured maximum:
+
+```typescript
+await queue.add("risky-job", payload, {
+  maxAttempts: 5, // Retry up to 5 times (default: 3)
+})
+```
+
+After all attempts are exhausted, the job moves to the **dead letter queue** (status: `dead`).
+
+## Job Timeouts
+
+Prevent stuck jobs with a timeout:
+
+```typescript
+await queue.add("long-task", payload, {
+  timeout: 30000, // 30 seconds
+})
+```
+
+If a job exceeds the timeout, it is marked as failed and retried according to `maxAttempts`.
+
+## Dead Letter Queue
+
+Jobs that exceed their retry limit land in the DLQ with status `dead`. You can inspect and redrive them:
+
+```typescript
+// Get dead jobs
+const deadJobs = await adapter.getDeadJobs({ limit: 50 })
+
+// Redrive a single job (resets to pending)
+await adapter.redriveJob(jobId)
+
+// Redrive all dead jobs
+await adapter.redriveJobs()
+```
+
+## Error Events
+
+```typescript
+queue.on("job:failed", (job) => {
+  console.error(
+    `Job ${job.name} failed on attempt ${job.attempts}/${job.maxAttempts}`
+  )
+  console.error(job.error?.message)
+})
+```
+
+## Best Practices
+
+- Set `maxAttempts` based on whether the operation is idempotent
+- Use timeouts for external API calls and network operations
+- Monitor the DLQ and set up alerts for accumulated dead jobs
+- Use the CLI or dashboard to inspect and redrive dead jobs

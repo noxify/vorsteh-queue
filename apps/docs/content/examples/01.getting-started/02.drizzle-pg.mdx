@@ -1,0 +1,35 @@
+---
+title: Drizzle + node-postgres
+navTitle: Drizzle + pg
+description: Basic example using Drizzle ORM with node-postgres (pg).
+tags: ["drizzle", "node-postgres", "beginner"]
+---
+
+A minimal example using Drizzle ORM with the `node-postgres` (pg) driver connecting to a real PostgreSQL database.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=drizzle-pg
+</Command>
+
+Then install dependencies, push the schema and start the dev server:
+
+```bash
+cd my-app
+npm install
+npm run db:push
+npm run dev
+```
+
+## What it demonstrates
+
+- Drizzle ORM with node-postgres driver
+- Schema migration with drizzle-kit
+- Queue creation, handler registration, and job processing
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/drizzle-pg)

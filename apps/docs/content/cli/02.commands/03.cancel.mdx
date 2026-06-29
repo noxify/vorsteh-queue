@@ -1,0 +1,20 @@
+---
+title: "vorsteh-queue cancel"
+navTitle: "cancel"
+description: Cancel a pending or delayed job.
+cliCommand: "cancel"
+---
+
+Cancels a job, moving it to the `cancelled` status. Only jobs that are not yet in a terminal state can be cancelled.
+
+## Usage
+
+```bash
+vorsteh-queue cancel <job-id>
+```
+
+```bash
+vorsteh-queue cancel <job-id> --reason "no longer needed"
+```
+
+<CliCommandDetails command="cancel" />

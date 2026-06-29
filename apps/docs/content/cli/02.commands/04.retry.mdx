@@ -1,0 +1,16 @@
+---
+title: "vorsteh-queue retry"
+navTitle: "retry"
+description: Retry a failed job by resetting it to pending.
+cliCommand: "retry"
+---
+
+Resets a failed job to `pending` status so it can be processed again. The job must be in `failed` status.
+
+## Usage
+
+```bash
+vorsteh-queue retry <job-id>
+```
+
+<CliCommandDetails command="retry" />

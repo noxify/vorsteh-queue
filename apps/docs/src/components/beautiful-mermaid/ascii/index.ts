@@ -1,0 +1,211 @@
+// ============================================================================
+// beautiful-mermaid — ASCII renderer public API
+//
+// Renders Mermaid diagrams to ASCII or Unicode box-drawing art.
+// No external dependencies — pure TypeScript.
+//
+// Supported diagram types:
+//   - Flowcharts (graph TD / flowchart LR) — grid-based layout with A* pathfinding
+//   - State diagrams (stateDiagram-v2) — same pipeline as flowcharts
+//   - Architecture diagrams (architecture-beta) — dedicated entrypoint built on graph layout
+//   - Sequence diagrams (sequenceDiagram) — column-based timeline layout
+//   - Class diagrams (classDiagram) — level-based UML layout
+//   - ER diagrams (erDiagram) — grid layout with crow's foot notation
+//   - Timeline diagrams (timeline) — chronological outline with grouped milestones
+//   - User Journey diagrams (journey) — scored task lists with actor annotations
+//   - XY charts (xychart / xychart-beta)
+//
+// Usage:
+//   import { renderMermaidASCII } from 'beautiful-mermaid'
+//   const ascii = renderMermaidASCII('graph LR\n  A --> B')
+// ============================================================================
+
+import { parseMermaid } from '../parser'
+import { convertToAsciiGraph } from './converter'
+import { createMapping } from './grid'
+import { drawGraph } from './draw'
+import { canvasToString, flipCanvasVertically, flipRoleCanvasVertically } from './canvas'
+import { renderSequenceAscii } from './sequence'
+import { renderClassAscii } from './class-diagram'
+import { renderErAscii } from './er-diagram'
+import { renderTimelineAscii } from './timeline'
+import { renderJourneyAscii } from './journey'
+import { renderXYChartAscii } from './xychart'
+import { renderArchitectureAscii } from './architecture'
+import { detectColorMode, DEFAULT_ASCII_THEME, diagramColorsToAsciiTheme } from './ansi'
+import type { AsciiConfig, AsciiTheme, ColorMode } from './types'
+import { normalizeMermaidSource } from '../mermaid-source'
+import type { MermaidRuntimeConfig } from '../mermaid-source'
+
+// Re-export types for external use
+export type { AsciiTheme, ColorMode }
+export { DEFAULT_ASCII_THEME, detectColorMode, diagramColorsToAsciiTheme }
+
+export interface AsciiRenderOptions {
+  /** true = ASCII chars (+,-,|,>), false = Unicode box-drawing (┌,─,│,►). Default: false */
+  useAscii?: boolean
+  /** Horizontal spacing between nodes. Default: 5 */
+  paddingX?: number
+  /** Vertical spacing between nodes. Default: 5 */
+  paddingY?: number
+  /** Padding inside node boxes. Default: 1 */
+  boxBorderPadding?: number
+  /**
+   * Color mode for output.
+   * - 'none': No colors (plain text)
+   * - 'auto': Auto-detect (terminal ANSI capabilities, or HTML in browsers)
+   * - 'ansi16': 16-color ANSI
+   * - 'ansi256': 256-color xterm
+   * - 'truecolor': 24-bit RGB
+   * - 'html': HTML <span> tags with inline color styles (for browser rendering)
+   * Default: 'auto'
+   */
+  colorMode?: ColorMode | 'auto'
+  /** Theme colors for ASCII output. Uses default theme if not provided. */
+  theme?: Partial<AsciiTheme>
+  /** Optional Mermaid-style runtime config (analogous to initialize/frontmatter config). */
+  mermaidConfig?: MermaidRuntimeConfig
+}
+
+/**
+ * Detect the diagram type from the mermaid source text.
+ * Mirrors the detection logic in src/index.ts for the SVG renderer.
+ */
+function detectDiagramType(firstLine: string): 'flowchart' | 'architecture' | 'sequence' | 'class' | 'er' | 'timeline' | 'journey' | 'xychart' {
+  if (/^architecture-beta\s*$/.test(firstLine)) return 'architecture'
+  if (/^xychart(-beta)?\b/.test(firstLine)) return 'xychart'
+  if (/^timeline\s*$/.test(firstLine)) return 'timeline'
+  if (/^journey\s*$/.test(firstLine)) return 'journey'
+  if (/^sequencediagram\s*$/.test(firstLine)) return 'sequence'
+  if (/^classdiagram\s*$/.test(firstLine)) return 'class'
+  if (/^erdiagram\s*$/.test(firstLine)) return 'er'
+
+  // Default: flowchart/state (handled by parseMermaid internally)
+  return 'flowchart'
+}
+
+function firstSignificantLine(text: string): string {
+  for (const rawLine of text.split('\n')) {
+    const line = rawLine.trim()
+    if (line.length === 0 || line.startsWith('%%')) continue
+    return line.split(';')[0]!.trim().toLowerCase()
+  }
+  return ''
+}
+
+/**
+ * Render Mermaid diagram text to an ASCII/Unicode string.
+ *
+ * Synchronous — no async layout engine needed (unlike the SVG renderer).
+ * Auto-detects diagram type from the header line and dispatches to
+ * the appropriate renderer.
+ *
+ * @param text - Mermaid source text (any supported diagram type)
+ * @param options - Rendering options
+ * @returns Multi-line ASCII/Unicode string
+ *
+ * @example
+ * ```ts
+ * const result = renderMermaidAscii(`
+ *   graph LR
+ *     A --> B --> C
+ * `, { useAscii: true })
+ *
+ * // Output:
+ * // +---+     +---+     +---+
+ * // |   |     |   |     |   |
+ * // | A |---->| B |---->| C |
+ * // |   |     |   |     |   |
+ * // +---+     +---+     +---+
+ * ```
+ */
+export function renderMermaidASCII(
+  text: string,
+  options: AsciiRenderOptions = {},
+): string {
+  const config: AsciiConfig = {
+    useAscii: options.useAscii ?? false,
+    paddingX: options.paddingX ?? 5,
+    paddingY: options.paddingY ?? 5,
+    boxBorderPadding: options.boxBorderPadding ?? 1,
+    graphDirection: 'TD', // default, overridden for flowcharts below
+  }
+
+  // Resolve color mode ('auto' or unset → detect environment, otherwise use specified mode)
+  const colorMode: ColorMode = options.colorMode === 'auto' || options.colorMode === undefined
+    ? detectColorMode()
+    : options.colorMode
+
+  // Merge user theme with defaults
+  const theme: AsciiTheme = { ...DEFAULT_ASCII_THEME, ...options.theme }
+  const normalizedSource = normalizeMermaidSource(text, options.mermaidConfig ?? {})
+
+  const diagramType = detectDiagramType(normalizedSource.firstLine)
+
+  switch (diagramType) {
+    case 'architecture': {
+      const vars = normalizedSource.config.themeVariables
+      const archColors: import('../theme').DiagramColors = {
+        bg: (vars?.background as string) ?? '#ffffff',
+        fg: (vars?.primaryTextColor as string) ?? (vars?.textColor as string) ?? '#27272A',
+        line: vars?.lineColor as string | undefined,
+        accent: vars?.primaryColor as string | undefined,
+      }
+      const archTheme = { ...theme, ...diagramColorsToAsciiTheme(archColors) }
+      return renderArchitectureAscii(normalizedSource.lines, config, colorMode, archTheme)
+    }
+
+    case 'xychart':
+      return renderXYChartAscii(normalizedSource.text, config, colorMode, theme, normalizedSource.frontmatter)
+
+    case 'sequence':
+      return renderSequenceAscii(normalizedSource.text, config, colorMode, theme)
+
+    case 'class':
+      return renderClassAscii(normalizedSource.text, config, colorMode, theme)
+
+    case 'er':
+      return renderErAscii(normalizedSource.text, config, colorMode, theme)
+
+    case 'timeline':
+      return renderTimelineAscii(normalizedSource.lines, config, colorMode, theme)
+
+    case 'journey':
+      return renderJourneyAscii(normalizedSource.text, config, colorMode, theme)
+
+    case 'flowchart':
+    default: {
+      // Flowchart + state diagram pipeline (original)
+      const parsed = parseMermaid(normalizedSource.text)
+
+      // Normalize direction for grid layout.
+      // BT is laid out as TD then flipped vertically after drawing.
+      // RL is treated as LR (full RL support not yet implemented).
+      if (parsed.direction === 'LR' || parsed.direction === 'RL') {
+        config.graphDirection = 'LR'
+      } else {
+        config.graphDirection = 'TD'
+      }
+
+      const graph = convertToAsciiGraph(parsed, config)
+      createMapping(graph)
+      drawGraph(graph)
+
+      // BT: flip the finished canvas vertically so the flow runs bottom→top.
+      // The grid layout ran as TD; flipping + character remapping produces BT.
+      if (parsed.direction === 'BT') {
+        flipCanvasVertically(graph.canvas)
+        flipRoleCanvasVertically(graph.roleCanvas)
+      }
+
+      return canvasToString(graph.canvas, {
+        roleCanvas: graph.roleCanvas,
+        colorMode,
+        theme,
+      })
+    }
+  }
+}
+
+/** @deprecated Use `renderMermaidASCII` */
+export const renderMermaidAscii = renderMermaidASCII

@@ -1,0 +1,83 @@
+---
+title: Prisma Adapter
+navTitle: Prisma
+description: Prisma ORM adapter for PostgreSQL with generated types and migrations.
+---
+
+The Prisma adapter provides PostgreSQL support using Prisma ORM, offering generated types, migrations, and developer tooling.
+
+## Installation
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-prisma
+</Command>
+
+## Quick Start
+
+```typescript
+import { PrismaClient } from "@prisma/client"
+
+import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma/postgres-adapter"
+import { Queue } from "@vorsteh-queue/core"
+
+const prisma = new PrismaClient()
+const adapter = new PostgresPrismaQueueAdapter(prisma)
+const queue = new Queue(adapter, { name: "my-queue" })
+```
+
+## Database Schema
+
+Add the queue job model to your `schema.prisma`:
+
+```prisma
+model QueueJob {
+  id                 String    @id @default(uuid())
+  name               String
+  payload            Json
+  status             String    @default("pending")
+  priority           Int       @default(2)
+  attempts           Int       @default(0)
+  maxAttempts        Int       @default(3)
+  progress           Int       @default(0)
+  result             Json?
+  error              Json?
+  processAt          DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  completedAt        DateTime?
+  failedAt           DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  timeout            Int?
+  cron               String?
+  cronTimezone       String?
+  repeatCount        Int       @default(0)
+  repeatLimit        Int?
+  repeatEvery        Int?
+  groupKey           String?
+  flowId             String?
+  parentJobId        String?
+  childJobIds        String[]  @default([])
+  uniqueKey          String?   @unique
+
+  @@map("queue_jobs")
+}
+```
+
+## Custom Table and Schema Names
+
+```typescript
+const adapter = new PostgresPrismaQueueAdapter(prisma, {
+  modelName: "CustomQueueJobs",
+  schemaName: "custom_schema",
+  tableName: "custom_queue_jobs",
+})
+```
+
+## Migrations
+
+Use the [Prisma CLI](https://www.prisma.io/docs/orm/tools/prisma-cli) for migrations:
+
+```bash
+npx prisma migrate dev --name add-queue-table
+```

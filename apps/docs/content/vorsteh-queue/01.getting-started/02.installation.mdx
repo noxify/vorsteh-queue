@@ -1,0 +1,50 @@
+---
+title: Installation
+description: Install Vorsteh Queue packages for your preferred ORM adapter.
+---
+
+## Quick Start with CLI
+
+<Command variant="exec">create-vorsteh-queue my-queue-app</Command>
+
+The scaffolding CLI provides interactive prompts for template selection, package manager, and dependency installation.
+
+See the [create-vorsteh-queue docs](/docs/vorsteh-queue/packages/create-vorsteh-queue) for details.
+
+## Manual Installation
+
+### Drizzle ORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
+</Command>
+
+### Prisma ORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-prisma
+</Command>
+
+### Kysely (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-kysely
+</Command>
+
+## Database Setup
+
+Each adapter provides schema definitions and migration tooling:
+
+- **Drizzle** — use the included schema and run `drizzle-kit` migrations
+- **Prisma** — add the model to `schema.prisma` and run `prisma migrate`
+- **Kysely** — use the provided migration and run via `kysely-ctl`
+
+Refer to the specific adapter documentation for detailed instructions.
+
+## Requirements
+
+| Requirement   | Version |
+| ------------- | ------- |
+| Node.js       | 20+     |
+| PostgreSQL    | 12+     |
+| Module system | ESM     |

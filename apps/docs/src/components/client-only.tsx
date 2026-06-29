@@ -1,17 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { createElement, Fragment, useEffect, useState } from "react"
-
-export const ClientOnly = ({ children }: { children: ReactNode }) => {
-  const hasMounted = useClientOnly()
-
-  if (!hasMounted) {
-    return null
-  }
-
-  return createElement(Fragment, { children })
-}
+import { useEffect, useState } from "react"
 
 /** React hook that returns true if the component has mounted client-side */
 export const useClientOnly = () => {
@@ -23,4 +13,14 @@ export const useClientOnly = () => {
   }, [])
 
   return hasMounted
+}
+
+export const ClientOnly = ({ children }: { children: ReactNode }) => {
+  const hasMounted = useClientOnly()
+
+  if (!hasMounted) {
+    return null
+  }
+
+  return <>{children}</>
 }

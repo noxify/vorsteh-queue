@@ -1,0 +1,34 @@
+---
+title: Progress Tracking
+description: Real-time job progress tracking with percentage updates.
+tags: ["progress", "monitoring"]
+---
+
+Shows how to report and monitor real-time progress during long-running job execution.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=progress-tracking
+</Command>
+
+Then install dependencies, push the schema and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm db:push
+pnpm dev
+```
+
+## What it demonstrates
+
+- `job.updateProgress()` calls during processing
+- Progress event listening
+- Batch processing with progress reporting
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/progress-tracking)

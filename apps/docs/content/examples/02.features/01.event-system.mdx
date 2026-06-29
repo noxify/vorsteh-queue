@@ -1,0 +1,35 @@
+---
+title: Event System
+description: Comprehensive event monitoring and statistics using the queue event system.
+tags: ["events", "monitoring"]
+---
+
+Demonstrates the full event lifecycle — listen to job additions, completions, failures, progress updates, and queue control events.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=event-system
+</Command>
+
+Then install dependencies, push the schema and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm db:push
+pnpm dev
+```
+
+## What it demonstrates
+
+- All job lifecycle events (`job:added`, `job:completed`, `job:failed`, `job:progress`)
+- Queue control events (`queue:paused`, `queue:resumed`)
+- Real-time statistics tracking via events
+- Event-driven logging patterns
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/event-system)

@@ -1,0 +1,45 @@
+---
+title: "vorsteh-queue serve"
+navTitle: "serve"
+description: Start the queue server with dashboard.
+cliCommand: "serve"
+---
+
+Starts the GraphQL API server and optional web dashboard. Requires a `queue.config.ts` with a direct adapter configuration.
+
+## Usage
+
+```bash
+vorsteh-queue serve
+```
+
+```bash
+vorsteh-queue serve --port 4000
+```
+
+```bash
+vorsteh-queue serve --no-dashboard
+```
+
+## Configuration
+
+The serve command reads from `queue.config.ts`:
+
+```typescript
+// queue.config.ts
+import { drizzle } from "drizzle-orm/node-postgres"
+import { Pool } from "pg"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle/postgres-adapter"
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const db = drizzle(pool)
+
+export default {
+  adapter: new PostgresQueueAdapter(db),
+  queueName: "my-queue",
+  port: 3000,
+  dashboard: true,
+}
+```
+
+<CliCommandDetails command="serve" />

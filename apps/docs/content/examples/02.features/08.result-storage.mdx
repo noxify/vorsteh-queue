@@ -1,0 +1,33 @@
+---
+title: Result Storage
+description: Storing and retrieving job results after completion.
+tags: ["results", "storage"]
+---
+
+Shows how to store structured results from job handlers and retrieve them after completion.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=result-storage
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- Returning typed results from job handlers
+- Retrieving results by job ID
+- Result inspection via CLI and API
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/result-storage)

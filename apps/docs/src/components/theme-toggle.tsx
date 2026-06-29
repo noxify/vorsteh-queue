@@ -1,23 +1,62 @@
 "use client"
 
+import { useTheme } from "better-themes/rsc"
 import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
+import { useSyncExternalStore } from "react"
 
-import { Button } from "~/components/ui/button"
+import { Button } from "@/components/ui/button"
+import { Kbd } from "@/components/ui/kbd"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
-export function ThemeToggle() {
+const emptySubscribe = (_onStoreChange: () => void) => () => null
+
+export default function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-muted-foreground size-8"
+        aria-label="Toggle theme"
+      >
+        <Moon className="size-4" />
+      </Button>
+    )
+  }
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="px-0"
-    >
-      <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-      <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-      <span className="sr-only">Toggle theme</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground size-8"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            aria-label="Toggle theme - Keyboard shortcut: D"
+          >
+            {theme === "dark" ? (
+              <Sun className="size-4" />
+            ) : (
+              <Moon className="size-4" />
+            )}
+          </Button>
+        }
+      />
+      <TooltipContent>
+        Toggle theme <Kbd>D</Kbd>
+      </TooltipContent>
+    </Tooltip>
   )
 }

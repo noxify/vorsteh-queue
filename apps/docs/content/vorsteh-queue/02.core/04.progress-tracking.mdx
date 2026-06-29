@@ -1,0 +1,47 @@
+---
+title: Progress Tracking
+description: Report and monitor real-time job progress within handlers.
+---
+
+Jobs can report progress (0–100) during execution, useful for long-running operations like batch processing or file uploads.
+
+## Reporting Progress
+
+Use `job.updateProgress()` inside your handler:
+
+```typescript
+interface BatchPayload {
+  items: string[]
+}
+
+interface BatchResult {
+  processed: number
+}
+
+queue.register<BatchPayload, BatchResult>("process-batch", async (job) => {
+  const { items } = job.payload
+
+  for (let i = 0; i < items.length; i++) {
+    await processItem(items[i])
+    await job.updateProgress(Math.round(((i + 1) / items.length) * 100))
+  }
+
+  return { processed: items.length }
+})
+```
+
+## Listening to Progress
+
+Subscribe to progress updates via the event system:
+
+```typescript
+queue.on("job:progress", (job) => {
+  console.log(`[${job.name}] ${job.progress}%`)
+})
+```
+
+## Notes
+
+- Progress is stored as an integer between 0 and 100
+- Updates are persisted to the database, surviving restarts
+- Calling `updateProgress` with the same value is a no-op (no extra writes)

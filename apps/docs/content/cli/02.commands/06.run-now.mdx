@@ -1,0 +1,16 @@
+---
+title: "vorsteh-queue run-now"
+navTitle: "run-now"
+description: Promote a delayed job to run immediately.
+cliCommand: "run-now"
+---
+
+Promotes a delayed job to `pending` status, making it eligible for immediate processing. The job must be in `delayed` status.
+
+## Usage
+
+```bash
+vorsteh-queue run-now <job-id>
+```
+
+<CliCommandDetails command="run-now" />

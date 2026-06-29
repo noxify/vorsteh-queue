@@ -1,0 +1,23 @@
+---
+title: "vorsteh-queue redrive"
+navTitle: "redrive"
+description: Redrive dead jobs back to pending for reprocessing.
+cliCommand: "redrive"
+---
+
+Moves dead jobs (jobs that exhausted all retry attempts) back to `pending` status for another attempt.
+
+## Usage
+
+```bash
+# Redrive a single job
+vorsteh-queue redrive <job-id>
+
+# Redrive all dead jobs
+vorsteh-queue redrive --all
+
+# Redrive dead jobs filtered by name
+vorsteh-queue redrive --all --name send-email
+```
+
+<CliCommandDetails command="redrive" />

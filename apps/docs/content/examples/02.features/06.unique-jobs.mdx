@@ -1,0 +1,33 @@
+---
+title: Unique Jobs
+description: Job deduplication with unique keys to prevent duplicate processing.
+tags: ["unique", "deduplication"]
+---
+
+Shows how to use unique keys to prevent duplicate jobs from being added to the queue.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=unique-jobs
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- Unique key assignment to prevent duplicates
+- Handling duplicate job attempts gracefully
+- Use cases like email deduplication or idempotent operations
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/unique-jobs)

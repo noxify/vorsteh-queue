@@ -1,0 +1,58 @@
+---
+title: Events
+description: Listen to job lifecycle and queue control events for monitoring and debugging.
+---
+
+The event system provides real-time notifications for job state changes and queue operations.
+
+## Job Lifecycle Events
+
+```typescript
+queue.on("job:added", (job) => {
+  console.log(`Job ${job.name} added to queue`)
+})
+
+queue.on("job:completed", (job) => {
+  console.log(`Job ${job.name} completed with result:`, job.result)
+})
+
+queue.on("job:failed", (job) => {
+  console.error(`Job ${job.name} failed:`, job.error)
+})
+
+queue.on("job:progress", (job) => {
+  console.log(`Job ${job.name}: ${job.progress}% complete`)
+})
+```
+
+## Queue Control Events
+
+```typescript
+queue.on("queue:paused", () => {
+  console.log("Queue paused")
+})
+
+queue.on("queue:resumed", () => {
+  console.log("Queue resumed")
+})
+```
+
+## Available Events
+
+| Event           | Payload | Description                  |
+| --------------- | ------- | ---------------------------- |
+| `job:added`     | `Job`   | Job was added to the queue   |
+| `job:completed` | `Job`   | Job processing finished      |
+| `job:failed`    | `Job`   | Job processing failed        |
+| `job:progress`  | `Job`   | Job progress was updated     |
+| `job:retry`     | `Job`   | Job is being retried         |
+| `queue:paused`  | —       | Queue processing was paused  |
+| `queue:resumed` | —       | Queue processing was resumed |
+
+## Use Cases
+
+- Logging and audit trails
+- Metrics collection (Prometheus, Datadog)
+- Chaining dependent jobs
+- Notifications on failures
+- Progress dashboards

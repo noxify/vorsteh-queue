@@ -1,0 +1,44 @@
+---
+title: Installation
+description: How to install and configure the Vorsteh Queue CLI for job management and monitoring.
+---
+
+The Vorsteh Queue CLI (`@vorsteh-queue/cli`) provides commands for inspecting, managing, and monitoring queue jobs from the terminal.
+
+## Install as a project dependency
+
+<Command variant="install">@vorsteh-queue/cli</Command>
+
+## Run without installing
+
+<Command variant="exec">vorsteh-queue</Command>
+
+## Environment Variables
+
+The CLI connects to a running Vorsteh Queue server via GraphQL by default:
+
+| Variable              | Required | Description                     | Default                         |
+| --------------------- | -------- | ------------------------------- | ------------------------------- |
+| `VORSTEH_QUEUE_URL`   | No       | GraphQL endpoint URL            | `http://localhost:3000/graphql` |
+| `VORSTEH_QUEUE_TOKEN` | No       | Bearer token for authentication | —                               |
+
+## Direct Adapter Mode
+
+Instead of connecting to a remote server, the CLI can use a local adapter directly via `queue.config.ts`:
+
+```typescript
+// queue.config.ts
+import { drizzle } from "drizzle-orm/node-postgres"
+import { Pool } from "pg"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle/postgres-adapter"
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const db = drizzle(pool)
+
+export default {
+  adapter: new PostgresQueueAdapter(db),
+  queueName: "my-queue",
+}
+```
+
+When the CLI detects an adapter in the config, it uses the direct transport instead of GraphQL.
