@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022"],
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "declaration": true,
@@ -12,10 +12,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["src/*"]
-    }
+    "rootDir": "${configDir}/src"
   },
   "include": ["${configDir}/src"],
   "exclude": ["${configDir}/node_modules", "${configDir}/dist"]

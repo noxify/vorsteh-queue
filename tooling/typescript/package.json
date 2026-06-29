@@ -1,14 +1,14 @@
 {
   "name": "@vorsteh-queue/tsconfig",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
+  "files": [
+    "*.json"
+  ],
   "exports": {
     "./base.json": "./base.json",
     "./external-package.json": "./external-package.json",
     "./internal-package.json": "./internal-package.json",
     "./build.json": "./build.json"
-  },
-  "files": [
-    "*.json"
-  ]
+  }
 }
