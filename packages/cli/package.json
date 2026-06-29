@@ -1,0 +1,56 @@
+{
+  "name": "@vorsteh-queue/cli",
+  "version": "0.1.0",
+  "description": "CLI tool for monitoring and managing Vorsteh Queue jobs",
+  "keywords": [
+    "cli",
+    "job-queue",
+    "management",
+    "monitoring",
+    "queue"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/cli"
+  },
+  "bin": {
+    "vorsteh-queue": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vorsteh-queue/core": "workspace:*",
+    "citty": "^0.2.2",
+    "consola": "^3.4.0"
+  },
+  "devDependencies": {
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "rolldown": "1.1.3",
+    "rollup-plugin-delete": "^3.0.2",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}
