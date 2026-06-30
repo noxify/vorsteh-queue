@@ -871,6 +871,237 @@ export function runTests<TDatabase = unknown>(
           expect(retrieved?.timeout).toBe(5000)
         })
       })
+
+      describe("SKIP LOCKED concurrency", () => {
+        it("should skip a row locked by another transaction", async () => {
+          const table =
+            useDefault === false ? `${schemaName}.${tableName}` : "queue_jobs"
+
+          // Insert two jobs with different priorities
+          await adapter.addJobs([
+            {
+              name: "lock-test",
+              payload: { n: 1 },
+              status: "pending",
+              priority: 1,
+              attempts: 0,
+              maxAttempts: 3,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+            {
+              name: "lock-test",
+              payload: { n: 2 },
+              status: "pending",
+              priority: 2,
+              attempts: 0,
+              maxAttempts: 3,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            },
+          ])
+
+          // Open a separate connection and hold a FOR UPDATE lock on the
+          // highest-priority job (simulates a worker holding the lock).
+          const lockClient = postgres(database.container.getConnectionUri(), {
+            max: 1,
+          })
+
+          // oxlint-disable-next-line promise/avoid-new
+          const lockedId = await new Promise<string>((resolve) => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            lockClient.begin(async (tx) => {
+              const [row] = await tx<{ id: string }[]>`
+                SELECT id FROM ${tx.unsafe(table)}
+                WHERE queue_name = 'test-queue'
+                  AND status = 'pending'
+                  AND name = 'lock-test'
+                ORDER BY priority ASC, created_at ASC
+                LIMIT 1
+                FOR UPDATE SKIP LOCKED
+              `
+              // oxlint-disable-next-line typescript/no-non-null-assertion
+              resolve(row!.id)
+
+              // Hold the transaction open so the lock persists
+              // oxlint-disable-next-line no-promise-executor-return promise/avoid-new promise/param-names
+              await new Promise((r) => setTimeout(r, 2000))
+            })
+          })
+
+          // While the lock is held, adapter.getNextJob should skip the locked
+          // row and return the second job instead.
+          const job = await adapter.getNextJob({
+            handlerNames: ["lock-test"],
+            activeGroups: [],
+          })
+
+          expect(job).not.toBeNull()
+          // oxlint-disable-next-line typescript/no-non-null-assertion
+          expect(job!.id).not.toBe(lockedId)
+          // oxlint-disable-next-line typescript/no-non-null-assertion
+          expect((job!.payload as { n: number }).n).toBe(2)
+
+          await lockClient.end()
+        })
+
+        it("should return null when all rows are locked", async () => {
+          const table =
+            useDefault === false ? `${schemaName}.${tableName}` : "queue_jobs"
+
+          // Insert a single job
+          await adapter.addJob({
+            name: "lock-all-test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          // Lock it in a separate transaction
+          const lockClient = postgres(database.container.getConnectionUri(), {
+            max: 1,
+          })
+
+          // oxlint-disable-next-line promise/avoid-new
+          await new Promise<void>((resolve) => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            lockClient.begin(async (tx) => {
+              await tx`
+                SELECT id FROM ${tx.unsafe(table)}
+                WHERE queue_name = 'test-queue'
+                  AND status = 'pending'
+                  AND name = 'lock-all-test'
+                LIMIT 1
+                FOR UPDATE SKIP LOCKED
+              `
+              resolve()
+
+              // oxlint-disable-next-line promise/avoid-new promise/param-names no-promise-executor-return
+              await new Promise((r) => setTimeout(r, 2000))
+            })
+          })
+
+          // Adapter should find no available jobs (the only one is locked)
+          const job = await adapter.getNextJob({
+            handlerNames: ["lock-all-test"],
+            activeGroups: [],
+          })
+
+          expect(job).toBeNull()
+
+          await lockClient.end()
+        })
+
+        it("should skip locked rows in getNextJobsForHandler", async () => {
+          const table =
+            useDefault === false ? `${schemaName}.${tableName}` : "queue_jobs"
+
+          // Insert 3 jobs
+          await adapter.addJobs(
+            Array.from({ length: 3 }, (_, i) => ({
+              name: "batch-lock-test",
+              payload: { index: i },
+              status: "pending" as const,
+              priority: i + 1,
+              attempts: 0,
+              maxAttempts: 3,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+            }))
+          )
+
+          // Lock the first (highest priority) job
+          const lockClient = postgres(database.container.getConnectionUri(), {
+            max: 1,
+          })
+
+          // oxlint-disable-next-line promise/avoid-new
+          const lockedId = await new Promise<string>((resolve) => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            lockClient.begin(async (tx) => {
+              const [row] = await tx<{ id: string }[]>`
+                SELECT id FROM ${tx.unsafe(table)}
+                WHERE queue_name = 'test-queue'
+                  AND status = 'pending'
+                  AND name = 'batch-lock-test'
+                ORDER BY priority ASC, created_at ASC
+                LIMIT 1
+                FOR UPDATE
+              `
+              // oxlint-disable-next-line typescript/no-non-null-assertion
+              resolve(row!.id)
+
+              // oxlint-disable-next-line promise/avoid-new promise/param-names no-promise-executor-return
+              await new Promise((r) => setTimeout(r, 2000))
+            })
+          })
+
+          // Request all 3, but one is locked so only 2 should be returned
+          const jobs = await adapter.getNextJobsForHandler(
+            "batch-lock-test",
+            3,
+            []
+          )
+
+          expect(jobs.length).toBe(2)
+          expect(jobs.every((j) => j.id !== lockedId)).toBe(true)
+
+          await lockClient.end()
+        })
+
+        it("should release lock after transaction completes", async () => {
+          const table =
+            useDefault === false ? `${schemaName}.${tableName}` : "queue_jobs"
+
+          await adapter.addJob({
+            name: "release-test",
+            payload: {},
+            status: "pending",
+            priority: 2,
+            attempts: 0,
+            maxAttempts: 3,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+          })
+
+          // Lock and immediately release via transaction commit
+          const lockClient = postgres(database.container.getConnectionUri(), {
+            max: 1,
+          })
+
+          await lockClient.begin(async (tx) => {
+            await tx`
+              SELECT id FROM ${tx.unsafe(table)}
+              WHERE queue_name = 'test-queue'
+                AND status = 'pending'
+                AND name = 'release-test'
+              LIMIT 1
+              FOR UPDATE SKIP LOCKED
+            `
+          })
+
+          await lockClient.end()
+
+          // After the lock is released, getNextJob should find the job
+          const job = await adapter.getNextJob({
+            handlerNames: ["release-test"],
+            activeGroups: [],
+          })
+
+          expect(job).not.toBeNull()
+          // oxlint-disable-next-line typescript/no-non-null-assertion
+          expect(job!.name).toBe("release-test")
+        })
+      })
     }
   )
 }

@@ -122,7 +122,7 @@ export class PubSub {
       [Symbol.asyncIterator]() {
         return this
       },
-      [Symbol.asyncDispose]: function (): PromiseLike<void> {
+      [Symbol.asyncDispose](): PromiseLike<void> {
         throw new Error("Function not implemented.")
       },
     }

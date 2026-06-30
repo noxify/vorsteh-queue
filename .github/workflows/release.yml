@@ -19,7 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          persist-credentials: false
+          token: ${{ secrets.CHANGESETS_TOKEN }}
+          persist-credentials: true
 
       - name: Setup
         uses: ./.github/setup
@@ -32,4 +33,3 @@ jobs:
           publish: pnpm ci:publish
         env:
           GITHUB_TOKEN: ${{ secrets.CHANGESETS_TOKEN }}
-          NPM_TOKEN: ""
