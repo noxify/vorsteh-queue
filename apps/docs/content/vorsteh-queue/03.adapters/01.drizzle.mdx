@@ -29,9 +29,9 @@ const queue = new Queue(adapter, { name: "my-queue" })
 
 ## Supported Drivers
 
-- **node-postgres (pg)** — `drizzle-orm/node-postgres`
-- **Postgres.js** — `drizzle-orm/postgres-js`
-- **PGlite** — `drizzle-orm/pglite` (embedded, great for development)
+- **node-postgres (pg)** — `drizzle-orm/node-postgres` ( [Docs](https://orm.drizzle.team/docs/get-started-postgresql#node-postgres) )
+- **Postgres.js** — `drizzle-orm/postgres-js` ( [Docs](https://orm.drizzle.team/docs/get-started-postgresql#postgresjs) )
+- **PGlite** — `drizzle-orm/pglite` (embedded, great for development) ( [Docs](https://orm.drizzle.team/docs/connect-pglite) )
 
 ## Database Schema
 
@@ -71,3 +71,7 @@ Use [drizzle-kit](https://orm.drizzle.team/docs/kit-overview) to generate and ru
 npx drizzle-kit generate
 npx drizzle-kit migrate
 ```
+
+## Adapter Properties
+
+<InterfaceReference file="core/src/types" name="DrizzleAdapterProps" />

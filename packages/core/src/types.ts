@@ -679,7 +679,7 @@ export interface QueueAdapter {
 
 /** Prisma adapter configuration */
 export interface PrismaAdapterProps {
-  /** Model name in schema.prisma
+  /** Model name in the `schema.prisma` file
    * @default "QueueJob"
    */
   modelName?: string
@@ -707,7 +707,7 @@ export interface KyselyAdapterProps {
 
 /** Drizzle adapter configuration */
 export interface DrizzleAdapterProps {
-  /** Export name in the schema.ts file
+  /** Export name in the `schema.ts` file
    * @default "queueJobs"
    */
   modelName?: string
