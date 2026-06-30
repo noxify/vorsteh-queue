@@ -29,7 +29,27 @@ env:
   FORCE_COLOR: 3
 
 jobs:
+  detect-package-changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      packages_changed: ${{ steps.filter.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            packages:
+              - 'packages/**'
+              - 'pnpm-lock.yaml'
+
   node_versions:
+    needs: [detect-package-changes]
+    if: |
+      always() &&
+      (needs.detect-package-changes.result == 'skipped' || needs.detect-package-changes.outputs.packages_changed == 'true')
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -80,6 +100,10 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: true
 
   postgres-drizzle:
+    needs: [detect-package-changes]
+    if: |
+      always() &&
+      (needs.detect-package-changes.result == 'skipped' || needs.detect-package-changes.outputs.packages_changed == 'true')
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -111,6 +135,10 @@ jobs:
           PG_VERSION: ${{ matrix.pg-version }}
 
   postgres-prisma:
+    needs: [detect-package-changes]
+    if: |
+      always() &&
+      (needs.detect-package-changes.result == 'skipped' || needs.detect-package-changes.outputs.packages_changed == 'true')
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -144,6 +172,10 @@ jobs:
           PG_VERSION: ${{ matrix.pg-version }}
 
   postgres-kysely:
+    needs: [detect-package-changes]
+    if: |
+      always() &&
+      (needs.detect-package-changes.result == 'skipped' || needs.detect-package-changes.outputs.packages_changed == 'true')
     runs-on: ubuntu-latest
     strategy:
       matrix:
