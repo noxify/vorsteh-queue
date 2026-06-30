@@ -68,16 +68,16 @@
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.3",
+    "@electric-sql/pglite": "0.5.3",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "kysely": "^0.29.2",
-    "kysely-ctl": "^0.21.0",
-    "kysely-postgres-js": "^3.0.0",
-    "postgres": "^3.4.8",
+    "kysely": "0.29.2",
+    "kysely-ctl": "0.21.0",
+    "kysely-postgres-js": "3.0.0",
+    "postgres": "3.4.9",
     "tsdown": "0.22.3",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   },
   "peerDependencies": {
     "kysely": ">=0.28.0"

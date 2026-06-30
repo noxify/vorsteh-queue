@@ -12,14 +12,14 @@
   "dependencies": {
     "@vorsteh-queue/adapter-kysely": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
-    "kysely": "^0.29.2",
-    "kysely-postgres-js": "^3.0.0",
-    "postgres": "^3.4.8"
+    "kysely": "0.29.2",
+    "kysely-postgres-js": "3.0.0",
+    "postgres": "3.4.9"
   },
   "devDependencies": {
     "dotenv-cli": "11.0.0",
-    "kysely-ctl": "^0.21.0",
+    "kysely-ctl": "0.21.0",
     "tsx": "4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "6.0.3"
   }
 }

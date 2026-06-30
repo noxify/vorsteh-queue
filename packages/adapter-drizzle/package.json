@@ -64,15 +64,15 @@
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.3",
+    "@electric-sql/pglite": "0.5.3",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "drizzle-kit": "^0.31.8",
-    "drizzle-orm": "^0.45.2",
-    "postgres": "^3.4.8",
+    "drizzle-kit": "0.31.10",
+    "drizzle-orm": "0.45.2",
+    "postgres": "3.4.9",
     "tsdown": "0.22.3",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   },
   "peerDependencies": {
     "drizzle-orm": ">=0.45.2"

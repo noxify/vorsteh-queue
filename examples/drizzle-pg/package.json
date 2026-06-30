@@ -11,13 +11,13 @@
   "dependencies": {
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "0.45.2",
     "pg": "8.22.0"
   },
   "devDependencies": {
     "@types/pg": "8.20.0",
-    "drizzle-kit": "^0.31.8",
+    "drizzle-kit": "0.31.10",
     "tsx": "4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "6.0.3"
   }
 }

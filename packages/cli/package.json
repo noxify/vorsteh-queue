@@ -50,15 +50,15 @@
     "@commander-js/extra-typings": "15.0.0",
     "@vorsteh-queue/core": "workspace:*",
     "@vorsteh-queue/server": "workspace:*",
-    "c12": "^2.0.4",
+    "c12": "3.3.4",
     "commander": "15.0.0",
-    "consola": "^3.4.0"
+    "consola": "3.4.2"
   },
   "devDependencies": {
     "@vorsteh-queue/tsconfig": "workspace:*",
     "tsdown": "0.22.3",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   },
   "engines": {
     "node": ">=22"

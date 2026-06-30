@@ -55,17 +55,18 @@
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
-    "@prisma/internals": "^7.8.0",
-    "@prisma/migrate": "^7.8.0",
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
+    "@prisma/internals": "7.8.0",
+    "@prisma/migrate": "7.8.0",
+    "@types/node": "24.13.2",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "prisma": "^7.8.0",
-    "testcontainers": "^12.0.3",
+    "prisma": "7.8.0",
+    "testcontainers": "12.0.3",
     "tsdown": "0.22.3",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   },
   "peerDependencies": {
     "@prisma/client": ">=7.0.0"

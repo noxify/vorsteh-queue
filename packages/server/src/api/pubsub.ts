@@ -122,6 +122,9 @@ export class PubSub {
       [Symbol.asyncIterator]() {
         return this
       },
+      [Symbol.asyncDispose]: function (): PromiseLike<void> {
+        throw new Error("Function not implemented.")
+      },
     }
 
     return generator

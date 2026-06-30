@@ -11,15 +11,15 @@
     "with-env": "dotenv -e .env --"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
     "@vorsteh-queue/adapter-prisma": "workspace:*",
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
     "dotenv-cli": "11.0.0",
-    "prisma": "^7.8.0",
+    "prisma": "7.8.0",
     "tsx": "4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "6.0.3"
   }
 }

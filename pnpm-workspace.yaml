@@ -6,9 +6,74 @@ packages:
 allowBuilds:
   "@prisma/client": false
   "@prisma/engines": false
+  "@tailwindcss/oxide": false
   cpu-features: false
   esbuild: false
   prisma: false
   protobufjs: false
   sharp: false
   ssh2: false
+minimumReleaseAgeExclude:
+  - "@tailwindcss/node@4.3.2"
+  - "@tailwindcss/oxide-android-arm64@4.3.2"
+  - "@tailwindcss/oxide-darwin-arm64@4.3.2"
+  - "@tailwindcss/oxide-darwin-x64@4.3.2"
+  - "@tailwindcss/oxide-freebsd-x64@4.3.2"
+  - "@tailwindcss/oxide-linux-arm-gnueabihf@4.3.2"
+  - "@tailwindcss/oxide-linux-arm64-gnu@4.3.2"
+  - "@tailwindcss/oxide-linux-arm64-musl@4.3.2"
+  - "@tailwindcss/oxide-linux-x64-gnu@4.3.2"
+  - "@tailwindcss/oxide-linux-x64-musl@4.3.2"
+  - "@tailwindcss/oxide-wasm32-wasi@4.3.2"
+  - "@tailwindcss/oxide-win32-arm64-msvc@4.3.2"
+  - "@tailwindcss/oxide-win32-x64-msvc@4.3.2"
+  - "@tailwindcss/oxide@4.3.2"
+  - "@tailwindcss/vite@4.3.2"
+  - tailwindcss@4.3.2
+  - "@oxfmt/binding-android-arm-eabi@0.57.0"
+  - "@oxfmt/binding-android-arm64@0.57.0"
+  - "@oxfmt/binding-darwin-arm64@0.57.0"
+  - "@oxfmt/binding-darwin-x64@0.57.0"
+  - "@oxfmt/binding-freebsd-x64@0.57.0"
+  - "@oxfmt/binding-linux-arm-gnueabihf@0.57.0"
+  - "@oxfmt/binding-linux-arm-musleabihf@0.57.0"
+  - "@oxfmt/binding-linux-arm64-gnu@0.57.0"
+  - "@oxfmt/binding-linux-arm64-musl@0.57.0"
+  - "@oxfmt/binding-linux-ppc64-gnu@0.57.0"
+  - "@oxfmt/binding-linux-riscv64-gnu@0.57.0"
+  - "@oxfmt/binding-linux-riscv64-musl@0.57.0"
+  - "@oxfmt/binding-linux-s390x-gnu@0.57.0"
+  - "@oxfmt/binding-linux-x64-gnu@0.57.0"
+  - "@oxfmt/binding-linux-x64-musl@0.57.0"
+  - "@oxfmt/binding-openharmony-arm64@0.57.0"
+  - "@oxfmt/binding-win32-arm64-msvc@0.57.0"
+  - "@oxfmt/binding-win32-ia32-msvc@0.57.0"
+  - "@oxfmt/binding-win32-x64-msvc@0.57.0"
+  - "@turbo/darwin-64@2.10.1"
+  - "@turbo/darwin-arm64@2.10.1"
+  - "@turbo/linux-64@2.10.1"
+  - "@turbo/linux-arm64@2.10.1"
+  - "@turbo/windows-64@2.10.1"
+  - "@turbo/windows-arm64@2.10.1"
+  - oxfmt@0.57.0
+  - turbo@2.10.1
+  - "@oxlint/binding-android-arm-eabi@1.72.0"
+  - "@oxlint/binding-android-arm64@1.72.0"
+  - "@oxlint/binding-darwin-arm64@1.72.0"
+  - "@oxlint/binding-darwin-x64@1.72.0"
+  - "@oxlint/binding-freebsd-x64@1.72.0"
+  - "@oxlint/binding-linux-arm-gnueabihf@1.72.0"
+  - "@oxlint/binding-linux-arm-musleabihf@1.72.0"
+  - "@oxlint/binding-linux-arm64-gnu@1.72.0"
+  - "@oxlint/binding-linux-arm64-musl@1.72.0"
+  - "@oxlint/binding-linux-ppc64-gnu@1.72.0"
+  - "@oxlint/binding-linux-riscv64-gnu@1.72.0"
+  - "@oxlint/binding-linux-riscv64-musl@1.72.0"
+  - "@oxlint/binding-linux-s390x-gnu@1.72.0"
+  - "@oxlint/binding-linux-x64-gnu@1.72.0"
+  - "@oxlint/binding-linux-x64-musl@1.72.0"
+  - "@oxlint/binding-openharmony-arm64@1.72.0"
+  - "@oxlint/binding-win32-arm64-msvc@1.72.0"
+  - "@oxlint/binding-win32-ia32-msvc@1.72.0"
+  - "@oxlint/binding-win32-x64-msvc@1.72.0"
+  - oxlint@1.72.0

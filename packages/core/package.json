@@ -67,16 +67,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@date-fns/tz": "^1.4.1",
-    "croner": "^10.0.1",
-    "date-fns": "^4.1.0"
+    "@date-fns/tz": "1.5.0",
+    "croner": "10.0.1",
+    "date-fns": "4.4.0"
   },
   "devDependencies": {
     "@types/node": "24.13.2",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "tsdown": "0.22.3",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   },
   "engines": {
     "node": ">=22"
