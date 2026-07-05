@@ -1,0 +1,65 @@
+---
+title: Overview
+description: Orchestrate complex job workflows using flow trees, multi-step execution, and job dependencies.
+---
+
+Vorsteh Queue provides three complementary patterns for orchestrating work beyond simple independent jobs:
+
+## Flow Trees
+
+Declarative parent-child job hierarchies. Children are processed first; the parent only runs when all children complete. Ideal for fan-out/fan-in patterns like build pipelines.
+
+```typescript
+const flow = await queue.addFlow({
+  name: "deploy",
+  payload: { version: "1.0" },
+  children: [
+    { name: "build", payload: { target: "linux" } },
+    { name: "build", payload: { target: "macos" } },
+  ],
+})
+```
+
+[Learn more about Flow Trees →](/docs/vorsteh-queue/core/flows/flow-trees)
+
+## Steps
+
+Multi-step job execution with durable state, sleep/wait primitives, and saga-style compensation. Each step is idempotent — on retry, completed steps replay from cache.
+
+```typescript
+worker.register("onboarding", async (job, { step }) => {
+  const user = await step.run("create-user", () => createUser(job.payload), {
+    compensate: (result) => deleteUser(result.id),
+  })
+  await step.sleep("cooldown", "1h")
+  await step.run("send-welcome", () => sendEmail(user.email))
+  return { userId: user.id }
+})
+```
+
+[Learn more about Steps →](/docs/vorsteh-queue/core/flows/steps)
+
+## Dependencies
+
+Lightweight job-to-job ordering. A job with `dependsOn` won't be picked for processing until all referenced jobs have completed. Useful when you don't need a full tree structure but want to ensure ordering.
+
+```typescript
+const jobA = await queue.add("prepare-data", { source: "s3" })
+await queue.add(
+  "analyze",
+  { report: true },
+  {
+    dependsOn: [jobA.id],
+  }
+)
+```
+
+[Learn more about Dependencies →](/docs/vorsteh-queue/core/flows/dependencies)
+
+## When to Use What
+
+| Pattern          | Use Case                                   | Coordination                             |
+| ---------------- | ------------------------------------------ | ---------------------------------------- |
+| **Flow Trees**   | Fan-out/fan-in, pipelines, DAGs            | Parent waits for all children            |
+| **Steps**        | Multi-stage processing within a single job | Sequential steps with retry/compensation |
+| **Dependencies** | Simple ordering between independent jobs   | Job waits for specific other jobs        |

@@ -1,0 +1,163 @@
+---
+title: Steps
+description: Multi-step job execution with durable state, sleep/wait primitives, and saga-style compensation.
+---
+
+Steps let you break a job handler into named, durable stages. Each step is idempotent — if a job is retried, completed steps replay their cached results without re-executing. This makes long-running workflows safe to retry.
+
+## Basic Usage
+
+Access the step API via the second argument in your handler:
+
+```typescript
+worker.register("process-order", async (job, { step }) => {
+  const payment = await step.run("charge", () =>
+    chargeCard(job.payload.cardId, job.payload.amount)
+  )
+
+  await step.run("fulfill", () =>
+    shipOrder(job.payload.orderId, payment.transactionId)
+  )
+
+  await step.run("notify", () =>
+    sendConfirmation(job.payload.email, payment.transactionId)
+  )
+
+  return { transactionId: payment.transactionId }
+})
+```
+
+On retry, if `"charge"` already completed, its result is returned from cache and the function is not called again.
+
+## step.run
+
+Execute a named step. Returns the cached result on replay.
+
+```typescript
+const result = await step.run("step-name", async () => {
+  // your logic here
+  return { data: "value" }
+})
+```
+
+### With Compensation (Saga Pattern)
+
+Provide a `compensate` function to undo the step if a later step fails:
+
+```typescript
+worker.register("onboarding", async (job, { step }) => {
+  const user = await step.run("create-user", () => createUser(job.payload), {
+    compensate: (result) => deleteUser(result.id),
+  })
+
+  const subscription = await step.run(
+    "create-subscription",
+    () => createSubscription(user.id),
+    {
+      compensate: (result) => cancelSubscription(result.id),
+    }
+  )
+
+  // If this step throws, compensations run in reverse order:
+  // cancelSubscription → deleteUser
+  await step.run("send-welcome", () => sendEmail(user.email))
+
+  return { userId: user.id, subscriptionId: subscription.id }
+})
+```
+
+Compensations run in reverse order (last registered first), following the saga pattern. If a compensation itself fails, it logs the error and continues running remaining compensations.
+
+## step.sleep
+
+Pause execution for a duration. The job is moved to `"delayed"` status and resumes after the specified time.
+
+```typescript
+worker.register("drip-campaign", async (job, { step }) => {
+  await step.run("send-day-1", () => sendEmail(job.payload.email, "welcome"))
+
+  await step.sleep("wait-3-days", "3d")
+
+  await step.run("send-day-4", () => sendEmail(job.payload.email, "tips"))
+
+  await step.sleep("wait-7-days", "7d")
+
+  await step.run("send-day-11", () => sendEmail(job.payload.email, "offer"))
+})
+```
+
+Supported duration formats:
+
+| Format   | Example   | Description  |
+| -------- | --------- | ------------ |
+| `number` | `5000`    | Milliseconds |
+| `"Nms"`  | `"500ms"` | Milliseconds |
+| `"Ns"`   | `"30s"`   | Seconds      |
+| `"Nm"`   | `"5m"`    | Minutes      |
+| `"Nh"`   | `"1h"`    | Hours        |
+| `"Nd"`   | `"3d"`    | Days         |
+
+## step.waitFor
+
+Pause execution until an external signal is received. Useful for human-in-the-loop workflows or external system callbacks.
+
+```typescript
+worker.register("approval-flow", async (job, { step }) => {
+  await step.run("submit", () => createApprovalRequest(job.payload))
+
+  const approval = await step.waitFor("wait-approval", "manager-approved", {
+    timeout: "24h",
+  })
+
+  if (approval.approved) {
+    await step.run("provision", () => provisionAccess(job.payload.userId))
+  }
+
+  return { approved: approval.approved }
+})
+```
+
+Send a signal to a waiting job using `queue.sendSignal()`:
+
+```typescript
+await queue.sendSignal(jobId, "manager-approved", {
+  approved: true,
+  approvedBy: "manager@company.com",
+})
+```
+
+If the timeout expires before the signal arrives, the step fails.
+
+## step.all
+
+Run multiple async operations in parallel within a step context:
+
+```typescript
+worker.register("parallel-fetch", async (job, { step }) => {
+  const [users, orders] = await step.all([
+    step.run("fetch-users", () => fetchUsers()),
+    step.run("fetch-orders", () => fetchOrders()),
+  ])
+
+  return { users, orders }
+})
+```
+
+## How Retries Work with Steps
+
+When a job with steps is retried:
+
+1. The step context loads previously completed steps from the database
+2. Each `step.run` checks if it already has a cached result
+3. Completed steps return their cached result instantly (no re-execution)
+4. Execution resumes from the first incomplete step
+
+This makes steps safe for operations with side effects (payments, emails, API calls) — they won't be duplicated on retry.
+
+## Step Context API
+
+<InterfaceReference file="core/src/types" name="StepContext" />
+
+## Step State
+
+<InterfaceReference file="core/src/types" name="StepState" />

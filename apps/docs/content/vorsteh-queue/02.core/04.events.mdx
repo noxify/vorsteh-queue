@@ -1,0 +1,72 @@
+---
+title: Events
+description: Listen to job lifecycle and queue control events for monitoring and debugging.
+---
+
+The event system provides real-time notifications for job state changes and queue operations. Both `Queue` (producer) and `Worker` (consumer) emit typed events you can subscribe to with `.on()`, `.once()`, and `.off()`.
+
+## Usage
+
+### Queue Events
+
+The `Queue` instance emits events when jobs are added or their state changes through the public API (e.g. cancellation).
+
+```typescript
+const queue = new Queue(adapter, { name: "my-queue" })
+
+queue.on("job:added", (job) => {
+  console.log(`[${job.name}] added with priority ${job.priority}`)
+})
+
+queue.on("job:cancelled", (job) => {
+  console.log(`[${job.id}] cancelled: ${job.cancellationReason}`)
+})
+```
+
+### Worker Events
+
+The `Worker` instance emits events during job processing — lifecycle transitions, errors, and batch operations.
+
+```typescript
+const worker = new Worker(adapter, { name: "my-queue", concurrency: 5 })
+
+worker.on("job:completed", (job) => {
+  console.log(`[${job.name}] completed in queue`)
+})
+
+worker.on("job:failed", (job) => {
+  console.error(`[${job.name}] failed:`, job.error.message)
+})
+
+worker.on("worker:error", (error) => {
+  console.error("Unexpected worker error:", error)
+})
+```
+
+### One-Time Listeners
+
+Use `.once()` to listen for a single occurrence:
+
+```typescript
+worker.once("worker:started", () => {
+  console.log("Worker is ready")
+})
+```
+
+## Available Events
+
+### Queue
+
+<InterfaceReference file="core/src/types" name="QueueEvents" />
+
+### Worker
+
+<InterfaceReference file="core/src/types" name="WorkerEvents" />
+
+## Use Cases
+
+- Logging and audit trails
+- Metrics collection (Prometheus, Datadog)
+- Chaining dependent jobs
+- Notifications on failures
+- Progress dashboards

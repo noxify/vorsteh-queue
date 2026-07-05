@@ -1,0 +1,106 @@
+---
+title: Flows
+description: Parent-child job trees where children run first and the parent waits until all are complete.
+---
+
+Flows let you define a tree of jobs with parent-child relationships. Children are processed first, and the parent only becomes eligible for processing once all its children complete. This enables DAG-style orchestration without external coordinators.
+
+## Creating a Flow
+
+Use `queue.addFlow()` with a declarative tree definition:
+
+```typescript
+const flow = await queue.addFlow({
+  name: "deploy",
+  payload: { version: "1.2.0" },
+  children: [
+    { name: "build", payload: { target: "linux" } },
+    { name: "build", payload: { target: "macos" } },
+    {
+      name: "test",
+      payload: {},
+      children: [{ name: "lint", payload: {} }],
+    },
+  ],
+})
+
+console.log(flow.id) // shared flow ID
+console.log(flow.job.id) // root job ID (status: "waiting-children")
+```
+
+## How It Works
+
+1. `addFlow` traverses the tree and creates all jobs. Leaf nodes get status `"pending"`, parent nodes get status `"waiting-children"`.
+2. Workers pick up leaf jobs first (since they're `"pending"`).
+3. When a child completes, the Worker checks if all siblings are done. If yes, the parent is promoted to `"pending"` and becomes eligible for processing.
+4. This cascades up the tree until the root job runs.
+
+```
+deploy (waiting-children)
+├── build:linux (pending) → processed first
+├── build:macos (pending) → processed first
+└── test (waiting-children)
+    └── lint (pending) → processed first
+```
+
+## Accessing Children Results
+
+Inside a handler, use `ctx.getChildrenResults()` to access completed children:
+
+```typescript
+worker.register("deploy", async (job, ctx) => {
+  const childResults = await ctx.getChildrenResults()
+  // Map<jobId, result>
+
+  console.log(`All ${childResults.size} children completed`)
+  return { deployed: true }
+})
+```
+
+## Failure Propagation
+
+By default, a failing child does not affect the parent. Set `failParentOnFailure: true` to cascade failures upward:
+
+```typescript
+const flow = await queue.addFlow({
+  name: "pipeline",
+  payload: {},
+  children: [
+    {
+      name: "critical-step",
+      payload: {},
+      failParentOnFailure: true, // parent fails if this child fails
+    },
+    {
+      name: "optional-step",
+      payload: {},
+      // parent continues even if this fails
+    },
+  ],
+})
+```
+
+When a child with `failParentOnFailure: true` moves to the dead-letter queue, its parent is immediately marked as failed. If the parent also has `failParentOnFailure`, the failure cascades further up the tree.
+
+## Inspecting a Flow
+
+Retrieve the full tree structure for visualization or debugging:
+
+```typescript
+const tree = await queue.getFlowTree(flow.id)
+
+if (tree) {
+  console.log(tree.job.name, tree.job.status)
+  for (const child of tree.children) {
+    console.log(`  ${child.job.name}: ${child.job.status}`)
+  }
+}
+```
+
+## Flow Definition
+
+<InterfaceReference file="core/src/types" name="FlowJobDefinition" />
+
+## Flow Node (Tree Output)
+
+<InterfaceReference file="core/src/types" name="FlowNode" />

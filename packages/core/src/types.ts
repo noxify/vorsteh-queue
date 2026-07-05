@@ -52,7 +52,7 @@ export interface SerializedError {
   readonly stack?: string
 }
 
-// ─── Step Types (Phase 2) ────────────────────────────────────────────────────
+// ─── Step Types ──────────────────────────────────────────────────────────────
 
 /** State of a single step within a multi-step job */
 export interface StepState {
@@ -214,9 +214,9 @@ export interface Job<TPayload = unknown, TResult = unknown> {
   readonly uniqueKey?: string
   /** Reason for cancellation */
   readonly cancellationReason?: string
-  /** Job dependency IDs (Phase 2) */
+  /** Job dependency IDs */
   readonly dependsOn?: readonly string[]
-  /** Step execution state (Phase 2) */
+  /** Step execution state */
   readonly steps?: readonly StepState[]
   /** Received signals for waitFor steps */
   readonly signals?: Readonly<Record<string, unknown>>
@@ -276,9 +276,9 @@ export interface JobOptions {
      */
     readonly action: "reject" | "replace"
   }
-  /** Job IDs that must complete before this job is processed (Phase 2) */
+  /** Job IDs that must complete before this job is processed */
   readonly dependsOn?: readonly string[]
-  /** Behavior when a dependency fails (Phase 2)
+  /** Behavior when a dependency fails
    * @default "cancel"
    */
   readonly onDependencyFailure?: "cancel" | "fail" | "ignore"
