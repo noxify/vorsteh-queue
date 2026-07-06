@@ -6,6 +6,23 @@ tags: ["workflow", "saga", "compensation"]
 
 Implements the Saga pattern for multi-step workflows where each step has a compensation action that runs on failure.
 
+## Flow
+
+```mermaid
+flowchart TD
+    Start([Job starts]) --> S1[Step 1: Reserve Stock]
+    S1 -->|success| S2[Step 2: Charge Payment]
+    S2 -->|success| S3[Step 3: Ship Order]
+    S3 -->|success| Done([Job completed])
+
+    S3 -->|failure| C2[Compensate: Refund Payment]
+    C2 --> C1[Compensate: Release Reservation]
+    C1 --> Failed([Job failed])
+
+    S2 -->|failure| C1b[Compensate: Release Reservation]
+    C1b --> Failed
+```
+
 ## Setup
 
 First, generate the project:
