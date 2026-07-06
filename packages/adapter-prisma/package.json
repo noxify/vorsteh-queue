@@ -63,7 +63,7 @@
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "prisma": "7.8.0",
-    "testcontainers": "12.0.3",
+    "testcontainers": "12.0.4",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
     "vitest": "4.1.9"

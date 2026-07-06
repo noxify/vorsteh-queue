@@ -64,7 +64,7 @@
     "@vorsteh-queue/core": "workspace:*"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.3",
+    "@electric-sql/pglite": "0.5.4",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "drizzle-kit": "0.31.10",
