@@ -9,7 +9,7 @@ export async function asyncFilter<T>(
   const filtered: T[] = []
 
   for (const element of arr) {
-    // oxlint-disable-next-line no-await-in-loop
+    // oxlint-disable-next-line no-await-in-loop react-doctor/async-await-in-loop
     if (await predicate(element)) {
       filtered.push(element)
     }

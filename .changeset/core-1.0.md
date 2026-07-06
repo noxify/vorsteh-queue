@@ -32,8 +32,8 @@ await queue.add("job", { data: "payload" })
 
 Handlers now receive a `JobContext` with an `AbortSignal` for timeout/cancellation support.
 
-Before: `(job) => Promise<result>`
-After: `(job, { signal, step }) => Promise<result>`
+- Before: `(job) => Promise<result>`
+- After: `(job, { signal, step }) => Promise<result>`
 
 ### Breaking: New Statuses
 

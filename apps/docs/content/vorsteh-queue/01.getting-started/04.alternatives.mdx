@@ -220,28 +220,28 @@ The goal is to bring those patterns together into one cohesive package — Postg
 
 ### Backend & Developer Experience
 
-| Library         | Backend                                | TypeScript   | ORM Integration                             |
-| --------------- | -------------------------------------- | ------------ | ------------------------------------------- |
-| Vorsteh Queue   | PostgreSQL                             | First-class  | Drizzle, Prisma, Kysely                     |
-| BullMQ          | Redis                                  | First-class  | —                                           |
-| pg-boss         | PostgreSQL                             | First-class  | Tx adapters (Drizzle, Prisma, Kysely, Knex) |
-| Graphile Worker | PostgreSQL                             | Types avail. | —                                           |
-| Agenda          | Pluggable (MongoDB, PostgreSQL, Redis) | Types avail. | —                                           |
-| GroupMQ         | Redis                                  | First-class  | —                                           |
-| Platformatic    | Pluggable (Memory, Redis/Valkey, FS)   | First-class  | —                                           |
-| prisma-queue    | PostgreSQL                             | First-class  | Prisma                                      |
-| BunQueue        | SQLite                                 | First-class  | —                                           |
+| Library | Backend | TypeScript | ORM Integration |
+| --- | --- | --- | --- |
+| Vorsteh Queue | PostgreSQL | First-class | Drizzle, Prisma, Kysely |
+| BullMQ | Redis | First-class | — |
+| pg-boss | PostgreSQL | First-class | Tx adapters (Drizzle, Prisma, Kysely, Knex) |
+| Graphile Worker | PostgreSQL | Types avail. | — |
+| Agenda | Pluggable (MongoDB, PostgreSQL, Redis) | Types avail. | — |
+| GroupMQ | Redis | First-class | — |
+| Platformatic | Pluggable (Memory, Redis/Valkey, FS) | First-class | — |
+| prisma-queue | PostgreSQL | First-class | Prisma |
+| BunQueue | SQLite | First-class | — |
 
 ### Features
 
-| Library         | Flows (DAG) | Progress | Web Dashboard     | CLI | Cron | Rate Limit | Group FIFO |
-| --------------- | ----------- | -------- | ----------------- | --- | ---- | ---------- | ---------- |
-| Vorsteh Queue   | Yes         | Yes      | built-in          | Yes | Yes  | Yes        | Yes        |
-| BullMQ          | Yes         | Yes      | community / paid  | No  | Yes  | Yes        | No         |
-| pg-boss         | No          | No       | official (add-on) | Yes | Yes  | Yes        | No         |
-| Graphile Worker | No          | No       | none              | No  | Yes  | No         | No         |
-| Agenda          | No          | No       | community         | No  | Yes  | No         | No         |
-| GroupMQ         | No          | No       | community / paid  | No  | Yes  | No         | Yes        |
-| Platformatic    | No          | No       | none              | No  | No   | No         | No         |
-| prisma-queue    | No          | No       | none              | No  | Yes  | No         | No         |
-| BunQueue        | Yes         | No       | official (beta)   | Yes | Yes  | Yes        | No         |
+| Library | Flows (DAG) | Progress | Web Dashboard | CLI | Cron | Rate Limit | Group FIFO |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Vorsteh Queue | Yes | Yes | built-in | Yes | Yes | Yes | Yes |
+| BullMQ | Yes | Yes | community / paid | No | Yes | Yes | No |
+| pg-boss | No | No | official (add-on) | Yes | Yes | Yes | No |
+| Graphile Worker | No | No | none | No | Yes | No | No |
+| Agenda | No | No | community | No | Yes | No | No |
+| GroupMQ | No | No | community / paid | No | Yes | No | Yes |
+| Platformatic | No | No | none | No | No | No | No |
+| prisma-queue | No | No | none | No | Yes | No | No |
+| BunQueue | Yes | No | official (beta) | Yes | Yes | Yes | No |

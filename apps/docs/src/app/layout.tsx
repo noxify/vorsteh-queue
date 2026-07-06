@@ -41,24 +41,24 @@ export const metadata: Metadata = {
   },
 }
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  inLanguage: "en",
+  name: "Vorsteh Queue",
+  potentialAction: {
+    "@type": "SearchAction",
+    query: "required name=search_term_string",
+    target: `${SITE_URL}/docs?search={search_term_string}`,
+  },
+  url: SITE_URL,
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const websiteJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    inLanguage: "en",
-    name: "Vorsteh Queue",
-    potentialAction: {
-      "@type": "SearchAction",
-      query: "required name=search_term_string",
-      target: `${SITE_URL}/docs?search={search_term_string}`,
-    },
-    url: SITE_URL,
-  }
-
   return (
     <RootProvider
       theme={{
@@ -100,6 +100,7 @@ export default function RootLayout({
         <body>
           <script
             type="application/ld+json"
+            // oxlint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: toJsonLd(websiteJsonLd) }}
           />
           <Analytics />

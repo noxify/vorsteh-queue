@@ -70,13 +70,13 @@ The detection walks the dependency graph before inserting the job, preventing in
 
 ## Dependencies vs Flow Trees
 
-|                     | Dependencies                                 | Flow Trees                                                      |
-| ------------------- | -------------------------------------------- | --------------------------------------------------------------- |
-| **Definition**      | `dependsOn: [jobId]` on individual jobs      | Declarative tree via `queue.addFlow()`                          |
-| **Coordination**    | Job waits for specific IDs to complete       | Parent waits for all children                                   |
-| **Results**         | No built-in result passing                   | Parent accesses children results via `ctx.getChildrenResults()` |
-| **Failure cascade** | Configurable per-job (`onDependencyFailure`) | Configurable per-child (`failParentOnFailure`)                  |
-| **Use case**        | Simple ordering between independent jobs     | Structured pipelines with fan-out/fan-in                        |
+|  | Dependencies | Flow Trees |
+| --- | --- | --- |
+| **Definition** | `dependsOn: [jobId]` on individual jobs | Declarative tree via `queue.addFlow()` |
+| **Coordination** | Job waits for specific IDs to complete | Parent waits for all children |
+| **Results** | No built-in result passing | Parent accesses children results via `ctx.getChildrenResults()` |
+| **Failure cascade** | Configurable per-job (`onDependencyFailure`) | Configurable per-child (`failParentOnFailure`) |
+| **Use case** | Simple ordering between independent jobs | Structured pipelines with fan-out/fan-in |
 
 - Use dependencies when you need lightweight ordering without the overhead of a tree structure.
 - Use flow trees when you need result aggregation, tree introspection, or complex DAG patterns.

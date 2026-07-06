@@ -21,14 +21,14 @@
 
 ## Packages
 
-| Package                                                        | Description                      |
-| -------------------------------------------------------------- | -------------------------------- |
-| [`@vorsteh-queue/core`](./packages/core)                       | Core queue engine and interfaces |
+| Package | Description |
+| --- | --- |
+| [`@vorsteh-queue/core`](./packages/core) | Core queue engine and interfaces |
 | [`@vorsteh-queue/adapter-drizzle`](./packages/adapter-drizzle) | Drizzle ORM adapter (PostgreSQL) |
-| [`@vorsteh-queue/adapter-prisma`](./packages/adapter-prisma)   | Prisma ORM adapter (PostgreSQL)  |
-| [`@vorsteh-queue/adapter-kysely`](./packages/adapter-kysely)   | Kysely adapter (PostgreSQL)      |
-| [`@vorsteh-queue/server`](./packages/server)                   | GraphQL server and dashboard UI  |
-| [`create-vorsteh-queue`](./packages/create-vorsteh-queue)      | CLI scaffolding tool             |
+| [`@vorsteh-queue/adapter-prisma`](./packages/adapter-prisma) | Prisma ORM adapter (PostgreSQL) |
+| [`@vorsteh-queue/adapter-kysely`](./packages/adapter-kysely) | Kysely adapter (PostgreSQL) |
+| [`@vorsteh-queue/server`](./packages/server) | GraphQL server and dashboard UI |
+| [`create-vorsteh-queue`](./packages/create-vorsteh-queue) | CLI scaffolding tool |
 
 ## Quick Start
 

@@ -74,7 +74,7 @@ export function SiteBreadcrumb({
                       {item.title}
                     </Link>
                   }
-                ></BreadcrumbLink>
+                />
               </BreadcrumbItem>
             )}
             {item.type === "group" && (
@@ -97,7 +97,7 @@ export function SiteBreadcrumb({
                           </Link>
                         }
                         className="cursor-pointer"
-                      ></DropdownMenuItem>
+                      />
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>

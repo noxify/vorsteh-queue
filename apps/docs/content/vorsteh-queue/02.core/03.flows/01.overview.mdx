@@ -58,8 +58,8 @@ await queue.add(
 
 ## When to Use What
 
-| Pattern          | Use Case                                   | Coordination                             |
-| ---------------- | ------------------------------------------ | ---------------------------------------- |
-| **Flow Trees**   | Fan-out/fan-in, pipelines, DAGs            | Parent waits for all children            |
-| **Steps**        | Multi-stage processing within a single job | Sequential steps with retry/compensation |
-| **Dependencies** | Simple ordering between independent jobs   | Job waits for specific other jobs        |
+| Pattern | Use Case | Coordination |
+| --- | --- | --- |
+| **Flow Trees** | Fan-out/fan-in, pipelines, DAGs | Parent waits for all children |
+| **Steps** | Multi-stage processing within a single job | Sequential steps with retry/compensation |
+| **Dependencies** | Simple ordering between independent jobs | Job waits for specific other jobs |

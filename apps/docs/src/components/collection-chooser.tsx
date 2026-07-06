@@ -43,7 +43,7 @@ export function CollectionChooser({
           </ItemActions>
         </Item>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className={"w-80"}>
+      <DropdownMenuContent className="w-80">
         {collections.map((item) => (
           <Link href={item.entrypoint} prefetch={false} key={item.group}>
             <DropdownMenuItem className="hover:cursor-pointer">

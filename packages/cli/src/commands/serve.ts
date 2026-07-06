@@ -23,7 +23,7 @@ export function createServeCommand() {
     // Dynamic import to avoid loading server deps unless needed
     const { createQueueServer } = await import("@vorsteh-queue/server")
 
-    const port = options.port ? Number.parseInt(options.port, 10) : undefined
+    const port = options.port ? Math.trunc(Number(options.port)) : undefined
     const { dashboard } = options
 
     const server = createQueueServer({

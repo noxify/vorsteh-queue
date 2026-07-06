@@ -36,8 +36,7 @@ function getPathnameCandidates(pathname: string): string[] {
   const candidates = [resolvedPathname]
 
   if (resolvedPathname === "/docs" || resolvedPathname === "/docs/") {
-    candidates.push(DEFAULT_DOCS_PATH)
-    candidates.push(`${DEFAULT_DOCS_PATH}/`)
+    candidates.push(DEFAULT_DOCS_PATH, `${DEFAULT_DOCS_PATH}/`)
   }
 
   return candidates
@@ -47,8 +46,7 @@ function collectChildUrls(item: TreeItem): string[] {
   const urls: string[] = []
 
   for (const child of item.children ?? []) {
-    urls.push(child.url)
-    urls.push(...collectChildUrls(child))
+    urls.push(child.url, ...collectChildUrls(child))
   }
 
   return urls

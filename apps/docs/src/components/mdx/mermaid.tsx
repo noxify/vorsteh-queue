@@ -117,6 +117,21 @@ export function MermaidDiagram({
     }
   }, [code, resolvedTheme])
 
+  const inlineAspectRatio = React.useMemo(() => {
+    if (!svg) {
+      return 1
+    }
+    const rawRatio = parseMermaidAspectRatio(svg)
+
+    // Prevent extreme SVG ratios from creating unusable viewport heights.
+    return Math.min(4, Math.max(0.85, rawRatio))
+  }, [svg])
+
+  const inlineDimensions = React.useMemo(
+    () => (svg ? parseMermaidDimensions(svg) : null),
+    [svg]
+  )
+
   if (error) {
     return <pre>{error.message}</pre>
   }
@@ -126,18 +141,6 @@ export function MermaidDiagram({
   }
 
   const previewSvg = svg
-
-  const inlineAspectRatio = React.useMemo(() => {
-    const rawRatio = parseMermaidAspectRatio(previewSvg)
-
-    // Prevent extreme SVG ratios from creating unusable viewport heights.
-    return Math.min(4, Math.max(0.85, rawRatio))
-  }, [previewSvg])
-
-  const inlineDimensions = React.useMemo(
-    () => parseMermaidDimensions(previewSvg),
-    [previewSvg]
-  )
 
   const isVeryWideDiagram =
     inlineAspectRatio > 2.2 ||

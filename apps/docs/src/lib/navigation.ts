@@ -272,8 +272,7 @@ export const getCollectionLinearNavigation = cache(
 
       for (const parent of groupedParents) {
         // Include parent landing pages in sibling navigation before nested pages.
-        ordered.push(parent)
-        ordered.push(...flattenItems(parent.children))
+        ordered.push(parent, ...flattenItems(parent.children))
       }
 
       // Previous/next navigation should stay within internal docs pages.

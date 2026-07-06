@@ -103,33 +103,33 @@ export function useMDXComponents() {
     Image: (props) => <ImageHandler {...props} />,
 
     Note: ({ title, children }: { title?: string; children: ReactNode }) => (
-      <Alert variant={"note"} className="my-4">
+      <Alert variant="note" className="my-4">
         {title && <AlertTitle>{title}</AlertTitle>}
         <AlertDescription className="block">{children}</AlertDescription>
       </Alert>
     ),
 
     Callout: ({ title, children }: { title?: string; children: ReactNode }) => (
-      <Alert variant={"default"} className="my-4">
+      <Alert variant="default" className="my-4">
         {title && <AlertTitle>{title}</AlertTitle>}
         <AlertDescription className="block">{children}</AlertDescription>
       </Alert>
     ),
 
     Success: ({ title, children }: { title?: string; children: ReactNode }) => (
-      <Alert variant={"success"} className="my-4">
+      <Alert variant="success" className="my-4">
         {title && <AlertTitle>{title}</AlertTitle>}
         <AlertDescription className="block">{children}</AlertDescription>
       </Alert>
     ),
     Warning: ({ title, children }: { title?: string; children: ReactNode }) => (
-      <Alert variant={"warning"} className="my-4">
+      <Alert variant="warning" className="my-4">
         {title && <AlertTitle>{title}</AlertTitle>}
         <AlertDescription className="block">{children}</AlertDescription>
       </Alert>
     ),
     Error: ({ title, children }: { title?: string; children: ReactNode }) => (
-      <Alert variant={"destructive"} className="my-4">
+      <Alert variant="destructive" className="my-4">
         {title && <AlertTitle>{title}</AlertTitle>}
         <AlertDescription className="block">{children}</AlertDescription>
       </Alert>
