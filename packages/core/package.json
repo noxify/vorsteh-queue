@@ -42,20 +42,12 @@
     ".": {
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs",
-      "default": "./src/index.ts"
+      "default": "./dist/index.mjs"
     },
     "./adapters/memory": {
       "types": "./dist/adapters/memory.d.mts",
       "import": "./dist/adapters/memory.mjs",
-      "default": "./src/adapters/memory.ts"
-    }
-  },
-  "publishConfig": {
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      }
+      "default": "./dist/adapters/memory.mjs"
     }
   },
   "scripts": {

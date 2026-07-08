@@ -30,12 +30,12 @@
     ".": {
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs",
-      "default": "./src/index.ts"
+      "default": "./dist/index.mjs"
     },
     "./commands-metadata": {
       "types": "./dist/commands-metadata.d.mts",
       "import": "./dist/commands-metadata.mjs",
-      "default": "./src/commands-metadata.ts"
+      "default": "./dist/commands-metadata.mjs"
     }
   },
   "scripts": {
