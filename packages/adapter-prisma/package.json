@@ -34,10 +34,12 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
       "default": "./dist/index.mjs"
     },
     "./postgres-adapter": {
       "types": "./dist/postgres-adapter.d.mts",
+      "source": "./src/postgres-adapter.ts",
       "default": "./dist/postgres-adapter.mjs"
     }
   },

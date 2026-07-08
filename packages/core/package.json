@@ -41,11 +41,13 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     },
     "./adapters/memory": {
       "types": "./dist/adapters/memory.d.mts",
+      "source": "./src/adapters/memory.ts",
       "import": "./dist/adapters/memory.mjs",
       "default": "./dist/adapters/memory.mjs"
     }

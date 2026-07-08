@@ -29,11 +29,13 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     },
     "./commands-metadata": {
       "types": "./dist/commands-metadata.d.mts",
+      "source": "./src/commands-metadata.ts",
       "import": "./dist/commands-metadata.mjs",
       "default": "./dist/commands-metadata.mjs"
     }

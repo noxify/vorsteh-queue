@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "customConditions": ["source"],
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "ES2024",

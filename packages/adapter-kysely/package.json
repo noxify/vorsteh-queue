@@ -39,18 +39,22 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
       "default": "./dist/index.mjs"
     },
     "./migrations": {
-      "default": "./dist/migrations/queue-table.mjs",
-      "types": "./dist/migrations/queue-table.d.mts"
+      "types": "./dist/migrations/queue-table.d.mts",
+      "source": "./src/migrations/queue-table.ts",
+      "default": "./dist/migrations/queue-table.mjs"
     },
     "./postgres-adapter": {
       "types": "./dist/postgres-adapter.d.mts",
+      "source": "./src/postgres-adapter.ts",
       "default": "./dist/postgres-adapter.mjs"
     },
     "./types": {
       "types": "./dist/types.d.mts",
+      "source": "./src/types.ts",
       "default": "./dist/types.mjs"
     }
   },

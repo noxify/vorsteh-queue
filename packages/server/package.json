@@ -29,6 +29,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     }
