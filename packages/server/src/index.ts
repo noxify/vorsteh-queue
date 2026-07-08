@@ -101,6 +101,15 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
     c.json({ status: "ok", queueName: config.queueName })
   )
 
+  // Dashboard config endpoint (unauthenticated — consumed by the SPA)
+  app.get("/api/config", (c) =>
+    c.json({
+      graphqlEndpoint: config.graphqlEndpoint ?? "/graphql",
+      queueName: config.queueName,
+      authEnabled: config.auth !== false,
+    })
+  )
+
   // Serve dashboard UI (static assets)
   if (config.dashboard !== false) {
     // Resolve the UI directory relative to this file's location.

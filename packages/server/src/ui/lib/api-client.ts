@@ -5,7 +5,7 @@ import { GraphQLClient } from "graphql-request"
  * Dashboard configuration provided at initialization.
  */
 export interface DashboardConfig {
-  /** GraphQL endpoint URL */
+  /** GraphQL endpoint URL (absolute) */
   readonly endpoint: string
   /** Optional Bearer token for authentication */
   readonly token?: string

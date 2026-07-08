@@ -30,6 +30,12 @@ export interface ServerConfig {
    * @default 3000
    */
   readonly port?: number
+  /**
+   * Public GraphQL endpoint URL exposed to the dashboard UI.
+   * Useful when the dashboard connects to a remote server.
+   * @default "/graphql" (relative to the server origin)
+   */
+  readonly graphqlEndpoint?: string
 }
 
 /**

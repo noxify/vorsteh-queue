@@ -19,12 +19,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate()
-  const [endpoint, setEndpoint] = useState(
-    () => localStorage.getItem("vq-endpoint") ?? "http://localhost:3000/graphql"
-  )
-  const [token, setToken] = useState(
-    () => localStorage.getItem("vq-token") ?? ""
-  )
+  const [token, setToken] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -34,13 +29,8 @@ function LoginPage() {
     setIsLoading(true)
 
     try {
+      const endpoint = `${window.location.origin}/graphql`
       configureDashboard({ endpoint, token: token || undefined })
-      // oxlint-disable-next-line react-doctor/auth-token-in-web-storage -- dashboard token is non-sensitive config, not an auth session
-      localStorage.setItem("vq-endpoint", endpoint)
-      if (token) {
-        // oxlint-disable-next-line react-doctor/auth-token-in-web-storage -- dashboard token is non-sensitive config
-        localStorage.setItem("vq-token", token)
-      }
       navigate({ to: "/" })
     } catch {
       setError("Failed to connect to the queue server")
@@ -57,7 +47,9 @@ function LoginPage() {
             <ActivityIcon className="text-primary-foreground h-5 w-5" />
           </div>
           <CardTitle className="text-xl">Vorsteh Queue</CardTitle>
-          <CardDescription>Connect to your queue server</CardDescription>
+          <CardDescription>
+            Enter your token to access the dashboard
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,28 +59,15 @@ function LoginPage() {
               </div>
             )}
             <div className="space-y-2">
-              <label htmlFor="endpoint" className="text-sm font-medium">
-                GraphQL Endpoint
-              </label>
-              <Input
-                id="endpoint"
-                type="url"
-                value={endpoint}
-                onChange={(event) => setEndpoint(event.target.value)}
-                placeholder="http://localhost:3000/graphql"
-                required
-              />
-            </div>
-            <div className="space-y-2">
               <label htmlFor="token" className="text-sm font-medium">
-                Bearer Token (optional)
+                Bearer Token
               </label>
               <Input
                 id="token"
                 type="password"
                 value={token}
                 onChange={(event) => setToken(event.target.value)}
-                placeholder="Leave empty for no auth"
+                placeholder="Enter your access token"
                 autoComplete="off"
               />
             </div>
