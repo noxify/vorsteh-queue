@@ -88,6 +88,7 @@ export default async function DocsPage({
   }
 
   const sections = await getSections(entry)
+  // oxlint-disable-next-line react-doctor/server-sequential-independent-await -- acceptable for readability
   const breadcrumbItems = await getBreadcrumbItems(slug)
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -122,6 +123,7 @@ export default async function DocsPage({
 
     return (
       <div>
+        {/* oxlint-disable react/no-danger -- rendered HTML content from trusted source */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
@@ -130,6 +132,7 @@ export default async function DocsPage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: toJsonLd(pageJsonLd) }}
         />
+        {/* oxlint-enable react/no-danger */}
         <MDX
           components={{
             // oxlint-disable-next-line react/no-unstable-nested-components
@@ -259,6 +262,7 @@ export default async function DocsPage({
 
   return (
     <div>
+      {/* oxlint-disable react/no-danger -- rendered HTML content from trusted source */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
@@ -267,6 +271,7 @@ export default async function DocsPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLd(articleJsonLd) }}
       />
+      {/* oxlint-enable react/no-danger */}
       <h1
         className="no-prose mt-20 mb-2 scroll-m-20 text-3xl font-light tracking-tight sm:text-4xl md:mt-0 md:text-5xl"
         style={{ fontFamily: spaceGrotesk.style.fontFamily }}

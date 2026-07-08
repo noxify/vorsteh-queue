@@ -254,6 +254,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
       const maxSize = options.maxSize ?? 10
       // eslint-disable-next-line no-await-in-loop
+      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential polling per handler is intentional
       const jobs = await this.adapter.getNextJobsForHandler(
         name,
         maxSize,
@@ -365,6 +366,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       }
       this.emit("job:completed", completedJob)
 
+      /* oxlint-disable react-doctor/async-parallel -- these must run sequentially (promote before triggers, triggers before schedule) */
       // Promote parent if this is a child in a flow
       await this.promoteParentIfReady(processingJob)
 
@@ -376,6 +378,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
       // Cleanup old completed jobs
       await this.cleanupAfterCompletion()
+      /* oxlint-enable react-doctor/async-parallel */
     } catch (error) {
       await this.handleJobFailure(job, error, signal, runCompensations)
     } finally {
@@ -528,9 +531,9 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       // Mark all as processing (sequential to maintain order guarantees)
       // Sequential updates required to maintain ordering guarantees
       for (const job of jobs) {
-        // eslint-disable-next-line no-await-in-loop
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential to maintain order guarantees
         await this.adapter.updateJobStatus(job.id, { status: "processing" })
-        // eslint-disable-next-line no-await-in-loop
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential to maintain order guarantees
         await this.adapter.incrementJobAttempts(job.id)
       }
 
@@ -561,7 +564,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
           continue
         }
         const result = results[i]
-        // eslint-disable-next-line no-await-in-loop
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential status updates per job
         await this.adapter.updateJobStatus(job.id, {
           status: "completed",
           result,
@@ -581,7 +584,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
       // Mark all as failed (partial failure support would need per-job results)
       for (const job of jobs) {
-        // eslint-disable-next-line no-await-in-loop
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential failure handling per job
         await this.handleJobFailure(job, error, signal)
       }
 
@@ -615,7 +618,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       }
 
       const payload = config.data(result, job)
-      // eslint-disable-next-line no-await-in-loop
+      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- triggers must fire sequentially
       await this.adapter.addJob({
         name: config.create,
         payload,

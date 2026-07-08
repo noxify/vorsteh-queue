@@ -56,4 +56,5 @@ function Button({
   )
 }
 
+// oxlint-disable-next-line react-doctor/only-export-components -- variant export is intentional
 export { Button, buttonVariants }

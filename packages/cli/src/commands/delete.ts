@@ -7,6 +7,7 @@ export function createDeleteCommand(transport: Transport) {
   const command = buildDeleteCommandStructure()
 
   command.action(async (id, options) => {
+    // oxlint-disable-next-line react-doctor/async-parallel -- sequential: connect → query → disconnect
     await transport.connect()
     const success = await transport.deleteJob(id)
     await transport.disconnect()

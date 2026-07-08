@@ -91,6 +91,7 @@ function dedupeSlugPaths(
 export async function getNormalizedDocPaths(): Promise<string[][]> {
   const entries = await staticRoutes()
 
+  // oxlint-disable-next-line react-doctor/js-combine-iterations -- readability over single-pass
   const normalized = entries
     .map((entryPathSegments) => removeFromArray(entryPathSegments, ["docs"]))
     .map((slug) => {

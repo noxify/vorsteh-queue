@@ -30,6 +30,7 @@ export function createClearCommand(transport: Transport) {
       return
     }
 
+    // oxlint-disable-next-line react-doctor/async-parallel -- sequential: connect → query → disconnect
     await transport.connect()
     const count = await transport.clearJobs(
       options.all ? undefined : (options.status as JobStatus)

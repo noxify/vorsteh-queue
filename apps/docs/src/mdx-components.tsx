@@ -46,6 +46,7 @@ type AnchorProps = ComponentPropsWithoutRef<"a">
 export function useMDXComponents() {
   return {
     p(paragraph) {
+      // oxlint-disable-next-line react/no-react-children -- needed for dynamic child inspection
       const children = Children.toArray(paragraph.children)
 
       const hasImageChild = children.some((child) => {
@@ -72,7 +73,7 @@ export function useMDXComponents() {
       // Image-only paragraphs should not be wrapped in <p>, otherwise block
       // wrappers inside the mapped image component can cause hydration errors.
       if (hasImageChild && children.length === 1) {
-        return <>{paragraph.children}</>
+        return paragraph.children
       }
 
       // If text and image are mixed, prefer a <div> to avoid invalid HTML

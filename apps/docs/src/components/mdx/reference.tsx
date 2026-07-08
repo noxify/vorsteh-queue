@@ -82,26 +82,22 @@ const SectionBody: ReferenceComponents["SectionBody"] = ({ children }) => (
   </CollapsibleContent>
 )
 
+const gapMap = { small: "gap-2", medium: "gap-4", large: "gap-6" } as const
+
 // Column Layout
 const Column: ReferenceComponents["Column"] = ({
   gap = "medium",
   children,
-}) => {
-  const gapMap = { small: "gap-2", medium: "gap-4", large: "gap-6" }
-  return (
-    <div className={`flex flex-col ${gapMap[gap ?? "medium"]}`}>{children}</div>
-  )
-}
+}) => (
+  <div className={`flex flex-col ${gapMap[gap ?? "medium"]}`}>{children}</div>
+)
 
 // Row Layout
-const Row: ReferenceComponents["Row"] = ({ gap = "medium", children }) => {
-  const gapMap = { small: "gap-2", medium: "gap-4", large: "gap-6" }
-  return (
-    <div className={`flex flex-row flex-wrap ${gapMap[gap ?? "medium"]}`}>
-      {children}
-    </div>
-  )
-}
+const Row: ReferenceComponents["Row"] = ({ gap = "medium", children }) => (
+  <div className={`flex flex-row flex-wrap ${gapMap[gap ?? "medium"]}`}>
+    {children}
+  </div>
+)
 
 // Detail
 const Detail: ReferenceComponents["Detail"] = ({ children }) => (
@@ -111,6 +107,7 @@ const Detail: ReferenceComponents["Detail"] = ({ children }) => (
 // Detail Heading
 const DetailHeading: ReferenceComponents["DetailHeading"] = ({ children }) => {
   // Render "Modifiers" inline as a compact badge-style element
+  // oxlint-disable-next-line react-doctor/no-polymorphic-children -- intentional string/element dispatch
   const text = typeof children === "string" ? children : ""
   if (text === "Modifiers") {
     return (
@@ -137,9 +134,8 @@ const Table: ReferenceComponents["Table"] = ({ children }) => (
 )
 
 // Table Row Group - no wrapper element to avoid invalid HTML nesting
-const TableRowGroup: ReferenceComponents["TableRowGroup"] = ({ children }) => (
-  <>{children}</>
-)
+const TableRowGroup: ReferenceComponents["TableRowGroup"] = ({ children }) =>
+  children
 
 // Table Row
 const TableRow: ReferenceComponents["TableRow"] = ({ children }) => (

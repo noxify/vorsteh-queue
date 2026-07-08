@@ -388,7 +388,7 @@ async function parseTree(
     }
 
     if (node.children) {
-      // oxlint-disable-next-line no-await-in-loop
+      // oxlint-disable-next-line no-await-in-loop, react-doctor/async-await-in-loop -- sequential processing intentional
       const childResults = await parseTree(node.children, seen)
       result.push(...childResults)
     }
@@ -564,7 +564,7 @@ async function mapLlmsTreeNode(
 
   if (node.children) {
     for (const child of node.children) {
-      // oxlint-disable-next-line no-await-in-loop
+      // oxlint-disable-next-line no-await-in-loop, react-doctor/async-await-in-loop -- sequential processing intentional
       const mappedChild = await mapLlmsTreeNode(child, docsHref)
 
       if (!mappedChild || seenChildHrefs.has(mappedChild.docsHref)) {
@@ -670,7 +670,8 @@ export const getApiReferenceExports = cache(
                 const typeInfo = await e.getType()
                 const methods =
                   typeInfo?.kind === "Class" && typeInfo.methods
-                    ? typeInfo.methods
+                    ? // oxlint-disable-next-line react-doctor/js-combine-iterations -- readability over single-pass
+                      typeInfo.methods
                         .filter(
                           (m: { name?: string; scope?: string }) =>
                             m.name && m.scope !== "static"

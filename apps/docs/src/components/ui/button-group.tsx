@@ -80,9 +80,11 @@ function ButtonGroupSeparator({
   )
 }
 
+/* oxlint-disable react-doctor/only-export-components -- variant export is intentional */
 export {
   ButtonGroup,
   ButtonGroupSeparator,
   ButtonGroupText,
   buttonGroupVariants,
 }
+/* oxlint-enable react-doctor/only-export-components */

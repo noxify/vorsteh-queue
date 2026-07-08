@@ -7,6 +7,7 @@ export function createRetryCommand(transport: Transport) {
   const command = buildRetryCommandStructure()
 
   command.action(async (id, options) => {
+    // oxlint-disable-next-line react-doctor/async-parallel -- sequential: connect → query → disconnect
     await transport.connect()
     const success = await transport.retryJob(id)
     await transport.disconnect()

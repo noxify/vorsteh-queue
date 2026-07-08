@@ -45,6 +45,7 @@ export function createFlowCommand(transport: Transport) {
   const command = buildFlowCommandStructure()
 
   command.action(async (id, options) => {
+    // oxlint-disable-next-line react-doctor/async-parallel -- sequential: connect → query → disconnect
     await transport.connect()
     const tree = await transport.getFlowTree(id)
     await transport.disconnect()

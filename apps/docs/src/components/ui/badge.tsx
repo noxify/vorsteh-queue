@@ -50,4 +50,5 @@ function Badge({
   })
 }
 
+// oxlint-disable-next-line react-doctor/only-export-components -- variant export is intentional
 export { Badge, badgeVariants }

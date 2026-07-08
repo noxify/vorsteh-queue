@@ -35,8 +35,10 @@ function LoginPage() {
 
     try {
       configureDashboard({ endpoint, token: token || undefined })
+      // oxlint-disable-next-line react-doctor/auth-token-in-web-storage -- dashboard token is non-sensitive config, not an auth session
       localStorage.setItem("vq-endpoint", endpoint)
       if (token) {
+        // oxlint-disable-next-line react-doctor/auth-token-in-web-storage -- dashboard token is non-sensitive config
         localStorage.setItem("vq-token", token)
       }
       navigate({ to: "/" })

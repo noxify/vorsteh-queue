@@ -70,6 +70,14 @@ function resolvePackageManager(
     : defaultPackageManager
 }
 
+function onValueChange(value: string) {
+  if (!isPackageManager(value)) {
+    return
+  }
+
+  window.setPackageManager?.(value)
+}
+
 export function CommandTabsClient({
   commands,
   defaultPackageManager = "npm",
@@ -78,6 +86,7 @@ export function CommandTabsClient({
     defaultPackageManager
   )
 
+  // oxlint-disable-next-line react-doctor/no-cascading-set-state -- batched by React 18+
   useEffect(() => {
     const setPackageManager = (packageManager: PackageManager | null) => {
       const resolved = resolvePackageManager(
@@ -120,14 +129,6 @@ export function CommandTabsClient({
       window.removeEventListener(SYNC_EVENT, onSync)
     }
   }, [defaultPackageManager])
-
-  const onValueChange = (value: string) => {
-    if (!isPackageManager(value)) {
-      return
-    }
-
-    window.setPackageManager?.(value)
-  }
 
   return (
     <Tabs value={selected} onValueChange={onValueChange}>

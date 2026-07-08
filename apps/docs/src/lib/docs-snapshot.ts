@@ -139,6 +139,7 @@ function toStringArray(value: unknown): string[] | undefined {
     return undefined
   }
 
+  // oxlint-disable-next-line react-doctor/js-flatmap-filter -- readability over single-pass
   const result = value
     .filter((item): item is string => typeof item === "string")
     .map((item) => item.trim())
@@ -252,6 +253,7 @@ async function buildRecord(
   }
 
   const frontmatter = await getEntryFrontmatter(entry)
+  // oxlint-disable-next-line react-doctor/server-sequential-independent-await -- acceptable for readability
   const file = await getFileContent(entry)
 
   if (!file) {
@@ -360,6 +362,7 @@ async function getSnapshotEntries(
 
   const seen = new Set<string>()
 
+  // oxlint-disable-next-line react-doctor/js-combine-iterations -- readability over single-pass
   return rootEntries
     .filter((entry) => isFile(entry) && !isHidden(entry))
     .filter((entry) => {
@@ -397,7 +400,7 @@ async function buildDocsSnapshotLines(
   const lines: string[] = []
 
   for (const entry of entries) {
-    // oxlint-disable-next-line no-await-in-loop
+    // oxlint-disable-next-line no-await-in-loop, react-doctor/async-await-in-loop -- sequential processing intentional
     const record = await buildRecord(entry, generatedAt, buildId)
     if (!record) {
       continue

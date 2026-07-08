@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
 
+// oxlint-disable-next-line react-doctor/no-giant-component -- intentionally large component
 export function VorstehQueueLogo({
   className,
   ...props

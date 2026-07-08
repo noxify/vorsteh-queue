@@ -39,5 +39,5 @@ export default function PlatformModifierKey() {
     () => false
   )
 
-  return <>{isMac ? "\u2318" : "CTRL + "}</>
+  return isMac ? "\u2318" : "CTRL + "
 }

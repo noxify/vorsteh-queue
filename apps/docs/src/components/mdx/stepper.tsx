@@ -15,6 +15,7 @@ import {
 } from "@/components/reui/stepper"
 
 export function StepperComponent({ children }: PropsWithChildren) {
+  // oxlint-disable-next-line react/no-react-children -- needed for dynamic child inspection
   const length = Children.count(children)
 
   return (
@@ -25,9 +26,10 @@ export function StepperComponent({ children }: PropsWithChildren) {
         defaultValue={0}
       >
         <StepperNav>
+          {/* oxlint-disable-next-line react/no-react-children -- needed for dynamic child inspection */}
           {Children.map(children, (step, index) => (
             <StepperItem
-              key={index}
+              key={index} // oxlint-disable-line react-doctor/no-array-index-as-key -- static list, order won't change
               step={index + 1}
               className="relative items-start not-last:flex-1"
             >

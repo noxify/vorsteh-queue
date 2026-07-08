@@ -7,6 +7,7 @@ export function createRedriveCommand(transport: Transport) {
   const command = buildRedriveCommandStructure()
 
   command.action(async (id, options) => {
+    // oxlint-disable-next-line react-doctor/async-defer-await
     await transport.connect()
 
     if (options.all) {
@@ -29,6 +30,7 @@ export function createRedriveCommand(transport: Transport) {
       return
     }
 
+    // oxlint-disable-next-line react-doctor/async-defer-await
     await transport.redriveJob(id)
     await transport.disconnect()
 

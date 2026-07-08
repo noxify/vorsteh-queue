@@ -41,11 +41,13 @@ interface ButtonProps
   readonly asChild?: boolean
 }
 
+/* oxlint-disable react-doctor/only-export-components -- buttonVariants co-export is intentional (shadcn/ui pattern) */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, children, ...props }, ref) => {
     const classes = cn(buttonVariants({ variant, size, className }))
 
     if (asChild && isValidElement(children)) {
+      // oxlint-disable-next-line react/no-clone-element -- asChild pattern requires cloneElement until migrated to Base UI render prop
       return cloneElement(
         children as React.ReactElement<Record<string, unknown>>,
         {
@@ -60,7 +62,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     }
 
     return (
-      <button className={classes} ref={ref} {...props}>
+      <button type="button" className={classes} ref={ref} {...props}>
         {children}
       </button>
     )

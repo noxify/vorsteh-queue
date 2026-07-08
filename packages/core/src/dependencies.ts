@@ -49,10 +49,10 @@ export async function detectCircularDependencies(
       visited.add(id)
       path.push(id)
 
-      // eslint-disable-next-line no-await-in-loop
+      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- dependency graph traversal must be sequential
       const job = await adapter.getJobById(id)
       if (job?.dependsOn && job.dependsOn.length > 0) {
-        // eslint-disable-next-line no-await-in-loop
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- recursive walk
         await walk(job.dependsOn)
       }
 

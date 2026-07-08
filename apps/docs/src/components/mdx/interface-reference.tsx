@@ -82,6 +82,7 @@ function normalizeJsDocTag(tagText: string) {
 function resolvePropertyDescription(property: {
   getJsDocs: () => { getDescription: () => string }[]
 }) {
+  // oxlint-disable-next-line react-doctor/js-flatmap-filter -- readability over single-pass
   const description = property
     .getJsDocs()
     .map((doc) => doc.getDescription().trim())
@@ -201,6 +202,7 @@ async function getDeclarationType(file: string, name: string) {
     kind: "TypeAlias",
     type: {
       kind: "TypeLiteral",
+      // oxlint-disable-next-line react-doctor/js-combine-iterations -- readability over single-pass
       members: typeLiteral
         .getMembers()
         .filter(Node.isPropertySignature)

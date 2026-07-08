@@ -56,6 +56,7 @@ export function SiteFooter() {
 
         <div className="border-t py-6 text-center text-sm">
           <p className="text-muted-foreground">
+            {/* oxlint-disable-next-line react-doctor/rendering-hydration-mismatch-time -- copyright year, mismatch acceptable */}
             © {new Date().getFullYear()} Vorsteh Queue. Released under the MIT
             License.
           </p>

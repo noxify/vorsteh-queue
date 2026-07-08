@@ -75,6 +75,7 @@ interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   indicators?: StepIndicators
 }
 
+/* oxlint-disable react/no-object-type-as-default-prop, react-doctor/rerender-memo-with-default-value -- acceptable for this pattern */
 function Stepper({
   defaultValue = 1,
   value,
@@ -82,10 +83,10 @@ function Stepper({
   orientation = "horizontal",
   className,
   children,
-  // oxlint-disable-next-line react/no-object-type-as-default-prop
   indicators = {},
   ...props
 }: StepperProps) {
+  /* oxlint-enable react/no-object-type-as-default-prop, react-doctor/rerender-memo-with-default-value */
   const [activeStep, setActiveStep] = useState(defaultValue)
   const [triggerNodes, setTriggerNodes] = useState<HTMLButtonElement[]>([])
 
@@ -139,6 +140,7 @@ function Stepper({
       orientation,
       registerTrigger,
       setActiveStep: handleSetActiveStep,
+      // oxlint-disable-next-line react/no-react-children -- needed for dynamic child inspection
       stepsCount: Children.toArray(children).filter(
         (child): child is ReactElement =>
           isValidElement(child) &&
@@ -202,7 +204,7 @@ function StepperItem({
 
   return (
     <StepItemContext.Provider
-      value={{ isDisabled: disabled, isLoading, state, step }}
+      value={{ isDisabled: disabled, isLoading, state, step }} // oxlint-disable-line react/jsx-no-constructed-context-values -- value changes trigger necessary re-renders
     >
       <div
         data-slot="stepper-item"
@@ -330,6 +332,7 @@ function StepperTrigger({
       data-slot="stepper-trigger"
       data-state={state}
       data-loading={isLoading}
+      type="button"
       className={cn(
         "focus-visible:border-ring focus-visible:ring-ring/50 inline-flex cursor-pointer items-center outline-none focus-visible:z-10 focus-visible:ring-3 disabled:pointer-events-none disabled:opacity-60",
         "gap-2.5 rounded-full",

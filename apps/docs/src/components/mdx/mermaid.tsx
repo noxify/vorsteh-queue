@@ -157,10 +157,12 @@ export function MermaidDiagram({
         initialZoom={wideInitialZoom}
         fitOnMount={isVeryWideDiagram}
       >
+        {/* oxlint-disable react/no-danger -- rendered HTML content from trusted source */}
         <div
           className="inline-block"
           dangerouslySetInnerHTML={{ __html: previewSvg }}
         />
+        {/* oxlint-enable react/no-danger */}
       </PanZoomDialog>
     )
   }
@@ -188,10 +190,12 @@ export function MermaidDiagram({
         initialZoom={wideInitialZoom}
         fitOnMount={isVeryWideDiagram}
       >
+        {/* oxlint-disable react/no-danger -- rendered HTML content from trusted source */}
         <div
           className="inline-block [&_svg]:h-auto [&_svg]:max-h-full [&_svg]:w-auto [&_svg]:max-w-full"
           dangerouslySetInnerHTML={{ __html: previewSvg }}
         />
+        {/* oxlint-enable react/no-danger */}
       </PanZoomControl>
     </div>
   )

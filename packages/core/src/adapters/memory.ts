@@ -98,7 +98,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       if (
         job.status === "delayed" &&
         job.processAt <= now &&
-        options.handlerNames.includes(job.name)
+        options.handlerNames.includes(job.name) // oxlint-disable-line react-doctor/js-set-map-lookups -- handlerNames is small and from config
       ) {
         const updated: Job = { ...job, status: "pending" }
         this.jobs.set(job.id, updated)

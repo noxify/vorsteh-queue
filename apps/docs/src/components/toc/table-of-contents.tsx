@@ -75,6 +75,7 @@ export function TableOfContentsScript({ nonce }: { nonce?: string }) {
       id="renoun-toc-script"
       nonce={nonce}
       strategy="afterInteractive"
+      // oxlint-disable-next-line react/no-danger -- rendered HTML content from trusted source
       dangerouslySetInnerHTML={{
         __html: code.replaceAll(/<\/script/giu, "<\\/script"),
       }}
@@ -133,12 +134,13 @@ function renderSections(
 }
 
 /** A table of contents that displays links to the sections in the current document. */
+/* oxlint-disable react/no-object-type-as-default-prop, react-doctor/rerender-memo-with-default-value -- acceptable for this pattern */
 export function TableOfContents({
   sections,
-  // oxlint-disable-next-line react/no-object-type-as-default-prop
   components = {},
   children,
 }: TableOfContentsProps) {
+  /* oxlint-enable react/no-object-type-as-default-prop, react-doctor/rerender-memo-with-default-value */
   const rootId = useId()
   const sectionIds = new Set<string>()
   const { Root, Title, List, Item, Link }: TableOfContentsComponents = {
@@ -162,6 +164,7 @@ export function TableOfContents({
   return (
     <Root aria-labelledby={rootId}>
       <Title id={rootId} />
+      {/* oxlint-disable-next-line react-doctor/no-render-in-render -- helper function for recursive rendering */}
       {renderSections(filteredSections, 0, { Item, Link, List })}
       {children}
       <Register ids={[...sectionIds]} />

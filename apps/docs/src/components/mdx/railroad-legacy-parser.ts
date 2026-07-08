@@ -119,7 +119,7 @@ class LegacyDslParser {
       this.index += 1
       return {
         kind: "number",
-        value: Number.parseInt(token.value, 10),
+        value: Math.trunc(Number(token.value)),
         token,
       }
     }

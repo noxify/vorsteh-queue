@@ -47,10 +47,8 @@ export function LinkHandler({ href, children, ...props }: AnchorProps) {
   const normalizedHref = normalizeInternalHref(href)
 
   return (
-    <>
-      <Link href={normalizedHref} {...props} prefetch={false}>
-        {children ?? normalizedHref}
-      </Link>
-    </>
+    <Link href={normalizedHref} {...props} prefetch={false}>
+      {children ?? normalizedHref}
+    </Link>
   )
 }

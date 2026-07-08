@@ -24,6 +24,7 @@ interface Transform {
   scale: number
 }
 
+// oxlint-disable-next-line react-doctor/no-giant-component -- intentionally large component
 export function PanZoomControl({
   children,
   className,
@@ -104,6 +105,7 @@ export function PanZoomControl({
   }, [centerOnMount, fitOnMount, initialZoom, maxZoom, centerView])
 
   const [isPanning, setIsPanning] = React.useState(false)
+  // oxlint-disable-next-line react-doctor/rerender-state-only-in-handlers -- used for tracking pointer state
   const [startPan, setStartPan] = React.useState({ x: 0, y: 0 })
 
   // Handle mouse wheel zoom

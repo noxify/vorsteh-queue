@@ -117,7 +117,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     const results: Job[] = []
     for (const job of jobs) {
-      // eslint-disable-next-line no-await-in-loop
+      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential inserts to maintain ordering
       const created = await this.addJob(job)
       results.push(created)
     }

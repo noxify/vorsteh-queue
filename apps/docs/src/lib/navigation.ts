@@ -177,6 +177,7 @@ export function getFavoriteNavigationItems(
 ): TreeItem[] {
   const seenUrls = new Set<string>()
 
+  // oxlint-disable-next-line react-doctor/js-combine-iterations -- readability over single-pass
   return groups
     .flatMap((group) => flattenNavigationItems(group.items))
     .filter((item) => item.favorite)

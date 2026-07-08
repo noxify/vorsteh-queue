@@ -80,4 +80,5 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   )
 }
 
+// oxlint-disable-next-line react-doctor/only-export-components -- variant export is intentional
 export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }

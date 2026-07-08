@@ -173,6 +173,7 @@ export function MobileTableOfContents({ sections }: DocsTableOfContentsProps) {
             <div className="text-muted-foreground px-1.5 py-1 text-xs font-medium">
               Table of contents
             </div>
+            {/* oxlint-disable-next-line react-doctor/no-render-in-render -- helper function for recursive rendering */}
             {renderSections(sections)}
           </DropdownMenuContent>
         </DropdownMenu>

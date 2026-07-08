@@ -243,7 +243,7 @@ export function createStepContext(
           continue
         }
         try {
-          // eslint-disable-next-line no-await-in-loop
+          // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- compensations must run in reverse order
           await entry.compensate(entry.result)
         } catch (compensationError) {
           // Log but don't throw — other compensations should still run

@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
   const forceUpdate = request.nextUrl.searchParams.get("update") === "true"
 
   if (isDev && !forceUpdate && existsSync(DEV_INDEX_CACHE_FILE)) {
+    // oxlint-disable-next-line react-doctor/server-hoist-static-io -- file read during build, acceptable
     const cached = readFileSync(DEV_INDEX_CACHE_FILE, "utf-8")
     return new Response(cached, {
       headers: { "Content-Type": "application/json; charset=utf-8" },

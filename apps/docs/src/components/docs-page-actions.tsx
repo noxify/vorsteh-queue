@@ -139,17 +139,11 @@ export function DocsPageActions({
             className="cursor-pointer"
           >
             {copyState === "copied" ? (
-              <>
-                <CheckIcon />
-              </>
+              <CheckIcon />
             ) : copyState === "failed" ? (
-              <>
-                <XIcon />
-              </>
+              <XIcon />
             ) : (
-              <>
-                <CopyIcon />
-              </>
+              <CopyIcon />
             )}
             Copy Markdown
           </Button>

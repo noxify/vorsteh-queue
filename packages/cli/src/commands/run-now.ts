@@ -7,6 +7,7 @@ export function createRunNowCommand(transport: Transport) {
   const command = buildRunNowCommandStructure()
 
   command.action(async (id, options) => {
+    // oxlint-disable-next-line react-doctor/async-parallel
     await transport.connect()
     const success = await transport.runJobNow(id)
     await transport.disconnect()

@@ -580,7 +580,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     if (hasChildren) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       for (const childDef of definition.children!) {
-        // eslint-disable-next-line no-await-in-loop
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- recursive tree creation must be sequential
         await this.createFlowNode(childDef, flowId, job.id)
       }
     }

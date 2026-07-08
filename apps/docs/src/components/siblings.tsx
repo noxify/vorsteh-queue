@@ -22,7 +22,7 @@ export default async function Siblings({ entry }: { entry: EntryType }) {
   const [collection] = entry.getPathnameSegments({ includeBasePathname: true })
 
   if (!collection) {
-    return <></>
+    return null
   }
 
   const orderedItems = await getCollectionLinearNavigation(collection)
@@ -30,7 +30,7 @@ export default async function Siblings({ entry }: { entry: EntryType }) {
   const currentIndex = orderedItems.findIndex((item) => item.url === currentUrl)
 
   if (currentIndex === -1) {
-    return <></>
+    return null
   }
 
   const previousItem =
@@ -41,7 +41,7 @@ export default async function Siblings({ entry }: { entry: EntryType }) {
       : undefined
 
   if (!previousItem && !nextItem) {
-    return <></>
+    return null
   }
 
   return (

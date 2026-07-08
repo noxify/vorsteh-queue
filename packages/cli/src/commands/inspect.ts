@@ -7,6 +7,7 @@ export function createInspectCommand(transport: Transport) {
   const command = buildInspectCommandStructure()
 
   command.action(async (id, options) => {
+    // oxlint-disable-next-line react-doctor/async-parallel -- sequential: connect → query → disconnect
     await transport.connect()
     const job = await transport.getJob(id)
     await transport.disconnect()

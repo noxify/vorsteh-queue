@@ -95,7 +95,7 @@ export default async function SectionGrid(props: SectionGridProps) {
   const inputItems = "items" in props ? props.items : undefined
 
   if (isEmptyInput(sections, inputItems)) {
-    return <></>
+    return null
   }
 
   const elements: GridElement[] = []
@@ -137,7 +137,7 @@ export default async function SectionGrid(props: SectionGridProps) {
         <Link
           href={ele.path}
           prefetch={false}
-          key={index}
+          key={index} // oxlint-disable-line react-doctor/no-array-index-as-key -- static list, order won't change
           className="not-prose group block h-full"
         >
           <div className="hover:border-brand/50 hover:dark:border-brand/30 relative h-full overflow-hidden rounded-2xl border border-black/10 shadow transition-transform duration-200 dark:border-white/10">

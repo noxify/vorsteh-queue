@@ -7,6 +7,7 @@ export function createCancelCommand(transport: Transport) {
   const command = buildCancelCommandStructure()
 
   command.action(async (id, options) => {
+    // oxlint-disable-next-line react-doctor/async-parallel -- sequential: connect → query → disconnect
     await transport.connect()
     const success = await transport.cancelJob(id, options.reason)
     await transport.disconnect()

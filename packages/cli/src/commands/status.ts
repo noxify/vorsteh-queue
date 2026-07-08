@@ -1,3 +1,4 @@
+// oxlint-disable react-doctor/async-parallel
 import consola from "consola"
 
 import { buildStatusCommandStructure } from "../metadata/status-metadata"
@@ -9,6 +10,7 @@ export function createStatusCommand(transport: Transport) {
   command.action(async (options) => {
     await transport.connect()
     const stats = await transport.getStats()
+    // oxlint-disable-next-line react-doctor/server-sequential-independent-await
     const size = await transport.size()
     await transport.disconnect()
 

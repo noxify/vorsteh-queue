@@ -7,6 +7,8 @@ export type {
   CommandArgumentMeta,
 } from "@vorsteh-queue/cli/commands-metadata"
 
+export { getCommandConfig } from "@vorsteh-queue/cli/commands-metadata"
+
 /**
  * Returns TOC-compatible section entries for a CLI command's options.
  * Options are nested under an "Options" heading.
@@ -50,5 +52,3 @@ export function getCliCommandTocSections(commandName: string) {
 
   return sections
 }
-
-export { getCommandConfig }

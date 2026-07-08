@@ -25,7 +25,7 @@ export function ThemeProvider({
 }: {
   readonly children: React.ReactNode
 }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
+  const [themeState, setThemeState] = useState<Theme>(() => {
     if (typeof window === "undefined") {
       return "system"
     }
@@ -41,7 +41,7 @@ export function ThemeProvider({
       : "light"
   })
 
-  const resolvedTheme = theme === "system" ? systemTheme : theme
+  const resolvedTheme = themeState === "system" ? systemTheme : themeState
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
@@ -63,8 +63,8 @@ export function ThemeProvider({
   }, [])
 
   const value = useMemo(
-    () => ({ theme, resolvedTheme, setTheme }),
-    [theme, resolvedTheme, setTheme]
+    () => ({ theme: themeState, resolvedTheme, setTheme }),
+    [themeState, resolvedTheme, setTheme]
   )
 
   return <ThemeContext value={value}>{children}</ThemeContext>

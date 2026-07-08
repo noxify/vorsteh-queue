@@ -140,6 +140,7 @@ export default function scrollHandler({
     register: (targetIds: string[]) => {
       dispose?.()
 
+      // oxlint-disable-next-line react-doctor/js-flatmap-filter -- readability over single-pass
       const targetElements = targetIds
         .map((id) => document.querySelector(`#${id}`))
         .filter(Boolean) as HTMLElement[]
