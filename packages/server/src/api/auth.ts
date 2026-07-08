@@ -44,11 +44,12 @@ export function createAuthMiddleware(config: AuthConfig): MiddlewareHandler {
     }
 
     const header = c.req.header("Authorization")
-    if (!header?.startsWith("Bearer ")) {
+    if (!header) {
       return c.json({ error: "Unauthorized" }, 401)
     }
 
-    const token = header.slice(7)
+    // Accept both "Bearer <token>" and plain "<token>" formats
+    const token = header.startsWith("Bearer ") ? header.slice(7) : header
     if (!validTokens.has(token)) {
       return c.json({ error: "Invalid token" }, 401)
     }
