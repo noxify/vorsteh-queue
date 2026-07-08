@@ -45,7 +45,7 @@ async function main() {
     adapter,
     queueName: "demo-queue",
     port: 3000,
-    auth: { type: "token", token: "my-secret-token" },
+    auth: { tokens: ["my-secret-token"] },
   })
 
   await server.start()

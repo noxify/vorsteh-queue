@@ -35,6 +35,14 @@ export function createAuthMiddleware(config: AuthConfig): MiddlewareHandler {
   const validTokens = new Set(config.tokens)
 
   return async (c, next) => {
+    // Allow GraphiQL UI to load without auth (browser GET requesting HTML)
+    if (
+      c.req.method === "GET" &&
+      c.req.header("Accept")?.includes("text/html")
+    ) {
+      return next()
+    }
+
     const header = c.req.header("Authorization")
     if (!header?.startsWith("Bearer ")) {
       return c.json({ error: "Unauthorized" }, 401)

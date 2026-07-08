@@ -30,6 +30,8 @@
  * ```
  */
 
+import path from "node:path"
+
 import { serve } from "@hono/node-server"
 import { serveStatic } from "@hono/node-server/serve-static"
 import { createYoga } from "graphql-yoga"
@@ -101,9 +103,16 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
 
   // Serve dashboard UI (static assets)
   if (config.dashboard !== false) {
-    app.use("/*", serveStatic({ root: "./dist/ui" }))
+    // Resolve the UI directory relative to this file's location.
+    // In dev (src/index.ts): ../dist/ui — In prod (dist/index.mjs): ./ui
+    const currentDir = import.meta.dirname
+    const uiRoot = currentDir.endsWith("src")
+      ? path.resolve(currentDir, "../dist/ui")
+      : path.resolve(currentDir, "ui")
+
+    app.use("/*", serveStatic({ root: uiRoot }))
     // SPA fallback — serve index.html for unmatched routes
-    app.get("/*", serveStatic({ root: "./dist/ui", path: "index.html" }))
+    app.get("/*", serveStatic({ root: uiRoot, path: "index.html" }))
   }
 
   return app
