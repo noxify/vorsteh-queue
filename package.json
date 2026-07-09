@@ -46,10 +46,10 @@
     "@vorsteh-queue/prettier-config": "workspace:*",
     "prettier": "^3.8.1",
     "sherif": "1.10.0",
-    "turbo": "2.8.0",
+    "turbo": "2.9.14",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.0.5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   },
   "prettier": "@vorsteh-queue/prettier-config",
   "pnpm": {
