@@ -5,10 +5,12 @@
  */
 
 import { Command } from "@commander-js/extra-typings"
+import consola from "consola"
 
 import { createCancelCommand } from "./commands/cancel"
 import { createClearCommand } from "./commands/clear"
 import { createDeleteCommand } from "./commands/delete"
+import { createDoctorCommand } from "./commands/doctor"
 import { createFlowCommand } from "./commands/flow"
 import { createInspectCommand } from "./commands/inspect"
 import { createRedriveCommand } from "./commands/redrive"
@@ -16,15 +18,7 @@ import { createRetryCommand } from "./commands/retry"
 import { createRunNowCommand } from "./commands/run-now"
 import { createServeCommand } from "./commands/serve"
 import { createStatusCommand } from "./commands/status"
-import { createGraphQLTransport } from "./transport/graphql"
-
-// Default to GraphQL transport via environment variables
-// eslint-disable-next-line no-restricted-properties
-const url = process.env.VORSTEH_QUEUE_URL ?? "http://localhost:3000/graphql"
-// eslint-disable-next-line no-restricted-properties
-const token = process.env.VORSTEH_QUEUE_TOKEN
-
-const transport = createGraphQLTransport(url, token)
+import { createTokenOption, createUrlOption } from "./options"
 
 const program = new Command()
 
@@ -33,21 +27,36 @@ program
   .version("0.1.0")
   .description("CLI for monitoring and managing vorsteh-queue jobs")
   .configureHelp({ sortSubcommands: true })
+  .addOption(createUrlOption())
+  .addOption(createTokenOption())
   .addCommand(createServeCommand())
-  .addCommand(createStatusCommand(transport))
-  .addCommand(createInspectCommand(transport))
-  .addCommand(createCancelCommand(transport))
-  .addCommand(createRetryCommand(transport))
-  .addCommand(createRedriveCommand(transport))
-  .addCommand(createRunNowCommand(transport))
-  .addCommand(createDeleteCommand(transport))
-  .addCommand(createClearCommand(transport))
-  .addCommand(createFlowCommand(transport))
+  .addCommand(createStatusCommand())
+  .addCommand(createInspectCommand())
+  .addCommand(createCancelCommand())
+  .addCommand(createRetryCommand())
+  .addCommand(createRedriveCommand())
+  .addCommand(createRunNowCommand())
+  .addCommand(createDeleteCommand())
+  .addCommand(createClearCommand())
+  .addCommand(createFlowCommand())
+  .addCommand(createDoctorCommand())
 
 try {
   await program.parseAsync()
 } catch (error: unknown) {
-  // eslint-disable-next-line no-restricted-properties
+  const debug = process.env.DEBUG
+
+  if (error instanceof Error) {
+    consola.error(`\nError: ${error.message}`)
+    if (debug) {
+      consola.error(error)
+    }
+  } else {
+    consola.error("\nAn unknown error occurred.")
+    if (debug) {
+      consola.error(error)
+    }
+  }
+
   process.exitCode = 1
-  throw error
 }

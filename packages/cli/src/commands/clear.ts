@@ -2,7 +2,8 @@ import type { JobStatus } from "@vorsteh-queue/core"
 import consola from "consola"
 
 import { buildClearCommandStructure } from "../metadata/clear-metadata"
-import type { Transport } from "../transport/types"
+import type { GlobalOptions } from "../transport/with-transport"
+import { withTransport } from "../transport/with-transport"
 
 const VALID_STATUSES = [
   "pending",
@@ -14,7 +15,7 @@ const VALID_STATUSES = [
   "dead",
 ]
 
-export function createClearCommand(transport: Transport) {
+export function createClearCommand() {
   const command = buildClearCommandStructure()
 
   command.action(async (options) => {
@@ -30,18 +31,23 @@ export function createClearCommand(transport: Transport) {
       return
     }
 
-    // oxlint-disable-next-line react-doctor/async-parallel -- sequential: connect → query → disconnect
-    await transport.connect()
-    const count = await transport.clearJobs(
-      options.all ? undefined : (options.status as JobStatus)
-    )
-    await transport.disconnect()
+    const globalOpts = command.optsWithGlobals() as GlobalOptions &
+      typeof options
 
-    if (options.json) {
-      consola.log(JSON.stringify({ cleared: count }))
-      return
-    }
-    consola.success(`Cleared ${count} job(s)`)
+    await withTransport(
+      { url: globalOpts.url, token: globalOpts.token },
+      async (transport) => {
+        const count = await transport.clearJobs(
+          options.all ? undefined : (options.status as JobStatus)
+        )
+
+        if (options.json) {
+          consola.log(JSON.stringify({ cleared: count }))
+          return
+        }
+        consola.success(`Cleared ${count} job(s)`)
+      }
+    )
   })
 
   return command

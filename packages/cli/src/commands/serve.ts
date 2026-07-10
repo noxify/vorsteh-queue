@@ -24,13 +24,11 @@ export function createServeCommand() {
     const { createQueueServer } = await import("@vorsteh-queue/server")
 
     const port = options.port ? Math.trunc(Number(options.port)) : undefined
-    const { dashboard } = options
 
     const server = createQueueServer({
       adapter: transport.adapter,
       queueName: transport.queueName,
       port,
-      dashboard,
     })
 
     await server.start()

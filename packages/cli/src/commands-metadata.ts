@@ -11,6 +11,7 @@ import type { Argument, Option } from "@commander-js/extra-typings"
 import { buildCancelCommandStructure } from "./metadata/cancel-metadata"
 import { buildClearCommandStructure } from "./metadata/clear-metadata"
 import { buildDeleteCommandStructure } from "./metadata/delete-metadata"
+import { buildDoctorCommandStructure } from "./metadata/doctor-metadata"
 import { buildFlowCommandStructure } from "./metadata/flow-metadata"
 import { buildInspectCommandStructure } from "./metadata/inspect-metadata"
 import { buildRedriveCommandStructure } from "./metadata/redrive-metadata"
@@ -23,6 +24,7 @@ type AvailableCommand =
   | "cancel"
   | "clear"
   | "delete"
+  | "doctor"
   | "flow"
   | "inspect"
   | "redrive"
@@ -108,6 +110,7 @@ const commandFactories: Record<string, () => unknown> = {
   cancel: buildCancelCommandStructure,
   clear: buildClearCommandStructure,
   delete: buildDeleteCommandStructure,
+  doctor: buildDoctorCommandStructure,
   flow: buildFlowCommandStructure,
   inspect: buildInspectCommandStructure,
   redrive: buildRedriveCommandStructure,

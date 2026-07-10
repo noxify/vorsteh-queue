@@ -1,10 +1,10 @@
 ---
 title: Server & Dashboard
 navTitle: Server
-description: GraphQL API server and web dashboard for monitoring and managing queues.
+description: GraphQL API server for monitoring and managing queues.
 ---
 
-The `@vorsteh-queue/server` package provides a standalone GraphQL API and web dashboard for managing Vorsteh Queue jobs.
+The `@vorsteh-queue/server` package provides a standalone GraphQL API for managing Vorsteh Queue jobs.
 
 ## Installation
 
@@ -19,7 +19,6 @@ const server = createQueueServer({
   adapter: yourAdapter,
   queueName: "my-queue",
   port: 3000,
-  dashboard: true,
 })
 
 await server.start()
@@ -28,8 +27,7 @@ await server.start()
 ## Features
 
 - **GraphQL API** — query queue stats, inspect jobs, cancel, retry, redrive
-- **Web Dashboard** — real-time monitoring with flow visualization
-- **Authentication** — optional token-based auth
+- **Authentication** — optional token-based auth with custom middleware support
 
 ## Configuration
 
@@ -42,7 +40,6 @@ export default defineConfig({
   adapter: yourAdapter,
   queueName: "my-queue",
   port: 3000,
-  dashboard: true,
 })
 ```
 

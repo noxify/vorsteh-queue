@@ -33,6 +33,10 @@ export type {
 
 export { createDirectTransport } from "./transport/direct"
 export { createGraphQLTransport } from "./transport/graphql"
+export { resolveTransport } from "./transport/resolve"
+export type { ResolveTransportOptions } from "./transport/resolve"
+export { withTransport } from "./transport/with-transport"
+export type { GlobalOptions } from "./transport/with-transport"
 export type { Transport } from "./transport/types"
 
 export { createStatusCommand } from "./commands/status"
@@ -44,6 +48,9 @@ export { createRunNowCommand } from "./commands/run-now"
 export { createDeleteCommand } from "./commands/delete"
 export { createClearCommand } from "./commands/clear"
 export { createFlowCommand } from "./commands/flow"
+export { createDoctorCommand } from "./commands/doctor"
+
+export { CLIError } from "./errors"
 
 export { availableCommands, getCommandConfig } from "./commands-metadata"
 export type {

@@ -4,6 +4,7 @@
 
 import type { FlowNode, Job, QueueStats } from "@vorsteh-queue/core"
 
+import { CLIError } from "../errors"
 import type { Transport } from "./types"
 
 export function createGraphQLTransport(url: string, token?: string): Transport {
@@ -45,8 +46,39 @@ export function createGraphQLTransport(url: string, token?: string): Transport {
   }
 
   return {
-    // eslint-disable-next-line no-empty-function
-    async connect() {},
+    async connect() {
+      const healthUrl = url.replace(/\/graphql$/, "") + "/health"
+      const headers: Record<string, string> = {}
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+
+      let response: Response
+      try {
+        response = await fetch(healthUrl, { method: "GET", headers })
+      } catch {
+        throw new CLIError(
+          `Could not connect to ${healthUrl}. Verify the server is running and the URL is correct.`
+        )
+      }
+
+      if (response.status === 401) {
+        throw new CLIError(
+          "Request failed with 401 Unauthorized.\n" +
+            "The server rejected the request.\n" +
+            "This may be caused by:\n" +
+            " - Missing authentication\n" +
+            " - Invalid or expired token\n" +
+            " - Custom authentication middleware"
+        )
+      }
+
+      if (!response.ok) {
+        throw new CLIError(
+          `Health check failed: ${response.status} ${response.statusText}`
+        )
+      }
+    },
     // eslint-disable-next-line no-empty-function
     async disconnect() {},
 

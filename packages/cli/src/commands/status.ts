@@ -2,32 +2,39 @@
 import consola from "consola"
 
 import { buildStatusCommandStructure } from "../metadata/status-metadata"
-import type { Transport } from "../transport/types"
+import type { GlobalOptions } from "../transport/with-transport"
+import { withTransport } from "../transport/with-transport"
 
-export function createStatusCommand(transport: Transport) {
+export function createStatusCommand() {
   const command = buildStatusCommandStructure()
 
   command.action(async (options) => {
-    await transport.connect()
-    const stats = await transport.getStats()
-    // oxlint-disable-next-line react-doctor/server-sequential-independent-await
-    const size = await transport.size()
-    await transport.disconnect()
+    const globalOpts = command.optsWithGlobals() as GlobalOptions &
+      typeof options
 
-    if (options.json) {
-      consola.log(JSON.stringify({ ...stats, size }, null, 2))
-      return
-    }
+    await withTransport(
+      { url: globalOpts.url, token: globalOpts.token },
+      async (transport) => {
+        const stats = await transport.getStats()
+        // oxlint-disable-next-line react-doctor/server-sequential-independent-await
+        const size = await transport.size()
 
-    consola.info("Queue Status:")
-    consola.log(`  Pending:    ${stats.pending}`)
-    consola.log(`  Delayed:    ${stats.delayed}`)
-    consola.log(`  Processing: ${stats.processing}`)
-    consola.log(`  Completed:  ${stats.completed}`)
-    consola.log(`  Failed:     ${stats.failed}`)
-    consola.log(`  Cancelled:  ${stats.cancelled}`)
-    consola.log(`  Dead:       ${stats.dead}`)
-    consola.log(`  Size:       ${size}`)
+        if (options.json) {
+          consola.log(JSON.stringify({ ...stats, size }, null, 2))
+          return
+        }
+
+        consola.info("Queue Status:")
+        consola.log(`  Pending:    ${stats.pending}`)
+        consola.log(`  Delayed:    ${stats.delayed}`)
+        consola.log(`  Processing: ${stats.processing}`)
+        consola.log(`  Completed:  ${stats.completed}`)
+        consola.log(`  Failed:     ${stats.failed}`)
+        consola.log(`  Cancelled:  ${stats.cancelled}`)
+        consola.log(`  Dead:       ${stats.dead}`)
+        consola.log(`  Size:       ${size}`)
+      }
+    )
   })
 
   return command

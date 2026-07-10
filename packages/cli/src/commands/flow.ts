@@ -2,7 +2,8 @@ import type { FlowNode } from "@vorsteh-queue/core"
 import consola from "consola"
 
 import { buildFlowCommandStructure } from "../metadata/flow-metadata"
-import type { Transport } from "../transport/types"
+import type { GlobalOptions } from "../transport/with-transport"
+import { withTransport } from "../transport/with-transport"
 
 const STATUS_ICONS: Record<string, string> = {
   pending: "○",
@@ -41,28 +42,33 @@ function renderTree(node: FlowNode, prefix = "", isLast = true): string {
   return lines.join("\n")
 }
 
-export function createFlowCommand(transport: Transport) {
+export function createFlowCommand() {
   const command = buildFlowCommandStructure()
 
   command.action(async (id, options) => {
-    // oxlint-disable-next-line react-doctor/async-parallel -- sequential: connect → query → disconnect
-    await transport.connect()
-    const tree = await transport.getFlowTree(id)
-    await transport.disconnect()
+    const globalOpts = command.optsWithGlobals() as GlobalOptions &
+      typeof options
 
-    if (!tree) {
-      consola.error(`Flow "${id}" not found`)
-      return
-    }
+    await withTransport(
+      { url: globalOpts.url, token: globalOpts.token },
+      async (transport) => {
+        const tree = await transport.getFlowTree(id)
 
-    if (options.json) {
-      consola.log(JSON.stringify(tree, null, 2))
-      return
-    }
+        if (!tree) {
+          consola.error(`Flow "${id}" not found`)
+          return
+        }
 
-    consola.info(`Flow: ${tree.job.name}  [flow-id: ${id}]`)
-    consola.log("")
-    consola.log(renderTree(tree))
+        if (options.json) {
+          consola.log(JSON.stringify(tree, null, 2))
+          return
+        }
+
+        consola.info(`Flow: ${tree.job.name}  [flow-id: ${id}]`)
+        consola.log("")
+        consola.log(renderTree(tree))
+      }
+    )
   })
 
   return command

@@ -13,18 +13,32 @@ The Vorsteh Queue CLI (`@vorsteh-queue/cli`) provides commands for inspecting, m
 
 <Command variant="exec">vorsteh-queue</Command>
 
-## Environment Variables
+## Transport Modes
 
-The CLI connects to a running Vorsteh Queue server via GraphQL by default:
+The CLI supports two transport modes for communicating with your queue:
 
-| Variable | Required | Description | Default |
-| --- | --- | --- | --- |
-| `VORSTEH_QUEUE_URL` | No | GraphQL endpoint URL | `http://localhost:3000/graphql` |
-| `VORSTEH_QUEUE_TOKEN` | No | Bearer token for authentication | — |
+### Direct (default)
 
-## Direct Adapter Mode
+In direct mode, the CLI loads your `queue.config.ts` and uses the configured adapter to interact with the database directly. No running server is required.
 
-Instead of connecting to a remote server, the CLI can use a local adapter directly via `queue.config.ts`:
+This is the default behavior when no `--url` flag or `VORSTEH_QUEUE_URL` environment variable is provided.
+
+### Remote
+
+In remote mode, the CLI connects to a running Vorsteh Queue server via GraphQL. This mode is activated by providing a URL through the `--url` flag or the `VORSTEH_QUEUE_URL` environment variable.
+
+```bash
+# Via flag
+vorsteh-queue list --url https://my-server.example.com/graphql
+
+# Via environment variable
+export VORSTEH_QUEUE_URL=https://my-server.example.com/graphql
+vorsteh-queue list
+```
+
+## Configuration
+
+For direct mode, create a `queue.config.ts` in your project root:
 
 ```typescript
 // queue.config.ts
@@ -41,4 +55,32 @@ export default {
 }
 ```
 
-When the CLI detects an adapter in the config, it uses the direct transport instead of GraphQL.
+Both `adapter` and `queueName` are required for direct mode. If either is missing, the CLI will exit with an error.
+
+## Global Options
+
+These options can be passed to any command:
+
+| Option             | Description                                             |
+| ------------------ | ------------------------------------------------------- |
+| `--url <string>`   | Remote server GraphQL endpoint. Enables remote mode.    |
+| `--token <string>` | Bearer token for authentication with the remote server. |
+
+The `--url` flag takes precedence over the `VORSTEH_QUEUE_URL` environment variable. Likewise, `--token` takes precedence over `VORSTEH_QUEUE_TOKEN`.
+
+## Environment Variables
+
+| Variable | Description |
+| --- | --- |
+| `VORSTEH_QUEUE_URL` | Remote server GraphQL endpoint. Enables remote mode when set. |
+| `VORSTEH_QUEUE_TOKEN` | Bearer token for authentication with the remote server. |
+
+## Troubleshooting
+
+Use the `doctor` command to diagnose configuration and connectivity issues:
+
+```bash
+vorsteh-queue doctor
+```
+
+The doctor command displays your current transport mode, adapter or endpoint details, authentication status, and verifies connectivity. It exits with code 0 on success or 1 if there is a problem.

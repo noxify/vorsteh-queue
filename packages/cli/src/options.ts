@@ -13,3 +13,21 @@ import { Option } from "@commander-js/extra-typings"
 export function createJsonOption() {
   return new Option("--json", "Output as JSON").default(false)
 }
+
+/**
+ * Create the --url option for specifying a remote server URL.
+ *
+ * @returns A Commander Option instance for the URL
+ */
+export function createUrlOption() {
+  return new Option("--url <string>", "Remote server URL (GraphQL endpoint)")
+}
+
+/**
+ * Create the --token option for specifying an authentication token.
+ *
+ * @returns A Commander Option instance for the token
+ */
+export function createTokenOption() {
+  return new Option("--token <string>", "Authentication token")
+}
