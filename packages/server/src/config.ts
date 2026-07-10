@@ -21,10 +21,6 @@ export interface ServerConfig {
   /** Enable the web dashboard
    * @default true
    */
-  readonly dashboard?: boolean
-  /** Authentication configuration
-   * @default false (no auth, with console warning)
-   */
   readonly auth?: AuthConfig
   /** Server port (for standalone mode)
    * @default 3000

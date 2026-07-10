@@ -1,9 +1,8 @@
 {
   "name": "@vorsteh-queue/server",
   "version": "0.1.0",
-  "description": "GraphQL server and dashboard for Vorsteh Queue",
+  "description": "GraphQL server for Vorsteh Queue",
   "keywords": [
-    "dashboard",
     "graphql",
     "graphql-yoga",
     "hono",
@@ -35,18 +34,16 @@
     }
   },
   "scripts": {
-    "build": "pnpm build:api && pnpm build:ui",
-    "build:api": "tsdown",
-    "build:ui": "vite build --config vite.config.ts",
+    "build": "tsdown",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "dev": "tsdown --watch & vite build --config vite.config.ts --watch",
+    "dev": "tsdown --watch",
     "test": "vitest",
-    "typecheck": "tsc -p tsconfig.api.json --noEmit && tsc -p tsconfig.ui.json --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hono/node-server": "2.0.8",
-    "@pothos/core": "4.13.0",
+    "@pothos/core": "4.13.1",
     "@vorsteh-queue/core": "workspace:*",
     "c12": "3.3.4",
     "graphql": "16.14.2",
@@ -54,28 +51,12 @@
     "hono": "4.12.28"
   },
   "devDependencies": {
-    "@base-ui/react": "1.6.0",
-    "@tailwindcss/vite": "4.3.2",
-    "@tanstack/react-query": "5.101.2",
-    "@tanstack/react-router": "1.170.17",
     "@types/node": "24.13.2",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "6.0.3",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "@xyflow/react": "12.11.2",
-    "class-variance-authority": "0.7.1",
-    "clsx": "2.1.1",
-    "gql.tada": "1.11.2",
-    "graphql-request": "7.4.0",
-    "lucide-react": "1.23.0",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "tailwind-merge": "3.6.0",
-    "tailwindcss": "4.3.2",
-    "tsdown": "0.22.3",
+    "tsdown": "0.22.4",
     "typescript": "6.0.3",
-    "vite": "8.1.3",
     "vitest": "4.1.10",
     "zod": "4.4.3"
   },
