@@ -8,6 +8,7 @@ import type { Transport } from "./types"
 export interface GlobalOptions {
   readonly url?: string
   readonly token?: string
+  readonly queue?: string
 }
 
 /**

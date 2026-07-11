@@ -61,7 +61,7 @@
     "@prisma/client": "7.8.0",
     "@prisma/internals": "7.8.0",
     "@prisma/migrate": "7.8.0",
-    "@types/node": "24.13.2",
+    "@types/node": "24.13.3",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "prisma": "7.8.0",

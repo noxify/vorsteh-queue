@@ -27,6 +27,11 @@ const adapter = new PostgresQueueAdapter(db)
 const queue = new Queue(adapter, { name: "my-queue" })
 ```
 
+<Note title="Tip">
+  For real projects, extract this setup into a shared `src/queues.ts` file. See
+  [Project Structure](/docs/vorsteh-queue/getting-started/project-structure).
+</Note>
+
 ## Supported Drivers
 
 - **node-postgres (pg)** — `drizzle-orm/node-postgres` ( [Docs](https://orm.drizzle.team/docs/get-started-postgresql#node-postgres) )

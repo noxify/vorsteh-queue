@@ -1,0 +1,39 @@
+---
+title: "vorsteh-queue queues"
+navTitle: "queues"
+description: List all configured queues.
+cliCommand: "queues"
+---
+
+Lists all queues defined in your `queue.config.ts`. Shows each queue name and indicates which one is the default.
+
+## Usage
+
+```bash
+vorsteh-queue queues
+```
+
+```
+ℹ Available queues:
+  email-queue (default)
+  report-queue
+```
+
+## JSON Output
+
+```bash
+vorsteh-queue queues --json
+```
+
+```json
+[
+  { "name": "email-queue", "isDefault": true },
+  { "name": "report-queue", "isDefault": false }
+]
+```
+
+## Notes
+
+This command reads directly from the config file and does not require a database connection or running server.
+
+<CliCommandDetails command="queues" />

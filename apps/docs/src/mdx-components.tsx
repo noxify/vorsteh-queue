@@ -22,6 +22,7 @@ import {
   StepperComponent,
   StepperItemComponent,
 } from "@/components/mdx/stepper"
+import { TemplateList } from "@/components/mdx/template-list"
 import {
   Accordion as BaseAccordion,
   AccordionContent as BaseAccordionContent,
@@ -320,5 +321,6 @@ export function useMDXComponents() {
     InlineReference,
     InterfaceReference,
     References,
+    TemplateList,
   } satisfies MDXComponents
 }

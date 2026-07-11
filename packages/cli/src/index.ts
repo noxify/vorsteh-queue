@@ -25,11 +25,7 @@
  */
 
 export { loadCliConfig } from "./config"
-export type {
-  CliTransport,
-  DirectTransportConfig,
-  GraphQLTransportConfig,
-} from "./config"
+export type { QueueConfigFile } from "./config"
 
 export { createDirectTransport } from "./transport/direct"
 export { createGraphQLTransport } from "./transport/graphql"

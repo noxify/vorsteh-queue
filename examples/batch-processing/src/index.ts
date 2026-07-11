@@ -1,17 +1,7 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { client, db } from "./database"
-
-// Setup
-const adapter = new PostgresQueueAdapter(db)
-const queue = new Queue(adapter, { name: "batch-demo" })
-const worker = new Worker(adapter, {
-  name: "batch-demo",
-  concurrency: 2,
-  removeOnComplete: 5,
-  removeOnFail: 3,
-})
+import { client } from "./database"
+import { adapter, queue } from "./queues"
 
 interface FilePayload {
   file: string
@@ -20,6 +10,13 @@ interface FilePayload {
 interface FileResult {
   ok: boolean
 }
+
+const worker = new Worker(adapter, {
+  name: "batch-demo",
+  concurrency: 2,
+  removeOnComplete: 5,
+  removeOnFail: 3,
+})
 
 // Register a batch handler
 worker.registerBatch<FilePayload, FileResult>(

@@ -1,7 +1,7 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { db, pool } from "./database"
+import { pool } from "./database"
+import { adapter, queue } from "./queues"
 
 // Job payload types
 interface EmailJob {
@@ -25,13 +25,6 @@ interface DataProcessingResult {
   processed: number
   results: unknown[]
 }
-
-// Adapter + Queue (Producer) + Worker (Consumer) setup
-const adapter = new PostgresQueueAdapter(db)
-
-const queue = new Queue(adapter, {
-  name: "example-queue",
-})
 
 const worker = new Worker(adapter, {
   name: "example-queue",

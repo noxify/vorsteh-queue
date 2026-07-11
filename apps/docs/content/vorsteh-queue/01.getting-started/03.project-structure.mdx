@@ -1,0 +1,110 @@
+---
+title: Project Structure
+description: Recommended project structure for Vorsteh Queue applications.
+---
+
+## Why centralize?
+
+Defining your adapter and queue instances in a single shared file keeps your project DRY. Instead of recreating the adapter in every file that needs it, you export once and import everywhere — your config file, workers, and application code all reference the same instances. This makes refactoring painless and ensures configuration changes propagate automatically.
+
+## Recommended structure
+
+```
+my-app/
+├── src/
+│   ├── queues.ts          # Queue definitions (adapter + Queue instances)
+│   ├── handlers/
+│   │   ├── email.ts       # Job handlers
+│   │   └── reports.ts
+│   └── worker.ts          # Worker setup
+├── queue.config.ts         # CLI/Server config (imports from src/queues.ts)
+└── package.json
+```
+
+## The shared queue file
+
+`src/queues.ts` is the single source of truth for your adapter and queue instances:
+
+```typescript
+// src/queues.ts
+import { Queue } from "@vorsteh-queue/core"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle/postgres-adapter"
+import { drizzle } from "drizzle-orm/node-postgres"
+import { Pool } from "pg"
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const db = drizzle(pool)
+
+export const adapter = new PostgresQueueAdapter(db)
+
+export const emailQueue = new Queue(adapter, { name: "email-queue" })
+export const reportQueue = new Queue(adapter, { name: "report-queue" })
+```
+
+## CLI and server configuration
+
+Your `queue.config.ts` simply imports from the shared file:
+
+```typescript
+// queue.config.ts
+import { adapter, emailQueue, reportQueue } from "./src/queues"
+
+export default {
+  adapter,
+  queues: [emailQueue, reportQueue],
+  defaultQueue: "email-queue",
+}
+```
+
+## Worker setup
+
+Workers import the queue they process:
+
+```typescript
+// src/worker.ts
+import { emailQueue } from "./queues"
+
+emailQueue.register("send-email", async (job) => {
+  // handle job
+})
+
+emailQueue.start()
+```
+
+## Adding jobs from your app
+
+Application code imports the same queue instance to add jobs:
+
+```typescript
+import { emailQueue } from "./queues"
+
+await emailQueue.add("send-email", { to: "user@example.com", subject: "Hello" })
+```
+
+## Single queue simplification
+
+For projects with a single queue, the pattern is the same — just simpler:
+
+```typescript
+// src/queues.ts
+import { Queue } from "@vorsteh-queue/core"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle/postgres-adapter"
+import { drizzle } from "drizzle-orm/node-postgres"
+import { Pool } from "pg"
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const db = drizzle(pool)
+
+export const adapter = new PostgresQueueAdapter(db)
+export const queue = new Queue(adapter, { name: "my-queue" })
+```
+
+```typescript
+// queue.config.ts
+import { adapter, queue } from "./src/queues"
+
+export default {
+  adapter,
+  queues: [queue],
+}
+```

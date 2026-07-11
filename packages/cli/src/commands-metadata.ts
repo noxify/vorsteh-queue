@@ -14,6 +14,7 @@ import { buildDeleteCommandStructure } from "./metadata/delete-metadata"
 import { buildDoctorCommandStructure } from "./metadata/doctor-metadata"
 import { buildFlowCommandStructure } from "./metadata/flow-metadata"
 import { buildInspectCommandStructure } from "./metadata/inspect-metadata"
+import { buildQueuesCommandStructure } from "./metadata/queues-metadata"
 import { buildRedriveCommandStructure } from "./metadata/redrive-metadata"
 import { buildRetryCommandStructure } from "./metadata/retry-metadata"
 import { buildRunNowCommandStructure } from "./metadata/run-now-metadata"
@@ -27,6 +28,7 @@ type AvailableCommand =
   | "doctor"
   | "flow"
   | "inspect"
+  | "queues"
   | "redrive"
   | "retry"
   | "run-now"
@@ -113,6 +115,7 @@ const commandFactories: Record<string, () => unknown> = {
   doctor: buildDoctorCommandStructure,
   flow: buildFlowCommandStructure,
   inspect: buildInspectCommandStructure,
+  queues: buildQueuesCommandStructure,
   redrive: buildRedriveCommandStructure,
   retry: buildRetryCommandStructure,
   "run-now": buildRunNowCommandStructure,

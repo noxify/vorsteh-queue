@@ -4,9 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { CLIError } from "../src/errors"
 import { resolveTransport } from "../src/transport/resolve"
 
-// Mock c12 module
-vi.mock("c12", () => ({
-  loadConfig: vi.fn(),
+// Mock config module (replaces old c12 mock)
+vi.mock("../src/config", () => ({
+  loadCliConfig: vi.fn(),
 }))
 
 // Mock direct/graphql transport factories
@@ -19,7 +19,7 @@ vi.mock("../src/transport/direct", () => ({
 }))
 
 vi.mock("../src/transport/graphql", () => ({
-  createGraphQLTransport: vi.fn((url, token) => ({
+  createGraphQLTransport: vi.fn((url, token, _queueName) => ({
     type: "graphql",
     url,
     token,
@@ -34,13 +34,17 @@ const validUrlArb = fc
     fc.webUrl({ validSchemes: ["http"] }),
     fc.webUrl({ validSchemes: ["https"] })
   )
-  .map((url) => url + "/graphql")
+  .map((url) => `${url}/graphql`)
 
 const invalidUrlArb = fc
   .string({ minLength: 1 })
   .filter((s) => !s.startsWith("http://") && !s.startsWith("https://"))
 
 const tokenArb = fc.string({ minLength: 1 })
+
+const queueNameArb = fc
+  .string({ minLength: 1, maxLength: 255 })
+  .filter((s) => s.trim().length > 0)
 
 describe("resolveTransport", () => {
   let originalEnv: NodeJS.ProcessEnv
@@ -56,26 +60,34 @@ describe("resolveTransport", () => {
 
   describe("Property 1: Transport mode selection by URL presence", () => {
     /**
-     * Validates: Requirements 1.1, 1.2, 1.3
+     * Validates: Requirements 1.1, 1.2, 1.3, 6.1, 6.3
      *
-     * For any URL starting with http:// or https://, resolveTransport returns
-     * a graphql transport. For no URL + valid config, it returns a direct transport.
+     * For any URL starting with http:// or https:// with a queue name,
+     * resolveTransport returns a graphql transport.
+     * For no URL + valid config, it returns a direct transport.
      */
     it("should return graphql transport when URL is provided via --url", async () => {
       const { createGraphQLTransport } =
         await import("../src/transport/graphql")
 
       await fc.assert(
-        fc.asyncProperty(validUrlArb, async (url) => {
+        fc.asyncProperty(validUrlArb, queueNameArb, async (url, queue) => {
           delete process.env.VORSTEH_QUEUE_URL
           delete process.env.VORSTEH_QUEUE_TOKEN
 
-          const result = (await resolveTransport({ url })) as unknown as {
+          const result = (await resolveTransport({
+            url,
+            queue,
+          })) as unknown as {
             type: string
           }
 
           expect(result.type).toBe("graphql")
-          expect(createGraphQLTransport).toHaveBeenCalledWith(url, undefined)
+          expect(createGraphQLTransport).toHaveBeenCalledWith(
+            url,
+            undefined,
+            queue
+          )
         }),
         { numRuns: 100 }
       )
@@ -86,16 +98,20 @@ describe("resolveTransport", () => {
         await import("../src/transport/graphql")
 
       await fc.assert(
-        fc.asyncProperty(validUrlArb, async (url) => {
+        fc.asyncProperty(validUrlArb, queueNameArb, async (url, queue) => {
           process.env.VORSTEH_QUEUE_URL = url
           delete process.env.VORSTEH_QUEUE_TOKEN
 
-          const result = (await resolveTransport({})) as unknown as {
+          const result = (await resolveTransport({ queue })) as unknown as {
             type: string
           }
 
           expect(result.type).toBe("graphql")
-          expect(createGraphQLTransport).toHaveBeenCalledWith(url, undefined)
+          expect(createGraphQLTransport).toHaveBeenCalledWith(
+            url,
+            undefined,
+            queue
+          )
 
           delete process.env.VORSTEH_QUEUE_URL
         }),
@@ -104,15 +120,14 @@ describe("resolveTransport", () => {
     })
 
     it("should return direct transport when no URL and valid config", async () => {
-      const { loadConfig } = await import("c12")
+      const { loadCliConfig } = await import("../src/config")
       const { createDirectTransport } = await import("../src/transport/direct")
       const mockAdapter = { setQueueName: vi.fn() }
+      const mockQueue = { name: "test-queue", adapter: mockAdapter }
 
-      vi.mocked(loadConfig).mockResolvedValue({
-        config: { adapter: mockAdapter, queueName: "test-queue" },
-        configFile: "queue.config.ts",
-        layers: [],
-        cwd: "/",
+      vi.mocked(loadCliConfig).mockResolvedValue({
+        adapter: mockAdapter,
+        queues: [mockQueue],
       } as never)
 
       delete process.env.VORSTEH_QUEUE_URL
@@ -141,27 +156,34 @@ describe("resolveTransport", () => {
         await import("../src/transport/graphql")
 
       await fc.assert(
-        fc.asyncProperty(validUrlArb, validUrlArb, async (flagUrl, envUrl) => {
-          fc.pre(flagUrl !== envUrl)
+        fc.asyncProperty(
+          validUrlArb,
+          validUrlArb,
+          queueNameArb,
+          async (flagUrl, envUrl, queue) => {
+            fc.pre(flagUrl !== envUrl)
 
-          process.env.VORSTEH_QUEUE_URL = envUrl
-          delete process.env.VORSTEH_QUEUE_TOKEN
+            process.env.VORSTEH_QUEUE_URL = envUrl
+            delete process.env.VORSTEH_QUEUE_TOKEN
 
-          const result = (await resolveTransport({
-            url: flagUrl,
-          })) as unknown as {
-            type: string
-            url: string
+            const result = (await resolveTransport({
+              url: flagUrl,
+              queue,
+            })) as unknown as {
+              type: string
+              url: string
+            }
+
+            expect(result.type).toBe("graphql")
+            expect(createGraphQLTransport).toHaveBeenCalledWith(
+              flagUrl,
+              undefined,
+              queue
+            )
+
+            delete process.env.VORSTEH_QUEUE_URL
           }
-
-          expect(result.type).toBe("graphql")
-          expect(createGraphQLTransport).toHaveBeenCalledWith(
-            flagUrl,
-            undefined
-          )
-
-          delete process.env.VORSTEH_QUEUE_URL
-        }),
+        ),
         { numRuns: 100 }
       )
     })
@@ -182,15 +204,20 @@ describe("resolveTransport", () => {
           validUrlArb,
           tokenArb,
           tokenArb,
-          async (url, flagToken, envToken) => {
+          queueNameArb,
+          async (url, flagToken, envToken, queue) => {
             fc.pre(flagToken !== envToken)
 
             process.env.VORSTEH_QUEUE_TOKEN = envToken
             delete process.env.VORSTEH_QUEUE_URL
 
-            await resolveTransport({ url, token: flagToken })
+            await resolveTransport({ url, token: flagToken, queue })
 
-            expect(createGraphQLTransport).toHaveBeenCalledWith(url, flagToken)
+            expect(createGraphQLTransport).toHaveBeenCalledWith(
+              url,
+              flagToken,
+              queue
+            )
 
             delete process.env.VORSTEH_QUEUE_TOKEN
           }
@@ -241,14 +268,13 @@ describe("resolveTransport", () => {
      * For no URL and no adapter in config, resolveTransport throws CLIError.
      */
     it("should throw CLIError when no URL and no adapter in config", async () => {
-      const { loadConfig } = await import("c12")
+      const { loadCliConfig } = await import("../src/config")
 
-      vi.mocked(loadConfig).mockResolvedValue({
-        config: {},
-        configFile: "queue.config.ts",
-        layers: [],
-        cwd: "/",
-      } as never)
+      vi.mocked(loadCliConfig).mockRejectedValue(
+        new CLIError(
+          "No adapter configured. Create a queue.config.ts with an adapter, or provide --url for remote mode."
+        )
+      )
 
       delete process.env.VORSTEH_QUEUE_URL
       delete process.env.VORSTEH_QUEUE_TOKEN
@@ -260,19 +286,40 @@ describe("resolveTransport", () => {
     })
 
     it("should throw CLIError when no URL and config is empty/null", async () => {
-      const { loadConfig } = await import("c12")
+      const { loadCliConfig } = await import("../src/config")
 
-      vi.mocked(loadConfig).mockResolvedValue({
-        config: null,
-        configFile: undefined,
-        layers: [],
-        cwd: "/",
-      } as never)
+      vi.mocked(loadCliConfig).mockRejectedValue(
+        new CLIError(
+          "No adapter configured. Create a queue.config.ts with an adapter, or provide --url for remote mode."
+        )
+      )
 
       delete process.env.VORSTEH_QUEUE_URL
       delete process.env.VORSTEH_QUEUE_TOKEN
 
       await expect(resolveTransport({})).rejects.toThrow(CLIError)
+    })
+  })
+
+  describe("Property 6: Remote mode requires --queue flag", () => {
+    /**
+     * Validates: Requirements 4.3, 4.4
+     *
+     * In remote mode without a config, --queue is required.
+     */
+    it("should throw CLIError when URL provided but no --queue flag", async () => {
+      await fc.assert(
+        fc.asyncProperty(validUrlArb, async (url) => {
+          delete process.env.VORSTEH_QUEUE_URL
+          delete process.env.VORSTEH_QUEUE_TOKEN
+
+          await expect(resolveTransport({ url })).rejects.toThrow(CLIError)
+          await expect(resolveTransport({ url })).rejects.toThrow(
+            /--queue flag is required/
+          )
+        }),
+        { numRuns: 100 }
+      )
     })
   })
 
@@ -285,9 +332,13 @@ describe("resolveTransport", () => {
       delete process.env.VORSTEH_QUEUE_TOKEN
 
       const url = "https://example.com/graphql"
-      await resolveTransport({ url })
+      await resolveTransport({ url, queue: "my-queue" })
 
-      expect(createGraphQLTransport).toHaveBeenCalledWith(url, undefined)
+      expect(createGraphQLTransport).toHaveBeenCalledWith(
+        url,
+        undefined,
+        "my-queue"
+      )
     })
 
     it("should not fail in remote mode when config file is missing (Req 1.12)", async () => {
@@ -298,12 +349,79 @@ describe("resolveTransport", () => {
       delete process.env.VORSTEH_QUEUE_TOKEN
 
       const url = "https://example.com/graphql"
-      const result = (await resolveTransport({ url })) as unknown as {
+      const result = (await resolveTransport({
+        url,
+        queue: "my-queue",
+      })) as unknown as {
         type: string
       }
 
       expect(result.type).toBe("graphql")
-      expect(createGraphQLTransport).toHaveBeenCalledWith(url, undefined)
+      expect(createGraphQLTransport).toHaveBeenCalledWith(
+        url,
+        undefined,
+        "my-queue"
+      )
+    })
+
+    it("should resolve queue from config defaultQueue in direct mode", async () => {
+      const { loadCliConfig } = await import("../src/config")
+      const { createDirectTransport } = await import("../src/transport/direct")
+      const mockAdapter = { setQueueName: vi.fn() }
+      const mockQueues = [
+        { name: "email-queue", adapter: mockAdapter },
+        { name: "report-queue", adapter: mockAdapter },
+      ]
+
+      vi.mocked(loadCliConfig).mockResolvedValue({
+        adapter: mockAdapter,
+        queues: mockQueues,
+        defaultQueue: "email-queue",
+      } as never)
+
+      delete process.env.VORSTEH_QUEUE_URL
+      delete process.env.VORSTEH_QUEUE_TOKEN
+
+      const result = (await resolveTransport({})) as unknown as {
+        type: string
+      }
+
+      expect(result.type).toBe("direct")
+      expect(createDirectTransport).toHaveBeenCalledWith(
+        mockAdapter,
+        "email-queue"
+      )
+    })
+
+    it("should override config default with --queue flag in direct mode", async () => {
+      const { loadCliConfig } = await import("../src/config")
+      const { createDirectTransport } = await import("../src/transport/direct")
+      const mockAdapter = { setQueueName: vi.fn() }
+      const mockQueues = [
+        { name: "email-queue", adapter: mockAdapter },
+        { name: "report-queue", adapter: mockAdapter },
+      ]
+
+      vi.mocked(loadCliConfig).mockResolvedValue({
+        adapter: mockAdapter,
+        queues: mockQueues,
+        defaultQueue: "email-queue",
+      } as never)
+
+      delete process.env.VORSTEH_QUEUE_URL
+      delete process.env.VORSTEH_QUEUE_TOKEN
+
+      const result = (await resolveTransport({
+        queue: "report-queue",
+      })) as unknown as {
+        type: string
+      }
+
+      expect(result.type).toBe("direct")
+      expect(createDirectTransport).toHaveBeenCalledWith(
+        mockAdapter,
+        "report-queue"
+      )
     })
   })
 })

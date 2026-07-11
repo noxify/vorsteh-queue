@@ -1,11 +1,8 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { client, db } from "./database"
+import { client } from "./database"
+import { adapter, queue } from "./queues"
 
-// Setup
-const adapter = new PostgresQueueAdapter(db)
-const queue = new Queue(adapter, { name: "event-queue" })
 const worker = new Worker(adapter, {
   name: "event-queue",
   concurrency: 2,

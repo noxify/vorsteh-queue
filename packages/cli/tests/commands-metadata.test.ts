@@ -4,7 +4,7 @@ import { availableCommands, getCommandConfig } from "../src/commands-metadata"
 
 describe("commands-metadata", () => {
   it("should list all available commands", () => {
-    expect(availableCommands).toHaveLength(11)
+    expect(availableCommands).toHaveLength(12)
     expect(availableCommands).toStrictEqual(
       expect.arrayContaining([
         "status",
@@ -16,6 +16,7 @@ describe("commands-metadata", () => {
         "delete",
         "clear",
         "flow",
+        "queues",
         "serve",
         "doctor",
       ])

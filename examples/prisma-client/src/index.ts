@@ -1,17 +1,8 @@
-import { PrismaPg } from "@prisma/adapter-pg"
-import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { PrismaClient } from "./generated/prisma/client"
+import { adapter, queue } from "./queues"
 
-const prismaAdapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-})
-const prisma = new PrismaClient({ adapter: prismaAdapter })
-
-const queueAdapter = new PostgresPrismaQueueAdapter(prisma)
-const queue = new Queue(queueAdapter, { name: "email-queue" })
-const worker = new Worker(queueAdapter, { name: "email-queue", concurrency: 2 })
+const worker = new Worker(adapter, { name: "email-queue", concurrency: 2 })
 
 interface EmailPayload {
   to: string

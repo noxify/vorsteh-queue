@@ -13,12 +13,17 @@ import { createDeleteCommand } from "./commands/delete"
 import { createDoctorCommand } from "./commands/doctor"
 import { createFlowCommand } from "./commands/flow"
 import { createInspectCommand } from "./commands/inspect"
+import { createQueuesCommand } from "./commands/queues"
 import { createRedriveCommand } from "./commands/redrive"
 import { createRetryCommand } from "./commands/retry"
 import { createRunNowCommand } from "./commands/run-now"
 import { createServeCommand } from "./commands/serve"
 import { createStatusCommand } from "./commands/status"
-import { createTokenOption, createUrlOption } from "./options"
+import {
+  createQueueOption,
+  createTokenOption,
+  createUrlOption,
+} from "./options"
 
 const program = new Command()
 
@@ -29,6 +34,7 @@ program
   .configureHelp({ sortSubcommands: true })
   .addOption(createUrlOption())
   .addOption(createTokenOption())
+  .addOption(createQueueOption())
   .addCommand(createServeCommand())
   .addCommand(createStatusCommand())
   .addCommand(createInspectCommand())
@@ -40,6 +46,7 @@ program
   .addCommand(createClearCommand())
   .addCommand(createFlowCommand())
   .addCommand(createDoctorCommand())
+  .addCommand(createQueuesCommand())
 
 try {
   await program.parseAsync()

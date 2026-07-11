@@ -1,7 +1,7 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { db, client } from "./database"
+import { client, db } from "./database"
+import { adapter, queue } from "./queues"
 import * as schema from "./schema"
 
 // Import pushSchema from drizzle-kit/api
@@ -33,16 +33,6 @@ interface DataProcessingResult {
   processed: number
   results: unknown[]
 }
-
-// Shared adapter
-const adapter = new PostgresQueueAdapter(db)
-
-// Queue setup (producer)
-const queue = new Queue(adapter, {
-  name: "example-queue",
-  removeOnComplete: 10,
-  removeOnFail: 5,
-})
 
 // Worker setup (consumer)
 const worker = new Worker(adapter, {

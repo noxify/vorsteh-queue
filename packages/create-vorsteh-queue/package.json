@@ -40,7 +40,7 @@
     "terminal-link": "5.0.0"
   },
   "devDependencies": {
-    "@types/node": "24.13.2",
+    "@types/node": "24.13.3",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "tsdown": "0.22.4",
     "tsx": "4.23.0",

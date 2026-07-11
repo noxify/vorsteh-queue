@@ -17,8 +17,10 @@ import { createQueueServer } from "@vorsteh-queue/server"
 
 const server = createQueueServer({
   adapter: yourAdapter,
-  queueName: "my-queue",
+  queues: ["email-queue", "report-queue"],
+  defaultQueue: "email-queue",
   port: 3000,
+  auth: { tokens: [process.env.QUEUE_TOKEN] },
 })
 
 await server.start()
@@ -27,6 +29,7 @@ await server.start()
 ## Features
 
 - **GraphQL API** — query queue stats, inspect jobs, cancel, retry, redrive
+- **Multi-queue support** — manage multiple queues from a single server
 - **Authentication** — optional token-based auth with custom middleware support
 
 ## Configuration
@@ -38,7 +41,8 @@ import { defineConfig } from "@vorsteh-queue/server"
 
 export default defineConfig({
   adapter: yourAdapter,
-  queueName: "my-queue",
+  queues: ["email-queue", "report-queue"],
+  defaultQueue: "email-queue",
   port: 3000,
 })
 ```
@@ -51,10 +55,21 @@ vorsteh-queue serve
 
 ## GraphQL API
 
-The server exposes a GraphQL endpoint at `/graphql` with queries and mutations for:
+The server exposes a GraphQL endpoint at `/graphql`. All queries and mutations require a `queue: String!` argument to specify which queue to target (except the `job` query where it is optional).
 
+Available operations:
+
+- Queue listing (`queues` — returns `[{ name, isDefault }]`)
 - Queue statistics (`stats`, `size`)
 - Job inspection (`job`, `deadJobs`)
 - Job management (`cancelJob`, `retryJob`, `runJobNow`, `deleteJob`)
 - Bulk operations (`redriveAll`, `clearJobs`)
 - Flow tree visualization (`flowTree`)
+
+## Health Check
+
+The server exposes a `/health` endpoint that returns:
+
+```json
+{ "status": "ok", "queues": ["email-queue", "report-queue"] }
+```

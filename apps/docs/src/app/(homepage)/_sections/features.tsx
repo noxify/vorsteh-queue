@@ -66,8 +66,8 @@ const features = [
   },
   {
     icon: Activity,
-    title: "Metrics & Monitoring",
-    description: "Built-in metrics and health checks for visibility.",
+    title: "OpenTelemetry Built-in",
+    description: "Opt-in metrics and distributed tracing via OpenTelemetry.",
   },
   {
     icon: Gauge,

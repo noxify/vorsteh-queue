@@ -1,0 +1,143 @@
+---
+title: Observability
+description: Built-in OpenTelemetry metrics and distributed tracing for monitoring your queue in production.
+---
+
+vorsteh-queue ships with native OpenTelemetry instrumentation. Metrics, traces, and job spans are emitted automatically — no wrapper code needed. If no OTel SDK is configured, all instrumentation is a no-op with zero overhead.
+
+## Setup
+
+Install the OpenTelemetry SDK alongside vorsteh-queue:
+
+<Command variant="install">
+  {`@opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-metrics-otlp-http @opentelemetry/exporter-trace-otlp-http`}
+</Command>
+
+Configure the SDK in your application's entrypoint (e.g. `instrumentation.ts`):
+
+```typescript
+import { NodeSDK } from "@opentelemetry/sdk-node"
+import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http"
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
+import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
+
+const sdk = new NodeSDK({
+  traceExporter: new OTLPTraceExporter(),
+  metricReader: new PeriodicExportingMetricReader({
+    exporter: new OTLPMetricExporter(),
+  }),
+})
+
+sdk.start()
+```
+
+That's it. vorsteh-queue will automatically emit metrics and traces to your configured backend (Grafana, Datadog, Honeycomb, AWS CloudWatch, etc.).
+
+## Metrics
+
+All metrics use the `vorsteh_queue` namespace and include a `vorsteh_queue.queue` attribute with the queue name, plus `vorsteh_queue.job.name` where applicable.
+
+### Counters
+
+| Metric                         | Description                           |
+| ------------------------------ | ------------------------------------- |
+| `vorsteh_queue.jobs.added`     | Total jobs added to the queue         |
+| `vorsteh_queue.jobs.processed` | Total jobs successfully completed     |
+| `vorsteh_queue.jobs.failed`    | Total job failures (includes retries) |
+| `vorsteh_queue.jobs.retried`   | Total retry attempts                  |
+| `vorsteh_queue.jobs.dead`      | Jobs moved to the dead letter queue   |
+| `vorsteh_queue.jobs.cancelled` | Jobs cancelled                        |
+
+### Gauges
+
+| Metric                      | Description                    |
+| --------------------------- | ------------------------------ |
+| `vorsteh_queue.jobs.active` | Jobs currently being processed |
+
+### Histograms
+
+| Metric | Unit | Description |
+| --- | --- | --- |
+| `vorsteh_queue.jobs.duration` | ms | Time spent processing a job |
+| `vorsteh_queue.jobs.wait_time` | ms | Time from enqueue to processing start |
+
+## Distributed Tracing
+
+Every job execution creates a span with the following attributes:
+
+| Attribute                        | Description                 |
+| -------------------------------- | --------------------------- |
+| `messaging.system`               | Always `vorsteh-queue`      |
+| `messaging.operation`            | Always `process`            |
+| `messaging.destination.name`     | Queue name                  |
+| `vorsteh_queue.job.id`           | Job ID                      |
+| `vorsteh_queue.job.name`         | Handler name                |
+| `vorsteh_queue.job.priority`     | Job priority                |
+| `vorsteh_queue.job.attempt`      | Current attempt number      |
+| `vorsteh_queue.job.max_attempts` | Maximum attempts configured |
+
+Spans are created with `SpanKind.CONSUMER` and follow the [OTel Messaging Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/messaging/).
+
+### Success and Failure
+
+- Successful jobs end with `SpanStatusCode.OK`
+- Failed jobs end with `SpanStatusCode.ERROR`, include the error message, and record an exception event
+
+## Examples
+
+### Prometheus Export
+
+```typescript
+import { NodeSDK } from "@opentelemetry/sdk-node"
+import { PrometheusExporter } from "@opentelemetry/exporter-prometheus"
+
+const sdk = new NodeSDK({
+  metricReader: new PrometheusExporter({ port: 9464 }),
+})
+
+sdk.start()
+// Metrics available at http://localhost:9464/metrics
+```
+
+### Grafana / OTLP
+
+```typescript
+import { NodeSDK } from "@opentelemetry/sdk-node"
+import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http"
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
+import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
+
+const sdk = new NodeSDK({
+  traceExporter: new OTLPTraceExporter({
+    url: "http://localhost:4318/v1/traces",
+  }),
+  metricReader: new PeriodicExportingMetricReader({
+    exporter: new OTLPMetricExporter({
+      url: "http://localhost:4318/v1/metrics",
+    }),
+  }),
+})
+
+sdk.start()
+```
+
+### Custom Alerting with Metrics
+
+Combine OTel metrics with your alerting system to get notified on anomalies:
+
+```typescript
+import { Queue, Worker } from "@vorsteh-queue/core"
+
+// OTel metrics are emitted automatically.
+// Set up alerts in your monitoring platform:
+//
+// - Alert when vorsteh_queue.jobs.dead > 0 (DLQ is filling up)
+// - Alert when vorsteh_queue.jobs.duration p99 > 30s (jobs are slow)
+// - Alert when vorsteh_queue.jobs.active stays at max concurrency (backpressure)
+```
+
+## No SDK? No Problem
+
+If `@opentelemetry/api` is installed but no SDK is configured (no `MeterProvider` or `TracerProvider` registered), all metric and tracing calls are no-ops. There is no performance penalty and no errors.
+
+This makes the telemetry truly opt-in: install the SDK when you want observability, remove it when you don't.

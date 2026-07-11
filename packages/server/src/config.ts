@@ -2,7 +2,7 @@
  * Server configuration types and helpers.
  */
 
-import type { QueueAdapter } from "@vorsteh-queue/core"
+import type { Queue } from "@vorsteh-queue/core"
 import { loadConfig as c12LoadConfig } from "c12"
 import type { MiddlewareHandler } from "hono"
 
@@ -14,12 +14,10 @@ export type AuthConfig =
 
 /** Server configuration */
 export interface ServerConfig {
-  /** Queue adapter instance */
-  readonly adapter: QueueAdapter
-  /** Queue name to monitor/manage */
-  readonly queueName: string
-  /** Enable the web dashboard
-   * @default true
+  /** Queue instances to manage */
+  readonly queues: readonly Queue[]
+  /** Authentication
+   * @default false
    */
   readonly auth?: AuthConfig
   /** Server port (for standalone mode)
@@ -44,11 +42,14 @@ export interface ServerConfig {
  * ```typescript
  * // queue.config.ts
  * import { defineConfig } from "@vorsteh-queue/server"
+ * import { Queue } from "@vorsteh-queue/core"
  * import { DrizzleAdapter } from "@vorsteh-queue/adapter-drizzle"
  *
+ * const adapter = new DrizzleAdapter({ ... })
+ * const emailQueue = new Queue(adapter, { name: "email-queue" })
+ *
  * export default defineConfig({
- *   adapter: new DrizzleAdapter({ ... }),
- *   queueName: "my-queue",
+ *   queues: [emailQueue],
  *   auth: { tokens: [process.env.QUEUE_TOKEN!] },
  * })
  * ```
@@ -64,7 +65,7 @@ export function defineConfig(config: ServerConfig): ServerConfig {
  *
  * @param cwd - Directory to start searching from (defaults to process.cwd())
  * @returns Resolved server configuration
- * @throws {Error} If no configuration file is found or adapter is missing
+ * @throws {Error} If no configuration file is found or validation fails
  *
  * @example
  * ```typescript
@@ -79,16 +80,27 @@ export async function loadConfig(cwd?: string): Promise<ServerConfig> {
     cwd,
   })
 
-  if (!config?.adapter) {
+  if (!config?.queues || config.queues.length === 0) {
     throw new Error(
-      "No adapter configured. Create a queue.config.ts file with an adapter."
+      "No queues configured. Add at least one Queue instance to the queues array in your queue.config.ts."
     )
   }
 
-  if (!config.queueName) {
+  if (config.queues.length > 20) {
     throw new Error(
-      "No queueName configured. Add a queueName to your queue.config.ts."
+      "Too many queues configured. The queues array must contain at most 20 entries."
     )
+  }
+
+  const seen = new Set<string>()
+  for (const queue of config.queues) {
+    const { name } = queue
+    if (seen.has(name)) {
+      throw new Error(
+        `Duplicate queue name '${name}'. Queue names must be unique within the configuration.`
+      )
+    }
+    seen.add(name)
   }
 
   return config

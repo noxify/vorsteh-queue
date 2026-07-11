@@ -7,7 +7,11 @@ import type { FlowNode, Job, QueueStats } from "@vorsteh-queue/core"
 import { CLIError } from "../errors"
 import type { Transport } from "./types"
 
-export function createGraphQLTransport(url: string, token?: string): Transport {
+export function createGraphQLTransport(
+  url: string,
+  token?: string,
+  queueName?: string
+): Transport {
   async function query<TResult>(
     gql: string,
     variables?: Record<string, unknown>
@@ -84,91 +88,95 @@ export function createGraphQLTransport(url: string, token?: string): Transport {
 
     async getStats() {
       const result = await query<{ stats: QueueStats }>(
-        "{ stats { pending delayed processing completed failed cancelled dead } }"
+        "query($queue: String!) { stats(queue: $queue) { pending delayed processing completed failed cancelled dead } }",
+        { queue: queueName }
       )
       return result.stats
     },
 
     async getJob(id: string) {
       const result = await query<{ job: Job | null }>(
-        `query($id: ID!) { job(id: $id) { id name status priority attempts maxAttempts progress payload createdAt processAt } }`,
-        { id }
+        `query($id: ID!, $queue: String) { job(id: $id, queue: $queue) { id name status priority attempts maxAttempts progress payload createdAt processAt } }`,
+        { id, queue: queueName }
       )
       return result.job
     },
 
     async getDeadJobs(options) {
       const result = await query<{ deadJobs: readonly Job[] }>(
-        `query($limit: Int, $offset: Int) { deadJobs(limit: $limit, offset: $offset) { id name status createdAt } }`,
-        { limit: options?.limit, offset: options?.offset }
+        `query($queue: String!, $limit: Int, $offset: Int) { deadJobs(queue: $queue, limit: $limit, offset: $offset) { id name status createdAt } }`,
+        { queue: queueName, limit: options?.limit, offset: options?.offset }
       )
       return result.deadJobs
     },
 
     async cancelJob(id: string, reason?: string) {
       const result = await query<{ cancelJob: boolean }>(
-        `mutation($id: ID!, $reason: String) { cancelJob(id: $id, reason: $reason) }`,
-        { id, reason }
+        `mutation($id: ID!, $queue: String!, $reason: String) { cancelJob(id: $id, queue: $queue, reason: $reason) }`,
+        { id, queue: queueName, reason }
       )
       return result.cancelJob
     },
 
     async retryJob(id: string) {
       const result = await query<{ retryJob: boolean }>(
-        `mutation($id: ID!) { retryJob(id: $id) }`,
-        { id }
+        `mutation($id: ID!, $queue: String!) { retryJob(id: $id, queue: $queue) }`,
+        { id, queue: queueName }
       )
       return result.retryJob
     },
 
     async runJobNow(id: string) {
       const result = await query<{ runJobNow: boolean }>(
-        `mutation($id: ID!) { runJobNow(id: $id) }`,
-        { id }
+        `mutation($id: ID!, $queue: String!) { runJobNow(id: $id, queue: $queue) }`,
+        { id, queue: queueName }
       )
       return result.runJobNow
     },
 
     async deleteJob(id: string) {
       const result = await query<{ deleteJob: boolean }>(
-        `mutation($id: ID!) { deleteJob(id: $id) }`,
-        { id }
+        `mutation($id: ID!, $queue: String!) { deleteJob(id: $id, queue: $queue) }`,
+        { id, queue: queueName }
       )
       return result.deleteJob
     },
 
     async redriveJob(id: string) {
       await query<{ redriveJob: boolean }>(
-        `mutation($id: ID!) { redriveJob(id: $id) }`,
-        { id }
+        `mutation($id: ID!, $queue: String!) { redriveJob(id: $id, queue: $queue) }`,
+        { id, queue: queueName }
       )
     },
 
     async redriveAll(filter) {
       const result = await query<{ redriveAll: number }>(
-        `mutation($name: String) { redriveAll(name: $name) }`,
-        { name: filter?.name }
+        `mutation($queue: String!, $name: String) { redriveAll(queue: $queue, name: $name) }`,
+        { queue: queueName, name: filter?.name }
       )
       return result.redriveAll
     },
 
     async clearJobs(status) {
       const result = await query<{ clearJobs: number }>(
-        `mutation($status: JobStatus) { clearJobs(status: $status) }`,
-        { status }
+        `mutation($queue: String!, $status: JobStatus) { clearJobs(queue: $queue, status: $status) }`,
+        { queue: queueName, status }
       )
       return result.clearJobs
     },
 
     async size() {
-      const result = await query<{ size: number }>("{ size }")
+      const result = await query<{ size: number }>(
+        "query($queue: String!) { size(queue: $queue) }",
+        { queue: queueName }
+      )
       return result.size
     },
 
     async getFlowTree(flowId: string) {
       const result = await query<{ flowTree: FlowNode | null }>(
-        `query($flowId: String!) { flowTree(flowId: $flowId) }`,
-        { flowId }
+        `query($queue: String!, $flowId: String!) { flowTree(queue: $queue, flowId: $flowId) }`,
+        { queue: queueName, flowId }
       )
       return result.flowTree
     },

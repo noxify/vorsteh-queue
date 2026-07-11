@@ -7,18 +7,7 @@ export function createServeCommand() {
   const command = buildServeCommandStructure()
 
   command.action(async (options) => {
-    const transport = await loadCliConfig()
-
-    if (transport.type !== "direct") {
-      consola.error(
-        "The serve command requires a direct adapter configuration."
-      )
-      consola.info(
-        "Add an adapter to your queue.config.ts to use the serve command."
-      )
-      // eslint-disable-next-line no-restricted-properties, unicorn/no-process-exit
-      process.exit(1)
-    }
+    const config = await loadCliConfig()
 
     // Dynamic import to avoid loading server deps unless needed
     const { createQueueServer } = await import("@vorsteh-queue/server")
@@ -26,8 +15,7 @@ export function createServeCommand() {
     const port = options.port ? Math.trunc(Number(options.port)) : undefined
 
     const server = createQueueServer({
-      adapter: transport.adapter,
-      queueName: transport.queueName,
+      queues: config.queues,
       port,
     })
 

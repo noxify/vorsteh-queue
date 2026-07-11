@@ -169,7 +169,7 @@ async function main() {
   const args = process.argv.slice(2)
   let projectName = args.find((arg) => !arg.startsWith("-"))
   const pmFlag = args.find(
-    (arg) => arg.startsWith("--package-manager=") || arg.startsWith("-pm=")
+    (arg) => arg.startsWith("--package-manager=") || arg.startsWith("-p=")
   )
   const templateFlag = args.find(
     (arg) => arg.startsWith("--template=") || arg.startsWith("-t=")

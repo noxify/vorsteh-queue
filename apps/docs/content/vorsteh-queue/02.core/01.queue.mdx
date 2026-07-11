@@ -15,6 +15,17 @@ const queue = new Queue(new MemoryQueueAdapter(), { name: "my-queue" })
 
 For production, replace `MemoryQueueAdapter` with a PostgreSQL adapter (Drizzle, Prisma, or Kysely).
 
+## Public Getters
+
+The Queue class exposes read-only access to its configuration:
+
+```typescript
+queue.name // The queue name passed in QueueConfig
+queue.adapter // The adapter instance passed to the constructor
+```
+
+These are used internally by the CLI and server to introspect exported Queue instances from your config file.
+
 ## Registering Handlers
 
 Define how each job type should be processed:
@@ -73,3 +84,7 @@ const stats = await queue.getStats()
 await queue.clear() // Clear all jobs
 await queue.clear("failed") // Clear only failed jobs
 ```
+
+## Project Organization
+
+For multi-queue setups and real-world projects, see [Project Structure](/docs/vorsteh-queue/getting-started/project-structure) for the recommended way to organize queue definitions.

@@ -1,87 +1,120 @@
 /**
- * CLI configuration loading.
+ * CLI configuration loading and validation.
  *
- * Uses the same `queue.config.ts` as the server for direct adapter access.
- * Also supports remote GraphQL transport for connecting to a running server.
+ * Loads multi-queue configuration from `queue.config.ts` via c12.
+ * Validates the config shape and throws CLIError for invalid configurations.
  */
 
-import type { QueueAdapter } from "@vorsteh-queue/core"
+import type { Queue, QueueAdapter } from "@vorsteh-queue/core"
 import { loadConfig as c12LoadConfig } from "c12"
 
-/** Direct transport configuration (local adapter from queue.config.ts) */
-export interface DirectTransportConfig {
-  readonly type: "direct"
-  readonly adapter: QueueAdapter
-  readonly queueName: string
-}
-
-/** GraphQL transport configuration (remote server) */
-export interface GraphQLTransportConfig {
-  readonly type: "graphql"
-  readonly url: string
-  readonly token?: string
-}
-
-/** Resolved CLI transport */
-export type CliTransport = DirectTransportConfig | GraphQLTransportConfig
-
-/** Raw config file shape (superset of ServerConfig) */
-interface QueueConfigFile {
-  readonly adapter?: QueueAdapter
-  readonly queueName?: string
-  readonly url?: string
-  readonly token?: string
-  readonly auth?: unknown
-  readonly port?: number
-  readonly dashboard?: boolean
-}
+import { CLIError } from "./errors"
 
 /**
- * Load CLI transport configuration from `queue.config.ts` via c12.
+ * Multi-queue config file shape.
  *
- * - If the config has an `adapter`, uses direct transport
- * - If the config has a `url`, uses GraphQL transport
- * - Falls back to localhost GraphQL if neither is found
- *
- * @param cwd - Directory to search for config (defaults to process.cwd())
- * @returns Resolved CLI transport configuration
+ * Users export this from `queue.config.ts` to configure the CLI
+ * with one or more Queue instances sharing a single adapter.
  *
  * @example
  * ```typescript
- * const transport = await loadCliConfig()
- * if (transport.type === "direct") {
- *   // Use adapter directly
- * } else {
- *   // Use GraphQL client
+ * import { Queue } from "@vorsteh-queue/core"
+ * import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+ *
+ * const adapter = new PostgresQueueAdapter(db)
+ * const emailQueue = new Queue(adapter, { name: "email-queue" })
+ * const reportQueue = new Queue(adapter, { name: "report-queue" })
+ *
+ * export default {
+ *   adapter,
+ *   queues: [emailQueue, reportQueue],
+ *   defaultQueue: "email-queue",
  * }
  * ```
  */
-export async function loadCliConfig(cwd?: string): Promise<CliTransport> {
-  const { config } = await c12LoadConfig<QueueConfigFile>({
+export interface QueueConfigFile {
+  /** Shared adapter instance */
+  readonly adapter: QueueAdapter
+  /** Array of Queue instances (1+) */
+  readonly queues: readonly Queue[]
+  /** Default queue name (required when queues.length > 1) */
+  readonly defaultQueue?: string
+}
+
+/**
+ * Validate the loaded config file and return a typed QueueConfigFile.
+ *
+ * @param config - Raw config object from c12
+ * @throws {CLIError} When validation fails
+ */
+function validateConfig(config: Partial<QueueConfigFile>): QueueConfigFile {
+  if (!config.adapter) {
+    throw new CLIError(
+      "No adapter configured. Create a queue.config.ts with an adapter, or provide --url for remote mode."
+    )
+  }
+
+  if (!config.queues || config.queues.length === 0) {
+    throw new CLIError(
+      "Configuration error: at least one Queue instance must be provided in the queues array."
+    )
+  }
+
+  const names = config.queues.map((q) => q.name)
+
+  const seen = new Set<string>()
+  for (const name of names) {
+    if (seen.has(name)) {
+      throw new CLIError(
+        `Configuration error: duplicate queue name '${name}'. Queue names must be unique.`
+      )
+    }
+    seen.add(name)
+  }
+
+  if (config.queues.length > 1 && !config.defaultQueue) {
+    throw new CLIError(
+      `Configuration error: defaultQueue is required when multiple queues are configured. Available: ${names.join(", ")}`
+    )
+  }
+
+  if (config.defaultQueue && !names.includes(config.defaultQueue)) {
+    throw new CLIError(
+      `Configuration error: defaultQueue '${config.defaultQueue}' does not match any configured queue. Available: ${names.join(", ")}`
+    )
+  }
+
+  return {
+    adapter: config.adapter,
+    queues: config.queues,
+    defaultQueue: config.defaultQueue,
+  }
+}
+
+/**
+ * Load and validate CLI configuration from `queue.config.ts` via c12.
+ *
+ * @param cwd - Directory to search for config (defaults to process.cwd())
+ * @returns Validated multi-queue configuration
+ * @throws {CLIError} When configuration is missing or invalid
+ *
+ * @example
+ * ```typescript
+ * const config = await loadCliConfig()
+ * console.log(config.queues.map(q => q.name))
+ * ```
+ */
+export async function loadCliConfig(cwd?: string): Promise<QueueConfigFile> {
+  const { config } = await c12LoadConfig<Partial<QueueConfigFile>>({
     name: "queue",
     cwd,
   })
 
-  if (config?.adapter && config.queueName) {
-    return {
-      type: "direct",
-      adapter: config.adapter,
-      queueName: config.queueName,
-    }
+  if (!config) {
+    throw new CLIError(
+      "No adapter configured. Create a queue.config.ts with an adapter, or provide --url for remote mode."
+    )
   }
 
-  if (config?.url) {
-    return {
-      type: "graphql",
-      url: config.url,
-      token: config.token,
-    }
-  }
-
-  // Default: try local server
-  return {
-    type: "graphql",
-    url: "http://localhost:3000/graphql",
-    token: undefined,
-  }
+  return validateConfig(config)
 }

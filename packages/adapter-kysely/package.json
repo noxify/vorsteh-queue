@@ -75,7 +75,7 @@
     "@electric-sql/pglite": "0.5.4",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "kysely": "^0.29.3",
+    "kysely": "0.29.3",
     "kysely-ctl": "0.21.0",
     "kysely-postgres-js": "3.0.0",
     "postgres": "3.4.9",

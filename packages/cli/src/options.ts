@@ -3,7 +3,7 @@
  * Reusable options that appear across multiple commands are defined here
  * to keep metadata files DRY.
  */
-import { Option } from "@commander-js/extra-typings"
+import { InvalidArgumentError, Option } from "@commander-js/extra-typings"
 
 /**
  * Create the --json option used by most commands.
@@ -30,4 +30,22 @@ export function createUrlOption() {
  */
 export function createTokenOption() {
   return new Option("--token <string>", "Authentication token")
+}
+
+/**
+ * Create the --queue option for targeting a specific queue.
+ *
+ * @returns A Commander Option instance for queue selection
+ */
+export function createQueueOption() {
+  return new Option("--queue <name>", "Target queue name").argParser(
+    (value: string) => {
+      if (!value.trim() || value.length > 255) {
+        throw new InvalidArgumentError(
+          "Invalid queue name: must be between 1 and 255 non-whitespace characters."
+        )
+      }
+      return value
+    }
+  )
 }

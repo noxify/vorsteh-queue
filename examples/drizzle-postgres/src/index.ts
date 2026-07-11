@@ -1,7 +1,7 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { db, client } from "./database"
+import { client } from "./database"
+import { adapter, queue } from "./queues"
 
 // Job payload types
 interface ReportJob {
@@ -26,16 +26,6 @@ interface CleanupResult {
   deletedCount: number
   freedSpace: number
 }
-
-// Shared adapter
-const adapter = new PostgresQueueAdapter(db)
-
-// Queue setup (producer)
-const queue = new Queue(adapter, {
-  name: "advanced-queue",
-  removeOnComplete: 20,
-  removeOnFail: 10,
-})
 
 // Worker setup (consumer)
 const worker = new Worker(adapter, {

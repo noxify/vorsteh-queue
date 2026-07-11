@@ -1,21 +1,20 @@
-import { MemoryQueueAdapter } from "@vorsteh-queue/core"
+import { MemoryQueueAdapter, Queue } from "@vorsteh-queue/core"
 import { beforeEach, describe, expect, it } from "vitest"
 
 import { createQueueMiddleware } from "../src"
 
 describe("GraphQL Server", () => {
-  let adapter: MemoryQueueAdapter
+  let queue: Queue
 
   beforeEach(async () => {
-    adapter = new MemoryQueueAdapter()
-    await adapter.connect()
-    adapter.setQueueName("test-queue")
+    const adapter = new MemoryQueueAdapter()
+    queue = new Queue(adapter, { name: "test-queue" })
+    await queue.connect()
   })
 
   function createApp() {
     return createQueueMiddleware({
-      adapter,
-      queueName: "test-queue",
+      queues: [queue],
       auth: false,
     })
   }
@@ -27,7 +26,7 @@ describe("GraphQL Server", () => {
       const body = await res.json()
 
       expect(res.status).toBe(200)
-      expect(body).toStrictEqual({ status: "ok", queueName: "test-queue" })
+      expect(body).toStrictEqual({ status: "ok", queues: ["test-queue"] })
     })
   })
 
@@ -36,7 +35,7 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       // Add some jobs
-      await adapter.addJob({
+      await queue.adapter.addJob({
         name: "test",
         payload: {},
         status: "pending",
@@ -52,7 +51,7 @@ describe("GraphQL Server", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: "{ stats { pending completed failed } }",
+          query: '{ stats(queue: "test-queue") { pending completed failed } }',
         }),
       })
 
@@ -62,10 +61,28 @@ describe("GraphQL Server", () => {
       expect(body.data.stats.completed).toBe(0)
     })
 
-    it("should get a job by ID", async () => {
+    it("should reject unknown queue name", async () => {
       const app = createApp()
 
-      const job = await adapter.addJob({
+      const res = await app.request("/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: '{ stats(queue: "unknown-queue") { pending } }',
+        }),
+      })
+
+      const body = await res.json()
+      expect(body.errors).toBeDefined()
+      expect(body.errors[0].message).toContain(
+        "Queue 'unknown-queue' not found"
+      )
+    })
+
+    it("should get a job by ID with queue", async () => {
+      const app = createApp()
+
+      const job = await queue.adapter.addJob({
         name: "lookup-job",
         payload: { key: "value" },
         status: "pending",
@@ -81,7 +98,7 @@ describe("GraphQL Server", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: `{ job(id: "${job.id}") { id name status priority payload } }`,
+          query: `{ job(id: "${job.id}", queue: "test-queue") { id name status priority payload } }`,
         }),
       })
 
@@ -90,6 +107,35 @@ describe("GraphQL Server", () => {
       expect(body.data.job.id).toBe(job.id)
       expect(body.data.job.name).toBe("lookup-job")
       expect(body.data.job.status).toBe("pending")
+    })
+
+    it("should get a job by ID without queue (search all)", async () => {
+      const app = createApp()
+
+      const job = await queue.adapter.addJob({
+        name: "lookup-job",
+        payload: { key: "value" },
+        status: "pending",
+        priority: 2,
+        attempts: 0,
+        maxAttempts: 3,
+        processAt: new Date(),
+        progress: 0,
+        repeatCount: 0,
+      })
+
+      const res = await app.request("/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `{ job(id: "${job.id}") { id name status } }`,
+        }),
+      })
+
+      const body = await res.json()
+      expect(res.status).toBe(200)
+      expect(body.data.job.id).toBe(job.id)
+      expect(body.data.job.name).toBe("lookup-job")
     })
 
     it("should return null for unknown job", async () => {
@@ -110,7 +156,7 @@ describe("GraphQL Server", () => {
     it("should get dead jobs", async () => {
       const app = createApp()
 
-      const job = await adapter.addJob({
+      const job = await queue.adapter.addJob({
         name: "dead-job",
         payload: {},
         status: "pending",
@@ -121,13 +167,13 @@ describe("GraphQL Server", () => {
         progress: 0,
         repeatCount: 0,
       })
-      await adapter.updateJobStatus(job.id, { status: "dead" })
+      await queue.adapter.updateJobStatus(job.id, { status: "dead" })
 
       const res = await app.request("/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: "{ deadJobs { id name status } }",
+          query: '{ deadJobs(queue: "test-queue") { id name status } }',
         }),
       })
 
@@ -139,7 +185,7 @@ describe("GraphQL Server", () => {
     it("should return queue size", async () => {
       const app = createApp()
 
-      await adapter.addJob({
+      await queue.adapter.addJob({
         name: "a",
         payload: {},
         status: "pending",
@@ -154,7 +200,7 @@ describe("GraphQL Server", () => {
       const res = await app.request("/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: "{ size }" }),
+        body: JSON.stringify({ query: '{ size(queue: "test-queue") }' }),
       })
 
       const body = await res.json()
@@ -166,7 +212,7 @@ describe("GraphQL Server", () => {
     it("should cancel a job", async () => {
       const app = createApp()
 
-      const job = await adapter.addJob({
+      const job = await queue.adapter.addJob({
         name: "cancel-me",
         payload: {},
         status: "pending",
@@ -182,21 +228,21 @@ describe("GraphQL Server", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: `mutation { cancelJob(id: "${job.id}", reason: "test") }`,
+          query: `mutation { cancelJob(id: "${job.id}", queue: "test-queue", reason: "test") }`,
         }),
       })
 
       const body = await res.json()
       expect(body.data.cancelJob).toBeTruthy()
 
-      const updated = await adapter.getJobById(job.id)
+      const updated = await queue.adapter.getJobById(job.id)
       expect(updated?.status).toBe("cancelled")
     })
 
     it("should redrive a dead job", async () => {
       const app = createApp()
 
-      const job = await adapter.addJob({
+      const job = await queue.adapter.addJob({
         name: "redrive-me",
         payload: {},
         status: "pending",
@@ -207,27 +253,27 @@ describe("GraphQL Server", () => {
         progress: 0,
         repeatCount: 0,
       })
-      await adapter.updateJobStatus(job.id, { status: "dead" })
+      await queue.adapter.updateJobStatus(job.id, { status: "dead" })
 
       const res = await app.request("/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: `mutation { redriveJob(id: "${job.id}") }`,
+          query: `mutation { redriveJob(id: "${job.id}", queue: "test-queue") }`,
         }),
       })
 
       const body = await res.json()
       expect(body.data.redriveJob).toBeTruthy()
 
-      const updated = await adapter.getJobById(job.id)
+      const updated = await queue.adapter.getJobById(job.id)
       expect(updated?.status).toBe("pending")
     })
 
     it("should clear jobs by status", async () => {
       const app = createApp()
 
-      const job = await adapter.addJob({
+      const job = await queue.adapter.addJob({
         name: "clear-me",
         payload: {},
         status: "pending",
@@ -238,13 +284,14 @@ describe("GraphQL Server", () => {
         progress: 0,
         repeatCount: 0,
       })
-      await adapter.updateJobStatus(job.id, { status: "completed" })
+      await queue.adapter.updateJobStatus(job.id, { status: "completed" })
 
       const res = await app.request("/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: "mutation { clearJobs(status: completed) }",
+          query:
+            'mutation { clearJobs(queue: "test-queue", status: completed) }',
         }),
       })
 
@@ -255,7 +302,7 @@ describe("GraphQL Server", () => {
     it("should retry a failed job", async () => {
       const app = createApp()
 
-      const job = await adapter.addJob({
+      const job = await queue.adapter.addJob({
         name: "retry-me",
         payload: {},
         status: "pending",
@@ -266,7 +313,7 @@ describe("GraphQL Server", () => {
         progress: 0,
         repeatCount: 0,
       })
-      await adapter.updateJobStatus(job.id, {
+      await queue.adapter.updateJobStatus(job.id, {
         status: "failed",
         error: { name: "Error", message: "oops" },
       })
@@ -275,14 +322,14 @@ describe("GraphQL Server", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: `mutation { retryJob(id: "${job.id}") }`,
+          query: `mutation { retryJob(id: "${job.id}", queue: "test-queue") }`,
         }),
       })
 
       const body = await res.json()
       expect(body.data.retryJob).toBeTruthy()
 
-      const updated = await adapter.getJobById(job.id)
+      const updated = await queue.adapter.getJobById(job.id)
       expect(updated?.status).toBe("pending")
       expect(updated?.attempts).toBe(0)
     })
@@ -290,7 +337,7 @@ describe("GraphQL Server", () => {
     it("should promote a delayed job via runJobNow", async () => {
       const app = createApp()
 
-      const job = await adapter.addJob({
+      const job = await queue.adapter.addJob({
         name: "delayed-job",
         payload: {},
         status: "delayed",
@@ -306,21 +353,21 @@ describe("GraphQL Server", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: `mutation { runJobNow(id: "${job.id}") }`,
+          query: `mutation { runJobNow(id: "${job.id}", queue: "test-queue") }`,
         }),
       })
 
       const body = await res.json()
       expect(body.data.runJobNow).toBeTruthy()
 
-      const updated = await adapter.getJobById(job.id)
+      const updated = await queue.adapter.getJobById(job.id)
       expect(updated?.status).toBe("pending")
     })
 
     it("should delete a job", async () => {
       const app = createApp()
 
-      const job = await adapter.addJob({
+      const job = await queue.adapter.addJob({
         name: "delete-me",
         payload: {},
         status: "pending",
@@ -336,23 +383,52 @@ describe("GraphQL Server", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: `mutation { deleteJob(id: "${job.id}") }`,
+          query: `mutation { deleteJob(id: "${job.id}", queue: "test-queue") }`,
         }),
       })
 
       const body = await res.json()
       expect(body.data.deleteJob).toBeTruthy()
 
-      const found = await adapter.getJobById(job.id)
+      const found = await queue.adapter.getJobById(job.id)
       expect(found).toBeNull()
+    })
+
+    it("should reject mutation with unknown queue", async () => {
+      const app = createApp()
+
+      const job = await queue.adapter.addJob({
+        name: "test-job",
+        payload: {},
+        status: "pending",
+        priority: 2,
+        attempts: 0,
+        maxAttempts: 3,
+        processAt: new Date(),
+        progress: 0,
+        repeatCount: 0,
+      })
+
+      const res = await app.request("/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `mutation { deleteJob(id: "${job.id}", queue: "invalid-queue") }`,
+        }),
+      })
+
+      const body = await res.json()
+      expect(body.errors).toBeDefined()
+      expect(body.errors[0].message).toContain(
+        "Queue 'invalid-queue' not found"
+      )
     })
   })
 
   describe("authentication", () => {
     it("should reject requests without token", async () => {
       const app = createQueueMiddleware({
-        adapter,
-        queueName: "test-queue",
+        queues: [queue],
         auth: { tokens: ["secret-token"] },
       })
 
@@ -362,8 +438,7 @@ describe("GraphQL Server", () => {
 
     it("should accept requests with valid token", async () => {
       const app = createQueueMiddleware({
-        adapter,
-        queueName: "test-queue",
+        queues: [queue],
         auth: { tokens: ["secret-token"] },
       })
 
@@ -375,8 +450,7 @@ describe("GraphQL Server", () => {
 
     it("should reject requests with invalid token", async () => {
       const app = createQueueMiddleware({
-        adapter,
-        queueName: "test-queue",
+        queues: [queue],
         auth: { tokens: ["secret-token"] },
       })
 

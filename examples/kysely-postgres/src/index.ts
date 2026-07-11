@@ -1,22 +1,19 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { client, db } from "./database"
+import { client } from "./database"
+import { adapter, queue } from "./queues"
 
-// Setup
-const adapter = new PostgresQueueAdapter(db)
-const queue = new Queue(adapter, { name: "advanced-queue" })
+interface ReportPayload {
+  userId: string
+  type: "daily" | "weekly" | "monthly"
+}
+
 const worker = new Worker(adapter, {
   name: "advanced-queue",
   concurrency: 3,
   removeOnComplete: 20,
   removeOnFail: 10,
 })
-
-interface ReportPayload {
-  userId: string
-  type: "daily" | "weekly" | "monthly"
-}
 
 worker.register<ReportPayload, { reportId: string }>(
   "generate-report",

@@ -17,10 +17,15 @@
  * ```
  */
 
+import type { Span } from "@opentelemetry/api"
+import { context, trace } from "@opentelemetry/api"
+
 import { TypedEventEmitter } from "./events"
 import { RateLimiterRegistry } from "./rate-limiter"
 import { calculateRetryDelay, DEFAULT_RETRY_STRATEGY } from "./retry"
 import { createStepContext, SleepInterrupt, WaitForInterrupt } from "./steps"
+import type { Telemetry } from "./telemetry"
+import { createTelemetry } from "./telemetry"
 import type {
   BatchHandlerOptions,
   BatchJobHandler,
@@ -53,6 +58,7 @@ interface ActiveJob {
   readonly controller: AbortController
   readonly promise: Promise<void>
   readonly handlerName: string
+  readonly span: Span
 }
 
 export class Worker extends TypedEventEmitter<WorkerEvents> {
@@ -61,6 +67,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     Pick<WorkerConfig, "name" | "concurrency" | "pollInterval">
   > &
     WorkerConfig
+  private readonly telemetry: Telemetry
 
   private readonly handlers = new Map<string, RegisteredHandler>()
   private readonly batchHandlers = new Map<string, RegisteredBatchHandler>()
@@ -80,6 +87,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       pollInterval: 100,
       ...config,
     }
+    this.telemetry = createTelemetry({ queueName: this.config.name })
 
     this.adapter.setQueueName(this.config.name)
   }
@@ -306,12 +314,18 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     const { signal } = controller
 
     this.trackGroupKey(job)
-    const promise = this.executeJob(job, handler, controller, signal)
+
+    // Start telemetry span for this job
+    const span = this.telemetry.jobStarted(job)
+    const promise = context.with(trace.setSpan(context.active(), span), () =>
+      this.executeJob(job, handler, controller, signal, span)
+    )
 
     this.activeJobs.set(job.id, {
       controller,
       promise,
       handlerName: job.name,
+      span,
     })
 
     return promise
@@ -321,7 +335,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     job: Job,
     handler: JobHandler,
     controller: AbortController,
-    signal: AbortSignal
+    signal: AbortSignal,
+    span: Span
   ): Promise<void> {
     let timeoutTimer: ReturnType<typeof setTimeout> | undefined
     let runCompensations: (() => Promise<void>) | undefined
@@ -363,8 +378,11 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         ...processingJob,
         status: "completed",
         result,
+        completedAt: new Date(),
+        processedAt: processingJob.processedAt ?? new Date(),
       }
       this.emit("job:completed", completedJob)
+      this.telemetry.jobCompleted(completedJob, span)
 
       /* oxlint-disable react-doctor/async-parallel -- these must run sequentially (promote before triggers, triggers before schedule) */
       // Promote parent if this is a child in a flow
@@ -380,7 +398,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       await this.cleanupAfterCompletion()
       /* oxlint-enable react-doctor/async-parallel */
     } catch (error) {
-      await this.handleJobFailure(job, error, signal, runCompensations)
+      await this.handleJobFailure(job, error, signal, runCompensations, span)
     } finally {
       if (timeoutTimer) {
         clearTimeout(timeoutTimer)
@@ -394,7 +412,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     job: Job,
     err: unknown,
     signal: AbortSignal,
-    runCompensations?: () => Promise<void>
+    runCompensations?: () => Promise<void>,
+    span?: Span
   ): Promise<void> {
     // Handle SleepInterrupt — job pauses and resumes later
     if (err instanceof SleepInterrupt) {
@@ -403,6 +422,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         status: "delayed",
         processAt,
       })
+      // SleepInterrupt is not a failure — end span without error
+      span?.end()
       return
     }
 
@@ -415,6 +436,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         status: "delayed",
         processAt,
       })
+      // WaitForInterrupt is not a failure — end span without error
+      span?.end()
       return
     }
 
@@ -439,11 +462,18 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
           status: "cancelled",
           cancellationReason: typeof reason === "string" ? reason : undefined,
         })
+        this.telemetry.jobCancelled(job.name)
+        span?.end()
         return
       }
     }
 
     const error = serializeError(err)
+
+    // Record failure in telemetry
+    if (span) {
+      this.telemetry.jobFailed(job, err, span)
+    }
 
     // Check if retries remaining
     if (currentAttempts < job.maxAttempts) {
@@ -466,6 +496,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       }
       this.emit("job:retried", retriedJob)
       this.emit("job:failed", { ...retriedJob, error })
+      this.telemetry.jobRetried(job.name)
     } else {
       // Move to DLQ (dead)
       await this.adapter.updateJobStatus(job.id, { status: "dead", error })
@@ -477,6 +508,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       }
       this.emit("job:dead", deadJob)
       this.emit("job:failed", { ...deadJob, error })
+      this.telemetry.jobDead(job.name)
 
       // Cascade failure to parent if configured
       await this.failParentOnChildFailure(deadJob)
@@ -499,12 +531,20 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
     // Track all jobs in this batch as a single active unit
     const batchId = `batch-${Date.now()}`
+
+    // Start telemetry spans for each job in the batch
+    const spans = new Map<string, Span>()
+    for (const job of jobs) {
+      spans.set(job.id, this.telemetry.jobStarted(job))
+    }
+
     const promise = this.executeBatch(
       jobs,
       handler,
       controller,
       signal,
-      batchId
+      batchId,
+      spans
     )
 
     // Register all jobs in the batch
@@ -514,6 +554,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         controller,
         promise,
         handlerName: job.name,
+        span: spans.get(job.id)!,
       })
     }
 
@@ -525,7 +566,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     handler: BatchJobHandler,
     controller: AbortController,
     signal: AbortSignal,
-    _batchId: string
+    _batchId: string,
+    spans: Map<string, Span>
   ): Promise<void> {
     try {
       // Mark all as processing (sequential to maintain order guarantees)
@@ -569,6 +611,18 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
           status: "completed",
           result,
         })
+
+        // Complete telemetry for each job
+        const completedJob: Job = {
+          ...job,
+          status: "completed",
+          result,
+          completedAt: new Date(),
+        }
+        const span = spans.get(job.id)
+        if (span) {
+          this.telemetry.jobCompleted(completedJob, span)
+        }
       }
 
       this.emit(
@@ -584,6 +638,10 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
       // Mark all as failed (partial failure support would need per-job results)
       for (const job of jobs) {
+        const span = spans.get(job.id)
+        if (span) {
+          this.telemetry.jobFailed(job, error, span)
+        }
         // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential failure handling per job
         await this.handleJobFailure(job, error, signal)
       }

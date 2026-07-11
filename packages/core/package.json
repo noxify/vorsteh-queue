@@ -66,11 +66,23 @@
     "date-fns": "4.4.0"
   },
   "devDependencies": {
-    "@types/node": "24.13.2",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/sdk-metrics": "2.9.0",
+    "@opentelemetry/sdk-trace-base": "2.9.0",
+    "@types/node": "24.13.3",
     "@vorsteh-queue/tsconfig": "workspace:*",
+    "fast-check": "^4.9.0",
     "tsdown": "0.22.4",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
+  },
+  "peerDependencies": {
+    "@opentelemetry/api": "^1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=22"

@@ -1,4 +1,4 @@
-import { Activity, CheckCircle2, Eye, Inbox } from "lucide-react"
+import { Activity, BarChart3, GitBranch, Terminal } from "lucide-react"
 import { Space_Grotesk } from "next/font/google"
 import Link from "next/link"
 
@@ -8,10 +8,13 @@ import { buttonVariants } from "@/components/ui/button"
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] })
 
 const bulletPoints = [
-  { icon: Activity, label: "Real-time job and worker metrics" },
-  { icon: Eye, label: "Queue health and throughput" },
-  { icon: CheckCircle2, label: "Job inspection and retry" },
-  { icon: Inbox, label: "Dead letter queue management" },
+  { icon: Activity, label: "Automatic metrics: counters, histograms, gauges" },
+  { icon: GitBranch, label: "Distributed tracing with job-level spans" },
+  {
+    icon: BarChart3,
+    label: "Export to Prometheus, Grafana, Datadog, and more",
+  },
+  { icon: Terminal, label: "CLI for queue stats, job inspection, and retry" },
 ]
 
 export function ObservabilitySection() {
@@ -22,17 +25,18 @@ export function ObservabilitySection() {
           {/* Left column - text */}
           <div className="flex flex-col gap-6">
             <span className="text-primary text-sm font-semibold tracking-wider uppercase">
-              Observe. Operate. Optimize.
+              OpenTelemetry Native
             </span>
             <h2
               className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl"
               style={{ fontFamily: spaceGrotesk.style.fontFamily }}
             >
-              Built-in observability and control.
+              Observability without the glue code.
             </h2>
             <p className="text-muted-foreground max-w-lg text-lg leading-relaxed">
-              Monitor queues, inspect jobs, and manage workers with built-in
-              tools and a clean dashboard.
+              vorsteh-queue instruments itself automatically via OpenTelemetry.
+              Metrics, traces, and job spans flow into your existing
+              observability stack with zero configuration.
             </p>
 
             <ul className="flex flex-col gap-3">
@@ -49,11 +53,11 @@ export function ObservabilitySection() {
 
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <Link
-                href="/docs/vorsteh-queue/packages/server"
+                href="/docs/vorsteh-queue/core/observability"
                 prefetch={false}
                 className={buttonVariants({ size: "lg" })}
               >
-                Explore the Dashboard
+                Observability Guide
               </Link>
               <Link
                 href="/docs"
@@ -65,154 +69,83 @@ export function ObservabilitySection() {
             </div>
           </div>
 
-          {/* Right column - dashboard mockup */}
+          {/* Right column - code example */}
           <div className="relative">
             <div className="overflow-hidden rounded-xl border border-[#272b33] bg-[#0f1117] shadow-2xl">
               {/* Tab bar */}
               <div className="flex items-center gap-0 border-b border-[#272b33]">
                 <div className="border-b-primary border-b-2 px-4 py-2.5 text-xs font-medium text-white">
-                  Overview
-                </div>
-                <div className="text-muted-foreground px-4 py-2.5 text-xs">
-                  Overview
+                  instrumentation.ts
                 </div>
                 <div className="ml-auto flex items-center gap-3 px-4">
                   <span className="text-muted-foreground text-xs">
-                    Auto-refresh
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    Last 5 minutes
+                    Zero overhead without SDK
                   </span>
                 </div>
               </div>
 
-              {/* Stats row */}
-              <div className="grid grid-cols-4 gap-0 border-b border-[#272b33]">
-                <DashboardStat
-                  label="Total Jobs"
-                  value="24,532"
-                  change="+12.3%"
-                  positive
-                />
-                <DashboardStat
-                  label="Processed"
-                  value="22,410"
-                  change="+11.5%"
-                  positive
-                />
-                <DashboardStat
-                  label="Failed"
-                  value="312"
-                  change="-1.7%"
-                  positive
-                />
-                <DashboardStat label="Active Workers" value="8" />
-              </div>
-
-              {/* Content area */}
-              <div className="grid grid-cols-5 gap-0">
-                {/* Chart placeholder */}
-                <div className="col-span-3 border-r border-[#272b33] p-4">
-                  <p className="text-muted-foreground mb-3 text-xs font-medium">
-                    Jobs Processed
-                  </p>
-                  <div className="flex h-20 items-end gap-1">
-                    {[35, 45, 55, 40, 60, 70, 50, 65, 80, 75, 55, 60].map(
-                      (h, i) => (
-                        <div
-                          key={i}
-                          className="bg-primary/60 flex-1 rounded-sm"
-                          style={{ height: `${h}%` }}
-                        />
-                      )
-                    )}
-                  </div>
-                </div>
-
-                {/* Queues table */}
-                <div className="col-span-2 p-4">
-                  <p className="text-muted-foreground mb-3 text-xs font-medium">
-                    Queues
-                  </p>
-                  <div className="flex flex-col gap-2 text-xs">
-                    <QueueRow
-                      name="default"
-                      pending="1,543"
-                      active="3"
-                      rate="107/min"
-                    />
-                    <QueueRow
-                      name="emails"
-                      pending="832"
-                      active="2"
-                      rate="45/min"
-                    />
-                    <QueueRow
-                      name="reports"
-                      pending="392"
-                      active="1"
-                      rate="15/min"
-                    />
-                    <QueueRow
-                      name="cleanup"
-                      pending="18"
-                      active="1"
-                      rate="10/min"
-                    />
-                  </div>
-                </div>
+              {/* Code content */}
+              <div className="p-5">
+                <pre className="text-xs leading-relaxed">
+                  <code>
+                    <span className="text-[#7c8da6]">
+                      {"// Your existing OTel setup — that's it\n"}
+                    </span>
+                    <span className="text-[#c678dd]">import</span>
+                    <span className="text-[#abb2bf]">{" { NodeSDK } "}</span>
+                    <span className="text-[#c678dd]">from</span>
+                    <span className="text-[#98c379]">
+                      {" '@opentelemetry/sdk-node'\n"}
+                    </span>
+                    <span className="text-[#c678dd]">import</span>
+                    <span className="text-[#abb2bf]">
+                      {" { OTLPMetricExporter } "}
+                    </span>
+                    <span className="text-[#c678dd]">from</span>
+                    <span className="text-[#98c379]">
+                      {" '@opentelemetry/exporter-metrics-otlp-http'\n\n"}
+                    </span>
+                    <span className="text-[#c678dd]">const</span>
+                    <span className="text-[#abb2bf]"> sdk = </span>
+                    <span className="text-[#c678dd]">new</span>
+                    <span className="text-[#61afef]"> NodeSDK</span>
+                    <span className="text-[#abb2bf]">{"({\n"}</span>
+                    <span className="text-[#abb2bf]">{"  metricReader: "}</span>
+                    <span className="text-[#c678dd]">new</span>
+                    <span className="text-[#61afef]">
+                      {" OTLPMetricExporter"}
+                    </span>
+                    <span className="text-[#abb2bf]">{"(),\n"})</span>
+                    {"\n\n"}
+                    <span className="text-[#abb2bf]">sdk.</span>
+                    <span className="text-[#61afef]">start</span>
+                    <span className="text-[#abb2bf]">()</span>
+                    {"\n\n"}
+                    <span className="text-[#7c8da6]">
+                      {"// vorsteh-queue automatically emits:\n"}
+                    </span>
+                    <span className="text-[#7c8da6]">
+                      {"// ✓ vorsteh_queue.jobs.processed\n"}
+                    </span>
+                    <span className="text-[#7c8da6]">
+                      {"// ✓ vorsteh_queue.jobs.failed\n"}
+                    </span>
+                    <span className="text-[#7c8da6]">
+                      {"// ✓ vorsteh_queue.jobs.duration\n"}
+                    </span>
+                    <span className="text-[#7c8da6]">
+                      {"// ✓ vorsteh_queue.jobs.wait_time\n"}
+                    </span>
+                    <span className="text-[#7c8da6]">
+                      {"// ✓ Distributed traces per job"}
+                    </span>
+                  </code>
+                </pre>
               </div>
             </div>
           </div>
         </div>
       </PageContainer>
     </section>
-  )
-}
-
-function DashboardStat({
-  label,
-  value,
-  change,
-  positive,
-}: {
-  label: string
-  value: string
-  change?: string
-  positive?: boolean
-}) {
-  return (
-    <div className="border-r border-[#272b33] p-4 last:border-r-0">
-      <p className="text-muted-foreground text-xs">{label}</p>
-      <p className="mt-1 text-lg font-bold text-white">{value}</p>
-      {change && (
-        <p
-          className={`mt-0.5 text-xs ${positive ? "text-emerald-400" : "text-red-400"}`}
-        >
-          {change}
-        </p>
-      )}
-    </div>
-  )
-}
-
-function QueueRow({
-  name,
-  pending,
-  active,
-  rate,
-}: {
-  name: string
-  pending: string
-  active: string
-  rate: string
-}) {
-  return (
-    <div className="text-muted-foreground flex items-center justify-between">
-      <span className="text-white">{name}</span>
-      <span>{pending}</span>
-      <span>{active}</span>
-      <span>{rate}</span>
-    </div>
   )
 }

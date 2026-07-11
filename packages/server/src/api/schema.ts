@@ -7,17 +7,36 @@ import type {
   FlowNode,
   Job,
   JobStatus,
-  QueueAdapter,
+  Queue,
   QueueStats,
   SerializedError,
 } from "@vorsteh-queue/core"
+import { createGraphQLError } from "graphql-yoga"
 
 import type { PubSub } from "./pubsub"
 
 export interface SchemaContext {
-  adapter: QueueAdapter
-  queueName: string
+  queues: readonly Queue[]
   pubsub: PubSub
+}
+
+/**
+ * Look up a Queue instance by name from the configured queues list.
+ *
+ * @param name - The queue name to find
+ * @param queues - The list of configured Queue instances
+ * @returns The matching Queue instance
+ * @throws {GraphQLError} If the queue name is not found
+ */
+function getQueue(name: string, queues: readonly Queue[]): Queue {
+  const queue = queues.find((q) => q.name === name)
+  if (!queue) {
+    throw createGraphQLError(
+      `Queue '${name}' not found. Available queues: ${queues.map((q) => q.name).join(", ")}`,
+      { extensions: { code: "BAD_USER_INPUT" } }
+    )
+  }
+  return queue
 }
 
 const builder = new SchemaBuilder<{ Context: SchemaContext }>({})
@@ -131,76 +150,130 @@ const JobType = builder.objectRef<Job>("Job").implement({
   }),
 })
 
+const QueueInfoType = builder
+  .objectRef<{ name: string; isDefault: boolean }>("QueueInfo")
+  .implement({
+    fields: (t) => ({
+      name: t.exposeString("name"),
+      isDefault: t.exposeBoolean("isDefault"),
+    }),
+  })
+
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 builder.queryType({
   fields: (t) => ({
+    queues: t.field({
+      type: [QueueInfoType],
+      resolve: (_parent, _args, ctx) => {
+        return ctx.queues.map((q) => ({
+          name: q.name,
+          isDefault: false,
+        }))
+      },
+    }),
+
     stats: t.field({
       type: QueueStatsType,
-      resolve: async (_parent, _args, ctx) => ctx.adapter.getQueueStats(),
+      args: { queue: t.arg.string({ required: true }) },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.getQueueStats()
+      },
     }),
 
     job: t.field({
       type: JobType,
       nullable: true,
-      args: { id: t.arg.id({ required: true }) },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.getJobById(String(args.id)),
+      args: {
+        id: t.arg.id({ required: true }),
+        queue: t.arg.string({ required: false }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        if (args.queue) {
+          const queue = getQueue(args.queue, ctx.queues)
+          return queue.adapter.getJobById(String(args.id))
+        }
+        // Search all queues
+        for (const queue of ctx.queues) {
+          const job = await queue.adapter.getJobById(String(args.id))
+          if (job) return job
+        }
+        return null
+      },
     }),
 
     jobs: t.field({
       type: [JobType],
       args: {
+        queue: t.arg.string({ required: true }),
         status: t.arg({ type: JobStatusEnum, required: false }),
         name: t.arg.string({ required: false }),
         limit: t.arg.int({ required: false }),
         offset: t.arg.int({ required: false }),
       },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.getJobs({
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.getJobs({
           status: args.status as JobStatus | undefined,
           name: args.name ?? undefined,
           limit: args.limit ?? 20,
           offset: args.offset ?? 0,
-        }),
+        })
+      },
     }),
 
     deadJobs: t.field({
       type: [JobType],
       args: {
+        queue: t.arg.string({ required: true }),
         limit: t.arg.int({ required: false }),
         offset: t.arg.int({ required: false }),
       },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.getDeadJobs({
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.getDeadJobs({
           limit: args.limit ?? 50,
           offset: args.offset ?? 0,
-        }),
+        })
+      },
     }),
 
     size: t.int({
-      resolve: async (_parent, _args, ctx) => ctx.adapter.size(),
+      args: { queue: t.arg.string({ required: true }) },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.size()
+      },
     }),
 
     flowTree: t.field({
       type: FlowNodeType,
       nullable: true,
-      args: { flowId: t.arg.string({ required: true }) },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.getFlowTree(args.flowId),
+      args: {
+        queue: t.arg.string({ required: true }),
+        flowId: t.arg.string({ required: true }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.getFlowTree(args.flowId)
+      },
     }),
 
     flows: t.field({
       type: [FlowEntryType],
       args: {
+        queue: t.arg.string({ required: true }),
         limit: t.arg.int({ required: false }),
         offset: t.arg.int({ required: false }),
       },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.getFlows({
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.getFlows({
           limit: args.limit ?? 20,
           offset: args.offset ?? 0,
-        }),
+        })
+      },
     }),
   }),
 })
@@ -213,52 +286,89 @@ builder.mutationType({
       type: "Boolean",
       args: {
         id: t.arg.id({ required: true }),
+        queue: t.arg.string({ required: true }),
         reason: t.arg.string({ required: false }),
       },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.cancelJob(String(args.id), args.reason ?? undefined),
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.cancelJob(
+          String(args.id),
+          args.reason ?? undefined
+        )
+      },
     }),
 
     redriveJob: t.field({
       type: "Boolean",
-      args: { id: t.arg.id({ required: true }) },
+      args: {
+        id: t.arg.id({ required: true }),
+        queue: t.arg.string({ required: true }),
+      },
       resolve: async (_parent, args, ctx) => {
-        await ctx.adapter.redriveJob(String(args.id))
+        const queue = getQueue(args.queue, ctx.queues)
+        await queue.adapter.redriveJob(String(args.id))
         return true
       },
     }),
 
     redriveAll: t.int({
-      args: { name: t.arg.string({ required: false }) },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.redriveJobs(args.name ? { name: args.name } : undefined),
+      args: {
+        queue: t.arg.string({ required: true }),
+        name: t.arg.string({ required: false }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.redriveJobs(
+          args.name ? { name: args.name } : undefined
+        )
+      },
     }),
 
     clearJobs: t.int({
-      args: { status: t.arg({ type: JobStatusEnum, required: false }) },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.clearJobs(args.status as JobStatus | undefined),
+      args: {
+        queue: t.arg.string({ required: true }),
+        status: t.arg({ type: JobStatusEnum, required: false }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.clearJobs(args.status as JobStatus | undefined)
+      },
     }),
 
     retryJob: t.field({
       type: "Boolean",
-      args: { id: t.arg.id({ required: true }) },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.retryJob(String(args.id)),
+      args: {
+        id: t.arg.id({ required: true }),
+        queue: t.arg.string({ required: true }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.retryJob(String(args.id))
+      },
     }),
 
     runJobNow: t.field({
       type: "Boolean",
-      args: { id: t.arg.id({ required: true }) },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.runJobNow(String(args.id)),
+      args: {
+        id: t.arg.id({ required: true }),
+        queue: t.arg.string({ required: true }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.runJobNow(String(args.id))
+      },
     }),
 
     deleteJob: t.field({
       type: "Boolean",
-      args: { id: t.arg.id({ required: true }) },
-      resolve: async (_parent, args, ctx) =>
-        ctx.adapter.deleteJob(String(args.id)),
+      args: {
+        id: t.arg.id({ required: true }),
+        queue: t.arg.string({ required: true }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.deleteJob(String(args.id))
+      },
     }),
   }),
 })

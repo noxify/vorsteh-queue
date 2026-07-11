@@ -62,3 +62,7 @@ queue.start()
 ```
 
 Replace `MemoryQueueAdapter` with a PostgreSQL adapter for production use. See the adapter docs for setup instructions.
+
+## Recommended Setup
+
+For real projects, we recommend centralizing your queue definitions in a shared file. This avoids repetition and makes configuration changes easy. See [Project Structure](/docs/vorsteh-queue/getting-started/project-structure) for the recommended approach.

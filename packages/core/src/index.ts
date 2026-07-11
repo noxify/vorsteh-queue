@@ -97,5 +97,9 @@ export {
 // Rate Limiting
 export { RateLimiter, RateLimiterRegistry } from "./rate-limiter"
 
+// Telemetry
+export { createTelemetry } from "./telemetry"
+export type { Telemetry, TelemetryConfig } from "./telemetry"
+
 // Constants
 export { STATE_TRANSITIONS } from "./types"

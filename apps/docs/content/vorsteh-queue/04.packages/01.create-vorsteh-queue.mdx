@@ -7,12 +7,6 @@ The `create-vorsteh-queue` CLI provides the fastest way to get started by creati
 
 ## Usage
 
-No installation required:
-
-```bash
-npx create-vorsteh-queue
-```
-
 ### Interactive Mode
 
 ```bash
@@ -32,19 +26,13 @@ npx create-vorsteh-queue my-app --template=drizzle-postgres --package-manager=pn
 | Option                   | Short       | Description             |
 | ------------------------ | ----------- | ----------------------- |
 | `--template=<name>`      | `-t=<name>` | Choose template         |
-| `--package-manager=<pm>` | `-pm=<pm>`  | Package manager         |
-| `--no-install`           | —           | Skip dependency install |
+| `--package-manager=<pm>` | `-p=<pm>`   | Package manager         |
+| `--no-install`           | n/a         | Skip dependency install |
 | `--quiet`                | `-q`        | Minimal output          |
 
 ## Available Templates
 
-- **drizzle-pg** — Basic Drizzle ORM with node-postgres
-- **drizzle-pglite** — Zero-setup with embedded PostgreSQL
-- **drizzle-postgres** — Advanced with recurring jobs
-- **event-system** — Comprehensive event monitoring
-- **progress-tracking** — Real-time progress updates
-- **pm2-workers** — Multi-process workers with PM2
-- **prisma-client** — Example with the new `prisma-client`
+<TemplateList />
 
 ## Example
 

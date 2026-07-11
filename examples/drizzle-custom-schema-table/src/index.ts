@@ -1,22 +1,19 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { client, db } from "./database"
+import { client } from "./database"
+import { adapter, queue } from "./queues"
 
-// Using a custom model name (matching the schema export)
-const adapter = new PostgresQueueAdapter(db, { modelName: "customQueueJobs" })
-const queue = new Queue(adapter, { name: "advanced-queue" })
+interface ReportJob {
+  userId: string
+  type: "daily" | "weekly" | "monthly"
+}
+
 const worker = new Worker(adapter, {
   name: "advanced-queue",
   concurrency: 2,
   removeOnComplete: 20,
   removeOnFail: 10,
 })
-
-interface ReportJob {
-  userId: string
-  type: "daily" | "weekly" | "monthly"
-}
 
 worker.register<ReportJob, { reportId: string }>(
   "generate-report",

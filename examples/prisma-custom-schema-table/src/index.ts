@@ -1,25 +1,7 @@
-import { PrismaPg } from "@prisma/adapter-pg"
-import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { PrismaClient } from "./generated/prisma/client"
+import { adapter, queue } from "./queues"
 
-const pgAdapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter: pgAdapter })
-
-// Shared adapter with custom schema and table
-const adapter = new PostgresPrismaQueueAdapter(prisma, {
-  modelName: "CustomQueueJob",
-  schemaName: "custom_schema",
-  tableName: "custom_queue_jobs",
-})
-
-// Queue setup (producer)
-const queue = new Queue(adapter, {
-  name: "email-queue",
-})
-
-// Worker setup (consumer)
 const worker = new Worker(adapter, {
   name: "email-queue",
   concurrency: 2,

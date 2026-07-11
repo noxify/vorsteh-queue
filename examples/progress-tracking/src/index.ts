@@ -1,22 +1,19 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { client, db } from "./database"
+import { client } from "./database"
+import { adapter, queue } from "./queues"
 
-// Setup
-const adapter = new PostgresQueueAdapter(db)
-const queue = new Queue(adapter, { name: "progress-queue" })
+interface ProcessDatasetPayload {
+  items: string[]
+  processingTime?: number
+}
+
 const worker = new Worker(adapter, {
   name: "progress-queue",
   concurrency: 2,
   removeOnComplete: 5,
   removeOnFail: 3,
 })
-
-interface ProcessDatasetPayload {
-  items: string[]
-  processingTime?: number
-}
 
 worker.register<ProcessDatasetPayload, { processed: number }>(
   "process-dataset",

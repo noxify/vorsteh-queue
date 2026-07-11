@@ -12,7 +12,7 @@ export function createDeleteCommand() {
       typeof options
 
     await withTransport(
-      { url: globalOpts.url, token: globalOpts.token },
+      { url: globalOpts.url, token: globalOpts.token, queue: globalOpts.queue },
       async (transport) => {
         const success = await transport.deleteJob(id)
 

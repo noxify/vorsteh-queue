@@ -1,7 +1,7 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
-import { client, db } from "./database"
+import { client } from "./database"
+import { adapter, queue } from "./queues"
 
 // Job payload types
 interface ReportJobPayload {
@@ -27,23 +27,12 @@ interface CleanupJobResult {
   freedSpace: number
 }
 
-// Shared adapter with custom schema and table
-const adapter = new PostgresQueueAdapter(db, {
-  schemaName: "custom_schema",
-  tableName: "custom_queue_jobs",
-})
-
-// Queue setup (producer)
-const queue = new Queue(adapter, {
-  name: "advanced-queue",
-  removeOnComplete: 20,
-  removeOnFail: 10,
-})
-
 // Worker setup (consumer)
 const worker = new Worker(adapter, {
   name: "advanced-queue",
   concurrency: 2,
+  removeOnComplete: 20,
+  removeOnFail: 10,
 })
 
 // Job handlers with proper types

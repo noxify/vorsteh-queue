@@ -1,7 +1,7 @@
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
-import { Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 
 import { client, db } from "./database"
+import { adapter, queue } from "./queues"
 import * as schema from "./schema"
 
 const { pushSchema } = await import("drizzle-kit/api")
@@ -17,8 +17,6 @@ interface ProcessDataResult {
   duration: number
 }
 
-const adapter = new PostgresQueueAdapter(db)
-const queue = new Queue(adapter, { name: "result-demo" })
 const worker = new Worker(adapter, {
   name: "result-demo",
   concurrency: 2,

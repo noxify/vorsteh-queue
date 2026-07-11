@@ -1,5 +1,7 @@
-import { MemoryQueueAdapter, Queue, Worker } from "@vorsteh-queue/core"
+import { Worker } from "@vorsteh-queue/core"
 import { createQueueServer } from "@vorsteh-queue/server"
+
+import { adapter, queue } from "./queues"
 
 /**
  * GraphQL Server Example
@@ -11,12 +13,10 @@ import { createQueueServer } from "@vorsteh-queue/server"
  * Header: Authorization: Bearer my-secret-token
  *
  * Query example:
- *   { stats { pending completed failed } }
+ *   { stats(queue: "demo-queue") { pending completed failed } }
  *   { job(id: "...") { name status payload } }
  */
 
-const adapter = new MemoryQueueAdapter()
-const queue = new Queue(adapter, { name: "demo-queue" })
 const worker = new Worker(adapter, {
   name: "demo-queue",
   concurrency: 2,
@@ -42,8 +42,7 @@ async function main() {
 
   // Start the GraphQL server
   const server = createQueueServer({
-    adapter,
-    queueName: "demo-queue",
+    queues: [queue],
     port: 3000,
     auth: { tokens: ["my-secret-token"] },
   })
@@ -52,9 +51,13 @@ async function main() {
   console.log("\nGraphQL endpoint: http://localhost:3000/graphql")
   console.log("Auth header: Authorization: Bearer my-secret-token")
   console.log("\nExample queries:")
-  console.log("  { stats { pending completed failed dead } }")
-  console.log("  { deadJobs { id name } }")
-  console.log("  mutation { clearJobs(status: completed) }")
+  console.log(
+    '  { stats(queue: "demo-queue") { pending completed failed dead } }'
+  )
+  console.log('  { deadJobs(queue: "demo-queue") { id name } }')
+  console.log(
+    '  mutation { clearJobs(queue: "demo-queue", status: completed) }'
+  )
 
   process.on("SIGINT", async () => {
     await worker.stop()

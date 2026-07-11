@@ -24,6 +24,8 @@ import {
   TimeoutError,
 } from "./errors"
 import { TypedEventEmitter } from "./events"
+import type { Telemetry } from "./telemetry"
+import { createTelemetry } from "./telemetry"
 import type {
   ActiveStatus,
   FlowJobDefinition,
@@ -40,34 +42,50 @@ import type {
 import { asUtc, parseCron, toUtcDate } from "./utils/scheduler"
 
 export class Queue extends TypedEventEmitter<QueueEvents> {
-  private readonly adapter: QueueAdapter
-  private readonly config: Required<Pick<QueueConfig, "name">> & QueueConfig
+  private readonly _adapter: QueueAdapter
+  private readonly _config: Required<Pick<QueueConfig, "name">> & QueueConfig
+  private readonly _telemetry: Telemetry
+
+  /**
+   * The queue name used for job isolation.
+   */
+  get name(): string {
+    return this._config.name
+  }
+
+  /**
+   * The underlying adapter instance.
+   */
+  get adapter(): QueueAdapter {
+    return this._adapter
+  }
 
   constructor(adapter: QueueAdapter, config: QueueConfig) {
     super()
-    this.adapter = adapter
-    this.config = {
+    this._adapter = adapter
+    this._config = {
       removeOnComplete: 100,
       removeOnFail: 50,
       deadLetterQueue: { enabled: true },
       ...config,
     }
+    this._telemetry = createTelemetry({ queueName: this._config.name })
 
-    this.adapter.setQueueName(this.config.name)
+    this._adapter.setQueueName(this._config.name)
   }
 
   /**
    * Connect to the storage backend.
    */
   async connect(): Promise<void> {
-    await this.adapter.connect()
+    await this._adapter.connect()
   }
 
   /**
    * Disconnect from the storage backend.
    */
   async disconnect(): Promise<void> {
-    await this.adapter.disconnect()
+    await this._adapter.disconnect()
   }
 
   /**
@@ -103,13 +121,13 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     payload: TPayload,
     options: JobOptions = {}
   ): Promise<Job<TPayload>> {
-    const jobOptions = { ...this.config.defaultJobOptions, ...options }
+    const jobOptions = { ...this._config.defaultJobOptions, ...options }
     const timezone = jobOptions.timezone ?? "UTC"
     const now = new Date()
 
     // Handle unique job logic
     if (jobOptions.unique) {
-      const existing = await this.adapter.findJobByUniqueKey(
+      const existing = await this._adapter.findJobByUniqueKey(
         jobOptions.unique.key
       )
       if (existing) {
@@ -117,7 +135,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
           throw new DuplicateJobError(jobOptions.unique.key, existing.id)
         }
         // action === "replace": cancel existing, then add new
-        await this.adapter.cancelJob(existing.id, "Replaced by newer job")
+        await this._adapter.cancelJob(existing.id, "Replaced by newer job")
       }
     }
 
@@ -138,7 +156,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
       processAt = asUtc(now)
     }
 
-    const job = await this.adapter.addJob({
+    const job = await this._adapter.addJob({
       name,
       payload,
       status,
@@ -158,6 +176,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     })
 
     this.emit("job:added", job)
+    this._telemetry.jobAdded(name)
     return job as Job<TPayload>
   }
 
@@ -174,7 +193,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     payloads: readonly TPayload[],
     options: JobOptions = {}
   ): Promise<readonly Job<TPayload>[]> {
-    const jobOptions = { ...this.config.defaultJobOptions, ...options }
+    const jobOptions = { ...this._config.defaultJobOptions, ...options }
     const now = new Date()
 
     const newJobs = payloads.map((payload) => ({
@@ -191,9 +210,10 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
       groupKey: jobOptions.group,
     }))
 
-    const jobs = await this.adapter.addJobs(newJobs)
+    const jobs = await this._adapter.addJobs(newJobs)
     for (const job of jobs) {
       this.emit("job:added", job)
+      this._telemetry.jobAdded(name)
     }
     return jobs as readonly Job<TPayload>[]
   }
@@ -301,7 +321,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
           return
         }
 
-        const current = await this.adapter.getJobById(job.id)
+        const current = await this._adapter.getJobById(job.id)
         if (!current) {
           timer = setTimeout(() => void poll(), pollInterval)
           return
@@ -344,9 +364,9 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * ```
    */
   async cancel(jobId: string, reason?: string): Promise<void> {
-    const cancelled = await this.adapter.cancelJob(jobId, reason)
+    const cancelled = await this._adapter.cancelJob(jobId, reason)
     if (cancelled) {
-      const job = await this.adapter.getJobById(jobId)
+      const job = await this._adapter.getJobById(jobId)
       if (job) {
         this.emit("job:cancelled", { ...job, cancellationReason: reason })
       }
@@ -370,7 +390,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     status?: ActiveStatus
     group?: string
   }): Promise<number> {
-    return this.adapter.cancelJobs(filter ?? {})
+    return this._adapter.cancelJobs(filter ?? {})
   }
 
   /**
@@ -380,7 +400,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * @returns The job or null if not found
    */
   async getJob(jobId: string): Promise<Job | null> {
-    return this.adapter.getJobById(jobId)
+    return this._adapter.getJobById(jobId)
   }
 
   /**
@@ -395,7 +415,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * ```
    */
   async getStats(): Promise<QueueStats> {
-    return this.adapter.getQueueStats()
+    return this._adapter.getQueueStats()
   }
 
   /**
@@ -408,7 +428,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     limit?: number
     offset?: number
   }): Promise<readonly Job[]> {
-    return this.adapter.getDeadJobs(options)
+    return this._adapter.getDeadJobs(options)
   }
 
   /**
@@ -417,7 +437,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * @param jobId - ID of the dead job to redrive
    */
   async redrive(jobId: string): Promise<void> {
-    await this.adapter.redriveJob(jobId)
+    await this._adapter.redriveJob(jobId)
   }
 
   /**
@@ -427,7 +447,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * @returns Number of jobs redriven
    */
   async redriveAll(filter?: { name?: string }): Promise<number> {
-    return this.adapter.redriveJobs(filter)
+    return this._adapter.redriveJobs(filter)
   }
 
   /**
@@ -443,7 +463,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * ```
    */
   async clear(status?: JobStatus): Promise<number> {
-    return this.adapter.clearJobs(status)
+    return this._adapter.clearJobs(status)
   }
 
   /**
@@ -460,7 +480,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * ```
    */
   async signal(jobId: string, event: string, data?: unknown): Promise<boolean> {
-    return this.adapter.setJobSignal(jobId, event, data)
+    return this._adapter.setJobSignal(jobId, event, data)
   }
 
   /**
@@ -475,7 +495,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * ```
    */
   async retry(jobId: string): Promise<boolean> {
-    return this.adapter.retryJob(jobId)
+    return this._adapter.retryJob(jobId)
   }
 
   /**
@@ -490,7 +510,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * ```
    */
   async runNow(jobId: string): Promise<boolean> {
-    return this.adapter.runJobNow(jobId)
+    return this._adapter.runJobNow(jobId)
   }
 
   /**
@@ -505,7 +525,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * ```
    */
   async deleteJob(jobId: string): Promise<boolean> {
-    return this.adapter.deleteJob(jobId)
+    return this._adapter.deleteJob(jobId)
   }
 
   // ─── Flows ─────────────────────────────────────────────────
@@ -545,7 +565,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    * @returns Tree structure with jobs and children, or null
    */
   async getFlowTree(flowId: string): Promise<FlowNode | null> {
-    return this.adapter.getFlowTree(flowId)
+    return this._adapter.getFlowTree(flowId)
   }
 
   private async createFlowNode(
@@ -556,7 +576,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     const hasChildren = definition.children && definition.children.length > 0
 
     // Create the job
-    const job = await this.adapter.addJob({
+    const job = await this._adapter.addJob({
       name: definition.name,
       payload: definition.payload,
       status: hasChildren ? "waiting-children" : "pending",

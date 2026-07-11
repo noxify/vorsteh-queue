@@ -7,10 +7,13 @@
  * @example
  * ```typescript
  * import { createQueueServer } from "@vorsteh-queue/server"
+ * import { Queue, MemoryQueueAdapter } from "@vorsteh-queue/core"
+ *
+ * const adapter = new MemoryQueueAdapter()
+ * const queue = new Queue(adapter, { name: "my-queue" })
  *
  * const server = createQueueServer({
- *   adapter: myAdapter,
- *   queueName: "my-queue",
+ *   queues: [queue],
  *   auth: { tokens: [process.env.QUEUE_TOKEN] },
  * })
  *
@@ -24,8 +27,7 @@
  *
  * const app = new Hono()
  * app.route("/queue", createQueueMiddleware({
- *   adapter: myAdapter,
- *   queueName: "my-queue",
+ *   queues: [queue],
  * }))
  * ```
  */
@@ -57,8 +59,7 @@ export type { PubSubEvents } from "./api/pubsub"
  * ```typescript
  * const app = new Hono()
  * app.route("/queue", createQueueMiddleware({
- *   adapter: myAdapter,
- *   queueName: "my-queue",
+ *   queues: [queue],
  *   auth: { tokens: ["secret"] },
  * }))
  * ```
@@ -77,8 +78,7 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
     schema,
     graphqlEndpoint: "/graphql",
     context: () => ({
-      adapter: config.adapter,
-      queueName: config.queueName,
+      queues: config.queues,
       pubsub,
     }),
   })
@@ -86,8 +86,7 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
   // Mount GraphQL endpoint
   app.on(["GET", "POST"], "/graphql", async (c) => {
     const response = await yoga.handle(c.req.raw, {
-      adapter: config.adapter,
-      queueName: config.queueName,
+      queues: config.queues,
       pubsub,
     })
     return response
@@ -95,14 +94,14 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
 
   // Health check
   app.get("/health", (c) =>
-    c.json({ status: "ok", queueName: config.queueName })
+    c.json({ status: "ok", queues: config.queues.map((q) => q.name) })
   )
 
   // Dashboard config endpoint (unauthenticated — consumed by the SPA)
   app.get("/api/config", (c) =>
     c.json({
       graphqlEndpoint: config.graphqlEndpoint ?? "/graphql",
-      queueName: config.queueName,
+      queues: config.queues.map((q) => q.name),
       authEnabled: config.auth !== false,
     })
   )
@@ -119,8 +118,7 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
  * @example
  * ```typescript
  * const server = createQueueServer({
- *   adapter: myAdapter,
- *   queueName: "my-queue",
+ *   queues: [queue],
  *   port: 3000,
  *   auth: { tokens: [process.env.QUEUE_TOKEN] },
  * })
@@ -140,20 +138,22 @@ export function createQueueServer(config: ServerConfig) {
 
     /** Start the server */
     async start(): Promise<void> {
-      await config.adapter.connect()
-      config.adapter.setQueueName(config.queueName)
+      await Promise.all(config.queues.map((q) => q.connect()))
 
       server = serve({ fetch: app.fetch, port })
+      const queueNames = config.queues.map((q) => q.name).join(", ")
       // eslint-disable-next-line no-console
       console.log(`vorsteh-queue server running on http://localhost:${port}`)
       // eslint-disable-next-line no-console
       console.log(`  GraphQL:  http://localhost:${port}/graphql`)
+      // eslint-disable-next-line no-console
+      console.log(`  Queues:   ${queueNames}`)
     },
 
     /** Stop the server */
     async stop(): Promise<void> {
       server?.close()
-      await config.adapter.disconnect()
+      await Promise.all(config.queues.map((q) => q.disconnect()))
     },
   }
 }

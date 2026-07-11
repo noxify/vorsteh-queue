@@ -3,22 +3,17 @@
  * and environment variables.
  */
 
-import type { QueueAdapter } from "@vorsteh-queue/core"
-import { loadConfig } from "c12"
-
+import { loadCliConfig } from "../config"
 import { CLIError } from "../errors"
 import { createDirectTransport } from "./direct"
 import { createGraphQLTransport } from "./graphql"
+import { resolveQueueName } from "./resolve-queue"
 import type { Transport } from "./types"
 
 export interface ResolveTransportOptions {
   readonly url?: string
   readonly token?: string
-}
-
-interface QueueConfigFile {
-  readonly adapter?: QueueAdapter
-  readonly queueName?: string
+  readonly queue?: string
 }
 
 /**
@@ -29,7 +24,7 @@ interface QueueConfigFile {
  * 2. VORSTEH_QUEUE_URL env var
  * 3. queue.config.ts with adapter (direct mode)
  *
- * @param options - Global CLI options (url, token)
+ * @param options - Global CLI options (url, token, queue)
  * @returns A Transport instance (not yet connected)
  * @throws {CLIError} When configuration is invalid or missing
  */
@@ -48,20 +43,16 @@ export async function resolveTransport(
 
     const effectiveToken =
       options.token ?? process.env.VORSTEH_QUEUE_TOKEN ?? undefined
-    return createGraphQLTransport(effectiveUrl, effectiveToken)
+
+    // In remote mode, resolve queue name — requires --queue when no config available
+    const queueName = resolveQueueName({ queue: options.queue })
+
+    return createGraphQLTransport(effectiveUrl, effectiveToken, queueName)
   }
 
-  const { config } = await loadConfig<QueueConfigFile>({ name: "queue" })
+  const config = await loadCliConfig()
 
-  if (!config?.adapter) {
-    throw new CLIError(
-      "No adapter configured. Create a queue.config.ts with an adapter, or provide --url for remote mode."
-    )
-  }
+  const resolvedQueue = resolveQueueName({ queue: options.queue, config })
 
-  if (!config.queueName) {
-    throw new CLIError("Missing queueName in queue.config.ts.")
-  }
-
-  return createDirectTransport(config.adapter, config.queueName)
+  return createDirectTransport(config.adapter, resolvedQueue)
 }

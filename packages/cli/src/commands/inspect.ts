@@ -12,7 +12,7 @@ export function createInspectCommand() {
       typeof options
 
     await withTransport(
-      { url: globalOpts.url, token: globalOpts.token },
+      { url: globalOpts.url, token: globalOpts.token, queue: globalOpts.queue },
       async (transport) => {
         const job = await transport.getJob(id)
 

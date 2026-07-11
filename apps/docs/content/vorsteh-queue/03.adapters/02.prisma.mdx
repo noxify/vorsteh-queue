@@ -25,9 +25,12 @@ const adapter = new PostgresPrismaQueueAdapter(prisma)
 const queue = new Queue(adapter, { name: "my-queue" })
 ```
 
-## Database Schema
+<Note title="Tip">
+  For real projects, extract this setup into a shared `src/queues.ts` file. See
+  [Project Structure](/docs/vorsteh-queue/getting-started/project-structure).
+</Note>
 
-Add the queue job model to your `schema.prisma`:
+## Database Schema
 
 ```prisma
 model QueueJob {

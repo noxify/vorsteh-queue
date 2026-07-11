@@ -31,6 +31,11 @@ const adapter = new PostgresQueueAdapter(db)
 const queue = new Queue(adapter, { name: "my-queue" })
 ```
 
+<Note title="Tip">
+  For real projects, extract this setup into a shared `src/queues.ts` file. See
+  [Project Structure](/docs/vorsteh-queue/getting-started/project-structure).
+</Note>
+
 ## Database Schema
 
 The adapter provides a migration for creating the queue table:
