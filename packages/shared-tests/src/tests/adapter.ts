@@ -223,6 +223,30 @@ export function runTests<TDatabase = unknown>(
           const retrieved = await adapter.getJobById(job.id)
           expect(retrieved?.onDependencyFailure).toBe("cancel")
         })
+
+        it("should persist onDependencyFailure via addJobs", async () => {
+          const depIds = ["00000000-0000-0000-0000-000000000001"]
+          const jobs = await adapter.addJobs([
+            {
+              attempts: 0,
+              dependsOn: depIds,
+              maxAttempts: 3,
+              name: "batch-dep-policy",
+              onDependencyFailure: "cancel",
+              payload: {},
+              priority: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+              status: "pending",
+            },
+          ])
+
+          expect(jobs[0]?.onDependencyFailure).toBe("cancel")
+
+          const retrieved = await adapter.getJobById(jobs[0]?.id ?? "")
+          expect(retrieved?.onDependencyFailure).toBe("cancel")
+        })
       })
 
       describe("getNextJob", () => {

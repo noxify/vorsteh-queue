@@ -120,6 +120,7 @@ export class PostgresQueueAdapter<
       groupKey: job.groupKey ?? null,
       maxAttempts: job.maxAttempts,
       name: job.name,
+      onDependencyFailure: job.onDependencyFailure ?? null,
       payload: job.payload,
       priority: job.priority,
       processAt: sql`${job.processAt.toISOString()}::timestamptz`,
