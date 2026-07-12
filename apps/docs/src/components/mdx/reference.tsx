@@ -82,7 +82,7 @@ const SectionBody: ReferenceComponents["SectionBody"] = ({ children }) => (
   </CollapsibleContent>
 )
 
-const gapMap = { small: "gap-2", medium: "gap-4", large: "gap-6" } as const
+const gapMap = { large: "gap-6", medium: "gap-4", small: "gap-2" } as const
 
 // Column Layout
 const Column: ReferenceComponents["Column"] = ({
@@ -236,23 +236,23 @@ const Description: ReferenceComponents["Description"] = ({ children }) => (
 )
 
 const referenceComponents = {
-  Section,
-  SectionHeading,
-  SectionBody,
-  Column,
-  Row,
-  Detail,
-  DetailHeading,
-  Signatures,
-  Table,
-  TableRowGroup,
-  TableRow,
-  TableSubRow,
-  TableHeader,
-  TableData,
   AccessorName,
   Code,
+  Column,
   Description,
+  Detail,
+  DetailHeading,
+  Row,
+  Section,
+  SectionBody,
+  SectionHeading,
+  Signatures,
+  Table,
+  TableData,
+  TableHeader,
+  TableRow,
+  TableRowGroup,
+  TableSubRow,
 } satisfies Partial<ReferenceComponents>
 
 // Main Reference component

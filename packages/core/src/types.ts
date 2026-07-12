@@ -33,13 +33,13 @@ export type ActiveStatus =
  * Key = current status, Value = array of allowed next statuses.
  */
 export const STATE_TRANSITIONS: Record<JobStatus, readonly JobStatus[]> = {
-  pending: ["processing", "cancelled", "waiting-children"],
-  delayed: ["pending", "cancelled"],
-  processing: ["completed", "failed", "cancelled"],
-  failed: ["pending", "dead", "cancelled"],
-  completed: [],
   cancelled: [],
+  completed: [],
   dead: ["pending"],
+  delayed: ["pending", "cancelled"],
+  failed: ["pending", "dead", "cancelled"],
+  pending: ["processing", "cancelled", "waiting-children"],
+  processing: ["completed", "failed", "cancelled"],
   "waiting-children": ["pending", "cancelled", "failed"],
 } as const
 

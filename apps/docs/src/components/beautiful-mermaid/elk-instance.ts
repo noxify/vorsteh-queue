@@ -14,7 +14,7 @@
  */
 
 import type { ElkNode } from 'elkjs'
-// @ts-ignore — static import of bundled ELK
+// @ts-expect-error — static import of bundled ELK
 import ELKBundled from 'elkjs/lib/elk.bundled.js'
 
 interface RawFakeWorker {
@@ -37,12 +37,12 @@ let rawWorker: RawFakeWorker | null = null
  * next macrotask.
  */
 function ensureElk(): void {
-  if (elk) return
+  if (elk) {return}
 
   // Capture setTimeout(0) callbacks queued during ELK construction
   const pending: (() => void)[] = []
   const origSetTimeout = globalThis.setTimeout
-  // @ts-ignore — simplified signature for our interception
+  // @ts-expect-error — simplified signature for our interception
   globalThis.setTimeout = (fn: () => void, delay?: number) => {
     if (delay === 0) { pending.push(fn); return 0 }
     return origSetTimeout(fn, delay)
@@ -54,14 +54,14 @@ function ensureElk(): void {
   const g = globalThis as Record<string, unknown>
   const hadSelf = 'self' in g
   const origSelf = g.self
-  if (hadSelf && typeof g.document === 'undefined') {
+  if (hadSelf && g.document === undefined) {
     delete g.self
   }
 
   elk = new ELKBundled()
 
   // Restore self
-  if (hadSelf) g.self = origSelf
+  if (hadSelf) {g.self = origSelf}
 
   // Restore setTimeout immediately
   globalThis.setTimeout = origSetTimeout
@@ -102,12 +102,12 @@ export function elkLayoutSync(graph: ElkNode): ElkNode {
   // Call dispatcher.saveDispatch directly — bypasses FakeWorker.postMessage's
   // setTimeout(0) wrapper. The dispatcher processes the layout synchronously
   // and calls rawWorker.onmessage with the result.
-  rawWorker!.dispatcher.saveDispatch({ data: { id: 0, cmd: 'layout', graph } as unknown as Record<string, unknown> })
+  rawWorker!.dispatcher.saveDispatch({ data: { cmd: 'layout', graph, id: 0 } as unknown as Record<string, unknown> })
 
   // Restore original handler
   rawWorker!.onmessage = origOnmessage
 
-  if (error) throw error
-  if (!result) throw new Error('ELK layout did not return synchronously')
+  if (error) {throw error}
+  if (!result) {throw new Error('ELK layout did not return synchronously')}
   return result
 }

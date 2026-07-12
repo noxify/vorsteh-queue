@@ -16,15 +16,15 @@ function toJsonLd(value: unknown) {
 }
 
 export const metadata: Metadata = {
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Vorsteh Queue",
-  },
   alternates: {
     types: {
       "application/x-ndjson": "/docs.snapshot.jsonl",
     },
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Vorsteh Queue",
   },
   description:
     "A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle background jobs, scheduled tasks, and recurring processes with ease.",
@@ -66,9 +66,9 @@ export default function RootLayout({
           "github-dark",
           {
             colors: {
+              "activityBar.background": "#211d1a",
               "editor.background": "#211d1a",
               "panel.border": "#211d1a",
-              "activityBar.background": "#211d1a",
             },
           },
         ],
@@ -77,9 +77,9 @@ export default function RootLayout({
 
           {
             colors: {
+              "activityBar.background": "#faf9f7",
               "editor.background": "#faf9f7",
               "panel.border": "#faf9f7",
-              "activityBar.background": "#faf9f7",
             },
           },
         ],

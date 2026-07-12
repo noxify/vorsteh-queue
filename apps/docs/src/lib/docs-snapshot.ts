@@ -74,9 +74,9 @@ function normalizeInternalHref(href: string): string {
 
 function mapSectionsToHeadings(sections: HeadingSection[]): Heading[] {
   return sections.map((section) => ({
+    id: section.id,
     level: section.depth,
     text: section.title,
-    id: section.id,
   }))
 }
 
@@ -274,9 +274,9 @@ async function buildRecord(
   const titleValue =
     typeof frontmatter?.title === "string"
       ? frontmatter.title
-      : typeof frontmatter?.navTitle === "string"
+      : (typeof frontmatter?.navTitle === "string"
         ? frontmatter.navTitle
-        : undefined
+        : undefined)
 
   const title = titleValue?.trim()
   if (!title) {
@@ -301,27 +301,27 @@ async function buildRecord(
   ].join(" ")
 
   return {
-    schemaVersion: "1.0.0",
-    docId,
-    source: sourceCollection,
-    slug: normalizedSlug,
-    path: toDocsPath(pathname),
-    raw_path: toRawPath(pathname),
-    title,
-    headings: mapSectionsToHeadings(sections),
-    documentType: classifyDocumentType(relPath),
-    contentOrigin: "static-doc",
-    canonicalUrl: toCanonicalUrl(pathname),
     buildId,
-    generatedAt,
+    canonicalUrl: toCanonicalUrl(pathname),
     content: body,
+    contentOrigin: "static-doc",
     description,
+    docId,
+    documentType: classifyDocumentType(relPath),
+    generatedAt,
+    headings: mapSectionsToHeadings(sections),
+    keywords: extractKeywords(keywordInput),
     navTitle:
       typeof frontmatter?.navTitle === "string"
         ? frontmatter.navTitle.trim()
         : undefined,
+    path: toDocsPath(pathname),
+    raw_path: toRawPath(pathname),
+    schemaVersion: "1.0.0",
+    slug: normalizedSlug,
+    source: sourceCollection,
     tags,
-    keywords: extractKeywords(keywordInput),
+    title,
   }
 }
 

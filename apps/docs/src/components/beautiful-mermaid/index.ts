@@ -141,31 +141,31 @@ function firstSignificantLine(text: string): string {
 const ZINC_DARK = THEMES["zinc-dark"] ?? { bg: "#18181B", fg: "#FAFAFA" }
 
 const MERMAID_THEME_COLORS: Record<string, DiagramColors> = {
-  default: { bg: DEFAULTS.bg, fg: DEFAULTS.fg },
   base: { bg: DEFAULTS.bg, fg: DEFAULTS.fg },
+  dark: {
+    accent: ZINC_DARK.accent,
+    bg: ZINC_DARK.bg,
+    border: ZINC_DARK.border,
+    fg: ZINC_DARK.fg,
+    line: ZINC_DARK.line,
+    muted: ZINC_DARK.muted,
+    surface: ZINC_DARK.surface,
+  },
+  default: { bg: DEFAULTS.bg, fg: DEFAULTS.fg },
+  forest: {
+    accent: "#15803d",
+    bg: "#f0fdf4",
+    border: "#86efac",
+    fg: "#14532d",
+    line: "#4d7c0f",
+    muted: "#65a30d",
+  },
   neutral: {
+    accent: "#6b7280",
     bg: "#ffffff",
     fg: "#1f2937",
     line: "#9ca3af",
-    accent: "#6b7280",
     muted: "#6b7280",
-  },
-  dark: {
-    bg: ZINC_DARK.bg,
-    fg: ZINC_DARK.fg,
-    line: ZINC_DARK.line,
-    accent: ZINC_DARK.accent,
-    muted: ZINC_DARK.muted,
-    surface: ZINC_DARK.surface,
-    border: ZINC_DARK.border,
-  },
-  forest: {
-    bg: "#f0fdf4",
-    fg: "#14532d",
-    line: "#4d7c0f",
-    accent: "#15803d",
-    muted: "#65a30d",
-    border: "#86efac",
   },
 }
 
@@ -177,11 +177,19 @@ function buildColors(
   const vars = config.themeVariables
 
   return {
+    accent:
+      options.accent ??
+      readThemeValue(vars, "arrowheadColor", "primaryColor") ??
+      theme?.accent,
     bg:
       options.bg ??
       readThemeValue(vars, "background", "mainBkg") ??
       theme?.bg ??
       DEFAULTS.bg,
+    border:
+      options.border ??
+      readThemeValue(vars, "primaryBorderColor", "secondaryBorderColor") ??
+      theme?.border,
     fg:
       options.fg ??
       readThemeValue(vars, "primaryTextColor", "textColor", "nodeTextColor") ??
@@ -191,23 +199,15 @@ function buildColors(
       options.line ??
       readThemeValue(vars, "lineColor", "defaultLinkColor") ??
       theme?.line,
-    accent:
-      options.accent ??
-      readThemeValue(vars, "arrowheadColor", "primaryColor") ??
-      theme?.accent,
     muted:
       options.muted ??
       readThemeValue(vars, "secondaryTextColor", "tertiaryTextColor") ??
       theme?.muted,
+    shadow: options.shadow ?? theme?.shadow,
     surface:
       options.surface ??
       readThemeValue(vars, "primaryColor", "nodeBkg", "mainBkg") ??
       theme?.surface,
-    border:
-      options.border ??
-      readThemeValue(vars, "primaryBorderColor", "secondaryBorderColor") ??
-      theme?.border,
-    shadow: options.shadow ?? theme?.shadow,
   }
 }
 
@@ -301,9 +301,9 @@ export function renderMermaidSVG(
         options
       )
       const archOptions =
-        archVisual.padding != null
-          ? { ...options, padding: options.padding ?? archVisual.padding }
-          : options
+        archVisual.padding == null
+          ? options
+          : { ...options, padding: options.padding ?? archVisual.padding }
       const diagram = parseArchitectureDiagram(lines)
       const positioned = layoutArchitectureDiagram(
         diagram,

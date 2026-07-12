@@ -231,18 +231,18 @@ function applyHashOnlyFallback(
  */
 function parseUrl(urlStr: string, parseQueryString = false): UrlObject {
   const result: UrlObject = {
-    protocol: null,
-    slashes: null,
     auth: null,
-    host: null,
-    port: null,
-    hostname: null,
     hash: null,
-    search: null,
-    query: null,
-    pathname: null,
-    path: null,
+    host: null,
+    hostname: null,
     href: urlStr,
+    path: null,
+    pathname: null,
+    port: null,
+    protocol: null,
+    query: null,
+    search: null,
+    slashes: null,
   }
 
   // Handle empty or invalid input

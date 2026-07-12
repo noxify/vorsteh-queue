@@ -4,15 +4,15 @@ import { client } from "./database"
 import { adapter, queue } from "./queues"
 
 const worker = new Worker(adapter, {
-  name: "event-queue",
   concurrency: 2,
+  name: "event-queue",
   pollInterval: 50,
 })
 
 // Register handlers
 worker.register("reliable-task", async (job) => {
   await new Promise((resolve) => setTimeout(resolve, 1000))
-  return { success: true, data: job.payload }
+  return { data: job.payload, success: true }
 })
 
 worker.register("unreliable-task", async () => {

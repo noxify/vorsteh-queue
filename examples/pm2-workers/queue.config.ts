@@ -7,6 +7,6 @@ import {
 
 export default {
   adapter,
-  queues: [emailQueue, imageQueue, reportQueue],
   defaultQueue: "email-queue",
+  queues: [emailQueue, imageQueue, reportQueue],
 }

@@ -44,31 +44,31 @@ export interface ResolvedArchitectureVisualConfig {
 }
 
 export const DEFAULT_ARCHITECTURE_VISUAL: ArchitectureVisualConfig = {
-  groupHeaderHeight: 28,
-  groupFontSize: 12,
-  groupFontWeight: 600,
-  groupLetterSpacing: 0,
-  groupPaddingX: 16,
-  groupPaddingY: 16,
-  groupLabelPaddingX: 12,
-  groupCornerRadius: 0,
-  groupLineWidth: 1,
-  serviceFontSize: 13,
-  serviceFontWeight: 500,
-  serviceLetterSpacing: 0,
-  servicePaddingX: 20,
-  servicePaddingY: 10,
-  serviceCornerRadius: 0,
-  serviceLineWidth: 1,
+  edgeBendRadius: 0,
   edgeFontSize: 11,
   edgeFontWeight: 400,
   edgeLetterSpacing: 0,
   edgeLineWidth: 1,
-  edgeBendRadius: 0,
+  groupCornerRadius: 0,
+  groupFontSize: 12,
+  groupFontWeight: 600,
+  groupHeaderHeight: 28,
+  groupLabelPaddingX: 12,
+  groupLetterSpacing: 0,
+  groupLineWidth: 1,
+  groupPaddingX: 16,
+  groupPaddingY: 16,
   iconSize: 16,
-  serviceIconSize: 18,
-  junctionOuterRadius: 8,
   junctionInnerRadius: 4.5,
+  junctionOuterRadius: 8,
+  serviceCornerRadius: 0,
+  serviceFontSize: 13,
+  serviceFontWeight: 500,
+  serviceIconSize: 18,
+  serviceLetterSpacing: 0,
+  serviceLineWidth: 1,
+  servicePaddingX: 20,
+  servicePaddingY: 10,
 }
 
 /**
@@ -112,67 +112,67 @@ export function resolveArchitectureVisualConfig(
   const junctionInnerRadius = Number((junctionOuterRadius * 0.56).toFixed(1))
 
   const styleDefaults: RenderStyleDefaults = {
-    nodeLabelFontSize: baseFontSize,
-    edgeLabelFontSize: edgeFontSize,
-    groupHeaderFontSize: groupFontSize,
-    nodeLabelFontWeight: DEFAULT_ARCHITECTURE_VISUAL.serviceFontWeight,
-    edgeLabelFontWeight: DEFAULT_ARCHITECTURE_VISUAL.edgeFontWeight,
-    groupHeaderFontWeight: DEFAULT_ARCHITECTURE_VISUAL.groupFontWeight,
-    nodePaddingX: DEFAULT_ARCHITECTURE_VISUAL.servicePaddingX,
-    nodePaddingY: DEFAULT_ARCHITECTURE_VISUAL.servicePaddingY,
-    nodeCornerRadius: DEFAULT_ARCHITECTURE_VISUAL.serviceCornerRadius,
-    nodeLineWidth: DEFAULT_ARCHITECTURE_VISUAL.serviceLineWidth,
-    edgeLineWidth: DEFAULT_ARCHITECTURE_VISUAL.edgeLineWidth,
     edgeBendRadius: DEFAULT_ARCHITECTURE_VISUAL.edgeBendRadius,
+    edgeLabelFontSize: edgeFontSize,
+    edgeLabelFontWeight: DEFAULT_ARCHITECTURE_VISUAL.edgeFontWeight,
+    edgeLineWidth: DEFAULT_ARCHITECTURE_VISUAL.edgeLineWidth,
     groupCornerRadius: DEFAULT_ARCHITECTURE_VISUAL.groupCornerRadius,
-    groupPaddingX: DEFAULT_ARCHITECTURE_VISUAL.groupPaddingX,
-    groupPaddingY: DEFAULT_ARCHITECTURE_VISUAL.groupPaddingY,
+    groupHeaderFontSize: groupFontSize,
+    groupHeaderFontWeight: DEFAULT_ARCHITECTURE_VISUAL.groupFontWeight,
     groupLabelPaddingX: DEFAULT_ARCHITECTURE_VISUAL.groupLabelPaddingX,
     groupLineWidth: DEFAULT_ARCHITECTURE_VISUAL.groupLineWidth,
+    groupPaddingX: DEFAULT_ARCHITECTURE_VISUAL.groupPaddingX,
+    groupPaddingY: DEFAULT_ARCHITECTURE_VISUAL.groupPaddingY,
+    nodeCornerRadius: DEFAULT_ARCHITECTURE_VISUAL.serviceCornerRadius,
+    nodeLabelFontSize: baseFontSize,
+    nodeLabelFontWeight: DEFAULT_ARCHITECTURE_VISUAL.serviceFontWeight,
+    nodeLineWidth: DEFAULT_ARCHITECTURE_VISUAL.serviceLineWidth,
+    nodePaddingX: DEFAULT_ARCHITECTURE_VISUAL.servicePaddingX,
+    nodePaddingY: DEFAULT_ARCHITECTURE_VISUAL.servicePaddingY,
   }
   const style = resolveRenderStyle(options, styleDefaults)
 
   const visual: ArchitectureVisualConfig = {
-    groupHeaderHeight: Math.max(groupHeaderHeight, style.groupHeaderFontSize + 12),
-    groupFontSize: style.groupHeaderFontSize,
-    groupFontWeight: style.groupHeaderFontWeight,
-    groupLetterSpacing: style.groupLetterSpacing,
-    groupFont: style.groupFont,
-    groupTextTransform: style.groupTextTransform,
-    groupPaddingX: style.groupPaddingX,
-    groupPaddingY: style.groupPaddingY,
-    groupLabelPaddingX: style.groupLabelPaddingX,
-    groupCornerRadius: style.groupCornerRadius,
-    groupLineWidth: style.groupLineWidth,
-    serviceFontSize: style.nodeLabelFontSize,
-    serviceFontWeight: style.nodeLabelFontWeight,
-    serviceLetterSpacing: style.nodeLetterSpacing,
-    servicePaddingX: style.nodePaddingX,
-    servicePaddingY: style.nodePaddingY,
-    serviceCornerRadius: style.cornerRadius ?? 0,
-    serviceLineWidth: style.nodeLineWidth,
+    edgeBendRadius: style.edgeBendRadius,
     edgeFontSize: style.edgeLabelFontSize,
     edgeFontWeight: style.edgeLabelFontWeight,
     edgeLetterSpacing: style.edgeLetterSpacing,
     edgeLineWidth: style.lineWidth,
-    edgeBendRadius: style.edgeBendRadius,
-    iconSize,
-    serviceIconSize,
-    junctionOuterRadius,
-    junctionInnerRadius,
-    groupSurface: pickString(themeVariables, 'clusterBkg') ?? colors.surface,
     groupBorder: style.groupBorderColor ?? pickString(themeVariables, 'clusterBorder') ?? colors.border,
-    serviceSurface: pickString(themeVariables, 'mainBkg', 'secondaryColor') ?? colors.surface,
+    groupCornerRadius: style.groupCornerRadius,
+    groupFont: style.groupFont,
+    groupFontSize: style.groupHeaderFontSize,
+    groupFontWeight: style.groupHeaderFontWeight,
+    groupHeaderHeight: Math.max(groupHeaderHeight, style.groupHeaderFontSize + 12),
+    groupLabelPaddingX: style.groupLabelPaddingX,
+    groupLetterSpacing: style.groupLetterSpacing,
+    groupLineWidth: style.groupLineWidth,
+    groupPaddingX: style.groupPaddingX,
+    groupPaddingY: style.groupPaddingY,
+    groupSurface: pickString(themeVariables, 'clusterBkg') ?? colors.surface,
+    groupTextTransform: style.groupTextTransform,
+    iconSize,
+    junctionInnerRadius,
+    junctionOuterRadius,
     serviceBorder: pickString(themeVariables, 'primaryBorderColor') ?? colors.border,
+    serviceCornerRadius: style.cornerRadius ?? 0,
+    serviceFontSize: style.nodeLabelFontSize,
+    serviceFontWeight: style.nodeLabelFontWeight,
+    serviceIconSize,
+    serviceLetterSpacing: style.nodeLetterSpacing,
+    serviceLineWidth: style.nodeLineWidth,
+    servicePaddingX: style.nodePaddingX,
+    servicePaddingY: style.nodePaddingY,
+    serviceSurface: pickString(themeVariables, 'mainBkg', 'secondaryColor') ?? colors.surface,
   }
 
-  return { visual, padding: getNumber(architecture, 'padding') }
+  return { padding: getNumber(architecture, 'padding'), visual }
 }
 
 function pickString(map: MermaidFrontmatterMap | undefined, ...keys: string[]): string | undefined {
   for (const key of keys) {
     const value = getString(map, key)
-    if (value) return value
+    if (value) {return value}
   }
   return undefined
 }
@@ -192,8 +192,8 @@ function getMap(map: MermaidFrontmatterMap | undefined, key: string): MermaidFro
 }
 
 function toNumber(value: MermaidConfigValue | undefined): number | undefined {
-  if (typeof value === 'number') return value
-  if (typeof value !== 'string') return undefined
+  if (typeof value === 'number') {return value}
+  if (typeof value !== 'string') {return undefined}
 
   const normalized = value.trim()
   const match = normalized.match(/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:px)?$/i)

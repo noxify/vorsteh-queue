@@ -27,8 +27,8 @@ import { normalizeBrTags } from '../multiline-utils'
 export function parseClassDiagram(lines: string[]): ClassDiagram {
   const diagram: ClassDiagram = {
     classes: [],
-    relationships: [],
     namespaces: [],
+    relationships: [],
   }
 
   // Track classes by ID for deduplication
@@ -94,7 +94,7 @@ export function parseClassDiagram(lines: string[]): ClassDiagram {
     // --- Namespace block start ---
     const nsMatch = line.match(/^namespace\s+(\S+)\s*\{$/)
     if (nsMatch) {
-      currentNamespace = { name: nsMatch[1]!, classIds: [] }
+      currentNamespace = { classIds: [], name: nsMatch[1]! }
       continue
     }
 
@@ -150,7 +150,7 @@ export function parseClassDiagram(lines: string[]): ClassDiagram {
     if (inlineAttrMatch) {
       // Make sure this isn't a relationship line (those have arrows)
       const rest = inlineAttrMatch[2]!
-      if (!rest.match(/<\|--|--|\*--|o--|-->|\.\.>|\.\.\|>/)) {
+      if (!/<\|--|--|\*--|o--|-->|\.\.>|\.\.\|>/.test(rest)) {
         const cls = ensureClass(classMap, inlineAttrMatch[1]!)
         const member = parseMember(rest)
         if (member) {
@@ -189,15 +189,15 @@ function parseAccessibilityLine(line: string, directive: 'accTitle' | 'accDescr'
 
 function collectAccessibilityBlock(initial: string, lines: string[], startIndex: number): { text: string; nextIndex: number } {
   const initialEnd = initial.indexOf('}')
-  if (initialEnd !== -1) return { text: initial.slice(0, initialEnd).trim(), nextIndex: startIndex }
+  if (initialEnd !== -1) {return { text: initial.slice(0, initialEnd).trim(), nextIndex: startIndex }}
   const parts = [initial.trim()].filter(Boolean)
   for (let i = startIndex + 1; i < lines.length; i++) {
     const line = lines[i]!
     const end = line.indexOf('}')
     if (end !== -1) {
       const beforeBrace = line.slice(0, end).trim()
-      if (beforeBrace) parts.push(beforeBrace)
-      return { text: parts.join('\n'), nextIndex: i }
+      if (beforeBrace) {parts.push(beforeBrace)}
+      return { nextIndex: i, text: parts.join('\n') }
     }
     parts.push(line)
   }
@@ -208,7 +208,7 @@ function collectAccessibilityBlock(initial: string, lines: string[], startIndex:
 function ensureClass(classMap: Map<string, ClassNode>, id: string): ClassNode {
   let cls = classMap.get(id)
   if (!cls) {
-    cls = { id, label: id, attributes: [], methods: [] }
+    cls = { attributes: [], id, label: id, methods: [] }
     classMap.set(id, cls)
   }
   return cls
@@ -217,7 +217,7 @@ function ensureClass(classMap: Map<string, ClassNode>, id: string): ClassNode {
 /** Parse a class member line (attribute or method) */
 function parseMember(line: string): { member: ClassMember; isMethod: boolean } | null {
   const trimmed = line.trim().replace(/;$/, '')
-  if (!trimmed) return null
+  if (!trimmed) {return null}
 
   // Extract visibility prefix
   let visibility: ClassMember['visibility'] = ''
@@ -237,16 +237,16 @@ function parseMember(line: string): { member: ClassMember; isMethod: boolean } |
     const isStatic = name.endsWith('$') || rest.includes('$')
     const isAbstract = name.endsWith('*') || rest.includes('*')
     return {
+      isMethod: true,
       member: {
-        visibility,
-        name: name.replace(/[$*]$/, ''),
-        type: type || undefined,
-        isStatic,
         isAbstract,
         isMethod: true,
+        isStatic,
+        name: name.replace(/[$*]$/, ''),
         params,
+        type: type || undefined,
+        visibility,
       },
-      isMethod: true,
     }
   }
 
@@ -268,15 +268,15 @@ function parseMember(line: string): { member: ClassMember; isMethod: boolean } |
   const isAbstract = name.endsWith('*')
 
   return {
+    isMethod: false,
     member: {
-      visibility,
-      name: name.replace(/[$*]$/, ''),
-      type: type || undefined,
-      isStatic,
       isAbstract,
       isMethod: false,
+      isStatic,
+      name: name.replace(/[$*]$/, ''),
+      type: type || undefined,
+      visibility,
     },
-    isMethod: false,
   }
 }
 
@@ -287,7 +287,7 @@ function parseRelationship(line: string): ClassRelationship | null {
   const match = line.match(
     /^(\S+?)\s+(?:"([^"]*?)"\s+)?(<\|--|<\|\.\.|\*--|o--|-->|--\*|--o|--\|>|\.\.>|\.\.\|>|<--|<\.\.?|--)\s+(?:"([^"]*?)"\s+)?(\S+?)(?:\s*:\s*(.+))?$/
   )
-  if (!match) return null
+  if (!match) {return null}
 
   const from = match[1]!
   const rawFromCardinality = match[2]
@@ -300,9 +300,9 @@ function parseRelationship(line: string): ClassRelationship | null {
   const label = rawLabel ? normalizeBrTags(rawLabel) : undefined
 
   const parsed = parseArrow(arrow)
-  if (!parsed) return null
+  if (!parsed) {return null}
 
-  return { from, to, type: parsed.type, markerAt: parsed.markerAt, label, fromCardinality, toCardinality }
+  return { from, fromCardinality, label, markerAt: parsed.markerAt, to, toCardinality, type: parsed.type }
 }
 
 /**
@@ -314,19 +314,33 @@ function parseArrow(arrow: string): { type: RelationshipType; markerAt: 'from' |
   // Trim whitespace that might be captured by the regex
   const a = arrow.trim()
   switch (a) {
-    case '<|--': return { type: 'inheritance',  markerAt: 'from' }
-    case '--|>': return { type: 'inheritance',  markerAt: 'to' }
-    case '<|..': return { type: 'realization',  markerAt: 'from' }
-    case '..|>': return { type: 'realization',  markerAt: 'to' }
-    case '*--':  return { type: 'composition',  markerAt: 'from' }
-    case '--*':  return { type: 'composition',  markerAt: 'to' }
-    case 'o--':  return { type: 'aggregation',  markerAt: 'from' }
-    case '--o':  return { type: 'aggregation',  markerAt: 'to' }
-    case '-->':  return { type: 'association',  markerAt: 'to' }
-    case '<--':  return { type: 'association',  markerAt: 'from' }
-    case '..>':  return { type: 'dependency',   markerAt: 'to' }
-    case '<..':  return { type: 'dependency',   markerAt: 'from' }
-    case '--':   return { type: 'association',  markerAt: 'to' }
-    default:     return null
+    case '<|--': { return { type: 'inheritance',  markerAt: 'from' }
+    }
+    case '--|>': { return { type: 'inheritance',  markerAt: 'to' }
+    }
+    case '<|..': { return { type: 'realization',  markerAt: 'from' }
+    }
+    case '..|>': { return { type: 'realization',  markerAt: 'to' }
+    }
+    case '*--': {  return { type: 'composition',  markerAt: 'from' }
+    }
+    case '--*': {  return { type: 'composition',  markerAt: 'to' }
+    }
+    case 'o--': {  return { type: 'aggregation',  markerAt: 'from' }
+    }
+    case '--o': {  return { type: 'aggregation',  markerAt: 'to' }
+    }
+    case '-->': {  return { type: 'association',  markerAt: 'to' }
+    }
+    case '<--': {  return { type: 'association',  markerAt: 'from' }
+    }
+    case '..>': {  return { type: 'dependency',   markerAt: 'to' }
+    }
+    case '<..': {  return { type: 'dependency',   markerAt: 'from' }
+    }
+    case '--': {   return { type: 'association',  markerAt: 'to' }
+    }
+    default: {     return null
+    }
   }
 }

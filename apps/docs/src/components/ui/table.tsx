@@ -7,28 +7,28 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const tableVariants = cva("w-full caption-bottom text-sm", {
-  variants: {
-    variant: {
-      default: "",
-      outline: "",
-      card: "rounded-lg",
-    },
-  },
   defaultVariants: {
     variant: "default",
+  },
+  variants: {
+    variant: {
+      card: "rounded-lg",
+      default: "",
+      outline: "",
+    },
   },
 })
 
 const tableContainerVariants = cva("relative w-full overflow-x-auto", {
-  variants: {
-    variant: {
-      default: "",
-      outline: "border border-border rounded-md",
-      card: "border border-border rounded-lg bg-card",
-    },
-  },
   defaultVariants: {
     variant: "default",
+  },
+  variants: {
+    variant: {
+      card: "border border-border rounded-lg bg-card",
+      default: "",
+      outline: "border border-border rounded-md",
+    },
   },
 })
 
@@ -44,7 +44,7 @@ function Table({
     >
       <table
         data-slot="table"
-        className={cn(tableVariants({ variant, className }))}
+        className={cn(tableVariants({ className, variant }))}
         {...props}
       />
     </div>

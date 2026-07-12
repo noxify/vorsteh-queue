@@ -169,17 +169,17 @@ function groupItems(items: SearchCommandItem[]): SearchCommandGroup[] {
       ? pageItems
       : [
           {
-            value: `doc-page-${pageId}`,
-            label: pageTitle,
-            href: pageHref,
+            documentType: "page" as const,
             group: "Documentation",
             hint: pageHint,
-            documentType: "page" as const,
-            pageId,
-            pageTitle,
+            href: pageHref,
+            label: pageTitle,
             pageHint,
             pageHref,
+            pageId,
+            pageTitle,
             resultOrder: Number.NEGATIVE_INFINITY,
+            value: `doc-page-${pageId}`,
           },
           ...pageItems,
         ]
@@ -197,10 +197,10 @@ function groupItems(items: SearchCommandItem[]): SearchCommandGroup[] {
     })
 
     return {
-      key: `page-${pageId}`,
-      value: pageTitle,
-      subtitle: pageHint,
       items: enrichedItems,
+      key: `page-${pageId}`,
+      subtitle: pageHint,
+      value: pageTitle,
     }
   })
 
@@ -225,9 +225,9 @@ function groupItems(items: SearchCommandItem[]): SearchCommandGroup[] {
 
   const otherGroups = [...groupedOther.entries()].map(
     ([value, groupedItems]) => ({
+      items: groupedItems,
       key: `group-${value}`,
       value,
-      items: groupedItems,
     })
   )
 
@@ -444,9 +444,9 @@ export function SearchCommandProvider({
 
     const sorted = [...optionMap.entries()]
       .toSorted(([, aLabel], [, bLabel]) => collator.compare(aLabel, bLabel))
-      .map(([value, label]) => ({ value, label }))
+      .map(([value, label]) => ({ label, value }))
 
-    return [{ value: "all", label: "All" }, ...sorted]
+    return [{ label: "All", value: "all" }, ...sorted]
   }, [availableCollections, items, searchResults, selectedCollection])
 
   /* oxlint-disable react-doctor/no-derived-state -- syncing filtered results with prop/state changes */
@@ -570,29 +570,29 @@ export function SearchCommandProvider({
               : undefined
 
           return {
-            value: `doc-${document.id ?? indexPosition}`,
-            label: label ?? "",
-            href,
-            group: "Documentation",
-            hint: formatHint(document),
-            description,
-            documentType: document.type,
-            pageId:
-              typeof document.page_id === "string"
-                ? document.page_id
-                : undefined,
-            pageTitle: document.title,
-            pageHint: formatHint(document),
-            pageHref:
-              typeof document.page_id === "string"
-                ? normalizeHref(document.page_id)
-                : href,
-            resultOrder: indexPosition,
             collection:
               getCollectionFromHref(href) ??
               (typeof document.section === "string"
                 ? normalizeCollection(document.section)
                 : undefined),
+            description,
+            documentType: document.type,
+            group: "Documentation",
+            hint: formatHint(document),
+            href,
+            label: label ?? "",
+            pageHint: formatHint(document),
+            pageHref:
+              typeof document.page_id === "string"
+                ? normalizeHref(document.page_id)
+                : href,
+            pageId:
+              typeof document.page_id === "string"
+                ? document.page_id
+                : undefined,
+            pageTitle: document.title,
+            resultOrder: indexPosition,
+            value: `doc-${document.id ?? indexPosition}`,
           }
         })
         .filter((item): item is SearchCommandItem => item !== null)

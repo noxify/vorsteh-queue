@@ -42,11 +42,11 @@ function isCombiningMark(code: number): boolean {
   // Combining Diacritical Marks for Symbols: U+20D0–U+20FF
   // Combining Half Marks: U+FE20–U+FE2F
   return (
-    (code >= 0x0300 && code <= 0x036f) ||
-    (code >= 0x1ab0 && code <= 0x1aff) ||
-    (code >= 0x1dc0 && code <= 0x1dff) ||
-    (code >= 0x20d0 && code <= 0x20ff) ||
-    (code >= 0xfe20 && code <= 0xfe2f)
+    (code >= 0x03_00 && code <= 0x03_6f) ||
+    (code >= 0x1a_b0 && code <= 0x1a_ff) ||
+    (code >= 0x1d_c0 && code <= 0x1d_ff) ||
+    (code >= 0x20_d0 && code <= 0x20_ff) ||
+    (code >= 0xfe_20 && code <= 0xfe_2f)
   )
 }
 
@@ -76,23 +76,23 @@ function isFullwidth(code: number): boolean {
   // CJK Unified Ideographs Extension B+: U+20000–U+2A6DF (and beyond)
 
   return (
-    (code >= 0x1100 && code <= 0x115f) || // Hangul Jamo
-    (code >= 0x2e80 && code <= 0x2eff) || // CJK Radicals Supplement
-    (code >= 0x2f00 && code <= 0x2fdf) || // Kangxi Radicals
-    (code >= 0x3000 && code <= 0x303f) || // CJK Symbols and Punctuation
-    (code >= 0x3040 && code <= 0x309f) || // Hiragana
-    (code >= 0x30a0 && code <= 0x30ff) || // Katakana
-    (code >= 0x3100 && code <= 0x312f) || // Bopomofo
-    (code >= 0x3130 && code <= 0x318f) || // Hangul Compatibility Jamo
-    (code >= 0x3190 && code <= 0x31ff) || // Kanbun + extensions
-    (code >= 0x3200 && code <= 0x33ff) || // Enclosed CJK + Compatibility
-    (code >= 0x3400 && code <= 0x4dbf) || // CJK Extension A
-    (code >= 0x4e00 && code <= 0x9fff) || // CJK Unified Ideographs
-    (code >= 0xac00 && code <= 0xd7af) || // Hangul Syllables
-    (code >= 0xf900 && code <= 0xfaff) || // CJK Compatibility Ideographs
-    (code >= 0xff00 && code <= 0xff60) || // Fullwidth ASCII
-    (code >= 0xffe0 && code <= 0xffe6) || // Fullwidth symbols
-    code >= 0x20000 // CJK Extension B and beyond
+    (code >= 0x11_00 && code <= 0x11_5f) || // Hangul Jamo
+    (code >= 0x2e_80 && code <= 0x2e_ff) || // CJK Radicals Supplement
+    (code >= 0x2f_00 && code <= 0x2f_df) || // Kangxi Radicals
+    (code >= 0x30_00 && code <= 0x30_3f) || // CJK Symbols and Punctuation
+    (code >= 0x30_40 && code <= 0x30_9f) || // Hiragana
+    (code >= 0x30_a0 && code <= 0x30_ff) || // Katakana
+    (code >= 0x31_00 && code <= 0x31_2f) || // Bopomofo
+    (code >= 0x31_30 && code <= 0x31_8f) || // Hangul Compatibility Jamo
+    (code >= 0x31_90 && code <= 0x31_ff) || // Kanbun + extensions
+    (code >= 0x32_00 && code <= 0x33_ff) || // Enclosed CJK + Compatibility
+    (code >= 0x34_00 && code <= 0x4d_bf) || // CJK Extension A
+    (code >= 0x4e_00 && code <= 0x9f_ff) || // CJK Unified Ideographs
+    (code >= 0xac_00 && code <= 0xd7_af) || // Hangul Syllables
+    (code >= 0xf9_00 && code <= 0xfa_ff) || // CJK Compatibility Ideographs
+    (code >= 0xff_00 && code <= 0xff_60) || // Fullwidth ASCII
+    (code >= 0xff_e0 && code <= 0xff_e6) || // Fullwidth symbols
+    code >= 0x2_00_00 // CJK Extension B and beyond
   )
 }
 
@@ -125,40 +125,40 @@ function isEmoji(char: string): boolean {
  */
 export function getCharWidth(char: string): number {
   const code = char.codePointAt(0)
-  if (code === undefined) return 0
+  if (code === undefined) {return 0}
 
   // Zero-width: combining diacritical marks
-  if (isCombiningMark(code)) return 0
+  if (isCombiningMark(code)) {return 0}
 
   // Fullwidth: CJK, emoji
-  if (isFullwidth(code) || isEmoji(char)) return 2.0
+  if (isFullwidth(code) || isEmoji(char)) {return 2.0}
 
   // Space
-  if (char === ' ') return 0.3
+  if (char === ' ') {return 0.3}
 
   // Very wide Latin
-  if (VERY_WIDE_CHARS.has(char)) return 1.5
+  if (VERY_WIDE_CHARS.has(char)) {return 1.5}
 
   // Wide Latin
-  if (WIDE_CHARS.has(char)) return 1.2
+  if (WIDE_CHARS.has(char)) {return 1.2}
 
   // Narrow Latin
-  if (NARROW_CHARS.has(char)) return 0.4
+  if (NARROW_CHARS.has(char)) {return 0.4}
 
   // Semi-narrow punctuation (brackets, slashes, hyphens)
-  if (SEMI_NARROW_PUNCT.has(char)) return 0.5
+  if (SEMI_NARROW_PUNCT.has(char)) {return 0.5}
 
   // Semi-narrow letter
-  if (char === 'r') return 0.8
+  if (char === 'r') {return 0.8}
 
   // Uppercase (slightly wider than lowercase on average)
-  if (code >= 65 && code <= 90) return 1.2
+  if (code >= 65 && code <= 90) {return 1.2}
 
   // Digits (uniform width in most fonts)
-  if (code >= 48 && code <= 57) return 1.0
+  if (code >= 48 && code <= 57) {return 1.0}
 
   // Default: average lowercase width
-  return 1.0
+  return 1
 }
 
 /**
@@ -176,7 +176,7 @@ export function measureTextWidth(text: string, fontSize: number, fontWeight: num
   // Base ratio calibrated for Inter font family
   // Heavier weights are slightly wider
   // Added +0.02 buffer to prevent edge truncation of characters like 's' at line ends
-  const baseRatio = fontWeight >= 600 ? 0.60 : fontWeight >= 500 ? 0.57 : 0.54
+  const baseRatio = fontWeight >= 600 ? 0.6 : (fontWeight >= 500 ? 0.57 : 0.54)
 
   let totalWidth = 0
 
@@ -232,15 +232,15 @@ export function measureMultilineText(
   // Width = max of all line widths
   let maxWidth = 0
   for (const line of lines) {
-    const plain = line.replace(/<\/?(?:b|strong|i|em|u|s|del)\s*>/gi, '')
+    const plain = line.replaceAll(/<\/?(?:b|strong|i|em|u|s|del)\s*>/gi, '')
     const w = measureTextWidth(plain, fontSize, fontWeight)
-    if (w > maxWidth) maxWidth = w
+    if (w > maxWidth) {maxWidth = w}
   }
 
   return {
-    width: maxWidth,
     height: lines.length * lineHeight,
-    lines,
     lineHeight,
+    lines,
+    width: maxWidth,
   }
 }

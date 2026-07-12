@@ -26,7 +26,7 @@ function parseMermaidDimensions(
       const height = parts.at(3)
 
       if (width && height && width > 0 && height > 0) {
-        return { width, height }
+        return { height, width }
       }
     }
   }
@@ -48,7 +48,7 @@ function parseMermaidDimensions(
       width > 0 &&
       height > 0
     ) {
-      return { width, height }
+      return { height, width }
     }
   }
 
@@ -105,14 +105,14 @@ export function MermaidDiagram({
           : THEMES["github-light"]
 
       return {
-        svg: renderMermaidSVG(code, { ...mermaidTheme, transparent: true }),
         error: null,
+        svg: renderMermaidSVG(code, { ...mermaidTheme, transparent: true }),
       }
       // oxlint-disable-next-line no-shadow
     } catch (error) {
       return {
-        svg: null,
         error: error instanceof Error ? error : new Error(String(error)),
+        svg: null,
       }
     }
   }, [code, resolvedTheme])
@@ -169,7 +169,7 @@ export function MermaidDiagram({
 
   const inlineMinHeight = inlineAspectRatio < 1 ? "18rem" : "20rem"
   const inlineMaxHeight =
-    inlineAspectRatio < 1 ? "48vh" : inlineAspectRatio < 1.4 ? "54vh" : "60vh"
+    inlineAspectRatio < 1 ? "48vh" : (inlineAspectRatio < 1.4 ? "54vh" : "60vh")
   const inlineHeight = inlineDimensions
     ? `min(calc(${Math.round(inlineDimensions.height)}px + 4rem), ${inlineMaxHeight})`
     : undefined
@@ -180,8 +180,8 @@ export function MermaidDiagram({
       style={{
         aspectRatio: inlineHeight ? undefined : inlineAspectRatio,
         height: inlineHeight,
-        minHeight: inlineMinHeight,
         maxHeight: inlineMaxHeight,
+        minHeight: inlineMinHeight,
       }}
     >
       <PanZoomControl

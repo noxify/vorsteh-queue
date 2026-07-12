@@ -75,7 +75,7 @@ export class PubSub {
       if (resolveNext) {
         const fn = resolveNext
         resolveNext = undefined
-        fn({ value: data as PubSubEvents[TEvent], done: false })
+        fn({ done: false, value: data as PubSubEvents[TEvent] })
       } else {
         queue.push(data as PubSubEvents[TEvent])
       }
@@ -93,12 +93,12 @@ export class PubSub {
       next(): Promise<IteratorResult<PubSubEvents[TEvent]>> {
         if (queue.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          return Promise.resolve({ value: queue.shift()!, done: false })
+          return Promise.resolve({ done: false, value: queue.shift()! })
         }
         if (done) {
           return Promise.resolve({
-            value: undefined as unknown as PubSubEvents[TEvent],
             done: true,
+            value: undefined as unknown as PubSubEvents[TEvent],
           })
         }
         // eslint-disable-next-line promise/avoid-new
@@ -110,8 +110,8 @@ export class PubSub {
         done = true
         self.listeners.get(event)?.delete(listener as Listener<unknown>)
         return Promise.resolve({
-          value: undefined as unknown as PubSubEvents[TEvent],
           done: true,
+          value: undefined as unknown as PubSubEvents[TEvent],
         })
       },
       throw(error: unknown): Promise<IteratorResult<PubSubEvents[TEvent]>> {

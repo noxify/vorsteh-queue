@@ -76,8 +76,8 @@ export function defineConfig(config: ServerConfig): ServerConfig {
  */
 export async function loadConfig(cwd?: string): Promise<ServerConfig> {
   const { config } = await c12LoadConfig<ServerConfig>({
-    name: "queue",
     cwd,
+    name: "queue",
   })
 
   if (!config?.queues || config.queues.length === 0) {

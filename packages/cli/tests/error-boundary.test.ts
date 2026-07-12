@@ -35,10 +35,10 @@ describe("error-boundary", () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
-    if (originalDebug !== undefined) {
-      process.env.DEBUG = originalDebug
-    } else {
+    if (originalDebug === undefined) {
       delete process.env.DEBUG
+    } else {
+      process.env.DEBUG = originalDebug
     }
     process.exitCode = undefined as unknown as number
   })
@@ -59,7 +59,7 @@ describe("error-boundary", () => {
           process.exitCode = undefined as unknown as number
 
           const error = new Error(message)
-          handleError(error, undefined)
+          handleError(error)
 
           expect(errorSpy).toHaveBeenCalledTimes(1)
           expect(errorSpy).toHaveBeenCalledWith(`\nError: ${message}`)
@@ -75,7 +75,7 @@ describe("error-boundary", () => {
           errorSpy.mockClear()
 
           const error = new Error(message)
-          handleError(error, undefined)
+          handleError(error)
 
           // Ensure the full error object (with stack) was NOT passed
           for (const call of errorSpy.mock.calls) {
@@ -126,13 +126,13 @@ describe("error-boundary", () => {
             fc.string(),
             fc.integer(),
             fc.constant(null),
-            fc.constant(undefined),
+            fc.constant(),
             fc.dictionary(fc.string(), fc.string())
           ),
           fc.string({ minLength: 1 }),
           (value, debugValue) => {
             // Skip if value is an Error instance (covered by the Error path)
-            if (value instanceof Error) return
+            if (value instanceof Error) {return}
 
             errorSpy.mockClear()
             process.exitCode = undefined as unknown as number
@@ -159,7 +159,7 @@ describe("error-boundary", () => {
      * **Validates: Requirements 6.4, 7.12**
      */
     it("should print 'An unknown error occurred.' for string thrown value", () => {
-      handleError("something went wrong", undefined)
+      handleError("something went wrong")
 
       expect(errorSpy).toHaveBeenCalledTimes(1)
       expect(errorSpy).toHaveBeenCalledWith("\nAn unknown error occurred.")
@@ -167,7 +167,7 @@ describe("error-boundary", () => {
     })
 
     it("should print 'An unknown error occurred.' for null thrown value", () => {
-      handleError(null, undefined)
+      handleError(null)
 
       expect(errorSpy).toHaveBeenCalledTimes(1)
       expect(errorSpy).toHaveBeenCalledWith("\nAn unknown error occurred.")
@@ -175,7 +175,7 @@ describe("error-boundary", () => {
     })
 
     it("should print 'An unknown error occurred.' for number thrown value", () => {
-      handleError(42, undefined)
+      handleError(42)
 
       expect(errorSpy).toHaveBeenCalledTimes(1)
       expect(errorSpy).toHaveBeenCalledWith("\nAn unknown error occurred.")
@@ -183,7 +183,7 @@ describe("error-boundary", () => {
     })
 
     it("should print 'An unknown error occurred.' for object thrown value", () => {
-      handleError({ code: "FAIL" }, undefined)
+      handleError({ code: "FAIL" })
 
       expect(errorSpy).toHaveBeenCalledTimes(1)
       expect(errorSpy).toHaveBeenCalledWith("\nAn unknown error occurred.")
@@ -194,12 +194,12 @@ describe("error-boundary", () => {
   // Validates: Requirements 7.13
   describe("exitCode is always set to 1", () => {
     it("should set process.exitCode to 1 for Error instances", () => {
-      handleError(new Error("test"), undefined)
+      handleError(new Error("test"))
       expect(process.exitCode).toBe(1)
     })
 
     it("should set process.exitCode to 1 for non-Error values", () => {
-      handleError("string error", undefined)
+      handleError("string error")
       expect(process.exitCode).toBe(1)
     })
   })

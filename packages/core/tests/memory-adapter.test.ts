@@ -5,15 +5,15 @@ import type { NewJob } from "../src/types"
 
 function makeJob(overrides: Partial<NewJob> = {}): NewJob {
   return {
-    name: "test-job",
-    payload: { data: "test" },
-    status: "pending",
-    priority: 2,
     attempts: 0,
     maxAttempts: 3,
+    name: "test-job",
+    payload: { data: "test" },
+    priority: 2,
     processAt: new Date(),
     progress: 0,
     repeatCount: 0,
+    status: "pending",
     ...overrides,
   }
 }
@@ -65,16 +65,16 @@ describe(MemoryQueueAdapter, () => {
       await adapter.addJob(makeJob({ name: "high", priority: 1 }))
 
       const job = await adapter.getNextJob({
-        handlerNames: ["low", "high"],
         activeGroups: [],
+        handlerNames: ["low", "high"],
       })
       expect(job?.name).toBe("high")
     })
 
     it("should return null when no jobs available", async () => {
       const job = await adapter.getNextJob({
-        handlerNames: ["test-job"],
         activeGroups: [],
+        handlerNames: ["test-job"],
       })
       expect(job).toBeNull()
     })
@@ -83,31 +83,31 @@ describe(MemoryQueueAdapter, () => {
       await adapter.addJob(makeJob({ name: "unregistered" }))
 
       const job = await adapter.getNextJob({
-        handlerNames: ["registered"],
         activeGroups: [],
+        handlerNames: ["registered"],
       })
       expect(job).toBeNull()
     })
 
     it("should skip groups that are active", async () => {
-      await adapter.addJob(makeJob({ name: "grouped", groupKey: "g1" }))
-      await adapter.addJob(makeJob({ name: "grouped", groupKey: "g2" }))
+      await adapter.addJob(makeJob({ groupKey: "g1", name: "grouped" }))
+      await adapter.addJob(makeJob({ groupKey: "g2", name: "grouped" }))
 
       const job = await adapter.getNextJob({
-        handlerNames: ["grouped"],
         activeGroups: ["g1"],
+        handlerNames: ["grouped"],
       })
       expect(job?.groupKey).toBe("g2")
     })
 
     it("should promote delayed jobs that are ready", async () => {
       await adapter.addJob(
-        makeJob({ status: "delayed", processAt: new Date(Date.now() - 1000) })
+        makeJob({ processAt: new Date(Date.now() - 1000), status: "delayed" })
       )
 
       const job = await adapter.getNextJob({
-        handlerNames: ["test-job"],
         activeGroups: [],
+        handlerNames: ["test-job"],
       })
       expect(job).not.toBeNull()
       expect(job?.status).toBe("pending")
@@ -115,12 +115,12 @@ describe(MemoryQueueAdapter, () => {
 
     it("should not promote delayed jobs that are not ready", async () => {
       await adapter.addJob(
-        makeJob({ status: "delayed", processAt: new Date(Date.now() + 60_000) })
+        makeJob({ processAt: new Date(Date.now() + 60_000), status: "delayed" })
       )
 
       const job = await adapter.getNextJob({
-        handlerNames: ["test-job"],
         activeGroups: [],
+        handlerNames: ["test-job"],
       })
       expect(job).toBeNull()
     })
@@ -146,8 +146,8 @@ describe(MemoryQueueAdapter, () => {
     })
 
     it("should respect group constraints", async () => {
-      await adapter.addJob(makeJob({ name: "x", groupKey: "active-group" }))
-      await adapter.addJob(makeJob({ name: "x", groupKey: "free-group" }))
+      await adapter.addJob(makeJob({ groupKey: "active-group", name: "x" }))
+      await adapter.addJob(makeJob({ groupKey: "free-group", name: "x" }))
 
       const jobs = await adapter.getNextJobsForHandler("x", 10, [
         "active-group",
@@ -170,8 +170,8 @@ describe(MemoryQueueAdapter, () => {
     it("should set completedAt on completed", async () => {
       const job = await adapter.addJob(makeJob())
       await adapter.updateJobStatus(job.id, {
-        status: "completed",
         result: { ok: true },
+        status: "completed",
       })
 
       const updated = await adapter.getJobById(job.id)
@@ -183,8 +183,8 @@ describe(MemoryQueueAdapter, () => {
     it("should set cancelledAt on cancelled", async () => {
       const job = await adapter.addJob(makeJob())
       await adapter.updateJobStatus(job.id, {
-        status: "cancelled",
         cancellationReason: "test",
+        status: "cancelled",
       })
 
       const updated = await adapter.getJobById(job.id)
@@ -314,7 +314,7 @@ describe(MemoryQueueAdapter, () => {
     it("should count pending + delayed jobs", async () => {
       await adapter.addJob(makeJob({ status: "pending" }))
       await adapter.addJob(
-        makeJob({ status: "delayed", processAt: new Date(Date.now() + 60_000) })
+        makeJob({ processAt: new Date(Date.now() + 60_000), status: "delayed" })
       )
       const completedJob = await adapter.addJob(makeJob())
       await adapter.updateJobStatus(completedJob.id, { status: "completed" })

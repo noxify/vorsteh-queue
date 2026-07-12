@@ -21,9 +21,9 @@ describe("Job Steps", () => {
     adapter = new MemoryQueueAdapter()
     queue = new Queue(adapter, { name: "steps-queue" })
     worker = new Worker(adapter, {
+      concurrency: 1,
       name: "steps-queue",
       pollInterval: 10,
-      concurrency: 1,
     })
     await queue.connect()
   })

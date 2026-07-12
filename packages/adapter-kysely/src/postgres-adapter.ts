@@ -60,21 +60,21 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     const result = await this.customDbClient
       .insertInto(this.table)
       .values({
-        queue_name: this.queueName,
+        attempts: job.attempts,
+        cron: job.cron ?? null,
+        group_key: job.groupKey ?? null,
+        max_attempts: job.maxAttempts,
         name: job.name,
         payload: job.payload,
-        status: job.status,
         priority: job.priority,
-        attempts: job.attempts,
-        max_attempts: job.maxAttempts,
         process_at: sql`${job.processAt.toISOString()}::timestamptz`,
         progress: job.progress ?? 0,
-        cron: job.cron ?? null,
+        queue_name: this.queueName,
+        repeat_count: job.repeatCount ?? 0,
         repeat_every: job.repeatEvery ?? null,
         repeat_limit: job.repeatLimit ?? null,
-        repeat_count: job.repeatCount ?? 0,
+        status: job.status,
         timeout: typeof job.timeout === "number" ? job.timeout : null,
-        group_key: job.groupKey ?? null,
         unique_key: job.uniqueKey ?? null,
       })
       .returningAll()
@@ -92,21 +92,21 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     }
 
     const values: InsertQueueJobValue[] = jobs.map((job) => ({
-      queue_name: this.queueName,
+      attempts: job.attempts,
+      cron: job.cron ?? null,
+      group_key: job.groupKey ?? null,
+      max_attempts: job.maxAttempts,
       name: job.name,
       payload: job.payload,
-      status: job.status,
       priority: job.priority,
-      attempts: job.attempts,
-      max_attempts: job.maxAttempts,
       process_at: sql`${job.processAt.toISOString()}::timestamptz`,
       progress: job.progress ?? 0,
-      cron: job.cron ?? null,
+      queue_name: this.queueName,
+      repeat_count: job.repeatCount ?? 0,
       repeat_every: job.repeatEvery ?? null,
       repeat_limit: job.repeatLimit ?? null,
-      repeat_count: job.repeatCount ?? 0,
+      status: job.status,
       timeout: typeof job.timeout === "number" ? job.timeout : null,
-      group_key: job.groupKey ?? null,
       unique_key: job.uniqueKey ?? null,
     }))
 
@@ -288,9 +288,9 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     await this.customDbClient
       .updateTable(this.table)
       .set({
-        status: "cancelled",
-        cancelled_at: new Date(),
         cancellation_reason: reason ?? null,
+        cancelled_at: new Date(),
+        status: "cancelled",
       })
       .where("id", "=", id)
       .execute()
@@ -301,7 +301,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   async cancelJobs(filter: CancelJobsFilter): Promise<number> {
     let query = this.customDbClient
       .updateTable(this.table)
-      .set({ status: "cancelled", cancelled_at: new Date() })
+      .set({ cancelled_at: new Date(), status: "cancelled" })
       .where("queue_name", "=", this.queueName)
       .where("status", "in", ["pending", "delayed", "processing", "failed"])
 
@@ -340,12 +340,12 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     await this.customDbClient
       .updateTable(this.table)
       .set({
-        status: "pending",
         attempts: 0,
         error: null,
         failed_at: null,
         process_at: new Date(),
         progress: 0,
+        status: "pending",
       })
       .where("id", "=", id)
       .where("queue_name", "=", this.queueName)
@@ -357,12 +357,12 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     let query = this.customDbClient
       .updateTable(this.table)
       .set({
-        status: "pending",
         attempts: 0,
         error: null,
         failed_at: null,
         process_at: new Date(),
         progress: 0,
+        status: "pending",
       })
       .where("queue_name", "=", this.queueName)
       .where("status", "=", "dead")
@@ -384,13 +384,13 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       .execute()
 
     const result = {
-      pending: 0,
-      delayed: 0,
-      processing: 0,
-      completed: 0,
-      failed: 0,
       cancelled: 0,
+      completed: 0,
       dead: 0,
+      delayed: 0,
+      failed: 0,
+      pending: 0,
+      processing: 0,
       "waiting-children": 0,
     }
     for (const stat of stats) {
@@ -543,12 +543,12 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     await this.customDbClient
       .updateTable(this.table)
       .set({
-        status: "pending",
         attempts: 0,
         error: null,
         failed_at: null,
         process_at: new Date(),
         progress: 0,
+        status: "pending",
       })
       .where("id", "=", id)
       .execute()
@@ -569,7 +569,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
     await this.customDbClient
       .updateTable(this.table)
-      .set({ status: "pending", process_at: new Date() })
+      .set({ process_at: new Date(), status: "pending" })
       .where("id", "=", id)
       .execute()
     return true
@@ -604,9 +604,9 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     await this.customDbClient
       .updateTable(this.table)
       .set({
+        process_at: new Date(),
         signals: JSON.stringify(signals),
         status: "pending",
-        process_at: new Date(),
       })
       .where("id", "=", id)
       .execute()
@@ -632,7 +632,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
     const buildNode = (job: Job): FlowNode => {
       const children = allJobs.filter((j) => j.parentId === job.id)
-      return { job, children: children.map((c) => buildNode(c)) }
+      return { children: children.map((c) => buildNode(c)), job }
     }
     return buildNode(root)
   }
@@ -672,35 +672,35 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
   // eslint-disable-next-line class-methods-use-this
   private transformJob(job: QueueJob): Job {
     return {
-      id: job.id,
-      name: job.name,
-      payload: job.payload,
-      status: job.status as JobStatus,
-      priority: job.priority,
       attempts: job.attempts,
-      maxAttempts: job.max_attempts,
+      cancellationReason: job.cancellation_reason ?? undefined,
+      cancelledAt: job.cancelled_at ?? undefined,
+      childrenCompleted: job.children_completed ?? 0,
+      childrenCount: job.children_count ?? 0,
+      completedAt: job.completed_at ?? undefined,
       createdAt: job.created_at,
+      cron: job.cron ?? undefined,
+      error: job.error as SerializedError | undefined,
+      failParentOnFailure: (job.fail_parent_on_failure ?? 0) > 0,
+      failedAt: job.failed_at ?? undefined,
+      flowId: job.flow_id ?? undefined,
+      groupKey: job.group_key ?? undefined,
+      id: job.id,
+      maxAttempts: job.max_attempts,
+      name: job.name,
+      parentId: job.parent_id ?? undefined,
+      payload: job.payload,
+      priority: job.priority,
       processAt: job.process_at,
       processedAt: job.processed_at ?? undefined,
-      completedAt: job.completed_at ?? undefined,
-      failedAt: job.failed_at ?? undefined,
-      cancelledAt: job.cancelled_at ?? undefined,
-      error: job.error as SerializedError | undefined,
-      result: job.result ?? undefined,
       progress: job.progress ?? 0,
-      cron: job.cron ?? undefined,
+      repeatCount: job.repeat_count ?? 0,
       repeatEvery: job.repeat_every ?? undefined,
       repeatLimit: job.repeat_limit ?? undefined,
-      repeatCount: job.repeat_count ?? 0,
+      result: job.result ?? undefined,
+      status: job.status as JobStatus,
       timeout: job.timeout ?? undefined,
-      groupKey: job.group_key ?? undefined,
       uniqueKey: job.unique_key ?? undefined,
-      cancellationReason: job.cancellation_reason ?? undefined,
-      parentId: job.parent_id ?? undefined,
-      flowId: job.flow_id ?? undefined,
-      childrenCount: job.children_count ?? 0,
-      childrenCompleted: job.children_completed ?? 0,
-      failParentOnFailure: (job.fail_parent_on_failure ?? 0) > 0,
     }
   }
 }

@@ -12,8 +12,8 @@ interface FileResult {
 }
 
 const worker = new Worker(adapter, {
-  name: "batch-demo",
   concurrency: 2,
+  name: "batch-demo",
   removeOnComplete: 5,
   removeOnFail: 3,
 })
@@ -31,7 +31,7 @@ worker.registerBatch<FilePayload, FileResult>(
     )
     return jobs.map(() => ({ ok: true }))
   },
-  { minSize: 3, maxSize: 10, waitFor: 2000 }
+  { maxSize: 10, minSize: 3, waitFor: 2000 }
 )
 
 async function main() {

@@ -24,9 +24,9 @@ export function createGraphQLTransport(
     }
 
     const response = await fetch(url, {
-      method: "POST",
-      headers,
       body: JSON.stringify({ query: gql, variables }),
+      headers,
+      method: "POST",
     })
 
     if (!response.ok) {
@@ -51,7 +51,7 @@ export function createGraphQLTransport(
 
   return {
     async connect() {
-      const healthUrl = url.replace(/\/graphql$/, "") + "/health"
+      const healthUrl = `${url.replace(/\/graphql$/, "")  }/health`
       const headers: Record<string, string> = {}
       if (token) {
         headers.Authorization = `Bearer ${token}`
@@ -59,7 +59,7 @@ export function createGraphQLTransport(
 
       let response: Response
       try {
-        response = await fetch(healthUrl, { method: "GET", headers })
+        response = await fetch(healthUrl, { headers, method: "GET" })
       } catch {
         throw new CLIError(
           `Could not connect to ${healthUrl}. Verify the server is running and the URL is correct.`
@@ -105,7 +105,7 @@ export function createGraphQLTransport(
     async getDeadJobs(options) {
       const result = await query<{ deadJobs: readonly Job[] }>(
         `query($queue: String!, $limit: Int, $offset: Int) { deadJobs(queue: $queue, limit: $limit, offset: $offset) { id name status createdAt } }`,
-        { queue: queueName, limit: options?.limit, offset: options?.offset }
+        { limit: options?.limit, offset: options?.offset, queue: queueName }
       )
       return result.deadJobs
     },
@@ -152,7 +152,7 @@ export function createGraphQLTransport(
     async redriveAll(filter) {
       const result = await query<{ redriveAll: number }>(
         `mutation($queue: String!, $name: String) { redriveAll(queue: $queue, name: $name) }`,
-        { queue: queueName, name: filter?.name }
+        { name: filter?.name, queue: queueName }
       )
       return result.redriveAll
     },
@@ -176,7 +176,7 @@ export function createGraphQLTransport(
     async getFlowTree(flowId: string) {
       const result = await query<{ flowTree: FlowNode | null }>(
         `query($queue: String!, $flowId: String!) { flowTree(queue: $queue, flowId: $flowId) }`,
-        { queue: queueName, flowId }
+        { flowId, queue: queueName }
       )
       return result.flowTree
     },

@@ -8,7 +8,7 @@
 
 export function topRoundedRectPath(x: number, y: number, width: number, height: number, radius: number): string {
   const r = clampRadius(radius, width / 2, height)
-  if (r === 0) return `M${x},${y} H${x + width} V${y + height} H${x} Z`
+  if (r === 0) {return `M${x},${y} H${x + width} V${y + height} H${x} Z`}
 
   return [
     `M${x + r},${y}`,

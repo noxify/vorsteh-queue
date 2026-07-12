@@ -81,21 +81,21 @@ export class PostgresQueueAdapter<
     const [result] = await this.db
       .insert(this.model)
       .values({
-        queueName: this.queueName,
+        attempts: job.attempts,
+        cron: job.cron ?? null,
+        groupKey: job.groupKey ?? null,
+        maxAttempts: job.maxAttempts,
         name: job.name,
         payload: job.payload,
-        status: job.status,
         priority: job.priority,
-        attempts: job.attempts,
-        maxAttempts: job.maxAttempts,
         processAt: sql`${job.processAt.toISOString()}::timestamptz`,
         progress: job.progress ?? 0,
-        cron: job.cron ?? null,
+        queueName: this.queueName,
+        repeatCount: job.repeatCount ?? 0,
         repeatEvery: job.repeatEvery ?? null,
         repeatLimit: job.repeatLimit ?? null,
-        repeatCount: job.repeatCount ?? 0,
+        status: job.status,
         timeout: typeof job.timeout === "number" ? job.timeout : null,
-        groupKey: job.groupKey ?? null,
         uniqueKey: job.uniqueKey ?? null,
       })
       .returning()
@@ -112,21 +112,21 @@ export class PostgresQueueAdapter<
     }
 
     const values = jobs.map((job) => ({
-      queueName: this.queueName,
+      attempts: job.attempts,
+      cron: job.cron ?? null,
+      groupKey: job.groupKey ?? null,
+      maxAttempts: job.maxAttempts,
       name: job.name,
       payload: job.payload,
-      status: job.status,
       priority: job.priority,
-      attempts: job.attempts,
-      maxAttempts: job.maxAttempts,
       processAt: sql`${job.processAt.toISOString()}::timestamptz`,
       progress: job.progress ?? 0,
-      cron: job.cron ?? null,
+      queueName: this.queueName,
+      repeatCount: job.repeatCount ?? 0,
       repeatEvery: job.repeatEvery ?? null,
       repeatLimit: job.repeatLimit ?? null,
-      repeatCount: job.repeatCount ?? 0,
+      status: job.status,
       timeout: typeof job.timeout === "number" ? job.timeout : null,
-      groupKey: job.groupKey ?? null,
       uniqueKey: job.uniqueKey ?? null,
     }))
 
@@ -301,9 +301,9 @@ export class PostgresQueueAdapter<
     await this.db
       .update(this.model)
       .set({
-        status: "cancelled",
-        cancelledAt: new Date(),
         cancellationReason: reason ?? null,
+        cancelledAt: new Date(),
+        status: "cancelled",
       })
       .where(eq(this.model.id, id))
 
@@ -333,7 +333,7 @@ export class PostgresQueueAdapter<
 
     const results = await this.db
       .update(this.model)
-      .set({ status: "cancelled", cancelledAt: new Date() })
+      .set({ cancelledAt: new Date(), status: "cancelled" })
       .where(and(...conditions))
       .returning()
 
@@ -364,12 +364,12 @@ export class PostgresQueueAdapter<
     await this.db
       .update(this.model)
       .set({
-        status: "pending",
         attempts: 0,
         error: null,
         failedAt: null,
         processAt: new Date(),
         progress: 0,
+        status: "pending",
       })
       .where(
         and(
@@ -392,12 +392,12 @@ export class PostgresQueueAdapter<
     const results = await this.db
       .update(this.model)
       .set({
-        status: "pending",
         attempts: 0,
         error: null,
         failedAt: null,
         processAt: new Date(),
         progress: 0,
+        status: "pending",
       })
       .where(and(...conditions))
       .returning()
@@ -407,19 +407,19 @@ export class PostgresQueueAdapter<
 
   async getQueueStats(): Promise<QueueStats> {
     const stats = await this.db
-      .select({ status: this.model.status, count: count() })
+      .select({ count: count(), status: this.model.status })
       .from(this.model)
       .where(eq(this.model.queueName, this.queueName))
       .groupBy(this.model.status)
 
     const result = {
-      pending: 0,
-      delayed: 0,
-      processing: 0,
-      completed: 0,
-      failed: 0,
       cancelled: 0,
+      completed: 0,
       dead: 0,
+      delayed: 0,
+      failed: 0,
+      pending: 0,
+      processing: 0,
       "waiting-children": 0,
     }
     for (const stat of stats) {
@@ -588,12 +588,12 @@ export class PostgresQueueAdapter<
     await this.db
       .update(this.model)
       .set({
-        status: "pending",
         attempts: 0,
         error: null,
         failedAt: null,
         processAt: new Date(),
         progress: 0,
+        status: "pending",
       })
       .where(eq(this.model.id, id))
     return true
@@ -617,7 +617,7 @@ export class PostgresQueueAdapter<
 
     await this.db
       .update(this.model)
-      .set({ status: "pending", processAt: new Date() })
+      .set({ processAt: new Date(), status: "pending" })
       .where(eq(this.model.id, id))
     return true
   }
@@ -654,7 +654,7 @@ export class PostgresQueueAdapter<
     const signals = { ...existing, [event]: data }
     await this.db
       .update(this.model)
-      .set({ signals, status: "pending", processAt: new Date() })
+      .set({ processAt: new Date(), signals, status: "pending" })
       .where(eq(this.model.id, id))
     return true
   }
@@ -681,7 +681,7 @@ export class PostgresQueueAdapter<
 
     const buildNode = (job: Job): FlowNode => {
       const children = allJobs.filter((j) => j.parentId === job.id)
-      return { job, children: children.map((c) => buildNode(c)) }
+      return { children: children.map((c) => buildNode(c)), job }
     }
     return buildNode(root)
   }
@@ -721,35 +721,35 @@ export class PostgresQueueAdapter<
   // eslint-disable-next-line class-methods-use-this
   private transformJob(job: schema.QueueJob): Job {
     return {
-      id: job.id,
-      name: job.name,
-      payload: job.payload,
-      status: job.status as JobStatus,
-      priority: job.priority,
       attempts: job.attempts,
-      maxAttempts: job.maxAttempts,
+      cancellationReason: job.cancellationReason ?? undefined,
+      cancelledAt: job.cancelledAt ?? undefined,
+      childrenCompleted: job.childrenCompleted ?? 0,
+      childrenCount: job.childrenCount ?? 0,
+      completedAt: job.completedAt ?? undefined,
       createdAt: job.createdAt,
+      cron: job.cron ?? undefined,
+      error: job.error as SerializedError | undefined,
+      failParentOnFailure: (job.failParentOnFailure ?? 0) > 0,
+      failedAt: job.failedAt ?? undefined,
+      flowId: job.flowId ?? undefined,
+      groupKey: job.groupKey ?? undefined,
+      id: job.id,
+      maxAttempts: job.maxAttempts,
+      name: job.name,
+      parentId: job.parentId ?? undefined,
+      payload: job.payload,
+      priority: job.priority,
       processAt: job.processAt,
       processedAt: job.processedAt ?? undefined,
-      completedAt: job.completedAt ?? undefined,
-      failedAt: job.failedAt ?? undefined,
-      cancelledAt: job.cancelledAt ?? undefined,
-      error: job.error as SerializedError | undefined,
-      result: job.result ?? undefined,
       progress: job.progress ?? 0,
-      cron: job.cron ?? undefined,
+      repeatCount: job.repeatCount ?? 0,
       repeatEvery: job.repeatEvery ?? undefined,
       repeatLimit: job.repeatLimit ?? undefined,
-      repeatCount: job.repeatCount ?? 0,
+      result: job.result ?? undefined,
+      status: job.status as JobStatus,
       timeout: job.timeout ?? undefined,
-      groupKey: job.groupKey ?? undefined,
       uniqueKey: job.uniqueKey ?? undefined,
-      cancellationReason: job.cancellationReason ?? undefined,
-      parentId: job.parentId ?? undefined,
-      flowId: job.flowId ?? undefined,
-      childrenCount: job.childrenCount ?? 0,
-      childrenCompleted: job.childrenCompleted ?? 0,
-      failParentOnFailure: (job.failParentOnFailure ?? 0) > 0,
     }
   }
 }

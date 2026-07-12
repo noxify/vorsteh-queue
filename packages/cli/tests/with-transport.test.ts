@@ -8,28 +8,29 @@ vi.mock("../src/transport/resolve", () => ({
 }))
 
 import { resolveTransport } from "../src/transport/resolve"
+
 const mockedResolveTransport = vi.mocked(resolveTransport)
 
 function createMockTransport(callLog: string[]) {
   return {
+    cancelJob: vi.fn(),
+    clearJobs: vi.fn(),
     connect: vi.fn(async () => {
       callLog.push("connect")
     }),
+    deleteJob: vi.fn(),
     disconnect: vi.fn(async () => {
       callLog.push("disconnect")
     }),
-    getStats: vi.fn(),
-    getJob: vi.fn(),
     getDeadJobs: vi.fn(),
-    cancelJob: vi.fn(),
+    getFlowTree: vi.fn(),
+    getJob: vi.fn(),
+    getStats: vi.fn(),
+    redriveAll: vi.fn(),
+    redriveJob: vi.fn(),
     retryJob: vi.fn(),
     runJobNow: vi.fn(),
-    deleteJob: vi.fn(),
-    redriveJob: vi.fn(),
-    redriveAll: vi.fn(),
-    clearJobs: vi.fn(),
     size: vi.fn(),
-    getFlowTree: vi.fn(),
   }
 }
 

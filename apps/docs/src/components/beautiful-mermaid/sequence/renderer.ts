@@ -8,22 +8,22 @@ import { renderMultilineText, escapeXml as escapeXmlUtil } from '../multiline-ut
 
 
 const SEQUENCE_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: FONT_SIZES.nodeLabel,
   edgeLabelFontSize: FONT_SIZES.edgeLabel,
-  groupHeaderFontSize: FONT_SIZES.edgeLabel,
-  nodeLabelFontWeight: FONT_WEIGHTS.nodeLabel,
   edgeLabelFontWeight: FONT_WEIGHTS.edgeLabel,
-  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
-  nodePaddingX: 16,
-  nodePaddingY: 6,
-  nodeCornerRadius: 4,
-  nodeLineWidth: STROKE_WIDTHS.outerBox,
   edgeLineWidth: STROKE_WIDTHS.connector,
   groupCornerRadius: 0,
-  groupPaddingX: 10,
-  groupPaddingY: 8,
+  groupHeaderFontSize: FONT_SIZES.edgeLabel,
+  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
   groupLabelPaddingX: 6,
   groupLineWidth: STROKE_WIDTHS.outerBox,
+  groupPaddingX: 10,
+  groupPaddingY: 8,
+  nodeCornerRadius: 4,
+  nodeLabelFontSize: FONT_SIZES.nodeLabel,
+  nodeLabelFontWeight: FONT_WEIGHTS.nodeLabel,
+  nodeLineWidth: STROKE_WIDTHS.outerBox,
+  nodePaddingX: 16,
+  nodePaddingY: 6,
 }
 
 // ============================================================================
@@ -62,14 +62,13 @@ export function renderSequenceSvg(
   const rootAttrs = buildAccessibilityAttrs(diagram.accessibilityTitle, diagram.accessibilityDescription, titleId, descId)
 
   // SVG root with CSS variables + style block + defs
-  parts.push(svgOpenTag(diagram.width, diagram.height, colors, transparent, rootAttrs))
-  parts.push(buildStyleBlock(font, false, colors.shadow))
+  parts.push(svgOpenTag(diagram.width, diagram.height, colors, transparent, rootAttrs), buildStyleBlock(font, false, colors.shadow))
   parts.push('<defs>')
 
   // Arrow marker definitions
   parts.push(arrowMarkerDefs())
   const shadowDefs = buildShadowDefs(colors)
-  if (shadowDefs) parts.push(shadowDefs)
+  if (shadowDefs) {parts.push(shadowDefs)}
   parts.push('</defs>')
 
   if (diagram.accessibilityTitle) {
@@ -171,8 +170,8 @@ function renderActor(actor: PositionedActor, style: ResolvedRenderStyle): string
     )
     // Label below the icon (supports multi-line)
     parts.push(
-      '  ' + renderMultilineText(label, x, y + height + 14, style.nodeLabelFontSize,
-        `font-size="${style.nodeLabelFontSize}" text-anchor="middle" font-weight="${style.nodeLabelFontWeight}"${letterAttr(style.nodeLetterSpacing)} fill="var(--_text)"`)
+      `  ${  renderMultilineText(label, x, y + height + 14, style.nodeLabelFontSize,
+        `font-size="${style.nodeLabelFontSize}" text-anchor="middle" font-weight="${style.nodeLabelFontWeight}"${letterAttr(style.nodeLetterSpacing)} fill="var(--_text)"`)}`
     )
   } else {
     // Participant: rectangle box with label (supports multi-line)
@@ -180,11 +179,8 @@ function renderActor(actor: PositionedActor, style: ResolvedRenderStyle): string
     parts.push(
       `  <rect x="${boxX}" y="${y}" width="${width}" height="${height}" rx="${style.cornerRadius ?? 4}" ry="${style.cornerRadius ?? 4}" ` +
       `fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="${style.nodeLineWidth}" />`
-    )
-    parts.push(
-      '  ' + renderMultilineText(label, x, y + height / 2, style.nodeLabelFontSize,
-        `font-size="${style.nodeLabelFontSize}" text-anchor="middle" font-weight="${style.nodeLabelFontWeight}"${letterAttr(style.nodeLetterSpacing)} fill="var(--_text)"`)
-    )
+    , '  ' + renderMultilineText(label, x, y + height / 2, style.nodeLabelFontSize,
+        `font-size="${style.nodeLabelFontSize}" text-anchor="middle" font-weight="${style.nodeLabelFontWeight}"${letterAttr(style.nodeLetterSpacing)} fill="var(--_text)"`))
   }
 
   parts.push('</g>')
@@ -243,8 +239,8 @@ function renderMessage(msg: PositionedMessage, style: ResolvedRenderStyle): stri
     )
     // Label to the right of the loop (supports multi-line)
     parts.push(
-      '  ' + renderMultilineText(msg.label, msg.x1 + loopW + labelPadding, msg.y + loopH / 2, style.edgeLabelFontSize,
-        `font-size="${style.edgeLabelFontSize}" text-anchor="start" font-weight="${style.edgeLabelFontWeight}"${letterAttr(style.edgeLetterSpacing)} fill="var(--_text-muted)"`)
+      `  ${  renderMultilineText(msg.label, msg.x1 + loopW + labelPadding, msg.y + loopH / 2, style.edgeLabelFontSize,
+        `font-size="${style.edgeLabelFontSize}" text-anchor="start" font-weight="${style.edgeLabelFontWeight}"${letterAttr(style.edgeLetterSpacing)} fill="var(--_text-muted)"`)}`
     )
   } else {
     // Normal message: horizontal arrow
@@ -255,8 +251,8 @@ function renderMessage(msg: PositionedMessage, style: ResolvedRenderStyle): stri
     // Label above the arrow, centered (supports multi-line)
     const midX = (msg.x1 + msg.x2) / 2
     parts.push(
-      '  ' + renderMultilineText(msg.label, midX, msg.y - 10, style.edgeLabelFontSize,
-        `font-size="${style.edgeLabelFontSize}" text-anchor="middle" font-weight="${style.edgeLabelFontWeight}"${letterAttr(style.edgeLetterSpacing)} fill="var(--_text-muted)"`)
+      `  ${  renderMultilineText(msg.label, midX, msg.y - 10, style.edgeLabelFontSize,
+        `font-size="${style.edgeLabelFontSize}" text-anchor="middle" font-weight="${style.edgeLabelFontWeight}"${letterAttr(style.edgeLetterSpacing)} fill="var(--_text-muted)"`)}`
     )
   }
 
@@ -296,13 +292,13 @@ function renderBlock(block: PositionedBlock, style: ResolvedRenderStyle): string
   )
   // Block type label (supports multi-line via <br> tags)
   parts.push(
-    '  ' + renderMultilineText(
+    `  ${  renderMultilineText(
       labelText,
       block.x + style.groupLabelPaddingX,
       block.y + tabHeight / 2,
       style.groupHeaderFontSize,
       `font-size="${style.groupHeaderFontSize}" font-weight="${style.groupHeaderFontWeight}"${style.groupFont ? ` font-family="${escapeAttr(style.groupFont)}"` : ''}${letterAttr(style.groupLetterSpacing)} fill="var(--_text-sec)"`
-    )
+    )}`
   )
 
   // Divider lines (for alt/else, par/and)
@@ -314,8 +310,8 @@ function renderBlock(block: PositionedBlock, style: ResolvedRenderStyle): string
     if (divider.label) {
       // Divider label supports multi-line
       parts.push(
-        '  ' + renderMultilineText(`[${divider.label}]`, block.x + 8, divider.y + 14, style.edgeLabelFontSize,
-          `font-size="${style.edgeLabelFontSize}" text-anchor="start" font-weight="${style.edgeLabelFontWeight}"${letterAttr(style.edgeLetterSpacing)} fill="var(--_text-muted)"`)
+        `  ${  renderMultilineText(`[${divider.label}]`, block.x + 8, divider.y + 14, style.edgeLabelFontSize,
+          `font-size="${style.edgeLabelFontSize}" text-anchor="start" font-weight="${style.edgeLabelFontWeight}"${letterAttr(style.edgeLetterSpacing)} fill="var(--_text-muted)"`)}`
       )
     }
   }
@@ -351,7 +347,7 @@ function renderNote(note: PositionedNote, style: ResolvedRenderStyle): string {
 // ============================================================================
 
 function letterAttr(value: number): string {
-  return value !== 0 ? ` letter-spacing="${value}"` : ''
+  return value === 0 ? '' : ` letter-spacing="${value}"`
 }
 
 // Use shared escapeXml from multiline-utils
@@ -366,27 +362,27 @@ function buildAccessibilityAttrs(
   titleId: string,
   descId: string,
 ): Record<string, string> {
-  if (!title && !description) return {}
+  if (!title && !description) {return {}}
   const attrs: Record<string, string> = { role: 'img' }
-  if (title) attrs['aria-labelledby'] = titleId
-  if (description) attrs['aria-describedby'] = descId
+  if (title) {attrs['aria-labelledby'] = titleId}
+  if (description) {attrs['aria-describedby'] = descId}
   return attrs
 }
 
-function hashAccessibility(...values: Array<string | number>): string {
-  let h = 0x811c9dc5
+function hashAccessibility(...values: (string | number)[]): string {
+  let h = 0x81_1c_9d_c5
   const text = values.join('|')
   for (let i = 0; i < text.length; i++) {
-    h ^= text.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
+    h ^= text.codePointAt(i)
+    h = Math.imul(h, 0x01_00_01_93)
   }
   return (h >>> 0).toString(36)
 }
 
 function escapeAttr(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
 }

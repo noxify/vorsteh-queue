@@ -17,7 +17,7 @@ import { splitLines, maxLineWidth, lineCount } from './multiline-utils'
 
 /** Classify a box-drawing character as 'border' or 'text'. */
 function classifyBoxChar(ch: string): CharRole {
-  if (/^[┌┐└┘├┤┬┴┼│─╭╮╰╯+\-|]$/.test(ch)) return 'border'
+  if (/^[┌┐└┘├┤┬┴┼│─╭╮╰╯+\-|]$/.test(ch)) {return 'border'}
   return 'text'
 }
 
@@ -30,9 +30,9 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('%%'))
   const diagram = parseSequenceDiagram(lines)
 
-  if (diagram.actors.length === 0) return ''
+  if (diagram.actors.length === 0) {return ''}
 
-  const useAscii = config.useAscii
+  const {useAscii} = config
 
   // Box-drawing characters
   const H = useAscii ? '-' : '─'
@@ -66,7 +66,7 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
   for (const msg of diagram.messages) {
     const fi = actorIdx.get(msg.from)!
     const ti = actorIdx.get(msg.to)!
-    if (fi === ti) continue // self-messages don't affect spacing
+    if (fi === ti) {continue} // self-messages don't affect spacing
     const lo = Math.min(fi, ti)
     const hi = Math.max(fi, ti)
     // Required gap per span = (max line width + arrow decorations) / number of gaps
@@ -98,7 +98,7 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
   const blockStartY = new Map<number, number>()
   const blockEndY = new Map<number, number>()
   const divYMap = new Map<string, number>() // "blockIdx:divIdx" → y
-  const notePositions: Array<{ x: number; y: number; width: number; height: number; lines: string[] }> = []
+  const notePositions: { x: number; y: number; width: number; height: number; lines: string[] }[] = []
 
   let curY = actorBoxH // start right below header boxes
 
@@ -113,16 +113,16 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
     } else if (note.position === 'right') {
       nx = llX[aIdx]! + 2
     } else if (note.actorIds.length >= 2) {
-      const aIdx2 = actorIdx.get(note.actorIds[note.actorIds.length - 1]!) ?? aIdx
+      const aIdx2 = actorIdx.get(note.actorIds.at(-1)!) ?? aIdx
       nx = Math.floor((llX[aIdx]! + llX[aIdx2]!) / 2) - Math.floor(nWidth / 2)
     } else {
       nx = llX[aIdx]! - Math.floor(nWidth / 2)
     }
-    return { x: Math.max(0, nx), y, width: nWidth, height: nHeight, lines: nLines }
+    return { height: nHeight, lines: nLines, width: nWidth, x: Math.max(0, nx), y }
   }
 
   for (const note of diagram.notes) {
-    if (note.afterIndex !== -1) continue
+    if (note.afterIndex !== -1) {continue}
     curY += 1
     const positioned = positionNote(note, curY)
     notePositions.push(positioned)
@@ -195,8 +195,8 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
   const totalH = footerY + actorBoxH
 
   // Total canvas width
-  const lastLL = llX[llX.length - 1] ?? 0
-  const lastHalf = halfBox[halfBox.length - 1] ?? 0
+  const lastLL = llX.at(-1) ?? 0
+  const lastHalf = halfBox.at(-1) ?? 0
   let totalW = lastLL + lastHalf + 2
 
   // Ensure canvas is wide enough for self-message labels and notes
@@ -234,7 +234,7 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
 
     // Top border
     setC(left, topY, TL, 'border')
-    for (let x = 1; x < w - 1; x++) setC(left + x, topY, H, 'border')
+    for (let x = 1; x < w - 1; x++) {setC(left + x, topY, H, 'border')}
     setC(left + w - 1, topY, TR, 'border')
 
     // Content lines (centered horizontally within the box)
@@ -253,7 +253,7 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
     // Bottom border
     const bottomY = topY + h - 1
     setC(left, bottomY, BL, 'border')
-    for (let x = 1; x < w - 1; x++) setC(left + x, bottomY, H, 'border')
+    for (let x = 1; x < w - 1; x++) {setC(left + x, bottomY, H, 'border')}
     setC(left + w - 1, bottomY, BR, 'border')
   }
 
@@ -305,20 +305,20 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
 
       // Row 0: start junction + horizontal + top-right corner
       setC(fromX, y0, JL, 'junction')
-      for (let x = fromX + 1; x < fromX + loopW; x++) setC(x, y0, lineChar, 'line')
+      for (let x = fromX + 1; x < fromX + loopW; x++) {setC(x, y0, lineChar, 'line')}
       setC(fromX + loopW, y0, useAscii ? '+' : '┐', 'corner')
 
       // Row 1: vertical on right side + label
       setC(fromX + loopW, y0 + 1, V, 'line')
       const labelX = fromX + loopW + 2
       for (let i = 0; i < msg.label.length; i++) {
-        if (labelX + i < totalW) setC(labelX + i, y0 + 1, msg.label[i]!, 'text')
+        if (labelX + i < totalW) {setC(labelX + i, y0 + 1, msg.label[i]!, 'text')}
       }
 
       // Row 2: arrow-back + horizontal + bottom-right corner
       const arrowChar = isFilled ? (useAscii ? '<' : '◀') : (useAscii ? '<' : '◁')
       setC(fromX, y0 + 2, arrowChar, 'arrow')
-      for (let x = fromX + 1; x < fromX + loopW; x++) setC(x, y0 + 2, lineChar, 'line')
+      for (let x = fromX + 1; x < fromX + loopW; x++) {setC(x, y0 + 2, lineChar, 'line')}
       setC(fromX + loopW, y0 + 2, useAscii ? '+' : '┘', 'corner')
     } else {
       // Normal message: label on row above, arrow on row below
@@ -336,18 +336,18 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
         const y = labelY + lineIdx
         for (let i = 0; i < line.length; i++) {
           const lx = labelStart + i
-          if (lx >= 0 && lx < totalW) setC(lx, y, line[i]!, 'text')
+          if (lx >= 0 && lx < totalW) {setC(lx, y, line[i]!, 'text')}
         }
       }
 
       // Draw arrow line
       if (leftToRight) {
-        for (let x = fromX + 1; x < toX; x++) setC(x, arrowY, lineChar, 'line')
+        for (let x = fromX + 1; x < toX; x++) {setC(x, arrowY, lineChar, 'line')}
         // Arrowhead at destination
         const ah = isFilled ? (useAscii ? '>' : '▶') : (useAscii ? '>' : '▷')
         setC(toX, arrowY, ah, 'arrow')
       } else {
-        for (let x = toX + 1; x < fromX; x++) setC(x, arrowY, lineChar, 'line')
+        for (let x = toX + 1; x < fromX; x++) {setC(x, arrowY, lineChar, 'line')}
         const ah = isFilled ? (useAscii ? '<' : '◀') : (useAscii ? '<' : '◁')
         setC(toX, arrowY, ah, 'arrow')
       }
@@ -360,13 +360,13 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
     const block = diagram.blocks[b]!
     const topY = blockStartY.get(b)
     const botY = blockEndY.get(b)
-    if (topY === undefined || botY === undefined) continue
+    if (topY === undefined || botY === undefined) {continue}
 
     // Find the leftmost/rightmost lifelines involved in this block's messages
     let minLX = totalW
     let maxLX = 0
     for (let m = block.startIndex; m <= block.endIndex; m++) {
-      if (m >= diagram.messages.length) break
+      if (m >= diagram.messages.length) {break}
       const msg = diagram.messages[m]!
       const f = actorIdx.get(msg.from) ?? 0
       const t = actorIdx.get(msg.to) ?? 0
@@ -379,7 +379,7 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
 
     // Top border with block type label
     setC(bLeft, topY, TL, 'border')
-    for (let x = bLeft + 1; x < bRight; x++) setC(x, topY, H, 'border')
+    for (let x = bLeft + 1; x < bRight; x++) {setC(x, topY, H, 'border')}
     setC(bRight, topY, TR, 'border')
     // Write block header label over the top border (supports multi-line)
     const hdrLabel = block.label ? `${block.type} [${block.label}]` : block.type
@@ -394,7 +394,7 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
 
     // Bottom border
     setC(bLeft, botY, BL, 'border')
-    for (let x = bLeft + 1; x < bRight; x++) setC(x, botY, H, 'border')
+    for (let x = bLeft + 1; x < bRight; x++) {setC(x, botY, H, 'border')}
     setC(bRight, botY, BR, 'border')
 
     // Side borders
@@ -406,10 +406,10 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
     // Dividers
     for (let d = 0; d < block.dividers.length; d++) {
       const dY = divYMap.get(`${b}:${d}`)
-      if (dY === undefined) continue
+      if (dY === undefined) {continue}
       const dashChar = isDashedH()
       setC(bLeft, dY, JL, 'junction')
-      for (let x = bLeft + 1; x < bRight; x++) setC(x, dY, dashChar, 'line')
+      for (let x = bLeft + 1; x < bRight; x++) {setC(x, dY, dashChar, 'line')}
       setC(bRight, dY, JR, 'junction')
       // Divider label
       const dLabel = block.dividers[d]!.label
@@ -430,7 +430,7 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
     increaseRoleCanvasSize(rc, np.x + np.width, np.y + np.height)
     // Top border
     setC(np.x, np.y, TL, 'border')
-    for (let x = 1; x < np.width - 1; x++) setC(np.x + x, np.y, H, 'border')
+    for (let x = 1; x < np.width - 1; x++) {setC(np.x + x, np.y, H, 'border')}
     setC(np.x + np.width - 1, np.y, TR, 'border')
     // Content rows
     for (let l = 0; l < np.lines.length; l++) {
@@ -444,11 +444,11 @@ export function renderSequenceAscii(text: string, config: AsciiConfig, colorMode
     // Bottom border
     const by = np.y + np.height - 1
     setC(np.x, by, BL, 'border')
-    for (let x = 1; x < np.width - 1; x++) setC(np.x + x, by, H, 'border')
+    for (let x = 1; x < np.width - 1; x++) {setC(np.x + x, by, H, 'border')}
     setC(np.x + np.width - 1, by, BR, 'border')
   }
 
-  return canvasToString(canvas, { roleCanvas: rc, colorMode, theme })
+  return canvasToString(canvas, { colorMode, roleCanvas: rc, theme })
 
   // ---- Helper: dashed horizontal character ----
   function isDashedH(): string {

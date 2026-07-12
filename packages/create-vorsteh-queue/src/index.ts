@@ -57,15 +57,15 @@ async function fetchTemplates(): Promise<Template[]> {
     console.warn(pc.yellow("⚠️  Using fallback templates"))
     return [
       {
-        name: "drizzle-postgres-example",
         alias: "drizzle-postgres",
         description: "Drizzle ORM + postgres.js",
+        name: "drizzle-postgres-example",
         path: "examples/drizzle-postgres",
       },
       {
-        name: "drizzle-pglite-example",
         alias: "drizzle-pglite",
         description: "Drizzle ORM + PGlite (Embedded)",
+        name: "drizzle-pglite-example",
         path: "examples/drizzle-pglite",
       },
     ]
@@ -246,9 +246,9 @@ async function main() {
     template = await select({
       message: "Choose a template:",
       options: templates.map((t) => ({
-        value: t,
-        label: t.name,
         hint: t.description,
+        label: t.name,
+        value: t,
       })),
     })
 
@@ -262,8 +262,8 @@ async function main() {
   let installDeps = !noInstall
   if (!noInstall && (!cliTemplate || !cliPackageManager)) {
     const result = await confirm({
-      message: "Install dependencies?",
       initialValue: true,
+      message: "Install dependencies?",
     })
 
     if (isCancel(result)) {
@@ -291,13 +291,13 @@ async function main() {
       const result = await select({
         message: "Which package manager?",
         options: [
-          { value: "npm", label: "npm" },
-          { value: "pnpm", label: "pnpm" },
-          { value: "yarn", label: "yarn" },
+          { label: "npm", value: "npm" },
+          { label: "pnpm", value: "pnpm" },
+          { label: "yarn", value: "yarn" },
           {
-            value: "bun",
-            label: "bun",
             hint: "Experimental - some database drivers may not work",
+            label: "bun",
+            value: "bun",
           },
         ],
       })
@@ -336,8 +336,8 @@ async function main() {
       try {
         await installPackage([], {
           cwd: targetDir,
-          silent: true,
           packageManager,
+          silent: true,
         })
         s.stop("Dependencies installed!")
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

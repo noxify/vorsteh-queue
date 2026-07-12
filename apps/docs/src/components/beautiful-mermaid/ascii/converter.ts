@@ -55,21 +55,21 @@ export function convertToAsciiGraph(parsed: MermaidGraph, config: AsciiConfig): 
   for (const mEdge of parsed.edges) {
     const from = nodeMap.get(mEdge.source)
     const to = nodeMap.get(mEdge.target)
-    if (!from || !to) continue
+    if (!from || !to) {continue}
 
     edges.push({
-      from,
-      to,
-      text: mEdge.label ?? '',
-      path: [],
-      labelLine: [],
-      startDir: { x: 0, y: 0 },
       endDir: { x: 0, y: 0 },
-      style: mEdge.style,
-      hasArrowStart: mEdge.hasArrowStart,
-      hasArrowEnd: mEdge.hasArrowEnd,
-      startMarker: mEdge.startMarker,
       endMarker: mEdge.endMarker,
+      from,
+      hasArrowEnd: mEdge.hasArrowEnd,
+      hasArrowStart: mEdge.hasArrowStart,
+      labelLine: [],
+      path: [],
+      startDir: { x: 0, y: 0 },
+      startMarker: mEdge.startMarker,
+      style: mEdge.style,
+      text: mEdge.label ?? '',
+      to,
     })
   }
 
@@ -96,18 +96,18 @@ export function convertToAsciiGraph(parsed: MermaidGraph, config: AsciiConfig): 
   }
 
   return {
-    nodes,
-    edges,
+    bundles: [], // Populated by analyzeEdgeBundles() during layout
     canvas: mkCanvas(0, 0),
-    roleCanvas: mkRoleCanvas(0, 0),
-    grid: new Map(),
     columnWidth: new Map(),
-    rowHeight: new Map(),
-    subgraphs,
     config,
+    edges,
+    grid: new Map(),
+    nodes,
     offsetX: 0,
     offsetY: 0,
-    bundles: [], // Populated by analyzeEdgeBundles() during layout
+    roleCanvas: mkRoleCanvas(0, 0),
+    rowHeight: new Map(),
+    subgraphs,
   }
 }
 
@@ -130,18 +130,21 @@ function convertSubgraph(
   }
 
   const sg: AsciiSubgraph = {
+    children: [],
+    direction: normalizedDirection,
+    maxX: 0,
+    maxY: 0,
+    minX: 0,
+    minY: 0,
     name: mSg.label,
     nodes: [],
     parent,
-    children: [],
-    minX: 0, minY: 0, maxX: 0, maxY: 0,
-    direction: normalizedDirection,
   }
 
   // Resolve node references
   for (const nodeId of mSg.nodeIds) {
     const node = nodeMap.get(nodeId)
-    if (node) sg.nodes.push(node)
+    if (node) {sg.nodes.push(node)}
   }
 
   allSubgraphs.push(sg)
@@ -197,7 +200,7 @@ function deduplicateSubgraphNodes(
   // claim nodes that haven't been claimed yet by any previous subgraph.
   function claimNodes(mSg: MermaidSubgraph): void {
     const asciiSg = sgMap.get(mSg)
-    if (!asciiSg) return
+    if (!asciiSg) {return}
 
     // Recurse into children first (they appear before parent in the Go parser stack,
     // but nodes defined in children are added to parent too — this is handled by
@@ -228,10 +231,10 @@ function deduplicateSubgraphNodes(
       for (const [id, n] of nodeMap) {
         if (n === node) { nodeId = id; break }
       }
-      if (!nodeId) return false
+      if (!nodeId) {return false}
 
       const owner = nodeOwner.get(nodeId)
-      if (!owner) return true // not in any subgraph claim — keep as-is
+      if (!owner) {return true} // not in any subgraph claim — keep as-is
 
       // Keep the node if this subgraph is the owner or an ancestor of the owner
       return isAncestorOrSelf(asciiSg, owner)
@@ -243,7 +246,7 @@ function deduplicateSubgraphNodes(
 function isAncestorOrSelf(candidate: AsciiSubgraph, target: AsciiSubgraph): boolean {
   let current: AsciiSubgraph | null = target
   while (current !== null) {
-    if (current === candidate) return true
+    if (current === candidate) {return true}
     current = current.parent
   }
   return false

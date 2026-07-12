@@ -20,64 +20,64 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] })
 
 const features = [
   {
+    description: "Fire and forget or run exactly once jobs.",
     icon: Clock,
     title: "One-time Jobs",
-    description: "Fire and forget or run exactly once jobs.",
   },
   {
+    description: "Schedule jobs to run in the future with precision.",
     icon: Pause,
     title: "Delayed Jobs",
-    description: "Schedule jobs to run in the future with precision.",
   },
   {
+    description: "Cron-based scheduling with timezone support.",
     icon: Calendar,
     title: "Scheduled Jobs",
-    description: "Cron-based scheduling with timezone support.",
   },
   {
+    description: "Run jobs on fixed intervals with ease.",
     icon: Repeat,
     title: "Recurring Jobs",
-    description: "Run jobs on fixed intervals with ease.",
   },
   {
+    description: "Prioritize what matters most. High to low.",
     icon: ArrowUpDown,
     title: "Job Priorities",
-    description: "Prioritize what matters most. High to low.",
   },
   {
+    description: "Automatic retries with customizable backoff strategies.",
     icon: RefreshCw,
     title: "Retries & Backoff",
-    description: "Automatic retries with customizable backoff strategies.",
   },
   {
+    description: "Failed jobs don't disappear. Inspect and retry them safely.",
     icon: Inbox,
     title: "Dead Letter Queue",
-    description: "Failed jobs don't disappear. Inspect and retry them safely.",
   },
   {
+    description: "Parent-child job hierarchies with dependency tracking.",
     icon: GitBranch,
     title: "Flow Pipelines",
-    description: "Parent-child job hierarchies with dependency tracking.",
   },
   {
+    description: "Real-time percentage updates during job execution.",
     icon: TrendingUp,
     title: "Progress Tracking",
-    description: "Real-time percentage updates during job execution.",
   },
   {
+    description: "Opt-in metrics and distributed tracing via OpenTelemetry.",
     icon: Activity,
     title: "OpenTelemetry Built-in",
-    description: "Opt-in metrics and distributed tracing via OpenTelemetry.",
   },
   {
+    description: "Pause, resume, and manage workers with graceful shutdown.",
     icon: Gauge,
     title: "Worker Controls",
-    description: "Pause, resume, and manage workers with graceful shutdown.",
   },
   {
+    description: "Full TypeScript support with excellent DX.",
     icon: Code2,
     title: "TypeScript First",
-    description: "Full TypeScript support with excellent DX.",
   },
 ]
 

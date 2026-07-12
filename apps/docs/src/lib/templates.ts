@@ -19,20 +19,20 @@ export interface Template {
  */
 export async function getTemplates(): Promise<readonly Template[]> {
   const examplePkgJson = await globby(["**/*/package.json"], {
-    cwd: path.join(process.cwd(), "..", "..", "examples"),
-    expandDirectories: true,
     absolute: true,
+    cwd: path.join(process.cwd(), "..", "..", "examples"),
     deep: 2,
+    expandDirectories: true,
     gitignore: true,
   })
 
   const templates = await pMap(examplePkgJson, async (file) => {
     const content = await readPackage({ cwd: path.dirname(file) })
     return {
-      name: content.name || path.basename(path.dirname(file)),
       alias: path.basename(path.dirname(file)),
-      path: path.join("examples", path.basename(path.dirname(file))),
       description: content.description ?? "No description",
+      name: content.name || path.basename(path.dirname(file)),
+      path: path.join("examples", path.basename(path.dirname(file))),
     }
   })
 

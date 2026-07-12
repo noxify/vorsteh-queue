@@ -10,15 +10,15 @@ import type { NewJob } from "../src/types"
 
 function makeJob(overrides: Partial<NewJob> = {}): NewJob {
   return {
-    name: "test",
-    payload: {},
-    status: "pending",
-    priority: 2,
     attempts: 0,
     maxAttempts: 3,
+    name: "test",
+    payload: {},
+    priority: 2,
     processAt: new Date(),
     progress: 0,
     repeatCount: 0,
+    status: "pending",
     ...overrides,
   }
 }
@@ -36,7 +36,7 @@ describe("Job Dependencies", () => {
     it("should not throw for simple dependency chain", async () => {
       const jobA = await adapter.addJob(makeJob({ name: "a" }))
       const jobB = await adapter.addJob(
-        makeJob({ name: "b", dependsOn: [jobA.id] })
+        makeJob({ dependsOn: [jobA.id], name: "b" })
       )
 
       await expect(
@@ -46,7 +46,7 @@ describe("Job Dependencies", () => {
 
     it("should throw on direct circular dependency", async () => {
       const jobA = await adapter.addJob(
-        makeJob({ name: "a", dependsOn: ["new-job"] })
+        makeJob({ dependsOn: ["new-job"], name: "a" })
       )
 
       await expect(
@@ -58,13 +58,13 @@ describe("Job Dependencies", () => {
       const jobA = await adapter.addJob(makeJob({ name: "a" }))
       // jobB depends on new-job (creating a cycle: new-job → jobA → jobB → new-job)
       const jobB = await adapter.addJob(
-        makeJob({ name: "b", dependsOn: ["new-job"] })
+        makeJob({ dependsOn: ["new-job"], name: "b" })
       )
       // Update jobA to depend on jobB
       await adapter.updateJobSteps(jobA.id, []) // just to ensure job exists
       // We need jobA to depend on jobB — update via raw
       const jobAUpdated = await adapter.addJob(
-        makeJob({ name: "a2", dependsOn: [jobB.id] })
+        makeJob({ dependsOn: [jobB.id], name: "a2" })
       )
 
       await expect(

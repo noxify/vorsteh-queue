@@ -29,6 +29,8 @@ import { getBoxAttachmentPoint } from './rectangle'
  *   (----------)
  */
 export const stadiumRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions(label: string, options: ShapeRenderOptions): ShapeDimensions {
     const lines = splitLines(label)
     const maxLineWidth = Math.max(...lines.map(l => visualWidth(l)), 0)
@@ -105,6 +107,4 @@ export const stadiumRenderer: ShapeRenderer = {
 
     return canvas
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }

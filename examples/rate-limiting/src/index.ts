@@ -10,8 +10,8 @@ import { MemoryQueueAdapter, Queue, Worker } from "@vorsteh-queue/core"
 const adapter = new MemoryQueueAdapter()
 const queue = new Queue(adapter, { name: "api-queue" })
 const worker = new Worker(adapter, {
-  name: "api-queue",
   concurrency: 10,
+  name: "api-queue",
   pollInterval: 50,
 })
 
@@ -23,9 +23,9 @@ worker.register(
     const timestamp = new Date().toISOString().slice(11, 23)
     console.log(`[${timestamp}] Calling API: ${endpoint}`)
     await new Promise((resolve) => setTimeout(resolve, 100))
-    return { status: 200, endpoint }
+    return { endpoint, status: 200 }
   },
-  { rateLimit: { max: 3, duration: 1000 } }
+  { rateLimit: { duration: 1000, max: 3 } }
 )
 
 async function main() {

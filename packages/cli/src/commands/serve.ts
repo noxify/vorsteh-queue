@@ -15,8 +15,8 @@ export function createServeCommand() {
     const port = options.port ? Math.trunc(Number(options.port)) : undefined
 
     const server = createQueueServer({
-      queues: config.queues,
       port,
+      queues: config.queues,
     })
 
     await server.start()

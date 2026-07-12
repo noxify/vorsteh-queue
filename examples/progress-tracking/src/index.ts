@@ -9,8 +9,8 @@ interface ProcessDatasetPayload {
 }
 
 const worker = new Worker(adapter, {
-  name: "progress-queue",
   concurrency: 2,
+  name: "progress-queue",
   removeOnComplete: 5,
   removeOnFail: 3,
 })

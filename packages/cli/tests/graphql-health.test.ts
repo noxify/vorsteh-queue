@@ -10,10 +10,10 @@ vi.stubGlobal("fetch", mockFetch)
 
 // Generators
 const baseUrlArb = fc.webUrl().map((url) => url.replace(/\/$/, ""))
-const graphqlUrlArb = baseUrlArb.map((base) => base + "/graphql")
+const graphqlUrlArb = baseUrlArb.map((base) => `${base  }/graphql`)
 const tokenArb = fc.string({ minLength: 1 })
 const nonOkStatusArb = fc
-  .integer({ min: 300, max: 599 })
+  .integer({ max: 599, min: 300 })
   .filter((s) => s !== 401)
 
 beforeEach(() => {
@@ -36,16 +36,16 @@ describe("GraphQL Transport Health Check", () => {
     it("should derive health URL by replacing /graphql with /health", async () => {
       await fc.assert(
         fc.asyncProperty(graphqlUrlArb, async (graphqlUrl) => {
-          mockFetch.mockResolvedValueOnce({ status: 200, ok: true })
+          mockFetch.mockResolvedValueOnce({ ok: true, status: 200 })
 
           const transport = createGraphQLTransport(graphqlUrl)
           await transport.connect()
 
           const expectedHealthUrl =
-            graphqlUrl.replace(/\/graphql$/, "") + "/health"
+            `${graphqlUrl.replace(/\/graphql$/, "")  }/health`
           expect(mockFetch).toHaveBeenCalledWith(expectedHealthUrl, {
-            method: "GET",
             headers: {},
+            method: "GET",
           })
         }),
         { numRuns: 100 }
@@ -64,16 +64,16 @@ describe("GraphQL Transport Health Check", () => {
     it("should include Authorization header when token is present", async () => {
       await fc.assert(
         fc.asyncProperty(graphqlUrlArb, tokenArb, async (graphqlUrl, token) => {
-          mockFetch.mockResolvedValueOnce({ status: 200, ok: true })
+          mockFetch.mockResolvedValueOnce({ ok: true, status: 200 })
 
           const transport = createGraphQLTransport(graphqlUrl, token)
           await transport.connect()
 
           const expectedHealthUrl =
-            graphqlUrl.replace(/\/graphql$/, "") + "/health"
+            `${graphqlUrl.replace(/\/graphql$/, "")  }/health`
           expect(mockFetch).toHaveBeenCalledWith(expectedHealthUrl, {
-            method: "GET",
             headers: { Authorization: `Bearer ${token}` },
+            method: "GET",
           })
         }),
         { numRuns: 100 }
@@ -96,7 +96,7 @@ describe("GraphQL Transport Health Check", () => {
 
           const transport = createGraphQLTransport(graphqlUrl)
           const expectedHealthUrl =
-            graphqlUrl.replace(/\/graphql$/, "") + "/health"
+            `${graphqlUrl.replace(/\/graphql$/, "")  }/health`
 
           await expect(transport.connect()).rejects.toSatisfy(
             (error: unknown) => {
@@ -127,9 +127,9 @@ describe("GraphQL Transport Health Check", () => {
           fc.string({ minLength: 1 }),
           async (graphqlUrl, statusCode, statusText) => {
             mockFetch.mockResolvedValueOnce({
+              ok: false,
               status: statusCode,
               statusText,
-              ok: false,
             })
 
             const transport = createGraphQLTransport(graphqlUrl)
@@ -137,7 +137,7 @@ describe("GraphQL Transport Health Check", () => {
             await expect(transport.connect()).rejects.toSatisfy(
               (error: unknown) => {
                 expect(error).toBeInstanceOf(CLIError)
-                const message = (error as CLIError).message
+                const {message} = (error as CLIError)
                 expect(message).toContain(String(statusCode))
                 expect(message).toContain(statusText)
                 return true
@@ -153,7 +153,7 @@ describe("GraphQL Transport Health Check", () => {
   // Example-based tests
   describe("Example tests", () => {
     it("should resolve successfully on 200 response (Req 3.4)", async () => {
-      mockFetch.mockResolvedValueOnce({ status: 200, ok: true })
+      mockFetch.mockResolvedValueOnce({ ok: true, status: 200 })
 
       const transport = createGraphQLTransport("http://localhost:3000/graphql")
       await expect(transport.connect()).resolves.toBeUndefined()
@@ -161,9 +161,9 @@ describe("GraphQL Transport Health Check", () => {
 
     it("should throw CLIError with exact multi-line message on 401 (Req 3.6)", async () => {
       mockFetch.mockResolvedValueOnce({
+        ok: false,
         status: 401,
         statusText: "Unauthorized",
-        ok: false,
       })
 
       const transport = createGraphQLTransport(
@@ -182,14 +182,14 @@ describe("GraphQL Transport Health Check", () => {
     })
 
     it("should not include Authorization header when no token is provided", async () => {
-      mockFetch.mockResolvedValueOnce({ status: 200, ok: true })
+      mockFetch.mockResolvedValueOnce({ ok: true, status: 200 })
 
       const transport = createGraphQLTransport("http://localhost:3000/graphql")
       await transport.connect()
 
       expect(mockFetch).toHaveBeenCalledWith("http://localhost:3000/health", {
-        method: "GET",
         headers: {},
+        method: "GET",
       })
     })
   })

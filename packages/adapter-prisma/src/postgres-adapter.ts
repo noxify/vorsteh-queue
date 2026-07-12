@@ -88,21 +88,21 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const result = await this.db[this.modelName]!.create({
       data: {
-        queueName: this.queueName,
+        attempts: job.attempts,
+        cron: job.cron ?? null,
+        groupKey: job.groupKey ?? null,
+        maxAttempts: job.maxAttempts,
         name: job.name,
         payload: JSON.stringify(job.payload),
-        status: job.status,
         priority: job.priority,
-        attempts: job.attempts,
-        maxAttempts: job.maxAttempts,
         processAt: job.processAt,
         progress: job.progress ?? 0,
-        cron: job.cron ?? null,
+        queueName: this.queueName,
+        repeatCount: job.repeatCount ?? 0,
         repeatEvery: job.repeatEvery ?? null,
         repeatLimit: job.repeatLimit ?? null,
-        repeatCount: job.repeatCount ?? 0,
+        status: job.status,
         timeout: typeof job.timeout === "number" ? job.timeout : null,
-        groupKey: job.groupKey ?? null,
         uniqueKey: job.uniqueKey ?? null,
       },
     })
@@ -228,14 +228,14 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await this.db[this.modelName]!.update({ where: { id }, data })
+    await this.db[this.modelName]!.update({ data, where: { id } })
   }
 
   async incrementJobAttempts(id: string): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.db[this.modelName]!.update({
-      where: { id },
       data: { attempts: { increment: 1 } },
+      where: { id },
     })
   }
 
@@ -243,8 +243,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     const normalized = Math.max(0, Math.min(100, progress))
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.db[this.modelName]!.update({
-      where: { id },
       data: { progress: normalized },
+      where: { id },
     })
   }
 
@@ -264,12 +264,12 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.db[this.modelName]!.update({
-      where: { id },
       data: {
-        status: "cancelled",
-        cancelledAt: new Date(),
         cancellationReason: reason ?? null,
+        cancelledAt: new Date(),
+        status: "cancelled",
       },
+      where: { id },
     })
 
     return true
@@ -293,8 +293,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const result = await this.db[this.modelName]!.updateMany({
+      data: { cancelledAt: new Date(), status: "cancelled" },
       where,
-      data: { status: "cancelled", cancelledAt: new Date() },
     })
 
     return result.count ?? 0
@@ -306,10 +306,10 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const results = await this.db[this.modelName]!.findMany({
-      where: { queueName: this.queueName, status: "dead" },
       orderBy: { createdAt: "desc" },
-      take: limit,
       skip: offset,
+      take: limit,
+      where: { queueName: this.queueName, status: "dead" },
     })
 
     return results.map((r: unknown) =>
@@ -320,15 +320,15 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   async redriveJob(id: string): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.db[this.modelName]!.update({
-      where: { id },
       data: {
-        status: "pending",
         attempts: 0,
         error: null,
         failedAt: null,
         processAt: new Date(),
         progress: 0,
+        status: "pending",
       },
+      where: { id },
     })
   }
 
@@ -343,15 +343,15 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const result = await this.db[this.modelName]!.updateMany({
-      where,
       data: {
-        status: "pending",
         attempts: 0,
         error: null,
         failedAt: null,
         processAt: new Date(),
         progress: 0,
+        status: "pending",
       },
+      where,
     })
 
     return result.count ?? 0
@@ -360,19 +360,19 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   async getQueueStats(): Promise<QueueStats> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const stats = await this.db[this.modelName]!.groupBy({
+      _count: { status: true },
       by: ["status"],
       where: { queueName: this.queueName },
-      _count: { status: true },
     })
 
     const result = {
-      pending: 0,
-      delayed: 0,
-      processing: 0,
-      completed: 0,
-      failed: 0,
       cancelled: 0,
+      completed: 0,
       dead: 0,
+      delayed: 0,
+      failed: 0,
+      pending: 0,
+      processing: 0,
       "waiting-children": 0,
     }
     for (const stat of stats) {
@@ -413,10 +413,10 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const rows = await this.db[this.modelName]!.findMany({
-      where,
       orderBy: { createdAt: "desc" },
-      take: limit,
       skip: offset,
+      take: limit,
+      where,
     })
 
     return (rows as unknown[]).map((r) =>
@@ -432,14 +432,14 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const rows = await this.db[this.modelName]!.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: offset,
+      take: limit,
       where: {
-        queueName: this.queueName,
         flowId: { not: null },
         parentId: null,
+        queueName: this.queueName,
       },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      skip: offset,
     })
 
     return (rows as unknown[]).map((r) => {
@@ -463,10 +463,10 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   async cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const jobsToDelete = await this.db[this.modelName]!.findMany({
-      where: { queueName: this.queueName, status },
       orderBy: { createdAt: "desc" },
-      skip: keepCount,
       select: { id: true },
+      skip: keepCount,
+      where: { queueName: this.queueName, status },
     })
 
     if (jobsToDelete.length === 0) {
@@ -486,8 +486,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     const result = await this.db[this.modelName]!.findFirst({
       where: {
         queueName: this.queueName,
-        uniqueKey,
         status: { notIn: ["completed", "cancelled", "dead"] },
+        uniqueKey,
       },
     })
 
@@ -501,8 +501,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   async updateJobSteps(id: string, steps: readonly StepState[]): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.db[this.modelName]!.update({
-      where: { id },
       data: { steps: JSON.stringify(steps) },
+      where: { id },
     })
   }
 
@@ -517,15 +517,15 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.db[this.modelName]!.update({
-      where: { id },
       data: {
-        status: "pending",
         attempts: 0,
         error: null,
         failedAt: null,
         processAt: new Date(),
         progress: 0,
+        status: "pending",
       },
+      where: { id },
     })
     return true
   }
@@ -541,8 +541,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.db[this.modelName]!.update({
+      data: { processAt: new Date(), status: "pending" },
       where: { id },
-      data: { status: "pending", processAt: new Date() },
     })
     return true
   }
@@ -576,12 +576,12 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     const signals = { ...existing, [event]: data }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.db[this.modelName]!.update({
-      where: { id },
       data: {
+        processAt: new Date(),
         signals: JSON.stringify(signals),
         status: "pending",
-        processAt: new Date(),
       },
+      where: { id },
     })
     return true
   }
@@ -589,7 +589,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   async getFlowTree(flowId: string): Promise<FlowNode | null> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const jobs = await this.db[this.modelName]!.findMany({
-      where: { queueName: this.queueName, flowId },
+      where: { flowId, queueName: this.queueName },
     })
     if (jobs.length === 0) {
       return null
@@ -605,7 +605,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
 
     const buildNode = (job: Job): FlowNode => {
       const children = allJobs.filter((j: Job) => j.parentId === job.id)
-      return { job, children: children.map((c: Job) => buildNode(c)) }
+      return { children: children.map((c: Job) => buildNode(c)), job }
     }
     return buildNode(root)
   }
@@ -615,8 +615,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   ): Promise<{ completed: number; total: number }> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const updated = await this.db[this.modelName]!.update({
-      where: { id: parentId },
       data: { childrenCompleted: { increment: 1 } },
+      where: { id: parentId },
     })
     return {
       completed: updated.childrenCompleted ?? 0,
@@ -627,7 +627,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   async getChildrenJobs(parentId: string): Promise<readonly Job[]> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const jobs = await this.db[this.modelName]!.findMany({
-      where: { queueName: this.queueName, parentId },
+      where: { parentId, queueName: this.queueName },
     })
     return jobs.map((j: unknown) =>
       PostgresPrismaQueueAdapter.transformPrismaJob(j)
@@ -637,61 +637,61 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static transformPrismaJob(job: any): Job {
     return {
+      attempts: job.attempts,
+      cancellationReason: job.cancellationReason ?? undefined,
+      cancelledAt: job.cancelledAt ?? undefined,
+      completedAt: job.completedAt ?? undefined,
+      createdAt: job.createdAt,
+      cron: job.cron ?? undefined,
+      error: job.error as SerializedError | undefined,
+      failedAt: job.failedAt ?? undefined,
+      groupKey: job.groupKey ?? undefined,
       id: job.id,
+      maxAttempts: job.maxAttempts,
       name: job.name,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
-      status: job.status as JobStatus,
       priority: job.priority,
-      attempts: job.attempts,
-      maxAttempts: job.maxAttempts,
-      createdAt: job.createdAt,
       processAt: job.processAt,
       processedAt: job.processedAt ?? undefined,
-      completedAt: job.completedAt ?? undefined,
-      failedAt: job.failedAt ?? undefined,
-      cancelledAt: job.cancelledAt ?? undefined,
-      error: job.error as SerializedError | undefined,
-      result: job.result ?? undefined,
       progress: job.progress ?? 0,
-      cron: job.cron ?? undefined,
+      repeatCount: job.repeatCount ?? 0,
       repeatEvery: job.repeatEvery ?? undefined,
       repeatLimit: job.repeatLimit ?? undefined,
-      repeatCount: job.repeatCount ?? 0,
+      result: job.result ?? undefined,
+      status: job.status as JobStatus,
       timeout: job.timeout ?? undefined,
-      groupKey: job.groupKey ?? undefined,
       uniqueKey: job.uniqueKey ?? undefined,
-      cancellationReason: job.cancellationReason ?? undefined,
     }
   }
 
   private static transformRawJob(job: RawQueueJob): Job {
     return {
+      attempts: job.attempts,
+      cancellationReason: job.cancellation_reason ?? undefined,
+      cancelledAt: job.cancelled_at ?? undefined,
+      completedAt: job.completed_at ?? undefined,
+      createdAt: job.created_at,
+      cron: job.cron ?? undefined,
+      error: job.error as SerializedError | undefined,
+      failedAt: job.failed_at ?? undefined,
+      groupKey: job.group_key ?? undefined,
       id: job.id,
+      maxAttempts: job.max_attempts,
       name: job.name,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
-      status: job.status as JobStatus,
       priority: job.priority,
-      attempts: job.attempts,
-      maxAttempts: job.max_attempts,
-      createdAt: job.created_at,
       processAt: job.process_at,
       processedAt: job.processed_at ?? undefined,
-      completedAt: job.completed_at ?? undefined,
-      failedAt: job.failed_at ?? undefined,
-      cancelledAt: job.cancelled_at ?? undefined,
-      error: job.error as SerializedError | undefined,
-      result: job.result ?? undefined,
       progress: job.progress ?? 0,
-      cron: job.cron ?? undefined,
+      repeatCount: job.repeat_count ?? 0,
       repeatEvery: job.repeat_every ?? undefined,
       repeatLimit: job.repeat_limit ?? undefined,
-      repeatCount: job.repeat_count ?? 0,
+      result: job.result ?? undefined,
+      status: job.status as JobStatus,
       timeout: job.timeout ?? undefined,
-      groupKey: job.group_key ?? undefined,
       uniqueKey: job.unique_key ?? undefined,
-      cancellationReason: job.cancellation_reason ?? undefined,
     }
   }
 }

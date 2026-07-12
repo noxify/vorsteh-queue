@@ -43,22 +43,22 @@ describe(PubSub, () => {
     const subscription = pubsub.subscribe("stats:updated")
 
     const stats1 = {
-      pending: 1,
-      delayed: 0,
-      processing: 0,
-      completed: 0,
-      failed: 0,
       cancelled: 0,
+      completed: 0,
       dead: 0,
+      delayed: 0,
+      failed: 0,
+      pending: 1,
+      processing: 0,
     } as QueueStats
     const stats2 = {
-      pending: 2,
-      delayed: 0,
-      processing: 0,
-      completed: 0,
-      failed: 0,
       cancelled: 0,
+      completed: 0,
       dead: 0,
+      delayed: 0,
+      failed: 0,
+      pending: 2,
+      processing: 0,
     } as QueueStats
 
     // Publish multiple events before consuming

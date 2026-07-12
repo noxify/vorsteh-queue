@@ -137,7 +137,7 @@ export function ObservabilitySection() {
                       {"// ✓ vorsteh_queue.jobs.wait_time\n"}
                     </span>
                     <span className="text-[#7c8da6]">
-                      {"// ✓ Distributed traces per job"}
+                      // ✓ Distributed traces per job
                     </span>
                   </code>
                 </pre>

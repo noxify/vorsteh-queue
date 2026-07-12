@@ -20,35 +20,35 @@ import { topRoundedRectPath } from '../svg-paths'
 // ============================================================================
 
 const TL = {
-  titleFontSize: 18,
-  titleFontWeight: 600,
-  sectionFontSize: 12,
-  sectionFontWeight: 600,
-  pillFontSize: 12,
-  pillFontWeight: 600,
   eventFontSize: 12,
   eventFontWeight: 400,
-  markerOuterRadius: 8,
   markerInnerRadius: 4.5,
+  markerOuterRadius: 8,
+  pillFontSize: 12,
+  pillFontWeight: 600,
+  sectionFontSize: 12,
+  sectionFontWeight: 600,
+  titleFontSize: 18,
+  titleFontWeight: 600,
 } as const
 
 const TIMELINE_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: TL.eventFontSize,
   edgeLabelFontSize: TL.pillFontSize,
-  groupHeaderFontSize: TL.sectionFontSize,
-  nodeLabelFontWeight: TL.eventFontWeight,
   edgeLabelFontWeight: TL.pillFontWeight,
-  groupHeaderFontWeight: TL.sectionFontWeight,
-  nodePaddingX: 14,
-  nodePaddingY: 10,
-  nodeCornerRadius: 0,
-  nodeLineWidth: STROKE_WIDTHS.outerBox,
   edgeLineWidth: 1.5,
   groupCornerRadius: 0,
-  groupPaddingX: 18,
-  groupPaddingY: 18,
+  groupHeaderFontSize: TL.sectionFontSize,
+  groupHeaderFontWeight: TL.sectionFontWeight,
   groupLabelPaddingX: 12,
   groupLineWidth: STROKE_WIDTHS.outerBox,
+  groupPaddingX: 18,
+  groupPaddingY: 18,
+  nodeCornerRadius: 0,
+  nodeLabelFontSize: TL.eventFontSize,
+  nodeLabelFontWeight: TL.eventFontWeight,
+  nodeLineWidth: STROKE_WIDTHS.outerBox,
+  nodePaddingX: 14,
+  nodePaddingY: 10,
 }
 
 interface TimelineFamilyPalette {
@@ -73,7 +73,7 @@ export function renderTimelineSvg(
   const parts: string[] = []
   const style = resolveRenderStyle(options, TIMELINE_STYLE_DEFAULTS)
   const useSectionFamilies = diagram.sections.some(section => Boolean(section.label))
-  const accessibleTitle = diagram.accessibilityTitle ?? diagram.title?.text.replace(/\n+/g, ' ')
+  const accessibleTitle = diagram.accessibilityTitle ?? diagram.title?.text.replaceAll(/\n+/g, ' ')
   const accessibleDescription = diagram.accessibilityDescription
   const familyPalettes = getTimelineFamilyPalettes(timelineConfig, themeVariables)
   const allowMulticolor = !(timelineConfig.disableMulticolor && !useSectionFamilies)
@@ -82,10 +82,9 @@ export function renderTimelineSvg(
   const descId = `${uid}-desc`
   const rootAttrs = buildAccessibilityAttrs(accessibleTitle, accessibleDescription, titleId, descId)
 
-  parts.push(svgOpenTag(diagram.width, diagram.height, colors, transparent, rootAttrs))
-  parts.push(buildStyleBlock(font, false, colors.shadow))
+  parts.push(svgOpenTag(diagram.width, diagram.height, colors, transparent, rootAttrs), buildStyleBlock(font, false, colors.shadow))
   const shadowDefs = buildShadowDefs(colors)
-  if (shadowDefs) parts.push(`<defs>${shadowDefs}</defs>`)
+  if (shadowDefs) {parts.push(`<defs>${shadowDefs}</defs>`)}
   parts.push(timelineStyles(style))
 
   if (accessibleTitle) {
@@ -159,10 +158,7 @@ function renderSectionFrame(
   const parts: string[] = []
   const labelAttr = section.label ? ` data-label="${escapeAttr(section.label)}"` : ''
   const familyAttr = renderFamilyAttr(familyIndex, familyPalettes)
-  parts.push(`<g class="timeline-section" data-id="${escapeAttr(section.id)}"${labelAttr}${familyAttr}>`)
-  parts.push(
-    `  <rect class="timeline-section-bg" x="${section.x}" y="${section.y}" width="${section.width}" height="${section.height}" rx="${style.groupCornerRadius}" ry="${style.groupCornerRadius}" />`
-  )
+  parts.push(`<g class="timeline-section" data-id="${escapeAttr(section.id)}"${labelAttr}${familyAttr}>`, `  <rect class="timeline-section-bg" x="${section.x}" y="${section.y}" width="${section.width}" height="${section.height}" rx="${style.groupCornerRadius}" ry="${style.groupCornerRadius}" />`)
 
   if (section.headerHeight > 0) {
     parts.push(
@@ -170,13 +166,13 @@ function renderSectionFrame(
     )
     if (section.label) {
       parts.push(
-        '  ' + renderMultilineText(
+        `  ${  renderMultilineText(
           section.label,
           section.x + style.groupLabelPaddingX,
           section.y + section.headerHeight / 2,
           style.groupHeaderFontSize,
           `class="timeline-section-label" text-anchor="start" font-size="${style.groupHeaderFontSize}" font-weight="${style.groupHeaderFontWeight}"${style.groupFont ? ` font-family="${escapeAttr(style.groupFont)}"` : ''}${letterAttr(style.groupLetterSpacing)}`,
-        )
+        )}`
       )
     }
   }
@@ -198,28 +194,19 @@ function renderPeriod(
 
   parts.push(
     `<g class="timeline-period" data-id="${escapeAttr(period.id)}" data-label="${escapeAttr(period.label)}"${sectionAttr}${familyAttr}>`
-  )
-  parts.push(
-    `  <line class="timeline-stem" x1="${period.centerX}" y1="${period.stemTopY}" x2="${period.centerX}" y2="${period.stemBottomY}" />`
-  )
+  , `  <line class="timeline-stem" x1="${period.centerX}" y1="${period.stemTopY}" x2="${period.centerX}" y2="${period.stemBottomY}" />`)
   parts.push(
     `  <rect class="timeline-period-pill" x="${period.pillX}" y="${period.pillY}" width="${period.pillWidth}" height="${period.pillHeight}" rx="${style.cornerRadius ?? 0}" ry="${style.cornerRadius ?? 0}" />`
-  )
-  parts.push(
-    '  ' + renderMultilineText(
+  , '  ' + renderMultilineText(
       period.label,
       period.centerX,
       period.pillY + period.pillHeight / 2,
       style.edgeLabelFontSize,
       `class="timeline-period-text" text-anchor="middle" font-size="${style.edgeLabelFontSize}" font-weight="${style.edgeLabelFontWeight}"${letterAttr(style.edgeLetterSpacing)}`,
-    )
-  )
+    ))
   parts.push(
     `  <circle class="timeline-marker-ring" cx="${period.centerX}" cy="${period.markerY}" r="${TL.markerOuterRadius}" />`
-  )
-  parts.push(
-    `  <circle class="timeline-marker-core" cx="${period.centerX}" cy="${period.markerY}" r="${TL.markerInnerRadius}" />`
-  )
+  , `  <circle class="timeline-marker-core" cx="${period.centerX}" cy="${period.markerY}" r="${TL.markerInnerRadius}" />`)
 
   for (const event of period.events) {
     parts.push(renderEvent(event, sectionLabel, familyIndex, familyPalettes, style))
@@ -242,19 +229,19 @@ function renderEvent(
   return [
     `<g class="timeline-event" data-id="${escapeAttr(event.id)}" data-period="${escapeAttr(event.periodLabel)}"${sectionAttr}${familyAttr}>`,
     `  <rect class="timeline-event-card" x="${event.x}" y="${event.y}" width="${event.width}" height="${event.height}" rx="${style.cornerRadius ?? 0}" ry="${style.cornerRadius ?? 0}" />`,
-    '  ' + renderMultilineText(
+    `  ${  renderMultilineText(
       event.text,
       event.x + style.nodePaddingX,
       event.y + event.height / 2,
       style.nodeLabelFontSize,
       `class="timeline-event-text" text-anchor="start" font-size="${style.nodeLabelFontSize}" font-weight="${style.nodeLabelFontWeight}"${letterAttr(style.nodeLetterSpacing)}`,
-    ),
+    )}`,
     '</g>',
 ].join('\n')
 }
 
 function letterAttr(value: number): string {
-  return value !== 0 ? ` letter-spacing="${value}"` : ''
+  return value === 0 ? '' : ` letter-spacing="${value}"`
 }
 
 function renderFamilyAttr(familyIndex: number, familyPalettes: readonly TimelineFamilyPalette[]): string {
@@ -306,7 +293,7 @@ function readTimelineScale(
   prefix: 'cScale' | 'cScaleLabel' | 'cScaleInv',
   index: number,
 ): string | undefined {
-  if (!themeVariables) return undefined
+  if (!themeVariables) {return undefined}
   const value = themeVariables[`${prefix}${index}`]
   return typeof value === 'string' && value.length > 0 ? value : undefined
 }
@@ -317,20 +304,20 @@ function buildAccessibilityAttrs(
   titleId: string,
   descId: string,
 ): Record<string, string> {
-  if (!title && !description) return {}
+  if (!title && !description) {return {}}
 
   const attrs: Record<string, string> = { role: 'img' }
-  if (title) attrs['aria-labelledby'] = titleId
-  if (description) attrs['aria-describedby'] = descId
+  if (title) {attrs['aria-labelledby'] = titleId}
+  if (description) {attrs['aria-describedby'] = descId}
   return attrs
 }
 
-function hashTimeline(diagram: { width: number; height: number; sections: Array<{ periods: unknown[] }> }): string {
-  let h = 0x811c9dc5
+function hashTimeline(diagram: { width: number; height: number; sections: { periods: unknown[] }[] }): string {
+  let h = 0x81_1c_9d_c5
   const s = `${diagram.width}|${diagram.height}|${diagram.sections.map(s => s.periods.length).join(',')}`
   for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
+    h ^= s.codePointAt(i)
+    h = Math.imul(h, 0x01_00_01_93)
   }
   return (h >>> 0).toString(36)
 }

@@ -95,9 +95,9 @@ export function HeroSection() {
           {/* Right column - code snippet */}
           <div className="relative min-w-0 overflow-hidden">
             {useMDXComponents().CodeBlock({
-              shouldAnalyze: false,
               children: codeSnippet,
               language: "ts",
+              shouldAnalyze: false,
             })}
           </div>
         </div>

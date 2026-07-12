@@ -49,14 +49,14 @@ function parseFlowchart(lines: string[]): MermaidGraph {
   const direction = headerMatch[1]!.toUpperCase() as Direction
 
   const graph: MermaidGraph = {
-    direction,
-    nodes: new Map(),
-    edges: [],
-    subgraphs: [],
-    classDefs: new Map(),
     classAssignments: new Map(),
-    nodeStyles: new Map(),
+    classDefs: new Map(),
+    direction,
+    edges: [],
     linkStyles: new Map(),
+    nodeStyles: new Map(),
+    nodes: new Map(),
+    subgraphs: [],
   }
 
   // Subgraph stack for nested subgraphs.
@@ -105,7 +105,7 @@ function parseFlowchart(lines: string[]): MermaidGraph {
       if (target === 'default') {
         graph.linkStyles.set('default', { ...graph.linkStyles.get('default'), ...props })
       } else {
-        const indices = target.split(',').map(s => parseInt(s.trim(), 10))
+        const indices = target.split(',').map(s => Number.parseInt(s.trim(), 10))
         for (const idx of indices) {
           if (!isNaN(idx)) {
             graph.linkStyles.set(idx, { ...graph.linkStyles.get(idx), ...props })
@@ -118,7 +118,7 @@ function parseFlowchart(lines: string[]): MermaidGraph {
     // --- direction override inside subgraph: `direction LR` ---
     const dirMatch = line.match(/^direction\s+(TD|TB|LR|BT|RL)\s*$/i)
     if (dirMatch && subgraphStack.length > 0) {
-      subgraphStack[subgraphStack.length - 1]!.direction = dirMatch[1]!.toUpperCase() as Direction
+      subgraphStack.at(-1)!.direction = dirMatch[1]!.toUpperCase() as Direction
       continue
     }
 
@@ -137,9 +137,9 @@ function parseFlowchart(lines: string[]): MermaidGraph {
       } else {
         // Use the label text as id (slugified)
         label = normalizeBrTags(rest)
-        id = rest.replace(/\s+/g, '_').replace(/[^\w]/g, '')
+        id = rest.replaceAll(/\s+/g, '_').replaceAll(/[^\w]/g, '')
       }
-      const sg: MermaidSubgraph = { id, label, nodeIds: [], children: [] }
+      const sg: MermaidSubgraph = { children: [], id, label, nodeIds: [] }
       subgraphStack.push(sg)
       continue
     }
@@ -149,7 +149,7 @@ function parseFlowchart(lines: string[]): MermaidGraph {
       const completed = subgraphStack.pop()
       if (completed) {
         if (subgraphStack.length > 0) {
-          subgraphStack[subgraphStack.length - 1]!.children.push(completed)
+          subgraphStack.at(-1)!.children.push(completed)
         } else {
           graph.subgraphs.push(completed)
         }
@@ -181,14 +181,14 @@ function parseFlowchart(lines: string[]): MermaidGraph {
 
 function parseStateDiagram(lines: string[]): MermaidGraph {
   const graph: MermaidGraph = {
-    direction: 'TD',
-    nodes: new Map(),
-    edges: [],
-    subgraphs: [],
-    classDefs: new Map(),
     classAssignments: new Map(),
-    nodeStyles: new Map(),
+    classDefs: new Map(),
+    direction: 'TD',
+    edges: [],
     linkStyles: new Map(),
+    nodeStyles: new Map(),
+    nodes: new Map(),
+    subgraphs: [],
   }
 
   // Track composite state nesting (like subgraphs)
@@ -206,7 +206,7 @@ function parseStateDiagram(lines: string[]): MermaidGraph {
     const dirMatch = line.match(/^direction\s+(TD|TB|LR|BT|RL)\s*$/i)
     if (dirMatch) {
       if (compositeStack.length > 0) {
-        compositeStack[compositeStack.length - 1]!.direction = dirMatch[1]!.toUpperCase() as Direction
+        compositeStack.at(-1)!.direction = dirMatch[1]!.toUpperCase() as Direction
       } else {
         graph.direction = dirMatch[1]!.toUpperCase() as Direction
       }
@@ -221,7 +221,7 @@ function parseStateDiagram(lines: string[]): MermaidGraph {
       if (target === 'default') {
         graph.linkStyles.set('default', { ...graph.linkStyles.get('default'), ...props })
       } else {
-        const indices = target.split(',').map(s => parseInt(s.trim(), 10))
+        const indices = target.split(',').map(s => Number.parseInt(s.trim(), 10))
         for (const idx of indices) {
           if (!isNaN(idx)) {
             graph.linkStyles.set(idx, { ...graph.linkStyles.get(idx), ...props })
@@ -236,7 +236,7 @@ function parseStateDiagram(lines: string[]): MermaidGraph {
     if (compositeMatch) {
       const label = compositeMatch[1] ?? compositeMatch[2]!
       const id = compositeMatch[2]!
-      const sg: MermaidSubgraph = { id, label, nodeIds: [], children: [] }
+      const sg: MermaidSubgraph = { children: [], id, label, nodeIds: [] }
       compositeStack.push(sg)
       // Track this ID to avoid creating a duplicate node for the composite state
       compositeStateIds.add(id)
@@ -251,7 +251,7 @@ function parseStateDiagram(lines: string[]): MermaidGraph {
       const completed = compositeStack.pop()
       if (completed) {
         if (compositeStack.length > 0) {
-          compositeStack[compositeStack.length - 1]!.children.push(completed)
+          compositeStack.at(-1)!.children.push(completed)
         } else {
           graph.subgraphs.push(completed)
         }
@@ -296,12 +296,12 @@ function parseStateDiagram(lines: string[]): MermaidGraph {
       }
 
       graph.edges.push({
-        source: sourceId,
-        target: targetId,
-        label: edgeLabel,
-        style: 'solid',
-        hasArrowStart: false,
         hasArrowEnd: true,
+        hasArrowStart: false,
+        label: edgeLabel,
+        source: sourceId,
+        style: 'solid',
+        target: targetId,
       })
       continue
     }
@@ -330,7 +330,7 @@ function registerStateNode(
     graph.nodes.set(node.id, node)
   }
   if (compositeStack.length > 0) {
-    const current = compositeStack[compositeStack.length - 1]!
+    const current = compositeStack.at(-1)!
     if (!current.nodeIds.includes(node.id)) {
       current.nodeIds.push(node.id)
     }
@@ -343,9 +343,7 @@ function ensureStateNode(
   compositeStack: MermaidSubgraph[],
   id: string
 ): void {
-  if (!graph.nodes.has(id)) {
-    registerStateNode(graph, compositeStack, { id, label: id, shape: 'rounded' })
-  } else {
+  if (graph.nodes.has(id)) {
     // Track in composite if applicable
     if (compositeStack.length > 0) {
       const current = compositeStack[compositeStack.length - 1]!
@@ -353,6 +351,8 @@ function ensureStateNode(
         current.nodeIds.push(id)
       }
     }
+  } else {
+    registerStateNode(graph, compositeStack, { id, label: id, shape: 'rounded' })
   }
 }
 
@@ -405,13 +405,13 @@ const ARROW_REGEX = /^(<)?(-->|-.->|==>|---|-\.-|===|--o|--x|o--o|o--x|x--o|x--x
  *
  * Based on PR #36 by @liuxiaopai-ai (https://github.com/lukilabs/beautiful-mermaid/pull/36)
  */
-const TEXT_ARROW_REGEX = /^(<)?(--|-\.|==)\s+(.+?)\s+(-->|---|\.\->|-\.\-|==>|===)/
+const TEXT_ARROW_REGEX = /^(<)?(--|-\.|==)\s+(.+?)\s+(-->|---|\.->|-\.-|==>|===)/
 
 /**
  * Node shape patterns — ordered from most specific delimiters to least.
  * Multi-char delimiters must be tried before single-char to avoid false matches.
  */
-const NODE_PATTERNS: Array<{ regex: RegExp; shape: NodeShape }> = [
+const NODE_PATTERNS: { regex: RegExp; shape: NodeShape }[] = [
   // Triple delimiters (must be first)
   { regex: /^([\w-]+)\(\(\((.+?)\)\)\)/, shape: 'doublecircle' },  // A(((text)))
 
@@ -457,7 +457,7 @@ function parseEdgeLine(
 
   // Parse the first node group (possibly with & separators)
   const firstGroup = consumeNodeGroup(remaining, graph, subgraphStack)
-  if (!firstGroup || firstGroup.ids.length === 0) return
+  if (!firstGroup || firstGroup.ids.length === 0) {return}
 
   remaining = firstGroup.remaining.trim()
   let prevGroupIds = firstGroup.ids
@@ -485,7 +485,7 @@ function parseEdgeLine(
     } else {
       // Fallback: text-embedded label syntax (-- Yes -->, -. Maybe .->, == Sure ==>)
       const textMatch = remaining.match(TEXT_ARROW_REGEX)
-      if (!textMatch) break
+      if (!textMatch) {break}
       hasArrowStart = Boolean(textMatch[1])
       const rawLabel = textMatch[3]!.trim()
       edgeLabel = rawLabel ? normalizeBrTags(rawLabel) : undefined
@@ -500,7 +500,7 @@ function parseEdgeLine(
 
     // Parse the next node group
     const nextGroup = consumeNodeGroup(remaining, graph, subgraphStack)
-    if (!nextGroup || nextGroup.ids.length === 0) break
+    if (!nextGroup || nextGroup.ids.length === 0) {break}
 
     remaining = nextGroup.remaining.trim()
 
@@ -508,14 +508,14 @@ function parseEdgeLine(
     for (const sourceId of prevGroupIds) {
       for (const targetId of nextGroup.ids) {
         graph.edges.push({
-          source: sourceId,
-          target: targetId,
-          label: edgeLabel,
-          style,
-          hasArrowStart,
-          hasArrowEnd,
-          startMarker,
           endMarker,
+          hasArrowEnd,
+          hasArrowStart,
+          label: edgeLabel,
+          source: sourceId,
+          startMarker,
+          style,
+          target: targetId,
         })
       }
     }
@@ -539,7 +539,7 @@ function consumeNodeGroup(
   subgraphStack: MermaidSubgraph[]
 ): ConsumedNodeGroup | null {
   const first = consumeNode(text, graph, subgraphStack)
-  if (!first) return null
+  if (!first) {return null}
 
   const ids = [first.id]
   let remaining = first.remaining.trim()
@@ -548,7 +548,7 @@ function consumeNodeGroup(
   while (remaining.startsWith('&')) {
     remaining = remaining.slice(1).trim()
     const next = consumeNode(remaining, graph, subgraphStack)
-    if (!next) break
+    if (!next) {break}
     ids.push(next.id)
     remaining = next.remaining.trim()
   }
@@ -601,7 +601,7 @@ function consumeNode(
     }
   }
 
-  if (id === null) return null
+  if (id === null) {return null}
 
   // Check for ::: class shorthand suffix immediately after the node
   const classMatch = remaining.match(CLASS_SHORTHAND_REGEX)
@@ -629,7 +629,7 @@ function registerNode(
 /** Add node ID to the innermost subgraph if we're inside one */
 function trackInSubgraph(subgraphStack: MermaidSubgraph[], nodeId: string): void {
   if (subgraphStack.length > 0) {
-    const current = subgraphStack[subgraphStack.length - 1]!
+    const current = subgraphStack.at(-1)!
     if (!current.nodeIds.includes(nodeId)) {
       current.nodeIds.push(nodeId)
     }
@@ -638,32 +638,32 @@ function trackInSubgraph(subgraphStack: MermaidSubgraph[], nodeId: string): void
 
 /** Map arrow operator string to edge style (ignoring direction) */
 function arrowStyleFromOp(op: string): EdgeStyle {
-  if (op === '-.->') return 'dotted'
-  if (op === '-.-') return 'dotted'
-  if (op === '==>') return 'thick'
-  if (op === '===') return 'thick'
+  if (op === '-.->') {return 'dotted'}
+  if (op === '-.-') {return 'dotted'}
+  if (op === '==>') {return 'thick'}
+  if (op === '===') {return 'thick'}
   // '-->'' and '---' are both solid
   return 'solid'
 }
 
 /** Map text-embedded arrow open/close operators to edge style */
 function textArrowStyleFromOps(openOp: string, closeOp: string): EdgeStyle {
-  if (openOp === '-.' || closeOp === '.->' || closeOp === '-.-') return 'dotted'
-  if (openOp === '==' || closeOp === '==>' || closeOp === '===') return 'thick'
+  if (openOp === '-.' || closeOp === '.->' || closeOp === '-.-') {return 'dotted'}
+  if (openOp === '==' || closeOp === '==>' || closeOp === '===') {return 'thick'}
   return 'solid'
 }
 
 function startMarkerForOp(op: string, hasLeftAngle: boolean): EdgeMarker | undefined {
-  if (hasLeftAngle) return 'arrow'
-  if (op.startsWith('o')) return 'circle'
-  if (op.startsWith('x')) return 'cross'
+  if (hasLeftAngle) {return 'arrow'}
+  if (op.startsWith('o')) {return 'circle'}
+  if (op.startsWith('x')) {return 'cross'}
   return undefined
 }
 
 function endMarkerForOp(op: string): EdgeMarker | undefined {
-  const last = op[op.length - 1]
-  if (last === '>') return 'arrow'
-  if (last === 'o') return 'circle'
-  if (last === 'x') return 'cross'
+  const last = op.at(-1)
+  if (last === '>') {return 'arrow'}
+  if (last === 'o') {return 'circle'}
+  if (last === 'x') {return 'cross'}
   return undefined
 }

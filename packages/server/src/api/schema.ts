@@ -45,13 +45,13 @@ const builder = new SchemaBuilder<{ Context: SchemaContext }>({})
 
 const JobStatusEnum = builder.enumType("JobStatus", {
   values: {
-    pending: { value: "pending" },
-    delayed: { value: "delayed" },
-    processing: { value: "processing" },
-    completed: { value: "completed" },
-    failed: { value: "failed" },
     cancelled: { value: "cancelled" },
+    completed: { value: "completed" },
     dead: { value: "dead" },
+    delayed: { value: "delayed" },
+    failed: { value: "failed" },
+    pending: { value: "pending" },
+    processing: { value: "processing" },
     waiting_children: { value: "waiting-children" },
   },
 })
@@ -62,8 +62,8 @@ const SerializedErrorType = builder
   .objectRef<SerializedError>("SerializedError")
   .implement({
     fields: (t) => ({
-      name: t.exposeString("name"),
       message: t.exposeString("message"),
+      name: t.exposeString("name"),
       stack: t.string({
         nullable: true,
         resolve: (parent) => parent.stack ?? null,
@@ -73,61 +73,59 @@ const SerializedErrorType = builder
 
 const QueueStatsType = builder.objectRef<QueueStats>("QueueStats").implement({
   fields: (t) => ({
-    pending: t.exposeInt("pending"),
-    delayed: t.exposeInt("delayed"),
-    processing: t.exposeInt("processing"),
-    completed: t.exposeInt("completed"),
-    failed: t.exposeInt("failed"),
     cancelled: t.exposeInt("cancelled"),
+    completed: t.exposeInt("completed"),
     dead: t.exposeInt("dead"),
+    delayed: t.exposeInt("delayed"),
+    failed: t.exposeInt("failed"),
+    pending: t.exposeInt("pending"),
+    processing: t.exposeInt("processing"),
   }),
 })
 
 const JobType = builder.objectRef<Job>("Job").implement({
   fields: (t) => ({
-    id: t.exposeID("id"),
-    name: t.exposeString("name"),
-    payload: t.field({
-      type: "String",
-      resolve: (parent) => JSON.stringify(parent.payload),
-    }),
-    status: t.field({
-      type: JobStatusEnum,
-      resolve: (parent) => parent.status,
-    }),
-    priority: t.exposeInt("priority"),
     attempts: t.exposeInt("attempts"),
-    maxAttempts: t.exposeInt("maxAttempts"),
-    progress: t.exposeInt("progress"),
-    groupKey: t.string({
+    cancellationReason: t.string({
       nullable: true,
-      resolve: (parent) => parent.groupKey ?? null,
+      resolve: (parent) => parent.cancellationReason ?? null,
     }),
-    uniqueKey: t.string({
+    cancelledAt: t.string({
       nullable: true,
-      resolve: (parent) => parent.uniqueKey ?? null,
+      resolve: (parent) => parent.cancelledAt?.toISOString() ?? null,
+    }),
+    completedAt: t.string({
+      nullable: true,
+      resolve: (parent) => parent.completedAt?.toISOString() ?? null,
+    }),
+    createdAt: t.string({
+      resolve: (parent) => parent.createdAt.toISOString(),
     }),
     cron: t.string({
       nullable: true,
       resolve: (parent) => parent.cron ?? null,
-    }),
-    cancellationReason: t.string({
-      nullable: true,
-      resolve: (parent) => parent.cancellationReason ?? null,
     }),
     error: t.field({
       type: SerializedErrorType,
       nullable: true,
       resolve: (parent) => parent.error ?? null,
     }),
-    result: t.string({
+    failedAt: t.string({
       nullable: true,
-      resolve: (parent) =>
-        parent.result ? JSON.stringify(parent.result) : null,
+      resolve: (parent) => parent.failedAt?.toISOString() ?? null,
     }),
-    createdAt: t.string({
-      resolve: (parent) => parent.createdAt.toISOString(),
+    groupKey: t.string({
+      nullable: true,
+      resolve: (parent) => parent.groupKey ?? null,
     }),
+    id: t.exposeID("id"),
+    maxAttempts: t.exposeInt("maxAttempts"),
+    name: t.exposeString("name"),
+    payload: t.field({
+      type: "String",
+      resolve: (parent) => JSON.stringify(parent.payload),
+    }),
+    priority: t.exposeInt("priority"),
     processAt: t.string({
       resolve: (parent) => parent.processAt.toISOString(),
     }),
@@ -135,17 +133,19 @@ const JobType = builder.objectRef<Job>("Job").implement({
       nullable: true,
       resolve: (parent) => parent.processedAt?.toISOString() ?? null,
     }),
-    completedAt: t.string({
+    progress: t.exposeInt("progress"),
+    result: t.string({
       nullable: true,
-      resolve: (parent) => parent.completedAt?.toISOString() ?? null,
+      resolve: (parent) =>
+        parent.result ? JSON.stringify(parent.result) : null,
     }),
-    failedAt: t.string({
-      nullable: true,
-      resolve: (parent) => parent.failedAt?.toISOString() ?? null,
+    status: t.field({
+      type: JobStatusEnum,
+      resolve: (parent) => parent.status,
     }),
-    cancelledAt: t.string({
+    uniqueKey: t.string({
       nullable: true,
-      resolve: (parent) => parent.cancelledAt?.toISOString() ?? null,
+      resolve: (parent) => parent.uniqueKey ?? null,
     }),
   }),
 })
@@ -154,8 +154,8 @@ const QueueInfoType = builder
   .objectRef<{ name: string; isDefault: boolean }>("QueueInfo")
   .implement({
     fields: (t) => ({
-      name: t.exposeString("name"),
       isDefault: t.exposeBoolean("isDefault"),
+      name: t.exposeString("name"),
     }),
   })
 
@@ -163,22 +163,48 @@ const QueueInfoType = builder
 
 builder.queryType({
   fields: (t) => ({
-    queues: t.field({
-      type: [QueueInfoType],
-      resolve: (_parent, _args, ctx) => {
-        return ctx.queues.map((q) => ({
-          name: q.name,
-          isDefault: false,
-        }))
+    deadJobs: t.field({
+      type: [JobType],
+      args: {
+        queue: t.arg.string({ required: true }),
+        limit: t.arg.int({ required: false }),
+        offset: t.arg.int({ required: false }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.getDeadJobs({
+          limit: args.limit ?? 50,
+          offset: args.offset ?? 0,
+        })
       },
     }),
 
-    stats: t.field({
-      type: QueueStatsType,
-      args: { queue: t.arg.string({ required: true }) },
+    flowTree: t.field({
+      type: FlowNodeType,
+      nullable: true,
+      args: {
+        queue: t.arg.string({ required: true }),
+        flowId: t.arg.string({ required: true }),
+      },
       resolve: async (_parent, args, ctx) => {
         const queue = getQueue(args.queue, ctx.queues)
-        return queue.adapter.getQueueStats()
+        return queue.adapter.getFlowTree(args.flowId)
+      },
+    }),
+
+    flows: t.field({
+      type: [FlowEntryType],
+      args: {
+        queue: t.arg.string({ required: true }),
+        limit: t.arg.int({ required: false }),
+        offset: t.arg.int({ required: false }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.getFlows({
+          limit: args.limit ?? 20,
+          offset: args.offset ?? 0,
+        })
       },
     }),
 
@@ -223,19 +249,13 @@ builder.queryType({
       },
     }),
 
-    deadJobs: t.field({
-      type: [JobType],
-      args: {
-        queue: t.arg.string({ required: true }),
-        limit: t.arg.int({ required: false }),
-        offset: t.arg.int({ required: false }),
-      },
-      resolve: async (_parent, args, ctx) => {
-        const queue = getQueue(args.queue, ctx.queues)
-        return queue.adapter.getDeadJobs({
-          limit: args.limit ?? 50,
-          offset: args.offset ?? 0,
-        })
+    queues: t.field({
+      type: [QueueInfoType],
+      resolve: (_parent, _args, ctx) => {
+        return ctx.queues.map((q) => ({
+          name: q.name,
+          isDefault: false,
+        }))
       },
     }),
 
@@ -247,32 +267,12 @@ builder.queryType({
       },
     }),
 
-    flowTree: t.field({
-      type: FlowNodeType,
-      nullable: true,
-      args: {
-        queue: t.arg.string({ required: true }),
-        flowId: t.arg.string({ required: true }),
-      },
+    stats: t.field({
+      type: QueueStatsType,
+      args: { queue: t.arg.string({ required: true }) },
       resolve: async (_parent, args, ctx) => {
         const queue = getQueue(args.queue, ctx.queues)
-        return queue.adapter.getFlowTree(args.flowId)
-      },
-    }),
-
-    flows: t.field({
-      type: [FlowEntryType],
-      args: {
-        queue: t.arg.string({ required: true }),
-        limit: t.arg.int({ required: false }),
-        offset: t.arg.int({ required: false }),
-      },
-      resolve: async (_parent, args, ctx) => {
-        const queue = getQueue(args.queue, ctx.queues)
-        return queue.adapter.getFlows({
-          limit: args.limit ?? 20,
-          offset: args.offset ?? 0,
-        })
+        return queue.adapter.getQueueStats()
       },
     }),
   }),
@@ -298,7 +298,18 @@ builder.mutationType({
       },
     }),
 
-    redriveJob: t.field({
+    clearJobs: t.int({
+      args: {
+        queue: t.arg.string({ required: true }),
+        status: t.arg({ type: JobStatusEnum, required: false }),
+      },
+      resolve: async (_parent, args, ctx) => {
+        const queue = getQueue(args.queue, ctx.queues)
+        return queue.adapter.clearJobs(args.status as JobStatus | undefined)
+      },
+    }),
+
+    deleteJob: t.field({
       type: "Boolean",
       args: {
         id: t.arg.id({ required: true }),
@@ -306,8 +317,7 @@ builder.mutationType({
       },
       resolve: async (_parent, args, ctx) => {
         const queue = getQueue(args.queue, ctx.queues)
-        await queue.adapter.redriveJob(String(args.id))
-        return true
+        return queue.adapter.deleteJob(String(args.id))
       },
     }),
 
@@ -324,14 +334,16 @@ builder.mutationType({
       },
     }),
 
-    clearJobs: t.int({
+    redriveJob: t.field({
+      type: "Boolean",
       args: {
+        id: t.arg.id({ required: true }),
         queue: t.arg.string({ required: true }),
-        status: t.arg({ type: JobStatusEnum, required: false }),
       },
       resolve: async (_parent, args, ctx) => {
         const queue = getQueue(args.queue, ctx.queues)
-        return queue.adapter.clearJobs(args.status as JobStatus | undefined)
+        await queue.adapter.redriveJob(String(args.id))
+        return true
       },
     }),
 
@@ -358,18 +370,6 @@ builder.mutationType({
         return queue.adapter.runJobNow(String(args.id))
       },
     }),
-
-    deleteJob: t.field({
-      type: "Boolean",
-      args: {
-        id: t.arg.id({ required: true }),
-        queue: t.arg.string({ required: true }),
-      },
-      resolve: async (_parent, args, ctx) => {
-        const queue = getQueue(args.queue, ctx.queues)
-        return queue.adapter.deleteJob(String(args.id))
-      },
-    }),
   }),
 })
 
@@ -379,11 +379,11 @@ const FlowNodeType = builder.objectRef<FlowNode>("FlowNode")
 
 FlowNodeType.implement({
   fields: (t) => ({
-    job: t.field({ type: JobType, resolve: (parent) => parent.job }),
     children: t.field({
       type: [FlowNodeType],
       resolve: (parent) => parent.children,
     }),
+    job: t.field({ type: JobType, resolve: (parent) => parent.job }),
   }),
 })
 
@@ -392,7 +392,7 @@ const FlowEntryType = builder
   .implement({
     fields: (t) => ({
       flowId: t.exposeString("flowId"),
-      rootJob: t.field({ type: JobType, resolve: (parent) => parent.rootJob }),
+      rootJob: t.field({ resolve: (parent) => parent.rootJob, type: JobType }),
     }),
   })
 
@@ -401,16 +401,16 @@ const FlowEntryType = builder
 builder.subscriptionType({
   fields: (t) => ({
     jobStatusChanged: t.field({
-      type: JobType,
+      resolve: (payload: Job) => payload,
       subscribe: (_parent, _args, ctx) =>
         ctx.pubsub.subscribe("job:statusChanged"),
-      resolve: (payload: Job) => payload,
+      type: JobType,
     }),
 
     statsUpdated: t.field({
-      type: QueueStatsType,
-      subscribe: (_parent, _args, ctx) => ctx.pubsub.subscribe("stats:updated"),
       resolve: (payload: QueueStats) => payload,
+      subscribe: (_parent, _args, ctx) => ctx.pubsub.subscribe("stats:updated"),
+      type: QueueStatsType,
     }),
   }),
 })

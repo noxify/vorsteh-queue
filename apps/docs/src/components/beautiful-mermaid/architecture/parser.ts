@@ -61,19 +61,19 @@ export function parseArchitectureDiagram(lines: string[]): ArchitectureDiagram {
     const accDescrBlockMatch = line.match(/^accDescr\s*:?\s*\{\s*(.*)$/i)
     if (accDescrBlockMatch) {
       const blockLines: string[] = []
-      if (accDescrBlockMatch[1]!.trim()) blockLines.push(accDescrBlockMatch[1]!.trim())
+      if (accDescrBlockMatch[1]!.trim()) {blockLines.push(accDescrBlockMatch[1]!.trim())}
       let closed = false
       for (i++; i < lines.length; i++) {
         const blockLine = lines[i]!
         if (blockLine.includes('}')) {
           const before = blockLine.slice(0, blockLine.indexOf('}')).trim()
-          if (before) blockLines.push(before)
+          if (before) {blockLines.push(before)}
           closed = true
           break
         }
         blockLines.push(blockLine)
       }
-      if (!closed) throw new Error('Unterminated accDescr block — missing closing "}"')
+      if (!closed) {throw new Error('Unterminated accDescr block — missing closing "}"')}
       accessibilityDescription = normalizeBrTags(blockLines.join('\n').trim())
       continue
     }
@@ -91,10 +91,10 @@ export function parseArchitectureDiagram(lines: string[]): ArchitectureDiagram {
       const label = normalizeBrTags(groupMatch[3] ?? id)
       const parentId = groupMatch[4] ?? undefined
       ensureIdentifierAvailable(id, groups, services, junctions)
-      const group: ArchitectureGroup = { id, label, icon, parentId, children: [] }
+      const group: ArchitectureGroup = { children: [], icon, id, label, parentId }
       ensureParentGroup(parentId, groups, line)
       groups.set(id, group)
-      attachChild({ kind: 'group', id }, parentId, groups, rootChildren)
+      attachChild({ id, kind: 'group' }, parentId, groups, rootChildren)
       continue
     }
 
@@ -105,10 +105,10 @@ export function parseArchitectureDiagram(lines: string[]): ArchitectureDiagram {
       const label = normalizeBrTags(groupMatchSafe(serviceMatch[3], id))
       const parentId = serviceMatch[4] ?? undefined
       ensureIdentifierAvailable(id, groups, services, junctions)
-      const service: ArchitectureService = { id, label, icon, parentId }
+      const service: ArchitectureService = { icon, id, label, parentId }
       ensureParentGroup(parentId, groups, line)
       services.set(id, service)
-      attachChild({ kind: 'service', id }, parentId, groups, rootChildren)
+      attachChild({ id, kind: 'service' }, parentId, groups, rootChildren)
       continue
     }
 
@@ -120,7 +120,7 @@ export function parseArchitectureDiagram(lines: string[]): ArchitectureDiagram {
       const junction: ArchitectureJunction = { id, parentId }
       ensureParentGroup(parentId, groups, line)
       junctions.set(id, junction)
-      attachChild({ kind: 'junction', id }, parentId, groups, rootChildren)
+      attachChild({ id, kind: 'junction' }, parentId, groups, rootChildren)
       continue
     }
 
@@ -128,13 +128,13 @@ export function parseArchitectureDiagram(lines: string[]): ArchitectureDiagram {
   }
 
   return {
-    groups: [...groups.values()],
-    services: [...services.values()],
-    junctions: [...junctions.values()],
-    edges,
-    rootChildren,
-    accessibilityTitle,
     accessibilityDescription,
+    accessibilityTitle,
+    edges,
+    groups: [...groups.values()],
+    junctions: [...junctions.values()],
+    rootChildren,
+    services: [...services.values()],
   }
 }
 
@@ -193,7 +193,7 @@ function parseArchitectureEdge(
   validateEndpoint(source, services, junctions, line)
   validateEndpoint(target, services, junctions, line)
 
-  return { source, target, label, hasArrowStart, hasArrowEnd }
+  return { hasArrowEnd, hasArrowStart, label, source, target }
 }
 
 function parseSourceEndpoint(token: string): ArchitectureEndpoint {
@@ -203,8 +203,8 @@ function parseSourceEndpoint(token: string): ArchitectureEndpoint {
   }
 
   return {
-    id: match[1]!,
     boundary: match[2] ? 'group' : 'item',
+    id: match[1]!,
     side: match[3] as ArchitectureEndpoint['side'],
   }
 }
@@ -216,8 +216,8 @@ function parseTargetEndpoint(token: string): ArchitectureEndpoint {
   }
 
   return {
-    id: match[2]!,
     boundary: match[3] ? 'group' : 'item',
+    id: match[2]!,
     side: match[1] as ArchitectureEndpoint['side'],
   }
 }
@@ -225,10 +225,10 @@ function parseTargetEndpoint(token: string): ArchitectureEndpoint {
 function parseEdgeOperator(token: string): Pick<ArchitectureEdge, 'label' | 'hasArrowStart' | 'hasArrowEnd'> {
   const trimmed = token.trim()
 
-  if (trimmed === '<-->') return { hasArrowStart: true, hasArrowEnd: true }
-  if (trimmed === '-->') return { hasArrowStart: false, hasArrowEnd: true }
-  if (trimmed === '<--') return { hasArrowStart: true, hasArrowEnd: false }
-  if (trimmed === '--') return { hasArrowStart: false, hasArrowEnd: false }
+  if (trimmed === '<-->') {return { hasArrowStart: true, hasArrowEnd: true }}
+  if (trimmed === '-->') {return { hasArrowStart: false, hasArrowEnd: true }}
+  if (trimmed === '<--') {return { hasArrowStart: true, hasArrowEnd: false }}
+  if (trimmed === '--') {return { hasArrowStart: false, hasArrowEnd: false }}
 
   const labelMatch = trimmed.match(/^(<)?-\[(.*)\]-(>)?$/)
   if (!labelMatch) {
@@ -237,9 +237,9 @@ function parseEdgeOperator(token: string): Pick<ArchitectureEdge, 'label' | 'has
 
   const label = normalizeBrTags(labelMatch[2] ?? '').trim() || undefined
   return {
-    label,
-    hasArrowStart: Boolean(labelMatch[1]),
     hasArrowEnd: Boolean(labelMatch[3]),
+    hasArrowStart: Boolean(labelMatch[1]),
+    label,
   }
 }
 
@@ -288,8 +288,9 @@ export function architectureToMermaidGraph(diagram: ArchitectureDiagram): Mermai
   const direction = detectArchitectureDirection(diagram.edges)
 
   return {
+    classAssignments: new Map(),
+    classDefs: new Map(),
     direction,
-    nodes,
     edges: diagram.edges.map((edge) => ({
       source: edge.source.id,
       target: edge.target.id,
@@ -298,11 +299,10 @@ export function architectureToMermaidGraph(diagram: ArchitectureDiagram): Mermai
       hasArrowStart: edge.hasArrowStart,
       hasArrowEnd: edge.hasArrowEnd,
     })),
-    subgraphs: buildMermaidSubgraphs(diagram.groups),
-    classDefs: new Map(),
-    classAssignments: new Map(),
-    nodeStyles: new Map(),
     linkStyles: new Map(),
+    nodeStyles: new Map(),
+    nodes,
+    subgraphs: buildMermaidSubgraphs(diagram.groups),
   }
 }
 
@@ -316,17 +316,17 @@ function buildMermaidSubgraphs(groups: ArchitectureGroup[]): MermaidSubgraph[] {
     for (const child of group.children) {
       if (child.kind === 'group') {
         const nested = byId.get(child.id)
-        if (nested) children.push(toMermaidSubgraph(nested))
+        if (nested) {children.push(toMermaidSubgraph(nested))}
       } else {
         nodeIds.push(child.id)
       }
     }
 
     return {
+      children,
       id: group.id,
       label: group.label,
       nodeIds,
-      children,
     }
   }
 
@@ -340,11 +340,11 @@ function detectArchitectureDirection(edges: ArchitectureEdge[]): Direction {
   let vertical = 0
 
   for (const edge of edges) {
-    if (edge.source.side === 'L' || edge.source.side === 'R') horizontal++
-    else vertical++
+    if (edge.source.side === 'L' || edge.source.side === 'R') {horizontal++}
+    else {vertical++}
 
-    if (edge.target.side === 'L' || edge.target.side === 'R') horizontal++
-    else vertical++
+    if (edge.target.side === 'L' || edge.target.side === 'R') {horizontal++}
+    else {vertical++}
   }
 
   return horizontal >= vertical ? 'LR' : 'TD'

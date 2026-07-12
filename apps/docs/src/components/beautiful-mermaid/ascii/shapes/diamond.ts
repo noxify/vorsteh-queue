@@ -16,12 +16,12 @@ import { getCorners } from './corners'
  *   ◇─────────◇
  */
 export const diamondRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions: getBoxDimensions,
 
   render(label, dimensions, options) {
     const corners = getCorners('diamond', options.useAscii)
     return renderBox(label, dimensions, corners, options.useAscii)
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }

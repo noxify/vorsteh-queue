@@ -3,8 +3,8 @@ import { Worker } from "@vorsteh-queue/core"
 import { adapter, queue } from "./queues"
 
 const worker = new Worker(adapter, {
-  name: "email-queue",
   concurrency: 2,
+  name: "email-queue",
 })
 
 interface EmailPayload {
@@ -43,9 +43,9 @@ async function main() {
   console.log("Connected to database")
 
   await queue.add("send-email", {
-    to: "user@example.com",
-    subject: "Welcome!",
     body: "Welcome to our service!",
+    subject: "Welcome!",
+    to: "user@example.com",
   })
 
   worker.start()

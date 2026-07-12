@@ -85,9 +85,9 @@ export function reserveSpotInGrid(
     // Collision — shift perpendicular to main flow direction
     if (dir === 'LR') {
       return reserveSpotInGrid(graph, node, { x: requested.x, y: requested.y + 4 }, dir)
-    } else {
-      return reserveSpotInGrid(graph, node, { x: requested.x + 4, y: requested.y }, dir)
     }
+      return reserveSpotInGrid(graph, node, { x: requested.x + 4, y: requested.y }, dir)
+    
   }
 
   // Reserve the 3x3 block
@@ -117,8 +117,8 @@ export function setColumnWidth(graph: AsciiGraph, node: AsciiNode): void {
 
   // Get shape-aware dimensions
   const shapeDims = getShapeDimensions(node.shape, node.displayLabel, {
-    useAscii: graph.config.useAscii,
     padding,
+    useAscii: graph.config.useAscii,
   })
 
   // Use shape-provided grid dimensions
@@ -197,7 +197,7 @@ export function getNodeSubgraph(graph: AsciiGraph, node: AsciiNode): AsciiSubgra
 function isAncestorOrSelf(candidate: AsciiSubgraph, target: AsciiSubgraph): boolean {
   let current: AsciiSubgraph | null = target
   while (current !== null) {
-    if (current === candidate) return true
+    if (current === candidate) {return true}
     current = current.parent
   }
   return false
@@ -223,7 +223,7 @@ export function getEffectiveDirection(graph: AsciiGraph, node: AsciiNode): 'LR' 
  */
 function hasIncomingEdgeFromOutsideSubgraph(graph: AsciiGraph, node: AsciiNode): boolean {
   const nodeSg = getNodeSubgraph(graph, node)
-  if (!nodeSg) return false
+  if (!nodeSg) {return false}
 
   let hasExternalEdge = false
   for (const edge of graph.edges) {
@@ -236,11 +236,11 @@ function hasIncomingEdgeFromOutsideSubgraph(graph: AsciiGraph, node: AsciiNode):
     }
   }
 
-  if (!hasExternalEdge) return false
+  if (!hasExternalEdge) {return false}
 
   // Only return true for the topmost node with an external incoming edge
   for (const otherNode of nodeSg.nodes) {
-    if (otherNode === node || !otherNode.gridCoord) continue
+    if (otherNode === node || !otherNode.gridCoord) {continue}
     let otherHasExternal = false
     for (const edge of graph.edges) {
       if (edge.to === otherNode) {
@@ -264,7 +264,7 @@ function hasIncomingEdgeFromOutsideSubgraph(graph: AsciiGraph, node: AsciiNode):
 // ============================================================================
 
 function calculateSubgraphBoundingBox(graph: AsciiGraph, sg: AsciiSubgraph): void {
-  if (sg.nodes.length === 0) return
+  if (sg.nodes.length === 0) {return}
 
   let minX = 1_000_000
   let minY = 1_000_000
@@ -284,7 +284,7 @@ function calculateSubgraphBoundingBox(graph: AsciiGraph, sg: AsciiSubgraph): voi
 
   // Include node positions
   for (const node of sg.nodes) {
-    if (!node.drawingCoord || !node.drawing) continue
+    if (!node.drawingCoord || !node.drawing) {continue}
     const nodeMinX = node.drawingCoord.x
     const nodeMinY = node.drawingCoord.y
     const nodeMaxX = nodeMinX + node.drawing.length - 1
@@ -345,7 +345,7 @@ export function calculateSubgraphBoundingBoxes(graph: AsciiGraph): void {
  * If any subgraph has negative min coordinates, shift everything positive.
  */
 export function offsetDrawingForSubgraphs(graph: AsciiGraph): void {
-  if (graph.subgraphs.length === 0) return
+  if (graph.subgraphs.length === 0) {return}
 
   let minX = 0
   let minY = 0
@@ -356,7 +356,7 @@ export function offsetDrawingForSubgraphs(graph: AsciiGraph): void {
 
   const offsetX = -minX
   const offsetY = -minY
-  if (offsetX === 0 && offsetY === 0) return
+  if (offsetX === 0 && offsetY === 0) {return}
 
   graph.offsetX = offsetX
   graph.offsetY = offsetY
@@ -414,7 +414,7 @@ export function createMapping(graph: AsciiGraph): void {
   // (e.g., `subgraph s; A-->B; end; X-->A` - A shouldn't be a root, X should).
   const rootNodes = initialRoots.filter(node => {
     const nodeSg = getNodeSubgraph(graph, node)
-    if (!nodeSg) return true  // external nodes: keep as roots
+    if (!nodeSg) {return true}  // external nodes: keep as roots
 
     // Check if this subgraph node has incoming edges from outside its subgraph
     for (const edge of graph.edges) {
@@ -434,7 +434,7 @@ export function createMapping(graph: AsciiGraph): void {
   let hasSubgraphRootsWithEdges = false
   for (const node of rootNodes) {
     if (isNodeInAnySubgraph(graph, node)) {
-      if (getChildren(graph, node).length > 0) hasSubgraphRootsWithEdges = true
+      if (getChildren(graph, node).length > 0) {hasSubgraphRootsWithEdges = true}
     } else {
       hasExternalRoots = true
     }
@@ -457,7 +457,7 @@ export function createMapping(graph: AsciiGraph): void {
       ? { x: 0, y: highestPositionPerLevel[0]! }
       : { x: highestPositionPerLevel[0]!, y: 0 }
     reserveSpotInGrid(graph, graph.nodes[node.index]!, requested)
-    highestPositionPerLevel[0] = highestPositionPerLevel[0]! + 4
+    highestPositionPerLevel[0] += 4
   }
 
   // Place subgraph root nodes at level 4 (one level in from the edge)
@@ -481,11 +481,11 @@ export function createMapping(graph: AsciiGraph): void {
   while (placedCount < graph.nodes.length) {
     const prevCount = placedCount
     for (const node of graph.nodes) {
-      if (node.gridCoord === null) continue  // skip unplaced nodes
+      if (node.gridCoord === null) {continue}  // skip unplaced nodes
       const gc = node.gridCoord
 
       for (const child of getChildren(graph, node)) {
-        if (child.gridCoord !== null) continue // already placed
+        if (child.gridCoord !== null) {continue} // already placed
 
         // Determine direction for this edge (parent -> child)
         // Use subgraph direction only if both are in the same subgraph with override
@@ -499,13 +499,13 @@ export function createMapping(graph: AsciiGraph): void {
 
         // Determine position based on direction context
         let highestPosition: number
-        if (edgeDir !== graph.config.graphDirection) {
+        if (edgeDir === graph.config.graphDirection) {
+          // Same direction: use level tracker
+          highestPosition = highestPositionPerLevel[childLevel]!
+        } else {
           // Cross-direction: use parent's perpendicular coordinate
           // This keeps children aligned with parent when direction changes
           highestPosition = edgeDir === 'LR' ? gc.y : gc.x
-        } else {
-          // Same direction: use level tracker
-          highestPosition = highestPositionPerLevel[childLevel]!
         }
 
         const requested: GridCoord = edgeDir === 'LR'
@@ -521,7 +521,7 @@ export function createMapping(graph: AsciiGraph): void {
       }
     }
     // Safety: break if no progress made (handles disconnected nodes)
-    if (placedCount === prevCount) break
+    if (placedCount === prevCount) {break}
   }
 
   // Compute column widths and row heights

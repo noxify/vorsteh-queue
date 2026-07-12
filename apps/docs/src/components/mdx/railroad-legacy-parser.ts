@@ -110,8 +110,8 @@ class LegacyDslParser {
       this.index += 1
       return {
         kind: "string",
-        value: LegacyDslParser.decodeString(token.value),
         token,
+        value: LegacyDslParser.decodeString(token.value),
       }
     }
 
@@ -119,8 +119,8 @@ class LegacyDslParser {
       this.index += 1
       return {
         kind: "number",
-        value: Math.trunc(Number(token.value)),
         token,
+        value: Math.trunc(Number(token.value)),
       }
     }
 
@@ -135,17 +135,17 @@ class LegacyDslParser {
           `expected ) after arguments of ${identifierToken.value}`
         )
         return {
+          args,
           kind: "call",
           name: identifierToken.value,
-          args,
           token: identifierToken,
         }
       }
 
       return {
         kind: "identifier",
-        value: identifierToken.value,
         token: identifierToken,
+        value: identifierToken.value,
       }
     }
 
@@ -160,7 +160,7 @@ class LegacyDslParser {
     const value: Record<string, LegacyScalar> = {}
 
     if (this.match("rbrace")) {
-      return { kind: "object", value, token: openBraceToken }
+      return { kind: "object", token: openBraceToken, value }
     }
 
     while (!this.isAtEnd()) {
@@ -182,9 +182,9 @@ class LegacyDslParser {
       value[key.value] =
         parsedValue.kind === "number"
           ? parsedValue.value
-          : parsedValue.kind === "identifier"
+          : (parsedValue.kind === "identifier"
             ? parsedValue.value
-            : parsedValue.value
+            : parsedValue.value)
 
       if (this.match("comma")) {
         continue
@@ -194,7 +194,7 @@ class LegacyDslParser {
     }
 
     this.consume("rbrace", "expected } after object literal")
-    return { kind: "object", value, token: openBraceToken }
+    return { kind: "object", token: openBraceToken, value }
   }
 
   private parseArguments(terminator: LegacyTokenType): LegacyExpression[] {
@@ -286,9 +286,9 @@ class LegacyDslParser {
   ): GrammarSyntaxError {
     const position = token?.source.start ??
       this.tokens.at(-1)?.source.end ?? {
-        offset: 0,
-        line: 1,
         column: 1,
+        line: 1,
+        offset: 0,
       }
     return new GrammarSyntaxError(message, position)
   }
@@ -440,7 +440,7 @@ function endFromCall(call: LegacyCall): End {
 }
 
 function defaultStringExpression(token: LegacyToken): LegacyExpression {
-  return { kind: "string", value: "", token }
+  return { kind: "string", token, value: "" }
 }
 
 function readChoiceArguments(call: LegacyCall): {
@@ -456,7 +456,7 @@ function readChoiceArguments(call: LegacyCall): {
   }
 
   const children = call.args.slice(firstNodeIndex).map(nodeFromExpression)
-  return { normal, children }
+  return { children, normal }
 }
 
 function handleChoice(call: LegacyCall): Node {
@@ -516,31 +516,8 @@ function handleLeaf(
 }
 
 const callHandlers: Record<string, (call: LegacyCall) => Node> = {
-  sequence: (call) => sequence(...call.args.map(nodeFromExpression)),
-  stack: (call) => sequence(...call.args.map(nodeFromExpression)),
-  choice: handleChoice,
-  horizontalchoice: handleChoice,
-  multiplechoice: handleMultipleChoice,
-  optional: handleOptional,
-  oneormore: handleOneOrMore,
-  zeroormore: handleZeroOrMore,
-  optionalsequence: (call) =>
-    sequence(
-      ...call.args.map((arg) => optional(nodeFromExpression(arg), "top"))
-    ),
   alternatingsequence: (call) => sequence(...call.args.map(nodeFromExpression)),
-  terminal: (call) =>
-    terminal(
-      handleLeaf(call, "Terminal"),
-      metadataFromExpression(call.args[1])
-    ),
-  nonterminal: (call) =>
-    nonTerminal(
-      handleLeaf(call, "NonTerminal"),
-      metadataFromExpression(call.args[1])
-    ),
-  special: (call) =>
-    special(handleLeaf(call, "Special"), metadataFromExpression(call.args[1])),
+  choice: handleChoice,
   comment: (call) =>
     comment(handleLeaf(call, "Comment"), metadataFromExpression(call.args[1])),
   group: (call) => {
@@ -552,7 +529,30 @@ const callHandlers: Record<string, (call: LegacyCall) => Node> = {
       : undefined
     return group(child, label)
   },
+  horizontalchoice: handleChoice,
+  multiplechoice: handleMultipleChoice,
+  nonterminal: (call) =>
+    nonTerminal(
+      handleLeaf(call, "NonTerminal"),
+      metadataFromExpression(call.args[1])
+    ),
+  oneormore: handleOneOrMore,
+  optional: handleOptional,
+  optionalsequence: (call) =>
+    sequence(
+      ...call.args.map((arg) => optional(nodeFromExpression(arg), "top"))
+    ),
+  sequence: (call) => sequence(...call.args.map(nodeFromExpression)),
   skip: () => skip(),
+  special: (call) =>
+    special(handleLeaf(call, "Special"), metadataFromExpression(call.args[1])),
+  stack: (call) => sequence(...call.args.map(nodeFromExpression)),
+  terminal: (call) =>
+    terminal(
+      handleLeaf(call, "Terminal"),
+      metadataFromExpression(call.args[1])
+    ),
+  zeroormore: handleZeroOrMore,
 }
 
 function nodeFromCall(call: LegacyCall): Node {
@@ -618,7 +618,7 @@ function diagramFromRoot(call: LegacyCall): Diagram {
   const child = children.length === 1 ? firstChild : sequence(...children)
   const options =
     startOption || endOption
-      ? { start: startOption, end: endOption }
+      ? { end: endOption, start: startOption }
       : undefined
 
   return diagram(child, options)

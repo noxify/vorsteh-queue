@@ -45,7 +45,7 @@ function groupBreadcrumb(input: Item[]): (ElementItem | GroupItem)[] {
 
   return [
     { type: "element" as const, ...firstItem },
-    { type: "group", items: groupItems.toReversed() },
+    { items: groupItems.toReversed(), type: "group" },
     ...restItems,
   ]
 }

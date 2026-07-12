@@ -45,27 +45,25 @@ export function renderSvg(
   const style = resolveRenderStyle(options)
 
   // SVG root with CSS variables + style block + defs
-  parts.push(svgOpenTag(graph.width, graph.height, colors, transparent))
-  parts.push(buildStyleBlock(font, false, colors.shadow))
-  parts.push('<defs>')
-  parts.push(arrowMarkerDefs())
+  parts.push(svgOpenTag(graph.width, graph.height, colors, transparent), buildStyleBlock(font, false, colors.shadow))
+  parts.push('<defs>', arrowMarkerDefs())
   const shadowDefs = buildShadowDefs(colors)
-  if (shadowDefs) parts.push(shadowDefs)
+  if (shadowDefs) {parts.push(shadowDefs)}
   // Per-color arrow markers for edges with custom stroke via linkStyle
   const customStrokeColors = new Set<string>()
   let needsCircle = false
   let needsCross = false
   for (const edge of graph.edges) {
-    if (edge.inlineStyle?.stroke) customStrokeColors.add(edge.inlineStyle.stroke)
-    if (edge.startMarker === 'circle' || edge.endMarker === 'circle') needsCircle = true
-    if (edge.startMarker === 'cross' || edge.endMarker === 'cross') needsCross = true
+    if (edge.inlineStyle?.stroke) {customStrokeColors.add(edge.inlineStyle.stroke)}
+    if (edge.startMarker === 'circle' || edge.endMarker === 'circle') {needsCircle = true}
+    if (edge.startMarker === 'cross' || edge.endMarker === 'cross') {needsCross = true}
   }
-  if (needsCircle) parts.push(circleMarkerDefs())
-  if (needsCross) parts.push(crossMarkerDefs())
+  if (needsCircle) {parts.push(circleMarkerDefs())}
+  if (needsCross) {parts.push(crossMarkerDefs())}
   for (const color of customStrokeColors) {
     parts.push(arrowMarkerDefsForColor(color))
-    if (needsCircle) parts.push(circleMarkerDefs(color))
-    if (needsCross) parts.push(crossMarkerDefs(color))
+    if (needsCircle) {parts.push(circleMarkerDefs(color))}
+    if (needsCross) {parts.push(crossMarkerDefs(color))}
   }
   parts.push('</defs>')
 
@@ -184,8 +182,8 @@ function crossMarkerDefs(color?: string): string {
 }
 
 function markerIdPrefix(marker: EdgeMarker): string {
-  if (marker === 'circle') return 'circlehead'
-  if (marker === 'cross') return 'crosshead'
+  if (marker === 'circle') {return 'circlehead'}
+  if (marker === 'cross') {return 'crosshead'}
   return 'arrowhead'
 }
 
@@ -193,7 +191,7 @@ function markerIdPrefix(marker: EdgeMarker): string {
  *  Non-alphanumeric chars are hex-encoded so distinct inputs never collapse
  *  (e.g. "var(--line-1)" → "var28--line2d129", "var(--line1)" → "var28--line129"). */
 function markerSuffix(color: string): string {
-  return color.replace(/[^a-zA-Z0-9]/g, (ch) => ch.charCodeAt(0).toString(16))
+  return color.replaceAll(/[^a-zA-Z0-9]/g, (ch) => ch.codePointAt(0).toString(16))
 }
 
 // ============================================================================
@@ -225,13 +223,13 @@ function renderGroup(group: PositionedGroup, font: string, style: ResolvedRender
 
   // Header label (supports multi-line via <br> tags)
   parts.push(
-    '  ' + renderMultilineText(
+    `  ${  renderMultilineText(
       transformText(group.label, style.groupTextTransform),
       group.x + style.groupLabelPaddingX,
       group.y + headerHeight / 2,
       style.groupHeaderFontSize,
       `font-size="${style.groupHeaderFontSize}" font-weight="${style.groupHeaderFontWeight}"${style.groupFont ? ` font-family="${escapeAttr(style.groupFont)}"` : ''}${style.groupLetterSpacing !== 0 ? ` letter-spacing="${style.groupLetterSpacing}"` : ''} fill="var(--_text-sec)"`
-    )
+    )}`
   )
 
   // Render nested groups recursively (inside this group)
@@ -249,7 +247,7 @@ function renderGroup(group: PositionedGroup, font: string, style: ResolvedRender
 // ============================================================================
 
 function renderEdge(edge: PositionedEdge, style: ResolvedRenderStyle): string {
-  if (edge.points.length < 2) return ''
+  if (edge.points.length < 2) {return ''}
 
   const pathData = style.edgeBendRadius > 0 ? pointsToPathD(edge.points, style.edgeBendRadius) : pointsToPolylinePath(edge.points)
   const dashArray = edge.style === 'dotted' ? ' stroke-dasharray="4 4"' : ''
@@ -284,8 +282,8 @@ function renderEdge(edge: PositionedEdge, style: ResolvedRenderStyle): string {
     `data-arrow-start="${edge.hasArrowStart}"`,
     `data-arrow-end="${edge.hasArrowEnd}"`,
   ]
-  if (edge.hasArrowStart) dataAttrs.push(`data-marker-start="${edge.startMarker ?? 'arrow'}"`)
-  if (edge.hasArrowEnd) dataAttrs.push(`data-marker-end="${edge.endMarker ?? 'arrow'}"`)
+  if (edge.hasArrowStart) {dataAttrs.push(`data-marker-start="${edge.startMarker ?? 'arrow'}"`)}
+  if (edge.hasArrowEnd) {dataAttrs.push(`data-marker-end="${edge.endMarker ?? 'arrow'}"`)}
   if (edge.label) {
     dataAttrs.push(`data-label="${escapeAttr(edge.label)}"`)
   }
@@ -309,8 +307,8 @@ function pointsToPolylinePath(points: Point[]): string {
 }
 
 function pointsToPathD(points: Point[], radius: number): string {
-  if (points.length === 0) return ''
-  if (points.length === 1) return `M${points[0]!.x},${points[0]!.y}`
+  if (points.length === 0) {return ''}
+  if (points.length === 1) {return `M${points[0]!.x},${points[0]!.y}`}
   if (radius <= 0 || points.length < 3) {
     return `M${points.map(p => `${p.x},${p.y}`).join(' L')}`
   }
@@ -332,18 +330,17 @@ function pointsToPathD(points: Point[], radius: number): string {
 
     const before = pointAlong(curr, prev, r)
     const after = pointAlong(curr, next, r)
-    parts.push(`L${before.x},${before.y}`)
-    parts.push(`Q${curr.x},${curr.y} ${after.x},${after.y}`)
+    parts.push(`L${before.x},${before.y}`, `Q${curr.x},${curr.y} ${after.x},${after.y}`)
   }
 
-  const last = points[points.length - 1]!
+  const last = points.at(-1)!
   parts.push(`L${last.x},${last.y}`)
   return parts.join(' ')
 }
 
 function pointAlong(from: Point, to: Point, distance: number): Point {
   const total = dist(from, to)
-  if (total === 0) return { ...from }
+  if (total === 0) {return { ...from }}
   const t = distance / total
   return {
     x: roundPathCoord(from.x + (to.x - from.x) * t),
@@ -375,7 +372,7 @@ function renderEdgeLabel(edge: PositionedEdge, font: string, style: ResolvedRend
     style.edgeLabelFontSize,
     padding,
     // Use --_text-sec for better contrast (was --_text-muted)
-    `text-anchor="middle" font-size="${style.edgeLabelFontSize}" font-weight="${style.edgeLabelFontWeight}"${style.edgeLetterSpacing !== 0 ? ` letter-spacing="${style.edgeLetterSpacing}"` : ''} fill="var(--_text-sec)"`,
+    `text-anchor="middle" font-size="${style.edgeLabelFontSize}" font-weight="${style.edgeLabelFontWeight}"${style.edgeLetterSpacing === 0 ? '' : ` letter-spacing="${style.edgeLetterSpacing}"`} fill="var(--_text-sec)"`,
     // Increased stroke width from 0.5 to 1 for better label separation from edges
     `rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1"`
   )
@@ -383,15 +380,15 @@ function renderEdgeLabel(edge: PositionedEdge, font: string, style: ResolvedRend
   // Semantic wrapper: links label to its edge via data-from/data-to
   return (
     `<g class="edge-label" data-from="${escapeAttr(edge.source)}" data-to="${escapeAttr(edge.target)}" data-label="${escapeAttr(label)}">\n` +
-    `  ${content.replace(/\n/g, '\n  ')}\n` +
+    `  ${content.replaceAll(/\n/g, '\n  ')}\n` +
     `</g>`
   )
 }
 
 /** Get the midpoint of a polyline (by walking segments) */
 function edgeMidpoint(points: Point[]): Point {
-  if (points.length === 0) return { x: 0, y: 0 }
-  if (points.length === 1) return points[0]!
+  if (points.length === 0) {return { x: 0, y: 0 }}
+  if (points.length === 1) {return points[0]!}
 
   // Calculate total length
   let totalLength = 0
@@ -413,7 +410,7 @@ function edgeMidpoint(points: Point[]): Point {
     remaining -= segLen
   }
 
-  return points[points.length - 1]!
+  return points.at(-1)!
 }
 
 function dist(a: Point, b: Point): number {
@@ -441,10 +438,9 @@ function renderNode(node: PositionedNode, font: string, style: ResolvedRenderSty
   const parts: string[] = []
   parts.push(
     `<g class="node" data-id="${escapeAttr(node.id)}" data-label="${escapeAttr(node.label)}" data-shape="${node.shape}">`
-  )
-  parts.push(`  ${shape.replace(/\n/g, '\n  ')}`)
+  , `  ${shape.replace(/\n/g, '\n  ')}`)
   if (label) {
-    parts.push(`  ${label.replace(/\n/g, '\n  ')}`)
+    parts.push(`  ${label.replaceAll(/\n/g, '\n  ')}`)
   }
   parts.push('</g>')
 
@@ -462,37 +458,52 @@ function renderNodeShape(node: PositionedNode, style: ResolvedRenderStyle): stri
   const sw = escapeAttr(inlineStyle?.['stroke-width'] ?? String(style.nodeLineWidth))
 
   switch (shape) {
-    case 'service':
+    case 'service': {
       return renderRect(x, y, width, height, fill, stroke, sw, style.cornerRadius ?? 0)
-    case 'diamond':
+    }
+    case 'diamond': {
       return renderDiamond(x, y, width, height, fill, stroke, sw)
-    case 'rounded':
+    }
+    case 'rounded': {
       return renderRoundedRect(x, y, width, height, fill, stroke, sw, style.cornerRadius ?? 6)
-    case 'stadium':
+    }
+    case 'stadium': {
       return renderStadium(x, y, width, height, fill, stroke, sw)
-    case 'circle':
+    }
+    case 'circle': {
       return renderCircle(x, y, width, height, fill, stroke, sw)
-    case 'subroutine':
+    }
+    case 'subroutine': {
       return renderSubroutine(x, y, width, height, fill, stroke, sw, style.cornerRadius ?? 0)
-    case 'doublecircle':
+    }
+    case 'doublecircle': {
       return renderDoubleCircle(x, y, width, height, fill, stroke, sw)
-    case 'hexagon':
+    }
+    case 'hexagon': {
       return renderHexagon(x, y, width, height, fill, stroke, sw)
-    case 'cylinder':
+    }
+    case 'cylinder': {
       return renderCylinder(x, y, width, height, fill, stroke, sw)
-    case 'asymmetric':
+    }
+    case 'asymmetric': {
       return renderAsymmetric(x, y, width, height, fill, stroke, sw)
-    case 'trapezoid':
+    }
+    case 'trapezoid': {
       return renderTrapezoid(x, y, width, height, fill, stroke, sw)
-    case 'trapezoid-alt':
+    }
+    case 'trapezoid-alt': {
       return renderTrapezoidAlt(x, y, width, height, fill, stroke, sw)
-    case 'state-start':
+    }
+    case 'state-start': {
       return renderStateStart(x, y, width, height)
-    case 'state-end':
+    }
+    case 'state-end': {
       return renderStateEnd(x, y, width, height)
+    }
     case 'rectangle':
-    default:
+    default: {
       return renderRect(x, y, width, height, fill, stroke, sw, style.cornerRadius ?? 0)
+    }
   }
 }
 
@@ -685,46 +696,46 @@ function renderStateEnd(x: number, y: number, w: number, h: number): string {
 
 function parseHexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const match = hex.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/)
-  if (!match) return null
+  if (!match) {return null}
   const raw = match[1]!
   const full = raw.length === 3
-    ? raw.split('').map(ch => ch + ch).join('')
+    ? [...raw].map(ch => ch + ch).join('')
     : raw
   return {
-    r: Number.parseInt(full.slice(0, 2), 16),
-    g: Number.parseInt(full.slice(2, 4), 16),
     b: Number.parseInt(full.slice(4, 6), 16),
+    g: Number.parseInt(full.slice(2, 4), 16),
+    r: Number.parseInt(full.slice(0, 2), 16),
   }
 }
 
 function parseRgbFunction(color: string): { r: number; g: number; b: number } | null {
   const match = color.match(/^rgba?\(\s*(\d{1,3})(?:\s*,\s*|\s+)(\d{1,3})(?:\s*,\s*|\s+)(\d{1,3})/i)
-  if (!match) return null
+  if (!match) {return null}
   const rgb = {
-    r: Number.parseInt(match[1]!, 10),
-    g: Number.parseInt(match[2]!, 10),
     b: Number.parseInt(match[3]!, 10),
+    g: Number.parseInt(match[2]!, 10),
+    r: Number.parseInt(match[1]!, 10),
   }
   return Object.values(rgb).every(v => v >= 0 && v <= 255) ? rgb : null
 }
 
 function contrastTextColor(fill: string): string | undefined {
   const rgb = parseHexToRgb(fill) ?? parseRgbFunction(fill)
-  if (!rgb) return undefined
+  if (!rgb) {return undefined}
   const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000
   return brightness > 140 ? '#000000' : '#FFFFFF'
 }
 
 function nodeTextColor(node: PositionedNode): string {
-  if (node.inlineStyle?.color) return node.inlineStyle.color
-  if (node.inlineStyle?.fill) return contrastTextColor(node.inlineStyle.fill) ?? 'var(--_text)'
+  if (node.inlineStyle?.color) {return node.inlineStyle.color}
+  if (node.inlineStyle?.fill) {return contrastTextColor(node.inlineStyle.fill) ?? 'var(--_text)'}
   return 'var(--_text)'
 }
 
 function renderNodeLabel(node: PositionedNode, font: string, style: ResolvedRenderStyle): string {
   // State pseudostates have no label
   if (node.shape === 'state-start' || node.shape === 'state-end') {
-    if (!node.label) return ''
+    if (!node.label) {return ''}
   }
 
   const cx = node.x + node.width / 2
@@ -737,7 +748,7 @@ function renderNodeLabel(node: PositionedNode, font: string, style: ResolvedRend
     cx,
     cy,
     style.nodeLabelFontSize,
-    `text-anchor="middle" font-size="${style.nodeLabelFontSize}" font-weight="${style.nodeLabelFontWeight}"${style.nodeLetterSpacing !== 0 ? ` letter-spacing="${style.nodeLetterSpacing}"` : ''} fill="${textColor}"`
+    `text-anchor="middle" font-size="${style.nodeLabelFontSize}" font-weight="${style.nodeLabelFontWeight}"${style.nodeLetterSpacing === 0 ? '' : ` letter-spacing="${style.nodeLetterSpacing}"`} fill="${textColor}"`
   )
 }
 
@@ -747,14 +758,18 @@ function renderNodeLabel(node: PositionedNode, font: string, style: ResolvedRend
 
 function transformText(text: string, transform: string | undefined): string {
   switch (transform?.toLowerCase()) {
-    case 'uppercase':
+    case 'uppercase': {
       return text.toUpperCase()
-    case 'lowercase':
+    }
+    case 'lowercase': {
       return text.toLowerCase()
-    case 'capitalize':
+    }
+    case 'capitalize': {
       return text.replace(/\b\p{L}/gu, ch => ch.toUpperCase())
-    default:
+    }
+    default: {
       return text
+    }
   }
 }
 
@@ -764,8 +779,8 @@ function transformText(text: string, transform: string | undefined): string {
  */
 function escapeAttr(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
 }

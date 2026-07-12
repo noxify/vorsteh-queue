@@ -26,9 +26,9 @@ describe("Workflow Engine", () => {
     adapter = new MemoryQueueAdapter()
     queue = new Queue(adapter, { name: "workflow-queue" })
     worker = new Worker(adapter, {
+      concurrency: 2,
       name: "workflow-queue",
       pollInterval: 10,
-      concurrency: 2,
     })
     await queue.connect()
   })
@@ -208,7 +208,7 @@ describe("Workflow Engine", () => {
         async (_job: JobWithProgress, { step }: JobContext) => {
           callCount += 1
           const data = await step.waitFor<{ value: number }>("wait", "my-event")
-          return { received: data.value, calls: callCount }
+          return { calls: callCount, received: data.value }
         }
       )
 
@@ -222,15 +222,15 @@ describe("Workflow Engine", () => {
 
       const completed = await queue.getJob(job.id)
       expect(completed?.status).toBe("completed")
-      expect(completed?.result).toStrictEqual({ received: 42, calls: 2 })
+      expect(completed?.result).toStrictEqual({ calls: 2, received: 42 })
     })
   })
 
   describe("Event Triggers", () => {
     it("should create a new job when trigger fires", async () => {
       worker.register("order", async () => ({
-        orderId: "ORD-1",
         email: "user@test.com",
+        orderId: "ORD-1",
       }))
       worker.register("receipt", async (job: JobWithProgress) => ({
         sent: true,
@@ -238,9 +238,9 @@ describe("Workflow Engine", () => {
       }))
 
       worker.trigger({
-        on: "order",
         create: "receipt",
         data: (result) => ({ email: (result as { email: string }).email }),
+        on: "order",
       })
 
       await queue.add("order", {})
@@ -262,10 +262,10 @@ describe("Workflow Engine", () => {
       worker.register("fraud-alert", async () => ({ alerted: true }))
 
       worker.trigger({
-        on: "payment",
+        condition: (result) => (result as { amount: number }).amount > 1000,
         create: "fraud-alert",
         data: (result) => result,
-        condition: (result) => (result as { amount: number }).amount > 1000,
+        on: "payment",
       })
 
       await queue.add("payment", {})
@@ -282,10 +282,10 @@ describe("Workflow Engine", () => {
       worker.register("fraud-alert", async () => ({ alerted: true }))
 
       worker.trigger({
-        on: "big-payment",
+        condition: (result) => (result as { amount: number }).amount > 1000,
         create: "fraud-alert",
         data: (result) => ({ amount: (result as { amount: number }).amount }),
-        condition: (result) => (result as { amount: number }).amount > 1000,
+        on: "big-payment",
       })
 
       await queue.add("big-payment", {})
@@ -302,8 +302,8 @@ describe("Workflow Engine", () => {
       worker.register("step-3", async () => ({ value: 3 }))
 
       worker
-        .trigger({ on: "step-1", create: "step-2", data: (r) => r })
-        .trigger({ on: "step-2", create: "step-3", data: (r) => r })
+        .trigger({ create: "step-2", data: (r) => r, on: "step-1" })
+        .trigger({ create: "step-3", data: (r) => r, on: "step-2" })
 
       await queue.add("step-1", {})
       worker.start()

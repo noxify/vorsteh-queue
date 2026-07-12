@@ -40,15 +40,15 @@ export function PanZoomControl({
   const contentRef = React.useRef<HTMLDivElement>(null)
 
   const [transform, setTransform] = React.useState<Transform>({
+    scale: initialZoom,
     x: 0,
     y: 0,
-    scale: initialZoom,
   })
 
   const centerView = React.useCallback(
     (scale: number) => {
       // Base centering is handled by CSS. x/y are only delta offsets from center.
-      setTransform({ x: 0, y: 0, scale })
+      setTransform({ scale, x: 0, y: 0 })
     },
     [setTransform]
   )
@@ -132,9 +132,9 @@ export function PanZoomControl({
         const newY = point.y - (point.y - transform.y) * scaleFactor
 
         setTransform({
+          scale: newScale,
           x: newX,
           y: newY,
-          scale: newScale,
         })
       }
     },
@@ -277,7 +277,7 @@ export function PanZoomControl({
       centerView(1)
       return
     }
-    setTransform({ x: 0, y: 0, scale: 1 })
+    setTransform({ scale: 1, x: 0, y: 0 })
   }, [centerOnMount, centerView])
 
   // Prevent context menu during pan

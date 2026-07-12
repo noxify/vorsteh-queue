@@ -15,8 +15,8 @@ interface ReportResult {
 }
 
 const worker = new Worker(adapter, {
-  name: "report-queue",
   concurrency: 1,
+  name: "report-queue",
   removeOnComplete: 20,
   removeOnFail: 10,
 })

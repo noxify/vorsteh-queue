@@ -18,7 +18,7 @@ import { splitLines } from './multiline-utils'
 
 /** Classify a character from a box drawing as 'border' or 'text'. */
 function classifyBoxChar(ch: string): CharRole {
-  if (/^[┌┐└┘├┤┬┴┼│─╭╮╰╯+\-|]$/.test(ch)) return 'border'
+  if (/^[┌┐└┘├┤┬┴┼│─╭╮╰╯+\-|]$/.test(ch)) {return 'border'}
   return 'text'
 }
 
@@ -28,7 +28,7 @@ function classifyBoxChar(ch: string): CharRole {
 
 /** Format an attribute line: "PK type name" or "FK type name" etc. */
 function formatAttribute(attr: ErAttribute): string {
-  const keyStr = attr.keys.length > 0 ? attr.keys.join(',') + ' ' : '   '
+  const keyStr = attr.keys.length > 0 ? `${attr.keys.join(',')  } ` : '   '
   return `${keyStr}${attr.type} ${attr.name}`
 }
 
@@ -37,7 +37,7 @@ function buildEntitySections(entity: ErEntity): string[][] {
   // Support multi-line entity names
   const header = splitLines(entity.label)
   const attrs = entity.attributes.map(formatAttribute)
-  if (attrs.length === 0) return [header]
+  if (attrs.length === 0) {return [header]}
   return [header, attrs]
 }
 
@@ -62,18 +62,26 @@ function buildEntitySections(entity: ErEntity): string[][] {
 function getCrowsFootChars(card: Cardinality, useAscii: boolean, isRight = false): string {
   if (useAscii) {
     switch (card) {
-      case 'one':       return '|'
-      case 'zero-one':  return 'o|'
-      case 'many':      return isRight ? '<' : '>'
-      case 'zero-many': return isRight ? 'o<' : '>o'
+      case 'one': {       return '|'
+      }
+      case 'zero-one': {  return 'o|'
+      }
+      case 'many': {      return isRight ? '<' : '>'
+      }
+      case 'zero-many': { return isRight ? 'o<' : '>o'
+      }
     }
   } else {
     // Use cleaner Unicode characters
     switch (card) {
-      case 'one':       return '│'
-      case 'zero-one':  return '○│'
-      case 'many':      return isRight ? '╟' : '╢'
-      case 'zero-many': return isRight ? '○╟' : '╢○'
+      case 'one': {       return '│'
+      }
+      case 'zero-one': {  return '○│'
+      }
+      case 'many': {      return isRight ? '╟' : '╢'
+      }
+      case 'zero-many': { return isRight ? '○╟' : '╢○'
+      }
     }
   }
 }
@@ -120,7 +128,7 @@ function findConnectedComponents(diagram: ErDiagram): Set<string>[] {
     const stack = [startId]
     while (stack.length > 0) {
       const nodeId = stack.pop()!
-      if (visited.has(nodeId)) continue
+      if (visited.has(nodeId)) {continue}
 
       visited.add(nodeId)
       component.add(nodeId)
@@ -160,9 +168,9 @@ export function renderErAscii(text: string, config: AsciiConfig, colorMode?: Col
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('%%'))
   const diagram = parseErDiagram(lines)
 
-  if (diagram.entities.length === 0) return ''
+  if (diagram.entities.length === 0) {return ''}
 
-  const useAscii = config.useAscii
+  const {useAscii} = config
   const hGap = 6  // horizontal gap between entity boxes
   const vGap = 4  // vertical gap between rows (for relationship lines)
   const componentGap = 6  // vertical gap between disconnected components
@@ -180,12 +188,12 @@ export function renderErAscii(text: string, config: AsciiConfig, colorMode?: Col
 
     let maxTextW = 0
     for (const section of sections) {
-      for (const line of section) maxTextW = Math.max(maxTextW, line.length)
+      for (const line of section) {maxTextW = Math.max(maxTextW, line.length)}
     }
     const boxW = maxTextW + 4 // 2 border + 2 padding
 
     let totalLines = 0
-    for (const section of sections) totalLines += Math.max(section.length, 1)
+    for (const section of sections) {totalLines += Math.max(section.length, 1)}
     const boxH = totalLines + (sections.length - 1) + 2
 
     entityBoxW.set(ent.id, boxW)
@@ -226,11 +234,11 @@ export function renderErAscii(text: string, config: AsciiConfig, colorMode?: Col
 
       placed.set(ent.id, {
         entity: ent,
+        height: h,
         sections: entitySections.get(ent.id)!,
+        width: w,
         x: currentX,
         y: currentY,
-        width: w,
-        height: h,
       })
 
       currentX += w + hGap
@@ -289,7 +297,7 @@ export function renderErAscii(text: string, config: AsciiConfig, colorMode?: Col
   for (const rel of diagram.relationships) {
     const e1 = placed.get(rel.entity1)
     const e2 = placed.get(rel.entity2)
-    if (!e1 || !e2) continue
+    if (!e1 || !e2) {continue}
 
     const lineH = rel.identifying ? H : dashH
     const lineV = rel.identifying ? V : dashV
@@ -397,7 +405,7 @@ export function renderErAscii(text: string, config: AsciiConfig, colorMode?: Col
       }
 
       // Lower marker (at lower entity's top edge) - treat as target side (isRight=true)
-      const targetX = lineX !== lowerCX ? lowerCX : lineX
+      const targetX = lineX === lowerCX ? lineX : lowerCX
       const lowerChars = getCrowsFootChars(lowerCard, useAscii, true)
       for (let i = 0; i < lowerChars.length; i++) {
         setC(targetX - Math.floor(lowerChars.length / 2) + i, endY, lowerChars[i]!, 'arrow')
@@ -431,5 +439,5 @@ export function renderErAscii(text: string, config: AsciiConfig, colorMode?: Col
     }
   }
 
-  return canvasToString(canvas, { roleCanvas: rc, colorMode, theme })
+  return canvasToString(canvas, { colorMode, roleCanvas: rc, theme })
 }

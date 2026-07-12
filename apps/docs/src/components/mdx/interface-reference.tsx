@@ -155,16 +155,16 @@ function toResolvedProperty(property: {
   const nestedMembers = resolveNestedMembers(typeNode)
 
   return {
-    name: property.getName(),
+    description: resolvePropertyDescription(property),
+    isOptional: property.hasQuestionToken(),
+    isReadonly: property.isReadonly(),
     kind: "PropertySignature",
+    name: property.getName(),
+    nestedMembers,
+    tags: resolvePropertyTags(property),
     type: {
       text: typeNode?.getText().trim() || "unknown",
     },
-    isOptional: property.hasQuestionToken(),
-    isReadonly: property.isReadonly(),
-    description: resolvePropertyDescription(property),
-    tags: resolvePropertyTags(property),
-    nestedMembers,
   }
 }
 

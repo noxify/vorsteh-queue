@@ -23,9 +23,9 @@ describe("Flow Producer", () => {
     adapter = new MemoryQueueAdapter()
     queue = new Queue(adapter, { name: "flow-queue" })
     worker = new Worker(adapter, {
+      concurrency: 5,
       name: "flow-queue",
       pollInterval: 10,
-      concurrency: 5,
     })
     await queue.connect()
   })
@@ -40,12 +40,12 @@ describe("Flow Producer", () => {
     // eslint-disable-next-line vitest/max-expects
     it("should create a flow with parent and children", async () => {
       const flow = await queue.addFlow({
-        name: "parent",
-        payload: { root: true },
         children: [
           { name: "child-a", payload: { n: 1 } },
           { name: "child-b", payload: { n: 2 } },
         ],
+        name: "parent",
+        payload: { root: true },
       })
 
       /* eslint-disable vitest/max-expects */
@@ -60,9 +60,9 @@ describe("Flow Producer", () => {
 
     it("should create children as pending", async () => {
       const flow = await queue.addFlow({
+        children: [{ name: "child", payload: {} }],
         name: "parent",
         payload: {},
-        children: [{ name: "child", payload: {} }],
       })
 
       const tree = await queue.getFlowTree(flow.id)
@@ -75,8 +75,6 @@ describe("Flow Producer", () => {
     // eslint-disable-next-line vitest/max-expects
     it("should handle nested children (grandchildren)", async () => {
       const flow = await queue.addFlow({
-        name: "root",
-        payload: {},
         children: [
           {
             name: "mid",
@@ -84,6 +82,8 @@ describe("Flow Producer", () => {
             children: [{ name: "leaf", payload: {} }],
           },
         ],
+        name: "root",
+        payload: {},
       })
 
       /* eslint-disable vitest/max-expects */
@@ -111,12 +111,12 @@ describe("Flow Producer", () => {
   describe("getFlowTree", () => {
     it("should return full tree structure", async () => {
       const flow = await queue.addFlow({
-        name: "deploy",
-        payload: {},
         children: [
           { name: "build", payload: { target: "linux" } },
           { name: "build", payload: { target: "macos" } },
         ],
+        name: "deploy",
+        payload: {},
       })
 
       const tree = await queue.getFlowTree(flow.id)
@@ -149,12 +149,12 @@ describe("Flow Producer", () => {
       })
 
       const flow = await queue.addFlow({
-        name: "parent-job",
-        payload: {},
         children: [
           { name: "child-job", payload: { n: 1 } },
           { name: "child-job", payload: { n: 2 } },
         ],
+        name: "parent-job",
+        payload: {},
       })
 
       worker.start()
@@ -187,8 +187,6 @@ describe("Flow Producer", () => {
       })
 
       const flow = await queue.addFlow({
-        name: "root",
-        payload: {},
         children: [
           {
             name: "mid",
@@ -196,6 +194,8 @@ describe("Flow Producer", () => {
             children: [{ name: "leaf", payload: {} }],
           },
         ],
+        name: "root",
+        payload: {},
       })
 
       worker.start()
@@ -216,8 +216,6 @@ describe("Flow Producer", () => {
       })
 
       const flow = await queue.addFlow({
-        name: "parent-safe",
-        payload: {},
         children: [
           {
             name: "child-fails",
@@ -226,6 +224,8 @@ describe("Flow Producer", () => {
             options: { maxAttempts: 1 },
           },
         ],
+        name: "parent-safe",
+        payload: {},
       })
 
       worker.start()
@@ -243,11 +243,11 @@ describe("Flow Producer", () => {
       })
 
       const flow = await queue.addFlow({
-        name: "parent-resilient",
-        payload: {},
         children: [
           { name: "child-explodes", payload: {} }, // failParentOnFailure defaults to false
         ],
+        name: "parent-resilient",
+        payload: {},
       })
 
       worker.start()

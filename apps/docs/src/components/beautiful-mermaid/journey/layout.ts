@@ -20,55 +20,55 @@ import { stripFormattingTags } from '../multiline-utils'
 // ============================================================================
 
 const JY = {
+  actorFontSize: 11,
+  actorFontWeight: 600,
+  actorGapTop: 12,
+  actorGapX: 6,
+  actorMinWidth: 44,
+  actorPadX: 8,
+  actorPadY: 6,
   paddingX: 32,
   paddingY: 28,
-  titleFontSize: 18,
-  titleFontWeight: 600,
-  titleGap: 24,
+  scoreCellGap: 5,
+  scoreCellSize: 10,
   sectionFontSize: 12,
   sectionFontWeight: 600,
+  sectionGap: 28,
+  sectionHeaderGap: 14,
   sectionHeaderMinHeight: 24,
   sectionHeaderPadX: 12,
   sectionHeaderPadY: 6,
-  sectionHeaderGap: 14,
   sectionPadX: 18,
   sectionPadY: 18,
-  sectionGap: 28,
-  taskGap: 14,
-  taskMinWidth: 220,
   taskFontSize: 13,
   taskFontWeight: 500,
+  taskGap: 14,
+  taskMinWidth: 220,
   taskPadX: 14,
   taskPadY: 12,
   taskToScoreGap: 18,
-  scoreCellSize: 10,
-  scoreCellGap: 5,
-  actorGapTop: 12,
-  actorFontSize: 11,
-  actorFontWeight: 600,
-  actorPadX: 8,
-  actorPadY: 6,
-  actorGapX: 6,
-  actorMinWidth: 44,
+  titleFontSize: 18,
+  titleFontWeight: 600,
+  titleGap: 24,
 } as const
 
 const JOURNEY_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: JY.taskFontSize,
   edgeLabelFontSize: JY.actorFontSize,
-  groupHeaderFontSize: JY.sectionFontSize,
-  nodeLabelFontWeight: JY.taskFontWeight,
   edgeLabelFontWeight: JY.actorFontWeight,
-  groupHeaderFontWeight: JY.sectionFontWeight,
-  nodePaddingX: JY.taskPadX,
-  nodePaddingY: JY.taskPadY,
-  nodeCornerRadius: 0,
-  nodeLineWidth: STROKE_WIDTHS.outerBox,
   edgeLineWidth: STROKE_WIDTHS.connector,
   groupCornerRadius: 0,
-  groupPaddingX: JY.sectionPadX,
-  groupPaddingY: JY.sectionPadY,
+  groupHeaderFontSize: JY.sectionFontSize,
+  groupHeaderFontWeight: JY.sectionFontWeight,
   groupLabelPaddingX: JY.sectionHeaderPadX,
   groupLineWidth: STROKE_WIDTHS.outerBox,
+  groupPaddingX: JY.sectionPadX,
+  groupPaddingY: JY.sectionPadY,
+  nodeCornerRadius: 0,
+  nodeLabelFontSize: JY.taskFontSize,
+  nodeLabelFontWeight: JY.taskFontWeight,
+  nodeLineWidth: STROKE_WIDTHS.outerBox,
+  nodePaddingX: JY.taskPadX,
+  nodePaddingY: JY.taskPadY,
 }
 
 interface ActorPillMetric {
@@ -136,7 +136,7 @@ export function layoutJourneyDiagram(
           measureTextWidth(plain, style.edgeLabelFontSize, style.edgeLabelFontWeight) + JY.actorPadX * 2,
         )
         const height = measureMultilineText(actor, style.edgeLabelFontSize, style.edgeLabelFontWeight).height + JY.actorPadY * 2
-        return { label: actor, width, height }
+        return { height, label: actor, width }
       })
 
       const actorRowWidth = actorPills.reduce((sum, pill, index) => {
@@ -156,14 +156,14 @@ export function layoutJourneyDiagram(
         + (actorRowHeight > 0 ? JY.actorGapTop + actorRowHeight : 0)
 
       return {
-        textWidth: text.width,
-        textHeight: text.height,
-        topAreaHeight,
         actorPills,
-        actorRowWidth,
         actorRowHeight,
-        minWidth,
+        actorRowWidth,
         height,
+        minWidth,
+        textHeight: text.height,
+        textWidth: text.width,
+        topAreaHeight,
       }
     })
 
@@ -182,7 +182,7 @@ export function layoutJourneyDiagram(
       + (showSectionFrames ? style.groupPaddingY * 2 : 0)
       + taskStackHeight
 
-    return { headerWidth, tasks: taskMetrics, innerWidth, height }
+    return { headerWidth, height, innerWidth, tasks: taskMetrics }
   })
 
   let contentTop = JY.paddingY
@@ -216,68 +216,70 @@ export function layoutJourneyDiagram(
       const meterStartX = sectionInnerX + metric.innerWidth - style.nodePaddingX - SCORE_TRACK_WIDTH
 
       const scoreCells: PositionedJourneyScoreCell[] = Array.from({ length: 5 }, (_, scoreIndex) => ({
+        filled: scoreIndex < task.score,
+        size: JY.scoreCellSize,
         x: meterStartX + scoreIndex * (JY.scoreCellSize + JY.scoreCellGap),
         y: meterY,
-        size: JY.scoreCellSize,
-        filled: scoreIndex < task.score,
       }))
 
       let pillCursorX = sectionInnerX + style.nodePaddingX
       const pillY = topAreaY + taskMetric.topAreaHeight + JY.actorGapTop
       const actorPills: PositionedJourneyActorPill[] = taskMetric.actorPills.map(pill => {
         const positioned = {
+          height: pill.height,
           label: pill.label,
+          width: pill.width,
           x: pillCursorX,
           y: pillY,
-          width: pill.width,
-          height: pill.height,
         }
         pillCursorX += pill.width + JY.actorGapX
         return positioned
       })
 
       tasks.push({
+        actorPills,
+        actors: task.actors,
+        height: taskMetric.height,
         id: task.id,
+        score: task.score,
+        scoreCells,
         sectionId: section.id,
         text: task.text,
-        score: task.score,
-        actors: task.actors,
-        x: sectionInnerX,
-        y: taskCursorY,
-        width: metric.innerWidth,
-        height: taskMetric.height,
         textX: sectionInnerX + style.nodePaddingX,
         textY: topAreaY + taskMetric.topAreaHeight / 2,
-        scoreCells,
-        actorPills,
+        width: metric.innerWidth,
+        x: sectionInnerX,
+        y: taskCursorY,
       })
 
       taskCursorY += taskMetric.height + JY.taskGap
     }
 
     sections.push({
-      id: section.id,
-      label: section.label,
-      x: cursorX,
-      y: contentTop,
-      width: sectionWidth,
-      height: metric.height,
       framed: showSectionFrames,
       headerHeight: sectionHeaderHeight,
+      height: metric.height,
+      id: section.id,
+      label: section.label,
       tasks,
+      width: sectionWidth,
+      x: cursorX,
+      y: contentTop,
     })
 
     maxBottom = Math.max(maxBottom, contentTop + metric.height)
     cursorX += sectionWidth
-    if (sectionIndex < diagram.sections.length - 1) cursorX += JY.sectionGap
+    if (sectionIndex < diagram.sections.length - 1) {cursorX += JY.sectionGap}
   }
 
   const width = cursorX + JY.paddingX
   const height = maxBottom + JY.paddingY
 
   return {
-    width,
+    accessibilityDescription: diagram.accessibilityDescription,
+    accessibilityTitle: diagram.accessibilityTitle,
     height,
+    sections,
     title: diagram.title
       ? {
           text: diagram.title,
@@ -285,8 +287,6 @@ export function layoutJourneyDiagram(
           y: JY.paddingY + titleMetrics!.height / 2,
         }
       : undefined,
-    accessibilityTitle: diagram.accessibilityTitle,
-    accessibilityDescription: diagram.accessibilityDescription,
-    sections,
+    width,
   }
 }

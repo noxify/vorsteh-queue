@@ -26,20 +26,20 @@ import { formatTickValue, getCategoryLabels, getDataCount, getDataXValues, getPo
 const BAR_PADDING_PERCENT = 0.05
 
 const XY_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: 14,
   edgeLabelFontSize: 16,
-  groupHeaderFontSize: 20,
-  nodeLabelFontWeight: 400,
   edgeLabelFontWeight: 400,
-  groupHeaderFontWeight: 500,
-  nodePaddingX: 0,
-  nodePaddingY: 0,
-  nodeLineWidth: 0,
   edgeLineWidth: 2,
   groupCornerRadius: 0,
+  groupHeaderFontSize: 20,
+  groupHeaderFontWeight: 500,
+  groupLineWidth: STROKE_WIDTHS.outerBox,
   groupPaddingX: 0,
   groupPaddingY: 0,
-  groupLineWidth: STROKE_WIDTHS.outerBox,
+  nodeLabelFontSize: 14,
+  nodeLabelFontWeight: 400,
+  nodeLineWidth: 0,
+  nodePaddingX: 0,
+  nodePaddingY: 0,
 }
 
 export function layoutXYChart(
@@ -65,7 +65,7 @@ export function layoutXYChart(
     config.xAxis.tickWidth = style.lineWidth
     config.yAxis.tickWidth = style.lineWidth
   }
-  if (chart.horizontal) return layoutHorizontal(chart, config)
+  if (chart.horizontal) {return layoutHorizontal(chart, config)}
   return layoutVertical(chart, config)
 }
 
@@ -94,10 +94,10 @@ function layoutVertical(chart: XYChart, config: ResolvedXYChartConfig): Position
   remainingLeftBudget = Math.max(0, remainingLeftBudget - yAxisConfig.size)
 
   const plotArea: PlotArea = {
+    height: Math.max(0, totalH - titleHeight - xAxisConfig.size),
+    width: Math.max(0, totalW - yAxisConfig.size),
     x: yAxisConfig.size,
     y: titleHeight,
-    width: Math.max(0, totalW - yAxisConfig.size),
-    height: Math.max(0, totalH - titleHeight - xAxisConfig.size),
   }
 
   const xScaleValue = chart.xAxis.range
@@ -109,9 +109,8 @@ function layoutVertical(chart: XYChart, config: ResolvedXYChartConfig): Position
     : plotArea.width / Math.max(1, dataCount)
   const yScale = (value: number) => plotArea.y + plotArea.height - ((value - yRange.min) / (yRange.max - yRange.min || 1)) * plotArea.height
 
-  const xTicks = !xAxisConfig.config.showLabel
-    ? []
-    : chart.xAxis.range && xTickValues && xScaleValue
+  const xTicks = xAxisConfig.config.showLabel
+    ? chart.xAxis.range && xTickValues && xScaleValue
       ? buildBottomAxisTicks(xTickValues, xTickLabels, xScaleValue, plotArea, xAxisConfig.config)
       : buildBottomAxisTicks(
         categoryLabels.map((_, index) => index),
@@ -120,6 +119,7 @@ function layoutVertical(chart: XYChart, config: ResolvedXYChartConfig): Position
         plotArea,
         xAxisConfig.config,
       )
+    : []
   const yTicks = yAxisConfig.config.showLabel
     ? buildLeftAxisTicks(
       yTickValues,
@@ -132,8 +132,8 @@ function layoutVertical(chart: XYChart, config: ResolvedXYChartConfig): Position
 
   const gridLines: GridLine[] = yTickValues.map(value => ({
     x1: plotArea.x,
-    y1: yScale(value),
     x2: plotArea.x + plotArea.width,
+    y1: yScale(value),
     y2: yScale(value),
   }))
 
@@ -142,31 +142,31 @@ function layoutVertical(chart: XYChart, config: ResolvedXYChartConfig): Position
   const lines = layoutVerticalLines(chart, xPoint, yScale, categoryLabels, colorMap)
 
   return {
-    width: totalW,
-    height: totalH,
     accessibility: chart.accessibility,
+    bars,
+    config,
+    gridLines,
+    height: totalH,
+    legend: [],
+    lines,
+    plotArea,
+    theme: chart.theme,
     title: titleHeight > 0 && chart.title
       ? { text: chart.title, x: totalW / 2, y: config.titlePadding + config.titleFontSize }
       : undefined,
+    width: totalW,
     xAxis: {
-      ticks: xTicks,
-      line: buildBottomAxisLine(plotArea, xAxisConfig.config),
-      title: buildBottomAxisTitle(chart.xAxis.title, plotArea, totalH, xAxisConfig.config),
       config: xAxisConfig.config,
+      line: buildBottomAxisLine(plotArea, xAxisConfig.config),
+      ticks: xTicks,
+      title: buildBottomAxisTitle(chart.xAxis.title, plotArea, totalH, xAxisConfig.config),
     },
     yAxis: {
-      ticks: yTicks,
-      line: buildLeftAxisLine(plotArea, yAxisConfig.config),
-      title: buildLeftAxisTitle(chart.yAxis.title, plotArea, yAxisConfig.config),
       config: yAxisConfig.config,
+      line: buildLeftAxisLine(plotArea, yAxisConfig.config),
+      ticks: yTicks,
+      title: buildLeftAxisTitle(chart.yAxis.title, plotArea, yAxisConfig.config),
     },
-    plotArea,
-    bars,
-    lines,
-    gridLines,
-    legend: [],
-    config,
-    theme: chart.theme,
   }
 }
 
@@ -193,10 +193,10 @@ function layoutHorizontal(chart: XYChart, config: ResolvedXYChartConfig): Positi
   remainingLeftBudget = Math.max(0, remainingLeftBudget - leftAxisConfig.size)
 
   const plotArea: PlotArea = {
+    height: Math.max(0, totalH - titleHeight - topAxisConfig.size),
+    width: Math.max(0, totalW - leftAxisConfig.size),
     x: leftAxisConfig.size,
     y: titleHeight + topAxisConfig.size,
-    width: Math.max(0, totalW - leftAxisConfig.size),
-    height: Math.max(0, totalH - titleHeight - topAxisConfig.size),
   }
 
   const valueScale = (value: number) => plotArea.x + ((value - yRange.min) / (yRange.max - yRange.min || 1)) * plotArea.width
@@ -218,8 +218,8 @@ function layoutHorizontal(chart: XYChart, config: ResolvedXYChartConfig): Positi
 
   const gridLines: GridLine[] = valueTickValues.map(value => ({
     x1: valueScale(value),
-    y1: plotArea.y,
     x2: valueScale(value),
+    y1: plotArea.y,
     y2: plotArea.y + plotArea.height,
   }))
 
@@ -228,37 +228,37 @@ function layoutHorizontal(chart: XYChart, config: ResolvedXYChartConfig): Positi
   const lines = layoutHorizontalLines(chart, categoryPoint, valueScale, categoryLabels, colorMap)
 
   return {
-    width: totalW,
-    height: totalH,
     accessibility: chart.accessibility,
+    bars,
+    config,
+    gridLines,
+    height: totalH,
     horizontal: true,
+    legend: [],
+    lines,
+    plotArea,
+    theme: chart.theme,
     title: titleHeight > 0 && chart.title
       ? { text: chart.title, x: totalW / 2, y: config.titlePadding + config.titleFontSize }
       : undefined,
+    width: totalW,
     xAxis: {
-      ticks: leftTicks,
-      line: buildLeftAxisLine(plotArea, leftAxisConfig.config),
-      title: buildLeftAxisTitle(chart.xAxis.title, plotArea, leftAxisConfig.config),
       config: leftAxisConfig.config,
+      line: buildLeftAxisLine(plotArea, leftAxisConfig.config),
+      ticks: leftTicks,
+      title: buildLeftAxisTitle(chart.xAxis.title, plotArea, leftAxisConfig.config),
     },
     yAxis: {
-      ticks: topTicks,
-      line: buildTopAxisLine(plotArea, topAxisConfig.config),
-      title: buildTopAxisTitle(chart.yAxis.title, plotArea, titleHeight, topAxisConfig.config),
       config: topAxisConfig.config,
+      line: buildTopAxisLine(plotArea, topAxisConfig.config),
+      ticks: topTicks,
+      title: buildTopAxisTitle(chart.yAxis.title, plotArea, titleHeight, topAxisConfig.config),
     },
-    plotArea,
-    bars,
-    lines,
-    gridLines,
-    legend: [],
-    config,
-    theme: chart.theme,
   }
 }
 
 function fitChartTitle(title: string | undefined, config: ResolvedXYChartConfig, budget: number): number {
-  if (!title || !config.showTitle) return 0
+  if (!title || !config.showTitle) {return 0}
   const required = config.titleFontSize + config.titlePadding * 2
   return required <= budget ? required : 0
 }
@@ -356,13 +356,13 @@ function buildBottomAxisTicks<T extends string | number>(
 
   return values.map((value, index) => ({
     label: labels[index]!,
-    x: scale(value),
-    y: plotArea.y + plotArea.height + lineOffset,
-    tx: scale(value),
-    ty: plotArea.y + plotArea.height + lineOffset + tickOffset,
     labelX: scale(value),
     labelY,
     textAnchor: 'middle',
+    tx: scale(value),
+    ty: plotArea.y + plotArea.height + lineOffset + tickOffset,
+    x: scale(value),
+    y: plotArea.y + plotArea.height + lineOffset,
   }))
 }
 
@@ -379,13 +379,13 @@ function buildTopAxisTicks(
 
   return values.map((value, index) => ({
     label: labels[index]!,
-    x: scale(value),
-    y: plotArea.y - lineOffset,
-    tx: scale(value),
-    ty: plotArea.y - lineOffset - tickOffset,
     labelX: scale(value),
     labelY,
     textAnchor: 'middle',
+    tx: scale(value),
+    ty: plotArea.y - lineOffset - tickOffset,
+    x: scale(value),
+    y: plotArea.y - lineOffset,
   }))
 }
 
@@ -402,29 +402,29 @@ function buildLeftAxisTicks<T extends string | number>(
 
   return values.map((value, index) => ({
     label: labels[index]!,
-    x: plotArea.x - lineOffset,
-    y: scale(value),
-    tx: plotArea.x - lineOffset - tickOffset,
-    ty: scale(value),
     labelX,
     labelY: scale(value),
     textAnchor: 'end',
+    tx: plotArea.x - lineOffset - tickOffset,
+    ty: scale(value),
+    x: plotArea.x - lineOffset,
+    y: scale(value),
   }))
 }
 
 function buildBottomAxisLine(plotArea: PlotArea, config: ResolvedXYAxisRenderConfig) {
   const y = plotArea.y + plotArea.height + (config.showAxisLine ? config.axisLineWidth / 2 : 0)
-  return { x1: plotArea.x, y1: y, x2: plotArea.x + plotArea.width, y2: y }
+  return { x1: plotArea.x, x2: plotArea.x + plotArea.width, y1: y, y2: y }
 }
 
 function buildTopAxisLine(plotArea: PlotArea, config: ResolvedXYAxisRenderConfig) {
   const y = plotArea.y - (config.showAxisLine ? config.axisLineWidth / 2 : 0)
-  return { x1: plotArea.x, y1: y, x2: plotArea.x + plotArea.width, y2: y }
+  return { x1: plotArea.x, x2: plotArea.x + plotArea.width, y1: y, y2: y }
 }
 
 function buildLeftAxisLine(plotArea: PlotArea, config: ResolvedXYAxisRenderConfig) {
   const x = plotArea.x - (config.showAxisLine ? config.axisLineWidth / 2 : 0)
-  return { x1: x, y1: plotArea.y, x2: x, y2: plotArea.y + plotArea.height }
+  return { x1: x, x2: x, y1: plotArea.y, y2: plotArea.y + plotArea.height }
 }
 
 function buildBottomAxisTitle(
@@ -433,7 +433,7 @@ function buildBottomAxisTitle(
   totalHeight: number,
   config: ResolvedXYAxisRenderConfig,
 ) {
-  if (!title || !config.showTitle) return undefined
+  if (!title || !config.showTitle) {return undefined}
   return {
     text: title,
     x: plotArea.x + plotArea.width / 2,
@@ -447,7 +447,7 @@ function buildTopAxisTitle(
   titleHeight: number,
   config: ResolvedXYAxisRenderConfig,
 ) {
-  if (!title || !config.showTitle) return undefined
+  if (!title || !config.showTitle) {return undefined}
   return {
     text: title,
     x: plotArea.x + plotArea.width / 2,
@@ -460,12 +460,12 @@ function buildLeftAxisTitle(
   plotArea: PlotArea,
   config: ResolvedXYAxisRenderConfig,
 ) {
-  if (!title || !config.showTitle) return undefined
+  if (!title || !config.showTitle) {return undefined}
   return {
+    rotate: -90,
     text: title,
     x: config.titlePadding + config.titleFontSize * 0.8,
     y: plotArea.y + plotArea.height / 2,
-    rotate: -90,
   }
 }
 
@@ -480,7 +480,7 @@ function layoutVerticalBars(
 ): PositionedBar[] {
   const barSeries = chart.series.filter(series => series.type === 'bar')
   const barCount = barSeries.length
-  if (barCount === 0) return []
+  if (barCount === 0) {return []}
 
   const usableWidth = pointSpacing * (1 - BAR_PADDING_PERCENT)
   const barWidth = usableWidth / Math.max(1, barCount)
@@ -499,14 +499,14 @@ function layoutVerticalBars(
       const x = xPoint(i) - usableWidth / 2 + barSeriesIndex * barWidth
       const valueY = yScale(series.data[i]!)
       bars.push({
-        x,
-        y: Math.min(valueY, baselineY),
-        width: barWidth,
+        colorIndex: colorMap[seriesArrayIndex]!,
         height: Math.abs(baselineY - valueY),
-        value: series.data[i]!,
         label: labels[i]!,
         seriesIndex: barSeriesIndex,
-        colorIndex: colorMap[seriesArrayIndex]!,
+        value: series.data[i]!,
+        width: barWidth,
+        x,
+        y: Math.min(valueY, baselineY),
       })
     }
     barSeriesIndex++
@@ -527,7 +527,7 @@ function layoutHorizontalBars(
 ): PositionedBar[] {
   const barSeries = chart.series.filter(series => series.type === 'bar')
   const barCount = barSeries.length
-  if (barCount === 0) return []
+  if (barCount === 0) {return []}
 
   const usableHeight = pointSpacing * (1 - BAR_PADDING_PERCENT)
   const barHeight = usableHeight / Math.max(1, barCount)
@@ -546,14 +546,14 @@ function layoutHorizontalBars(
       const y = yPoint(i) - usableHeight / 2 + barSeriesIndex * barHeight
       const valueX = xScale(series.data[i]!)
       bars.push({
-        x: Math.min(valueX, baselineX),
-        y,
-        width: Math.abs(valueX - baselineX),
+        colorIndex: colorMap[seriesArrayIndex]!,
         height: barHeight,
-        value: series.data[i]!,
         label: labels[i]!,
         seriesIndex: barSeriesIndex,
-        colorIndex: colorMap[seriesArrayIndex]!,
+        value: series.data[i]!,
+        width: Math.abs(valueX - baselineX),
+        x: Math.min(valueX, baselineX),
+        y,
       })
     }
     barSeriesIndex++
@@ -580,6 +580,7 @@ function layoutVerticalLines(
       continue
     }
     lines.push({
+      colorIndex: colorMap[seriesArrayIndex]!,
       points: series.data.map((value, index) => ({
         x: xPoint(index),
         y: yScale(value),
@@ -587,7 +588,6 @@ function layoutVerticalLines(
         label: labels[index]!,
       })),
       seriesIndex: lineSeriesIndex,
-      colorIndex: colorMap[seriesArrayIndex]!,
     })
     lineSeriesIndex++
     seriesArrayIndex++
@@ -613,6 +613,7 @@ function layoutHorizontalLines(
       continue
     }
     lines.push({
+      colorIndex: colorMap[seriesArrayIndex]!,
       points: series.data.map((value, index) => ({
         x: xScale(value),
         y: yPoint(index),
@@ -620,7 +621,6 @@ function layoutHorizontalLines(
         label: labels[index]!,
       })),
       seriesIndex: lineSeriesIndex,
-      colorIndex: colorMap[seriesArrayIndex]!,
     })
     lineSeriesIndex++
     seriesArrayIndex++

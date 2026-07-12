@@ -41,12 +41,12 @@ worker.register("expense-request", async (job, { step }) => {
       console.log(
         `[process] Expense APPROVED. Processing reimbursement of $${amount}`
       )
-      return { status: "reimbursed", amount }
+      return { amount, status: "reimbursed" }
     }
     console.log(
       `[process] Expense REJECTED. Reason: ${decision.comment ?? "No reason given"}`
     )
-    return { status: "rejected", reason: decision.comment }
+    return { reason: decision.comment, status: "rejected" }
   })
 
   return result
@@ -58,9 +58,9 @@ async function main() {
 
   // Add the expense request
   const job = await queue.add("expense-request", {
-    employeeId: "emp-42",
     amount: 250,
     description: "Conference ticket",
+    employeeId: "emp-42",
   })
 
   console.log(`Job created: ${job.id}\n`)

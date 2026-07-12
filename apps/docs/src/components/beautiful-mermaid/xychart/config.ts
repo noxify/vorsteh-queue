@@ -6,59 +6,54 @@ import type {
 } from './types'
 
 export const DEFAULT_XY_AXIS_CONFIG: ResolvedXYAxisRenderConfig = {
-  showLabel: true,
+  axisLineWidth: 2,
   labelFontSize: 14,
   labelPadding: 5,
-  showTitle: true,
-  titleFontSize: 16,
-  titlePadding: 5,
+  showAxisLine: true,
+  showLabel: true,
   showTick: true,
+  showTitle: true,
   tickLength: 5,
   tickWidth: 2,
-  showAxisLine: true,
-  axisLineWidth: 2,
+  titleFontSize: 16,
+  titlePadding: 5,
 }
 
 export const DEFAULT_XY_CHART_CONFIG: ResolvedXYChartConfig = {
-  width: 700,
-  height: 500,
-  useMaxWidth: true,
-  useWidth: undefined,
-  titleFontSize: 20,
-  titlePadding: 10,
   chartOrientation: 'vertical',
+  height: 500,
   plotReservedSpacePercent: 50,
   showDataLabel: false,
   showTitle: true,
+  titleFontSize: 20,
+  titlePadding: 10,
+  useMaxWidth: true,
+  useWidth: undefined,
+  width: 700,
   xAxis: { ...DEFAULT_XY_AXIS_CONFIG },
   yAxis: { ...DEFAULT_XY_AXIS_CONFIG },
 }
 
 export function resolveXYAxisRenderConfig(config?: XYAxisRenderConfig): ResolvedXYAxisRenderConfig {
   return {
-    showLabel: config?.showLabel ?? DEFAULT_XY_AXIS_CONFIG.showLabel,
+    axisLineWidth: getPositiveNumber(config?.axisLineWidth, DEFAULT_XY_AXIS_CONFIG.axisLineWidth),
     labelFontSize: getPositiveNumber(config?.labelFontSize, DEFAULT_XY_AXIS_CONFIG.labelFontSize),
     labelPadding: getNonNegativeNumber(config?.labelPadding, DEFAULT_XY_AXIS_CONFIG.labelPadding),
-    showTitle: config?.showTitle ?? DEFAULT_XY_AXIS_CONFIG.showTitle,
-    titleFontSize: getPositiveNumber(config?.titleFontSize, DEFAULT_XY_AXIS_CONFIG.titleFontSize),
-    titlePadding: getNonNegativeNumber(config?.titlePadding, DEFAULT_XY_AXIS_CONFIG.titlePadding),
+    showAxisLine: config?.showAxisLine ?? DEFAULT_XY_AXIS_CONFIG.showAxisLine,
+    showLabel: config?.showLabel ?? DEFAULT_XY_AXIS_CONFIG.showLabel,
     showTick: config?.showTick ?? DEFAULT_XY_AXIS_CONFIG.showTick,
+    showTitle: config?.showTitle ?? DEFAULT_XY_AXIS_CONFIG.showTitle,
     tickLength: getNonNegativeNumber(config?.tickLength, DEFAULT_XY_AXIS_CONFIG.tickLength),
     tickWidth: getPositiveNumber(config?.tickWidth, DEFAULT_XY_AXIS_CONFIG.tickWidth),
-    showAxisLine: config?.showAxisLine ?? DEFAULT_XY_AXIS_CONFIG.showAxisLine,
-    axisLineWidth: getPositiveNumber(config?.axisLineWidth, DEFAULT_XY_AXIS_CONFIG.axisLineWidth),
+    titleFontSize: getPositiveNumber(config?.titleFontSize, DEFAULT_XY_AXIS_CONFIG.titleFontSize),
+    titlePadding: getNonNegativeNumber(config?.titlePadding, DEFAULT_XY_AXIS_CONFIG.titlePadding),
   }
 }
 
 export function resolveXYChartRenderConfig(config: XYChartConfig): ResolvedXYChartConfig {
   return {
-    width: getPositiveNumber(config.width, DEFAULT_XY_CHART_CONFIG.width),
-    height: getPositiveNumber(config.height, DEFAULT_XY_CHART_CONFIG.height),
-    useMaxWidth: config.useMaxWidth ?? DEFAULT_XY_CHART_CONFIG.useMaxWidth,
-    useWidth: getOptionalPositiveNumber(config.useWidth),
-    titleFontSize: getPositiveNumber(config.titleFontSize, DEFAULT_XY_CHART_CONFIG.titleFontSize),
-    titlePadding: getNonNegativeNumber(config.titlePadding, DEFAULT_XY_CHART_CONFIG.titlePadding),
     chartOrientation: config.chartOrientation ?? DEFAULT_XY_CHART_CONFIG.chartOrientation,
+    height: getPositiveNumber(config.height, DEFAULT_XY_CHART_CONFIG.height),
     plotReservedSpacePercent: clamp(
       getPositiveNumber(config.plotReservedSpacePercent, DEFAULT_XY_CHART_CONFIG.plotReservedSpacePercent),
       10,
@@ -66,6 +61,11 @@ export function resolveXYChartRenderConfig(config: XYChartConfig): ResolvedXYCha
     ),
     showDataLabel: config.showDataLabel ?? DEFAULT_XY_CHART_CONFIG.showDataLabel,
     showTitle: config.showTitle ?? DEFAULT_XY_CHART_CONFIG.showTitle,
+    titleFontSize: getPositiveNumber(config.titleFontSize, DEFAULT_XY_CHART_CONFIG.titleFontSize),
+    titlePadding: getNonNegativeNumber(config.titlePadding, DEFAULT_XY_CHART_CONFIG.titlePadding),
+    useMaxWidth: config.useMaxWidth ?? DEFAULT_XY_CHART_CONFIG.useMaxWidth,
+    useWidth: getOptionalPositiveNumber(config.useWidth),
+    width: getPositiveNumber(config.width, DEFAULT_XY_CHART_CONFIG.width),
     xAxis: resolveXYAxisRenderConfig(config.xAxis),
     yAxis: resolveXYAxisRenderConfig(config.yAxis),
   }

@@ -52,7 +52,7 @@ export async function resolveTransport(
 
   const config = await loadCliConfig()
 
-  const resolvedQueue = resolveQueueName({ queue: options.queue, config })
+  const resolvedQueue = resolveQueueName({ config, queue: options.queue })
 
   return createDirectTransport(config.adapter, resolvedQueue)
 }

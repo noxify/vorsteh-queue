@@ -11,26 +11,26 @@ async function addSampleJobs() {
 
   // Add email jobs
   await emailQueue.add("send-welcome-email", {
-    to: "user@example.com",
-    subject: "Welcome to our platform!",
     body: "Thank you for signing up...",
+    subject: "Welcome to our platform!",
+    to: "user@example.com",
   })
 
   await emailQueue.add(
     "send-notification",
     {
-      to: "admin@example.com",
-      subject: "New user registration",
       body: "A new user has registered...",
+      subject: "New user registration",
+      to: "admin@example.com",
     },
     { priority: 1 }
   )
 
   // Add image processing jobs
   await imageQueue.add("resize-image", {
+    format: "webp",
     imageId: "img_001",
     sizes: [150, 300, 600, 1200],
-    format: "webp",
   })
 
   await imageQueue.add("optimize-image", {
@@ -40,26 +40,26 @@ async function addSampleJobs() {
 
   // Add report generation jobs
   await reportQueue.add("generate-monthly-report", {
-    reportType: "sales",
-    dateRange: { start: "2024-01-01", end: "2024-01-31" },
-    userId: "user_123",
+    dateRange: { end: "2024-01-31", start: "2024-01-01" },
     format: "pdf",
+    reportType: "sales",
+    userId: "user_123",
   })
 
   await reportQueue.add("generate-analytics-dashboard", {
-    reportType: "analytics",
-    dateRange: { start: "2024-01-01", end: "2024-01-31" },
-    userId: "user_456",
+    dateRange: { end: "2024-01-31", start: "2024-01-01" },
     format: "pdf",
+    reportType: "analytics",
+    userId: "user_456",
   })
 
   // Add recurring jobs
   await emailQueue.add(
     "send-notification",
     {
-      to: "subscribers@example.com",
-      subject: "Weekly Newsletter",
       body: "This week's updates...",
+      subject: "Weekly Newsletter",
+      to: "subscribers@example.com",
     },
     {
       cron: "0 9 * * 1", // Every Monday at 9 AM
@@ -70,10 +70,10 @@ async function addSampleJobs() {
   await reportQueue.add(
     "generate-monthly-report",
     {
-      reportType: "summary",
-      dateRange: { start: "2024-01-01", end: "2024-01-07" },
-      userId: "admin",
+      dateRange: { end: "2024-01-07", start: "2024-01-01" },
       format: "xlsx",
+      reportType: "summary",
+      userId: "admin",
     },
     {
       cron: "0 8 * * 0", // Every Sunday at 8 AM

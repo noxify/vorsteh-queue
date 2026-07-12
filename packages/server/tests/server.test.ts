@@ -14,8 +14,8 @@ describe("GraphQL Server", () => {
 
   function createApp() {
     return createQueueMiddleware({
-      queues: [queue],
       auth: false,
+      queues: [queue],
     })
   }
 
@@ -26,7 +26,7 @@ describe("GraphQL Server", () => {
       const body = await res.json()
 
       expect(res.status).toBe(200)
-      expect(body).toStrictEqual({ status: "ok", queues: ["test-queue"] })
+      expect(body).toStrictEqual({ queues: ["test-queue"], status: "ok" })
     })
   })
 
@@ -36,23 +36,23 @@ describe("GraphQL Server", () => {
 
       // Add some jobs
       await queue.adapter.addJob({
-        name: "test",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "test",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: '{ stats(queue: "test-queue") { pending completed failed } }',
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -65,11 +65,11 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: '{ stats(queue: "unknown-queue") { pending } }',
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -83,23 +83,23 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "lookup-job",
-        payload: { key: "value" },
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "lookup-job",
+        payload: { key: "value" },
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `{ job(id: "${job.id}", queue: "test-queue") { id name status priority payload } }`,
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -113,23 +113,23 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "lookup-job",
-        payload: { key: "value" },
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "lookup-job",
+        payload: { key: "value" },
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `{ job(id: "${job.id}") { id name status } }`,
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -142,11 +142,11 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: '{ job(id: "unknown") { id } }',
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -157,24 +157,24 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "dead-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "dead-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await queue.adapter.updateJobStatus(job.id, { status: "dead" })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: '{ deadJobs(queue: "test-queue") { id name status } }',
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -186,21 +186,21 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       await queue.adapter.addJob({
-        name: "a",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "a",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: '{ size(queue: "test-queue") }' }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -213,23 +213,23 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "cancel-me",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "cancel-me",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `mutation { cancelJob(id: "${job.id}", queue: "test-queue", reason: "test") }`,
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -243,24 +243,24 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "redrive-me",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 3,
         maxAttempts: 3,
+        name: "redrive-me",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await queue.adapter.updateJobStatus(job.id, { status: "dead" })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `mutation { redriveJob(id: "${job.id}", queue: "test-queue") }`,
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -274,25 +274,25 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "clear-me",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "clear-me",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await queue.adapter.updateJobStatus(job.id, { status: "completed" })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query:
             'mutation { clearJobs(queue: "test-queue", status: completed) }',
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -303,27 +303,27 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "retry-me",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 2,
         maxAttempts: 3,
+        name: "retry-me",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await queue.adapter.updateJobStatus(job.id, {
+        error: { message: "oops", name: "Error" },
         status: "failed",
-        error: { name: "Error", message: "oops" },
       })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `mutation { retryJob(id: "${job.id}", queue: "test-queue") }`,
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -338,23 +338,23 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "delayed-job",
-        payload: {},
-        status: "delayed",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "delayed-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(Date.now() + 60_000),
         progress: 0,
         repeatCount: 0,
+        status: "delayed",
       })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `mutation { runJobNow(id: "${job.id}", queue: "test-queue") }`,
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -368,23 +368,23 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "delete-me",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "delete-me",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `mutation { deleteJob(id: "${job.id}", queue: "test-queue") }`,
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -398,23 +398,23 @@ describe("GraphQL Server", () => {
       const app = createApp()
 
       const job = await queue.adapter.addJob({
-        name: "test-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "test-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const res = await app.request("/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `mutation { deleteJob(id: "${job.id}", queue: "invalid-queue") }`,
         }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       })
 
       const body = await res.json()
@@ -428,8 +428,8 @@ describe("GraphQL Server", () => {
   describe("authentication", () => {
     it("should reject requests without token", async () => {
       const app = createQueueMiddleware({
-        queues: [queue],
         auth: { tokens: ["secret-token"] },
+        queues: [queue],
       })
 
       const res = await app.request("/health")
@@ -438,8 +438,8 @@ describe("GraphQL Server", () => {
 
     it("should accept requests with valid token", async () => {
       const app = createQueueMiddleware({
-        queues: [queue],
         auth: { tokens: ["secret-token"] },
+        queues: [queue],
       })
 
       const res = await app.request("/health", {
@@ -450,8 +450,8 @@ describe("GraphQL Server", () => {
 
     it("should reject requests with invalid token", async () => {
       const app = createQueueMiddleware({
-        queues: [queue],
         auth: { tokens: ["secret-token"] },
+        queues: [queue],
       })
 
       const res = await app.request("/health", {

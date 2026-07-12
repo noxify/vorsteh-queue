@@ -43,7 +43,7 @@ export function renderTimelineAscii(
   theme: AsciiTheme = DEFAULT_ASCII_THEME,
 ): string {
   const diagram = parseTimelineDiagram(lines)
-  const useAscii = config.useAscii
+  const {useAscii} = config
 
   const marker = useAscii ? 'o' : '○'
   const vertical = useAscii ? '|' : '│'
@@ -59,7 +59,7 @@ export function renderTimelineAscii(
 
   if (diagram.title) {
     for (const line of diagram.title.split('\n')) {
-      pushLine([{ text: line, role: 'text' }])
+      pushLine([{ role: 'text', text: line }])
     }
     pushLine()
   }
@@ -69,9 +69,9 @@ export function renderTimelineAscii(
 
     if (section.label) {
       pushLine([
-        { text: '[', role: 'border' },
-        { text: section.label.replace(/\n/g, ' / '), role: 'text' },
-        { text: ']', role: 'border' },
+        { role: 'border', text: '[' },
+        { role: 'text', text: section.label.replace(/\n/g, ' / ') },
+        { role: 'border', text: ']' },
       ])
     }
 
@@ -80,14 +80,14 @@ export function renderTimelineAscii(
       const periodLines = period.label.split('\n')
 
       pushLine([
-        { text: marker, role: 'junction' },
-        { text: ' ', role: null },
-        { text: periodLines[0] ?? '', role: 'text' },
+        { role: 'junction', text: marker },
+        { role: null, text: ' ' },
+        { role: 'text', text: periodLines[0] ?? '' },
       ])
       for (const line of periodLines.slice(1)) {
         pushLine([
-          { text: `${periodContinuation} `, role: null },
-          { text: line, role: 'text' },
+          { role: null, text: `${periodContinuation} ` },
+          { role: 'text', text: line },
         ])
       }
 
@@ -96,31 +96,31 @@ export function renderTimelineAscii(
         const eventLines = event.text.split('\n')
         const junction = eventIndex === period.events.length - 1 ? lastBranch : branch
         pushLine([
-          { text: vertical, role: 'line' },
-          { text: '  ', role: null },
-          { text: junction, role: eventIndex === period.events.length - 1 ? 'corner' : 'junction' },
-          { text: horizontal, role: 'line' },
-          { text: ' ', role: null },
-          { text: eventLines[0] ?? '', role: 'text' },
+          { role: 'line', text: vertical },
+          { role: null, text: '  ' },
+          { role: eventIndex === period.events.length - 1 ? 'corner' : 'junction', text: junction },
+          { role: 'line', text: horizontal },
+          { role: null, text: ' ' },
+          { role: 'text', text: eventLines[0] ?? '' },
         ])
 
         for (const line of eventLines.slice(1)) {
           pushLine(eventIndex === period.events.length - 1
             ? [
-                { text: '    ', role: null },
-                { text: line, role: 'text' },
+                { role: null, text: '    ' },
+                { role: 'text', text: line },
               ]
             : [
-                { text: vertical, role: 'line' },
-                { text: '   ', role: null },
-                { text: line, role: 'text' },
+                { role: 'line', text: vertical },
+                { role: null, text: '   ' },
+                { role: 'text', text: line },
               ])
         }
       }
 
       const morePeriods = periodIndex < section.periods.length - 1
       const moreSections = sectionIndex < diagram.sections.length - 1
-      if (morePeriods || moreSections) pushLine()
+      if (morePeriods || moreSections) {pushLine()}
     }
   }
 

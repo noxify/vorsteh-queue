@@ -35,7 +35,7 @@ class MinHeap {
   }
 
   pop(): PQItem | undefined {
-    if (this.items.length === 0) return undefined
+    if (this.items.length === 0) {return undefined}
     const top = this.items[0]!
     const last = this.items.pop()!
     if (this.items.length > 0) {
@@ -69,11 +69,11 @@ class MinHeap {
       if (right < n && this.items[right]!.priority < this.items[smallest]!.priority) {
         smallest = right
       }
-      if (smallest !== i) {
+      if (smallest === i) {
+        break
+      } else {
         ;[this.items[i], this.items[smallest]] = [this.items[smallest]!, this.items[i]!]
         i = smallest
-      } else {
-        break
       }
     }
   }
@@ -110,7 +110,7 @@ const MOVE_DIRS: GridCoord[] = [
 
 /** Check if a grid cell is unoccupied and has non-negative coordinates. */
 function isFreeInGrid(grid: Map<string, AsciiNode>, c: GridCoord): boolean {
-  if (c.x < 0 || c.y < 0) return false
+  if (c.x < 0 || c.y < 0) {return false}
   return !grid.has(gridKey(c))
 }
 
@@ -178,7 +178,7 @@ export function getPath(
  * This reduces the number of line-drawing operations.
  */
 export function mergePath(path: GridCoord[]): GridCoord[] {
-  if (path.length <= 2) return path
+  if (path.length <= 2) {return path}
 
   const toRemove = new Set<number>()
   let step0 = path[0]!

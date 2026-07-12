@@ -65,7 +65,7 @@ export function runTests<TDatabase = unknown>(
 
         adapter = await ctx.initAdapter(
           db,
-          useDefault === false ? { modelName, tableName, schemaName } : {}
+          useDefault === false ? { modelName, schemaName, tableName } : {}
         )
 
         await adapter.connect()
@@ -75,15 +75,15 @@ export function runTests<TDatabase = unknown>(
       describe("addJob / getJobById", () => {
         it("should add a job and retrieve it by ID", async () => {
           const job = await adapter.addJob({
-            name: "test-job",
-            payload: { data: "test" },
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test-job",
+            payload: { data: "test" },
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           expect(job.id).toBeDefined()
@@ -109,26 +109,26 @@ export function runTests<TDatabase = unknown>(
         it("should add multiple jobs", async () => {
           const jobs = await adapter.addJobs([
             {
+              attempts: 0,
+              maxAttempts: 2,
               name: "batch-1",
               payload: { n: 1 },
-              status: "pending",
               priority: 1,
-              attempts: 0,
-              maxAttempts: 2,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
             {
-              name: "batch-2",
-              payload: { n: 2 },
-              status: "pending",
-              priority: 2,
               attempts: 0,
               maxAttempts: 2,
+              name: "batch-2",
+              payload: { n: 2 },
+              priority: 2,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
           ])
 
@@ -141,59 +141,59 @@ export function runTests<TDatabase = unknown>(
       describe("getNextJob", () => {
         it("should return highest priority job", async () => {
           await adapter.addJob({
+            attempts: 0,
+            maxAttempts: 3,
             name: "low",
             payload: {},
-            status: "pending",
             priority: 5,
-            attempts: 0,
-            maxAttempts: 3,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.addJob({
-            name: "high",
-            payload: {},
-            status: "pending",
-            priority: 1,
             attempts: 0,
             maxAttempts: 3,
+            name: "high",
+            payload: {},
+            priority: 1,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           const job = await adapter.getNextJob({
-            handlerNames: ["low", "high"],
             activeGroups: [],
+            handlerNames: ["low", "high"],
           })
           expect(job?.name).toBe("high")
         })
 
         it("should return null when no jobs available", async () => {
           const job = await adapter.getNextJob({
-            handlerNames: ["nonexistent"],
             activeGroups: [],
+            handlerNames: ["nonexistent"],
           })
           expect(job).toBeNull()
         })
 
         it("should only return jobs for registered handlers", async () => {
           await adapter.addJob({
-            name: "unregistered",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "unregistered",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           const job = await adapter.getNextJob({
-            handlerNames: ["other-handler"],
             activeGroups: [],
+            handlerNames: ["other-handler"],
           })
           expect(job).toBeNull()
         })
@@ -203,37 +203,37 @@ export function runTests<TDatabase = unknown>(
         it("should return jobs for a specific handler", async () => {
           await adapter.addJobs([
             {
+              attempts: 0,
+              maxAttempts: 2,
               name: "target",
               payload: { n: 1 },
-              status: "pending",
               priority: 1,
-              attempts: 0,
-              maxAttempts: 2,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
             {
+              attempts: 0,
+              maxAttempts: 2,
               name: "target",
               payload: { n: 2 },
-              status: "pending",
               priority: 2,
-              attempts: 0,
-              maxAttempts: 2,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
             {
-              name: "other",
-              payload: { n: 3 },
-              status: "pending",
-              priority: 1,
               attempts: 0,
               maxAttempts: 2,
+              name: "other",
+              payload: { n: 3 },
+              priority: 1,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
           ])
 
@@ -245,37 +245,37 @@ export function runTests<TDatabase = unknown>(
         it("should respect count limit", async () => {
           await adapter.addJobs([
             {
+              attempts: 0,
+              maxAttempts: 2,
               name: "x",
               payload: {},
-              status: "pending",
               priority: 1,
-              attempts: 0,
-              maxAttempts: 2,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
             {
+              attempts: 0,
+              maxAttempts: 2,
               name: "x",
               payload: {},
-              status: "pending",
               priority: 2,
-              attempts: 0,
-              maxAttempts: 2,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
             {
-              name: "x",
-              payload: {},
-              status: "pending",
-              priority: 3,
               attempts: 0,
               maxAttempts: 2,
+              name: "x",
+              payload: {},
+              priority: 3,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
           ])
 
@@ -287,15 +287,15 @@ export function runTests<TDatabase = unknown>(
       describe("updateJobStatus", () => {
         it("should update status to processing", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           await adapter.updateJobStatus(job.id, { status: "processing" })
@@ -307,20 +307,20 @@ export function runTests<TDatabase = unknown>(
 
         it("should update status to completed with result", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           await adapter.updateJobStatus(job.id, {
-            status: "completed",
             result: { ok: true },
+            status: "completed",
           })
 
           const updated = await adapter.getJobById(job.id)
@@ -331,20 +331,20 @@ export function runTests<TDatabase = unknown>(
 
         it("should update status to failed with error", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           await adapter.updateJobStatus(job.id, {
+            error: { message: "test error", name: "Error" },
             status: "failed",
-            error: { name: "Error", message: "test error" },
           })
 
           const updated = await adapter.getJobById(job.id)
@@ -357,15 +357,15 @@ export function runTests<TDatabase = unknown>(
       describe("incrementJobAttempts", () => {
         it("should increment attempts", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           await adapter.incrementJobAttempts(job.id)
@@ -377,15 +377,15 @@ export function runTests<TDatabase = unknown>(
       describe("updateJobProgress", () => {
         it("should update progress", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "processing",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "processing",
           })
 
           await adapter.updateJobProgress(job.id, 50)
@@ -395,15 +395,15 @@ export function runTests<TDatabase = unknown>(
 
         it("should clamp progress to 0-100", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "processing",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "processing",
           })
 
           await adapter.updateJobProgress(job.id, -10)
@@ -419,15 +419,15 @@ export function runTests<TDatabase = unknown>(
       describe("cancelJob / cancelJobs", () => {
         it("should cancel a pending job", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           const result = await adapter.cancelJob(job.id, "no longer needed")
@@ -441,15 +441,15 @@ export function runTests<TDatabase = unknown>(
 
         it("should not cancel a completed job", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.updateJobStatus(job.id, { status: "completed" })
 
@@ -460,37 +460,37 @@ export function runTests<TDatabase = unknown>(
         it("should cancel multiple jobs by filter", async () => {
           await adapter.addJobs([
             {
-              name: "email",
-              payload: {},
-              status: "pending",
-              priority: 2,
               attempts: 0,
               maxAttempts: 3,
+              name: "email",
+              payload: {},
+              priority: 2,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
             {
-              name: "email",
-              payload: {},
-              status: "pending",
-              priority: 2,
               attempts: 0,
               maxAttempts: 3,
+              name: "email",
+              payload: {},
+              priority: 2,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
             {
+              attempts: 0,
+              maxAttempts: 3,
               name: "sms",
               payload: {},
-              status: "pending",
               priority: 2,
-              attempts: 0,
-              maxAttempts: 3,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
           ])
 
@@ -502,15 +502,15 @@ export function runTests<TDatabase = unknown>(
       describe("DLQ: getDeadJobs / redriveJob / redriveJobs", () => {
         it("should get dead jobs", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.updateJobStatus(job.id, { status: "dead" })
 
@@ -521,15 +521,15 @@ export function runTests<TDatabase = unknown>(
 
         it("should redrive a dead job", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 3,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.updateJobStatus(job.id, { status: "dead" })
 
@@ -541,26 +541,26 @@ export function runTests<TDatabase = unknown>(
 
         it("should redrive all dead jobs", async () => {
           const j1 = await adapter.addJob({
+            attempts: 0,
+            maxAttempts: 3,
             name: "a",
             payload: {},
-            status: "pending",
             priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           const j2 = await adapter.addJob({
-            name: "b",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "b",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.updateJobStatus(j1.id, { status: "dead" })
           await adapter.updateJobStatus(j2.id, { status: "dead" })
@@ -573,37 +573,37 @@ export function runTests<TDatabase = unknown>(
       describe("getQueueStats", () => {
         it("should return counts by status", async () => {
           await adapter.addJob({
+            attempts: 0,
+            maxAttempts: 3,
             name: "a",
             payload: {},
-            status: "pending",
             priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.addJob({
+            attempts: 0,
+            maxAttempts: 3,
             name: "b",
             payload: {},
-            status: "pending",
             priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           const j3 = await adapter.addJob({
-            name: "c",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "c",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.updateJobStatus(j3.id, { status: "completed" })
 
@@ -616,37 +616,37 @@ export function runTests<TDatabase = unknown>(
       describe("size", () => {
         it("should count pending + delayed jobs", async () => {
           await adapter.addJob({
-            name: "a",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "a",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.addJob({
-            name: "b",
-            payload: {},
-            status: "delayed",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "b",
+            payload: {},
+            priority: 2,
             processAt: new Date(Date.now() + 60_000),
             progress: 0,
             repeatCount: 0,
+            status: "delayed",
           })
           const j3 = await adapter.addJob({
-            name: "c",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "c",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.updateJobStatus(j3.id, { status: "completed" })
 
@@ -658,26 +658,26 @@ export function runTests<TDatabase = unknown>(
       describe("clearJobs / cleanupJobs", () => {
         it("should clear all jobs", async () => {
           await adapter.addJob({
+            attempts: 0,
+            maxAttempts: 3,
             name: "a",
             payload: {},
-            status: "pending",
             priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.addJob({
-            name: "b",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "b",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           const count = await adapter.clearJobs()
@@ -686,26 +686,26 @@ export function runTests<TDatabase = unknown>(
 
         it("should clear jobs by status", async () => {
           await adapter.addJob({
+            attempts: 0,
+            maxAttempts: 3,
             name: "a",
             payload: {},
-            status: "pending",
             priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           const j2 = await adapter.addJob({
-            name: "b",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "b",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
           await adapter.updateJobStatus(j2.id, { status: "completed" })
 
@@ -717,15 +717,15 @@ export function runTests<TDatabase = unknown>(
       describe("findJobByUniqueKey", () => {
         it("should find active job by unique key", async () => {
           await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
             uniqueKey: "unique-123",
           })
 
@@ -736,15 +736,15 @@ export function runTests<TDatabase = unknown>(
 
         it("should not find completed job by unique key", async () => {
           const job = await adapter.addJob({
-            name: "test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
             uniqueKey: "done-key",
           })
           await adapter.updateJobStatus(job.id, { status: "completed" })
@@ -757,33 +757,33 @@ export function runTests<TDatabase = unknown>(
       describe("groups", () => {
         it("should skip active groups in getNextJob", async () => {
           await adapter.addJob({
+            attempts: 0,
+            groupKey: "g1",
+            maxAttempts: 3,
             name: "grouped",
             payload: { n: 1 },
-            status: "pending",
             priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
-            groupKey: "g1",
+            status: "pending",
           })
           await adapter.addJob({
+            attempts: 0,
+            groupKey: "g2",
+            maxAttempts: 3,
             name: "grouped",
             payload: { n: 2 },
-            status: "pending",
             priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
-            groupKey: "g2",
+            status: "pending",
           })
 
           const job = await adapter.getNextJob({
-            handlerNames: ["grouped"],
             activeGroups: ["g1"],
+            handlerNames: ["grouped"],
           })
           expect(job?.groupKey).toBe("g2")
         })
@@ -792,20 +792,20 @@ export function runTests<TDatabase = unknown>(
       describe("delayed jobs", () => {
         it("should not pick future delayed jobs", async () => {
           await adapter.addJob({
-            name: "delayed",
-            payload: {},
-            status: "delayed",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "delayed",
+            payload: {},
+            priority: 2,
             processAt: new Date(Date.now() + 60_000),
             progress: 0,
             repeatCount: 0,
+            status: "delayed",
           })
 
           const job = await adapter.getNextJob({
-            handlerNames: ["delayed"],
             activeGroups: [],
+            handlerNames: ["delayed"],
           })
           expect(job).toBeNull()
         })
@@ -814,16 +814,16 @@ export function runTests<TDatabase = unknown>(
       describe("cron fields", () => {
         it("should store and retrieve cron expression", async () => {
           const job = await adapter.addJob({
+            attempts: 0,
+            cron: "0 9 * * *",
+            maxAttempts: 3,
             name: "cron-job",
             payload: {},
-            status: "delayed",
             priority: 2,
-            attempts: 0,
-            maxAttempts: 3,
             processAt: new Date(Date.now() + 60_000),
             progress: 0,
             repeatCount: 0,
-            cron: "0 9 * * *",
+            status: "delayed",
           })
 
           const retrieved = await adapter.getJobById(job.id)
@@ -832,17 +832,17 @@ export function runTests<TDatabase = unknown>(
 
         it("should store repeat fields", async () => {
           const job = await adapter.addJob({
-            name: "repeat-job",
-            payload: {},
-            status: "delayed",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "repeat-job",
+            payload: {},
+            priority: 2,
             processAt: new Date(Date.now() + 60_000),
             progress: 0,
             repeatCount: 2,
             repeatEvery: 5000,
             repeatLimit: 10,
+            status: "delayed",
           })
 
           const retrieved = await adapter.getJobById(job.id)
@@ -855,15 +855,15 @@ export function runTests<TDatabase = unknown>(
       describe("timeout", () => {
         it("should store timeout value", async () => {
           const job = await adapter.addJob({
-            name: "timeout-job",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "timeout-job",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
             timeout: 5000,
           })
 
@@ -880,26 +880,26 @@ export function runTests<TDatabase = unknown>(
           // Insert two jobs with different priorities
           await adapter.addJobs([
             {
+              attempts: 0,
+              maxAttempts: 3,
               name: "lock-test",
               payload: { n: 1 },
-              status: "pending",
               priority: 1,
-              attempts: 0,
-              maxAttempts: 3,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
             {
-              name: "lock-test",
-              payload: { n: 2 },
-              status: "pending",
-              priority: 2,
               attempts: 0,
               maxAttempts: 3,
+              name: "lock-test",
+              payload: { n: 2 },
+              priority: 2,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending",
             },
           ])
 
@@ -934,8 +934,8 @@ export function runTests<TDatabase = unknown>(
           // While the lock is held, adapter.getNextJob should skip the locked
           // row and return the second job instead.
           const job = await adapter.getNextJob({
-            handlerNames: ["lock-test"],
             activeGroups: [],
+            handlerNames: ["lock-test"],
           })
 
           expect(job).not.toBeNull()
@@ -953,15 +953,15 @@ export function runTests<TDatabase = unknown>(
 
           // Insert a single job
           await adapter.addJob({
-            name: "lock-all-test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "lock-all-test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           // Lock it in a separate transaction
@@ -990,8 +990,8 @@ export function runTests<TDatabase = unknown>(
 
           // Adapter should find no available jobs (the only one is locked)
           const job = await adapter.getNextJob({
-            handlerNames: ["lock-all-test"],
             activeGroups: [],
+            handlerNames: ["lock-all-test"],
           })
 
           expect(job).toBeNull()
@@ -1006,15 +1006,15 @@ export function runTests<TDatabase = unknown>(
           // Insert 3 jobs
           await adapter.addJobs(
             Array.from({ length: 3 }, (_, i) => ({
-              name: "batch-lock-test",
-              payload: { index: i },
-              status: "pending" as const,
-              priority: i + 1,
               attempts: 0,
               maxAttempts: 3,
+              name: "batch-lock-test",
+              payload: { index: i },
+              priority: i + 1,
               processAt: new Date(),
               progress: 0,
               repeatCount: 0,
+              status: "pending" as const,
             }))
           )
 
@@ -1062,15 +1062,15 @@ export function runTests<TDatabase = unknown>(
             useDefault === false ? `${schemaName}.${tableName}` : "queue_jobs"
 
           await adapter.addJob({
-            name: "release-test",
-            payload: {},
-            status: "pending",
-            priority: 2,
             attempts: 0,
             maxAttempts: 3,
+            name: "release-test",
+            payload: {},
+            priority: 2,
             processAt: new Date(),
             progress: 0,
             repeatCount: 0,
+            status: "pending",
           })
 
           // Lock and immediately release via transaction commit
@@ -1093,8 +1093,8 @@ export function runTests<TDatabase = unknown>(
 
           // After the lock is released, getNextJob should find the job
           const job = await adapter.getNextJob({
-            handlerNames: ["release-test"],
             activeGroups: [],
+            handlerNames: ["release-test"],
           })
 
           expect(job).not.toBeNull()

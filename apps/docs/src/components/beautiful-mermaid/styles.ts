@@ -34,19 +34,19 @@ export const MONO_FONT_STACK = `${MONO_FONT}, 'SF Mono', 'Fira Code', ui-monospa
 
 /** Fixed font sizes used in the renderer (in px) */
 export const FONT_SIZES = {
-  /** Node label text */
-  nodeLabel: 13,
   /** Edge label text */
   edgeLabel: 11,
   /** Subgraph header text */
   groupHeader: 12,
+  /** Node label text */
+  nodeLabel: 13,
 } as const
 
 /** Font weights used per element type */
 export const FONT_WEIGHTS = {
-  nodeLabel: 500,
   edgeLabel: 400,
   groupHeader: 600,
+  nodeLabel: 500,
 } as const
 
 // ============================================================================
@@ -60,20 +60,20 @@ export const GROUP_HEADER_CONTENT_PAD = 12
 
 /** Padding inside node shapes */
 export const NODE_PADDING = {
+  /** Extra padding for diamond shapes (they need more space due to rotation) */
+  diamondExtra: 24,
   /** Horizontal padding inside rectangles/rounded/stadium (increased from 16 for better label fit) */
   horizontal: 20,
   /** Vertical padding inside rectangles/rounded/stadium */
   vertical: 10,
-  /** Extra padding for diamond shapes (they need more space due to rotation) */
-  diamondExtra: 24,
 } as const
 
 /** Stroke widths per element type (in px) */
 export const STROKE_WIDTHS = {
-  outerBox: 1,
-  innerBox: 0.75,
   /** Edge connector stroke (increased from 0.75 for better visibility) */
   connector: 1,
+  innerBox: 0.75,
+  outerBox: 1,
 } as const
 
 /**
@@ -91,8 +91,8 @@ export const TEXT_BASELINE_SHIFT = '0.35em' as const
 
 /** Arrow head dimensions — matches spec: 8px wide × ~5px tall */
 export const ARROW_HEAD = {
-  width: 8,
   height: 5,
+  width: 8,
 } as const
 
 // ============================================================================
@@ -158,53 +158,53 @@ export interface ResolvedRenderStyle {
 }
 
 export const FLOWCHART_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: FONT_SIZES.nodeLabel,
-  edgeLabelFontSize: FONT_SIZES.edgeLabel,
-  groupHeaderFontSize: FONT_SIZES.groupHeader,
-  nodeLabelFontWeight: FONT_WEIGHTS.nodeLabel,
-  edgeLabelFontWeight: FONT_WEIGHTS.edgeLabel,
-  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
-  nodePaddingX: NODE_PADDING.horizontal,
-  nodePaddingY: NODE_PADDING.vertical,
   diamondExtraPadding: NODE_PADDING.diamondExtra,
+  edgeLabelFontSize: FONT_SIZES.edgeLabel,
+  edgeLabelFontWeight: FONT_WEIGHTS.edgeLabel,
   edgeLineWidth: STROKE_WIDTHS.connector,
   groupCornerRadius: 0,
-  groupPaddingX: 16,
-  groupPaddingY: 16,
+  groupHeaderFontSize: FONT_SIZES.groupHeader,
+  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
   groupLabelPaddingX: 12,
   groupLineWidth: STROKE_WIDTHS.outerBox,
+  groupPaddingX: 16,
+  groupPaddingY: 16,
+  nodeLabelFontSize: FONT_SIZES.nodeLabel,
+  nodeLabelFontWeight: FONT_WEIGHTS.nodeLabel,
+  nodePaddingX: NODE_PADDING.horizontal,
+  nodePaddingY: NODE_PADDING.vertical,
 }
 
 function finiteNumber(value: number | undefined): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined
 }
 
-function positiveNumber(fallback: number, ...values: Array<number | undefined>): number {
+function positiveNumber(fallback: number, ...values: (number | undefined)[]): number {
   for (const value of values) {
     const finite = finiteNumber(value)
-    if (finite != null && finite > 0) return finite
+    if (finite != null && finite > 0) {return finite}
   }
   return fallback
 }
 
-function nonNegativeNumber(fallback: number, ...values: Array<number | undefined>): number
-function nonNegativeNumber(fallback: undefined, ...values: Array<number | undefined>): number | undefined
-function nonNegativeNumber(fallback: number | undefined, ...values: Array<number | undefined>): number | undefined {
+function nonNegativeNumber(fallback: number, ...values: (number | undefined)[]): number
+function nonNegativeNumber(fallback: undefined, ...values: (number | undefined)[]): number | undefined
+function nonNegativeNumber(fallback: number | undefined, ...values: (number | undefined)[]): number | undefined {
   for (const value of values) {
     const finite = finiteNumber(value)
-    if (finite != null && finite >= 0) return finite
+    if (finite != null && finite >= 0) {return finite}
   }
   return fallback
 }
 
-function finiteString(...values: Array<string | undefined>): string | undefined {
+function finiteString(...values: (string | undefined)[]): string | undefined {
   for (const value of values) {
-    if (typeof value === 'string' && value.trim().length > 0) return value
+    if (typeof value === 'string' && value.trim().length > 0) {return value}
   }
   return undefined
 }
 
-function textTransform(...values: Array<string | undefined>): TextTransform | undefined {
+function textTransform(...values: (string | undefined)[]): TextTransform | undefined {
   for (const value of values) {
     const normalized = finiteString(value)?.toLowerCase()
     if (normalized === 'uppercase' || normalized === 'lowercase' || normalized === 'capitalize') {
@@ -228,30 +228,30 @@ export function resolveRenderStyle(
     : nonNegativeNumber(defaults.nodeCornerRadius, node?.cornerRadius)
 
   return {
-    nodeLabelFontSize: positiveNumber(defaults.nodeLabelFontSize, node?.fontSize, text?.fontSize),
-    edgeLabelFontSize: positiveNumber(defaults.edgeLabelFontSize, edge?.fontSize, text?.fontSize),
-    groupHeaderFontSize: positiveNumber(defaults.groupHeaderFontSize, group?.fontSize, text?.fontSize),
-    nodeLabelFontWeight: positiveNumber(defaults.nodeLabelFontWeight, node?.fontWeight, text?.fontWeight),
-    edgeLabelFontWeight: positiveNumber(defaults.edgeLabelFontWeight, edge?.fontWeight, text?.fontWeight),
-    groupHeaderFontWeight: positiveNumber(defaults.groupHeaderFontWeight, group?.fontWeight, text?.fontWeight),
-    nodeLetterSpacing: finiteNumber(node?.letterSpacing) ?? finiteNumber(text?.letterSpacing) ?? defaults.nodeLetterSpacing ?? 0,
-    edgeLetterSpacing: finiteNumber(edge?.letterSpacing) ?? finiteNumber(text?.letterSpacing) ?? defaults.edgeLetterSpacing ?? 0,
-    groupLetterSpacing: finiteNumber(group?.letterSpacing) ?? finiteNumber(text?.letterSpacing) ?? defaults.groupLetterSpacing ?? 0,
-    nodePaddingX: nonNegativeNumber(defaults.nodePaddingX, node?.paddingX),
-    nodePaddingY: nonNegativeNumber(defaults.nodePaddingY, node?.paddingY),
-    diamondExtraPadding: defaults.diamondExtraPadding ?? NODE_PADDING.diamondExtra,
     cornerRadius,
-    nodeLineWidth: positiveNumber(defaults.nodeLineWidth ?? STROKE_WIDTHS.innerBox, node?.lineWidth),
-    lineWidth: positiveNumber(defaults.edgeLineWidth, edge?.lineWidth),
+    diamondExtraPadding: defaults.diamondExtraPadding ?? NODE_PADDING.diamondExtra,
     edgeBendRadius: nonNegativeNumber(defaults.edgeBendRadius ?? 0, edge?.bendRadius),
-    groupFont: finiteString(group?.fontFamily, defaults.groupFont),
-    groupTextTransform: textTransform(group?.textTransform, defaults.groupTextTransform),
-    groupCornerRadius: nonNegativeNumber(defaults.groupCornerRadius, group?.cornerRadius),
+    edgeLabelFontSize: positiveNumber(defaults.edgeLabelFontSize, edge?.fontSize, text?.fontSize),
+    edgeLabelFontWeight: positiveNumber(defaults.edgeLabelFontWeight, edge?.fontWeight, text?.fontWeight),
+    edgeLetterSpacing: finiteNumber(edge?.letterSpacing) ?? finiteNumber(text?.letterSpacing) ?? defaults.edgeLetterSpacing ?? 0,
     groupBorderColor: finiteString(group?.borderColor, defaults.groupBorderColor),
+    groupCornerRadius: nonNegativeNumber(defaults.groupCornerRadius, group?.cornerRadius),
+    groupFont: finiteString(group?.fontFamily, defaults.groupFont),
+    groupHeaderFontSize: positiveNumber(defaults.groupHeaderFontSize, group?.fontSize, text?.fontSize),
+    groupHeaderFontWeight: positiveNumber(defaults.groupHeaderFontWeight, group?.fontWeight, text?.fontWeight),
+    groupLabelPaddingX: explicitGroupPaddingX ?? defaults.groupLabelPaddingX ?? defaults.groupPaddingX,
+    groupLetterSpacing: finiteNumber(group?.letterSpacing) ?? finiteNumber(text?.letterSpacing) ?? defaults.groupLetterSpacing ?? 0,
+    groupLineWidth: positiveNumber(defaults.groupLineWidth ?? STROKE_WIDTHS.outerBox, group?.lineWidth),
     groupPaddingX: explicitGroupPaddingX ?? defaults.groupPaddingX,
     groupPaddingY: nonNegativeNumber(defaults.groupPaddingY, group?.paddingY),
-    groupLabelPaddingX: explicitGroupPaddingX ?? defaults.groupLabelPaddingX ?? defaults.groupPaddingX,
-    groupLineWidth: positiveNumber(defaults.groupLineWidth ?? STROKE_WIDTHS.outerBox, group?.lineWidth),
+    groupTextTransform: textTransform(group?.textTransform, defaults.groupTextTransform),
+    lineWidth: positiveNumber(defaults.edgeLineWidth, edge?.lineWidth),
+    nodeLabelFontSize: positiveNumber(defaults.nodeLabelFontSize, node?.fontSize, text?.fontSize),
+    nodeLabelFontWeight: positiveNumber(defaults.nodeLabelFontWeight, node?.fontWeight, text?.fontWeight),
+    nodeLetterSpacing: finiteNumber(node?.letterSpacing) ?? finiteNumber(text?.letterSpacing) ?? defaults.nodeLetterSpacing ?? 0,
+    nodeLineWidth: positiveNumber(defaults.nodeLineWidth ?? STROKE_WIDTHS.innerBox, node?.lineWidth),
+    nodePaddingX: nonNegativeNumber(defaults.nodePaddingX, node?.paddingX),
+    nodePaddingY: nonNegativeNumber(defaults.nodePaddingY, node?.paddingY),
   }
 }
 

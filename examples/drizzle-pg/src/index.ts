@@ -27,8 +27,8 @@ interface DataProcessingResult {
 }
 
 const worker = new Worker(adapter, {
-  name: "example-queue",
   concurrency: 3,
+  name: "example-queue",
   removeOnComplete: 10,
   removeOnFail: 5,
 })
@@ -40,8 +40,8 @@ worker.register<EmailJob, EmailResult>(
     console.log(`Sending email to ${job.payload.to}: ${job.payload.subject}`)
     await new Promise((resolve) => setTimeout(resolve, 1000))
     return {
-      sent: true,
       messageId: `msg_${Date.now()}`,
+      sent: true,
     }
   }
 )
@@ -94,16 +94,16 @@ async function main() {
 
   // Add some jobs
   await queue.add<EmailJob>("send-email", {
-    to: "user@example.com",
-    subject: "Welcome!",
     body: "Thanks for joining us!",
+    subject: "Welcome!",
+    to: "user@example.com",
   })
 
   await queue.add<DataProcessingJob>(
     "process-data",
     {
-      data: Array.from({ length: 20 }, (_, i) => `item-${i + 1}`),
       batchSize: 5,
+      data: Array.from({ length: 20 }, (_, i) => `item-${i + 1}`),
     },
     { priority: 1 }
   )
@@ -111,9 +111,9 @@ async function main() {
   await queue.add<EmailJob>(
     "send-email",
     {
-      to: "admin@example.com",
-      subject: "System Report",
       body: "Daily system status",
+      subject: "System Report",
+      to: "admin@example.com",
     },
     { delay: 5000 }
   )

@@ -52,7 +52,7 @@ export interface Block {
   /** Index of the last message inside this block (inclusive) */
   endIndex: number
   /** For alt/par blocks: indices where "else"/"and" dividers appear (message indices) */
-  dividers: Array<{ index: number; label: string }>
+  dividers: { index: number; label: string }[]
 }
 
 export interface Note {
@@ -136,7 +136,7 @@ export interface PositionedBlock {
   width: number
   height: number
   /** Divider lines within the block (for alt/par) */
-  dividers: Array<{ y: number; label: string }>
+  dividers: { y: number; label: string }[]
 }
 
 export interface PositionedNote {

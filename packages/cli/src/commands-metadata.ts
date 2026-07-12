@@ -65,8 +65,8 @@ export interface CommandConfig {
 
 function extractArgumentMeta(arg: Argument): CommandArgumentMeta {
   const meta: CommandArgumentMeta = {
-    name: arg.name(),
     description: arg.description,
+    name: arg.name(),
     required: arg.required,
     variadic: arg.variadic,
   }
@@ -83,10 +83,10 @@ function extractArgumentMeta(arg: Argument): CommandArgumentMeta {
 
 function extractOptionMeta(option: Option): CommandOptionMeta {
   const meta: CommandOptionMeta = {
-    flags: option.flags,
     description: option.description,
-    required: option.mandatory,
+    flags: option.flags,
     isBoolean: !option.required && !option.optional,
+    required: option.mandatory,
   }
 
   if (option.defaultValue !== undefined && !option.defaultValueDescription) {
@@ -151,9 +151,9 @@ export function getCommandConfig(commandName: string): CommandConfig {
   }
 
   return {
-    name: command.name(),
-    description: command.description(),
     arguments: command.registeredArguments.map(extractArgumentMeta),
+    description: command.description(),
+    name: command.name(),
     options: command.options.map(extractOptionMeta),
   }
 }

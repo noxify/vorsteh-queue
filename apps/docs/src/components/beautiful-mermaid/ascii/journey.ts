@@ -38,8 +38,8 @@ function renderScoreSegments(score: number, useAscii: boolean): StyledSegment[] 
   const empty = useAscii ? '.' : '○'
 
   const segments: StyledSegment[] = [
-    { text: filled.repeat(score), role: 'arrow' },
-    { text: empty.repeat(5 - score), role: 'border' },
+    { role: 'arrow', text: filled.repeat(score) },
+    { role: 'border', text: empty.repeat(5 - score) },
   ]
   return segments.filter(segment => segment.text.length > 0)
 }
@@ -55,7 +55,7 @@ export function renderJourneyAscii(
 ): string {
   const lines = preprocessMermaidLines(text)
   const diagram = parseJourneyDiagram(lines)
-  const useAscii = config.useAscii
+  const {useAscii} = config
   const out: string[] = []
   const pushLine = (segments: StyledSegment[] = []): void => {
     out.push(segments.length === 0 ? '' : renderStyledLine(segments, colorMode, theme))
@@ -63,7 +63,7 @@ export function renderJourneyAscii(
 
   if (diagram.title) {
     for (const line of diagram.title.split('\n')) {
-      pushLine([{ text: line, role: 'text' }])
+      pushLine([{ role: 'text', text: line }])
     }
     pushLine()
   }
@@ -73,9 +73,9 @@ export function renderJourneyAscii(
 
     if (section.label) {
       pushLine([
-        { text: '[', role: 'border' },
-        { text: section.label.replace(/\n/g, ' / '), role: 'text' },
-        { text: ']', role: 'border' },
+        { role: 'border', text: '[' },
+        { role: 'text', text: section.label.replace(/\n/g, ' / ') },
+        { role: 'border', text: ']' },
       ])
     }
 
@@ -87,28 +87,28 @@ export function renderJourneyAscii(
 
       pushLine([
         ...scoreSegments,
-        { text: ' ', role: null },
-        { text: taskLines[0] ?? '', role: 'text' },
+        { role: null, text: ' ' },
+        { role: 'text', text: taskLines[0] ?? '' },
       ])
       for (const line of taskLines.slice(1)) {
         pushLine([
-          { text: `${' '.repeat(scoreWidth + 1)} `, role: null },
-          { text: line, role: 'text' },
+          { role: null, text: `${' '.repeat(scoreWidth + 1)} ` },
+          { role: 'text', text: line },
         ])
       }
 
       if (task.actors.length > 0) {
         pushLine([
-          { text: '  ', role: null },
-          { text: 'by', role: 'border' },
-          { text: ' ', role: null },
-          { text: task.actors.join(', '), role: 'text' },
+          { role: null, text: '  ' },
+          { role: 'border', text: 'by' },
+          { role: null, text: ' ' },
+          { role: 'text', text: task.actors.join(', ') },
         ])
       }
 
       const moreTasks = taskIndex < section.tasks.length - 1
       const moreSections = sectionIndex < diagram.sections.length - 1
-      if (moreTasks || moreSections) pushLine()
+      if (moreTasks || moreSections) {pushLine()}
     }
   }
 

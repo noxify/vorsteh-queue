@@ -17,6 +17,8 @@ const { generateDrizzleJson, generateMigration } =
   await import("drizzle-kit/api")
 
 runTests<PostgresJsDatabase<typeof schema>>({
+  initAdapter: (db, adapterConfig) =>
+    new PostgresQueueAdapter(db, adapterConfig),
   initDbClient: (
     props: DatabaseConnectionProps
   ): PostgresJsDatabase<typeof schema> => {
@@ -25,8 +27,6 @@ runTests<PostgresJsDatabase<typeof schema>>({
     })
     return drizzle(client, { schema })
   },
-  initAdapter: (db, adapterConfig) =>
-    new PostgresQueueAdapter(db, adapterConfig),
   migrate: async (db) => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

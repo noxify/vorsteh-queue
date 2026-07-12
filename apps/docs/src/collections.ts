@@ -16,10 +16,10 @@ export const availableCollections = [
 export type AvailableCollection = (typeof availableCollections)[number]
 
 const repository = Repository.remote({
+  baseUrl: "https://github.com",
+  host: "github",
   owner: "noxify",
   repository: "vorsteh-queue",
-  host: "github",
-  baseUrl: "https://github.com",
 })
 
 const fileSystem = new NodeFileSystem()
@@ -30,9 +30,8 @@ export function createDirectories() {
   return availableCollections.map(
     (collection) =>
       new Directory({
-        fileSystem,
-        repository,
         basePathname: collection,
+        fileSystem,
         filter: (entry) =>
           !entry.baseName.startsWith("_") &&
           !entry.absolutePath.includes("_assets"),
@@ -41,6 +40,7 @@ export function createDirectories() {
             import(`../content/${collection}/${contentPath}.mdx`),
         },
         path: `content/${collection}`,
+        repository,
         schema: {
           mdx: docSchema,
         },

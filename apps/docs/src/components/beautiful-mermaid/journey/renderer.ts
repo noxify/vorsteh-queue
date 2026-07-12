@@ -18,35 +18,35 @@ import { topRoundedRectPath } from '../svg-paths'
 // ============================================================================
 
 const JY = {
-  titleFontSize: 18,
-  titleFontWeight: 600,
+  actorFontSize: 11,
+  actorFontWeight: 600,
   sectionFontSize: 12,
   sectionFontWeight: 600,
   taskFontSize: 13,
   taskFontWeight: 500,
   taskPadX: 14,
   taskPadY: 12,
-  actorFontSize: 11,
-  actorFontWeight: 600,
+  titleFontSize: 18,
+  titleFontWeight: 600,
 } as const
 
 const JOURNEY_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: JY.taskFontSize,
   edgeLabelFontSize: JY.actorFontSize,
-  groupHeaderFontSize: JY.sectionFontSize,
-  nodeLabelFontWeight: JY.taskFontWeight,
   edgeLabelFontWeight: JY.actorFontWeight,
-  groupHeaderFontWeight: JY.sectionFontWeight,
-  nodePaddingX: JY.taskPadX,
-  nodePaddingY: JY.taskPadY,
-  nodeCornerRadius: 0,
-  nodeLineWidth: STROKE_WIDTHS.outerBox,
   edgeLineWidth: STROKE_WIDTHS.connector,
   groupCornerRadius: 0,
-  groupPaddingX: 18,
-  groupPaddingY: 18,
+  groupHeaderFontSize: JY.sectionFontSize,
+  groupHeaderFontWeight: JY.sectionFontWeight,
   groupLabelPaddingX: 12,
   groupLineWidth: STROKE_WIDTHS.outerBox,
+  groupPaddingX: 18,
+  groupPaddingY: 18,
+  nodeCornerRadius: 0,
+  nodeLabelFontSize: JY.taskFontSize,
+  nodeLabelFontWeight: JY.taskFontWeight,
+  nodeLineWidth: STROKE_WIDTHS.outerBox,
+  nodePaddingX: JY.taskPadX,
+  nodePaddingY: JY.taskPadY,
 }
 
 /**
@@ -76,7 +76,7 @@ export function renderJourneySvg(
   }
   parts.push(buildStyleBlock(font, false, colors.shadow))
   const shadowDefs = buildShadowDefs(colors)
-  if (shadowDefs) parts.push(`<defs>${shadowDefs}</defs>`)
+  if (shadowDefs) {parts.push(`<defs>${shadowDefs}</defs>`)}
   parts.push(journeyStyles(style))
 
   for (const section of diagram.sections) {
@@ -112,8 +112,8 @@ function buildJourneyAccessibility(diagram: PositionedJourneyDiagram): {
   description?: string
 } {
   return {
-    title: diagram.accessibilityTitle ?? diagram.title?.text,
     description: diagram.accessibilityDescription,
+    title: diagram.accessibilityTitle ?? diagram.title?.text,
   }
 }
 
@@ -126,8 +126,8 @@ function openJourneySvgTag(
   descId: string,
 ): string {
   const attrs = ['role="img"', 'aria-roledescription="user journey"']
-  if (accessibility.title) attrs.push(`aria-labelledby="${titleId}"`)
-  if (accessibility.description) attrs.push(`aria-describedby="${descId}"`)
+  if (accessibility.title) {attrs.push(`aria-labelledby="${titleId}"`)}
+  if (accessibility.description) {attrs.push(`aria-describedby="${descId}"`)}
 
   return svgOpenTag(diagram.width, diagram.height, colors, transparent)
     .replace('>', ` ${attrs.join(' ')}>`)
@@ -152,10 +152,7 @@ function renderSectionFrame(section: PositionedJourneySection, style: ResolvedRe
   const parts: string[] = []
   const labelAttr = section.label ? ` data-label="${escapeAttr(section.label)}"` : ''
 
-  parts.push(`<g class="journey-section" data-id="${escapeAttr(section.id)}"${labelAttr}>`)
-  parts.push(
-    `  <rect class="journey-section-bg" x="${section.x}" y="${section.y}" width="${section.width}" height="${section.height}" rx="${style.groupCornerRadius}" ry="${style.groupCornerRadius}" />`
-  )
+  parts.push(`<g class="journey-section" data-id="${escapeAttr(section.id)}"${labelAttr}>`, `  <rect class="journey-section-bg" x="${section.x}" y="${section.y}" width="${section.width}" height="${section.height}" rx="${style.groupCornerRadius}" ry="${style.groupCornerRadius}" />`)
 
   if (section.headerHeight > 0) {
     parts.push(
@@ -164,13 +161,13 @@ function renderSectionFrame(section: PositionedJourneySection, style: ResolvedRe
 
     if (section.label) {
       parts.push(
-        '  ' + renderMultilineText(
+        `  ${  renderMultilineText(
           section.label,
           section.x + style.groupLabelPaddingX,
           section.y + section.headerHeight / 2,
           style.groupHeaderFontSize,
           `class="journey-section-label" text-anchor="start" font-size="${style.groupHeaderFontSize}" font-weight="${style.groupHeaderFontWeight}"${style.groupFont ? ` font-family="${escapeAttr(style.groupFont)}"` : ''}${letterAttr(style.groupLetterSpacing)}`,
-        )
+        )}`
       )
     }
   }
@@ -186,18 +183,15 @@ function renderTask(task: PositionedJourneyTask, sectionLabel: string | undefine
 
   parts.push(
     `<g class="journey-task" data-id="${escapeAttr(task.id)}" data-score="${task.score}"${sectionAttr}${actorAttr}>`
-  )
+  , `  <rect class="journey-task-card" x="${task.x}" y="${task.y}" width="${task.width}" height="${task.height}" rx="${style.cornerRadius ?? 0}" ry="${style.cornerRadius ?? 0}" />`)
   parts.push(
-    `  <rect class="journey-task-card" x="${task.x}" y="${task.y}" width="${task.width}" height="${task.height}" rx="${style.cornerRadius ?? 0}" ry="${style.cornerRadius ?? 0}" />`
-  )
-  parts.push(
-    '  ' + renderMultilineText(
+    `  ${  renderMultilineText(
       task.text,
       task.textX,
       task.textY,
       style.nodeLabelFontSize,
       `class="journey-task-text" text-anchor="start" font-size="${style.nodeLabelFontSize}" font-weight="${style.nodeLabelFontWeight}"${letterAttr(style.nodeLetterSpacing)}`,
-    )
+    )}`
   )
 
   for (const cell of task.scoreCells) {
@@ -218,27 +212,27 @@ function renderActorPill(pill: PositionedJourneyActorPill, style: ResolvedRender
   return [
     `  <g class="journey-actor" data-actor="${escapeAttr(pill.label)}">`,
     `    <rect class="journey-actor-pill" x="${pill.x}" y="${pill.y}" width="${pill.width}" height="${pill.height}" rx="${pill.height / 2}" ry="${pill.height / 2}" />`,
-    '    ' + renderMultilineText(
+    `    ${  renderMultilineText(
       pill.label,
       pill.x + pill.width / 2,
       pill.y + pill.height / 2,
       style.edgeLabelFontSize,
       `class="journey-actor-text" text-anchor="middle" font-size="${style.edgeLabelFontSize}" font-weight="${style.edgeLabelFontWeight}"${letterAttr(style.edgeLetterSpacing)}`,
-    ),
+    )}`,
     '  </g>',
   ].join('\n')
 }
 
 function letterAttr(value: number): string {
-  return value !== 0 ? ` letter-spacing="${value}"` : ''
+  return value === 0 ? '' : ` letter-spacing="${value}"`
 }
 
 function hashJourney(diagram: PositionedJourneyDiagram): string {
-  let h = 0x811c9dc5
+  let h = 0x81_1c_9d_c5
   const s = `${diagram.width}|${diagram.height}|${diagram.sections.map(s => s.tasks.length).join(',')}`
   for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
+    h ^= s.codePointAt(i)
+    h = Math.imul(h, 0x01_00_01_93)
   }
   return (h >>> 0).toString(36)
 }

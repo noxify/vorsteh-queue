@@ -15,10 +15,10 @@ import { getSeriesColor, CHART_ACCENT_FALLBACK } from './xychart/colors'
 declare const window: unknown
 
 ;(window as Record<string, unknown>).__mermaid = {
-  renderMermaidSVGAsync,
-  renderMermaidASCII,
-  diagramColorsToAsciiTheme,
-  THEMES,
-  getSeriesColor,
   CHART_ACCENT_FALLBACK,
+  THEMES,
+  diagramColorsToAsciiTheme,
+  getSeriesColor,
+  renderMermaidASCII,
+  renderMermaidSVGAsync,
 }

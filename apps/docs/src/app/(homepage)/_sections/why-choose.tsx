@@ -13,40 +13,40 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] })
 
 const reasons = [
   {
-    icon: Zap,
-    title: "Blazing Fast",
     description:
       "Optimized for high throughput with minimal overhead. Built on PostgreSQL, tuned for performance.",
+    icon: Zap,
+    title: "Blazing Fast",
   },
   {
-    icon: Shield,
-    title: "Reliable by Design",
     description:
       "Backed by PostgreSQL's ACID guarantees and advanced locking. Your jobs are safe and consistent.",
+    icon: Shield,
+    title: "Reliable by Design",
   },
   {
-    icon: Layers,
-    title: "ORM Agnostic",
     description:
       "Works with any ORM or query builder. Use it your way, without being locked in.",
+    icon: Layers,
+    title: "ORM Agnostic",
   },
   {
-    icon: Clock,
-    title: "Flexible Scheduling",
     description:
       "Cron jobs, delayed jobs, and recurring tasks. Powerful scheduling without added complexity.",
+    icon: Clock,
+    title: "Flexible Scheduling",
   },
   {
-    icon: Gauge,
-    title: "Production Ready",
     description:
       "Monitoring, retries, backoff strategies, dead letter queues, and more. Everything you need in production.",
+    icon: Gauge,
+    title: "Production Ready",
   },
   {
-    icon: Blocks,
-    title: "Open & Extensible",
     description:
       "100% open source. Clean architecture, extensible APIs, and a welcoming community.",
+    icon: Blocks,
+    title: "Open & Extensible",
   },
 ]
 

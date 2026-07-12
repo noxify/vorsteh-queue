@@ -10,8 +10,8 @@ import { MemoryQueueAdapter, Queue, Worker } from "@vorsteh-queue/core"
 const adapter = new MemoryQueueAdapter()
 const queue = new Queue(adapter, { name: "tenant-queue" })
 const worker = new Worker(adapter, {
-  name: "tenant-queue",
   concurrency: 4,
+  name: "tenant-queue",
   pollInterval: 10,
 })
 
@@ -24,7 +24,7 @@ worker.register("process-order", async (job) => {
   console.log(`[${tenantId}] Processing order #${orderId}...`)
   await new Promise((resolve) => setTimeout(resolve, 200))
   console.log(`[${tenantId}] Order #${orderId} done (${Date.now() - start}ms)`)
-  return { tenantId, orderId, processedAt: Date.now() }
+  return { orderId, processedAt: Date.now(), tenantId }
 })
 
 async function main() {
@@ -37,17 +37,17 @@ async function main() {
   for (let order = 1; order <= 3; order += 1) {
     await queue.add(
       "process-order",
-      { tenantId: "tenant-A", orderId: order },
+      { orderId: order, tenantId: "tenant-A" },
       { group: "tenant-A" }
     )
     await queue.add(
       "process-order",
-      { tenantId: "tenant-B", orderId: order },
+      { orderId: order, tenantId: "tenant-B" },
       { group: "tenant-B" }
     )
     await queue.add(
       "process-order",
-      { tenantId: "tenant-C", orderId: order },
+      { orderId: order, tenantId: "tenant-C" },
       { group: "tenant-C" }
     )
   }

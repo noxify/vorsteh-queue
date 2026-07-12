@@ -49,10 +49,10 @@ export function layoutArchitectureDiagram(
 ): PositionedArchitectureDiagram {
   const graph = architectureToMermaidGraph(diagram)
   const positioned = layoutGraphSync(graph, {
-    padding: options.padding ?? 40,
-    nodeSpacing: options.nodeSpacing ?? 36,
-    layerSpacing: options.layerSpacing ?? 56,
     componentSpacing: options.componentSpacing,
+    layerSpacing: options.layerSpacing ?? 56,
+    nodeSpacing: options.nodeSpacing ?? 36,
+    padding: options.padding ?? 40,
     style: visual ? {
       node: {
         fontSize: visual.serviceFontSize,
@@ -95,10 +95,10 @@ export function layoutArchitectureDiagram(
   const junctionBounds = new Map<string, Bounds>()
 
   for (const node of positioned.nodes) {
-    const bounds = { x: node.x, y: node.y, width: node.width, height: node.height }
+    const bounds = { height: node.height, width: node.width, x: node.x, y: node.y }
     if (servicesById.has(node.id)) {
       const service = servicesById.get(node.id)!
-      services.push({ ...bounds, id: service.id, label: service.label, icon: service.icon, parentId: service.parentId })
+      services.push({ ...bounds, icon: service.icon, id: service.id, label: service.label, parentId: service.parentId })
       serviceBounds.set(node.id, bounds)
     } else if (junctionIds.has(node.id)) {
       const junction = diagram.junctions.find((entry) => entry.id === node.id)!
@@ -115,8 +115,8 @@ export function layoutArchitectureDiagram(
     routeArchitectureEdge(edge, servicesById, serviceBounds, junctionBounds, flatGroups)
   )
 
-  let width = positioned.width
-  let height = positioned.height
+  let {width} = positioned
+  let {height} = positioned
   for (const edge of edges) {
     for (const point of edge.points) {
       width = Math.max(width, point.x + 40)
@@ -129,14 +129,14 @@ export function layoutArchitectureDiagram(
   }
 
   return {
-    width,
-    height,
-    groups,
-    services,
-    junctions,
-    edges,
-    accessibilityTitle: diagram.accessibilityTitle,
     accessibilityDescription: diagram.accessibilityDescription,
+    accessibilityTitle: diagram.accessibilityTitle,
+    edges,
+    groups,
+    height,
+    junctions,
+    services,
+    width,
   }
 }
 
@@ -147,15 +147,15 @@ function mapGroup(
 ): PositionedArchitectureGroup {
   const meta = groupsById.get(group.id)
   const mapped: PositionedArchitectureGroup = {
+    children: group.children.map((child) => mapGroup(child, groupsById, flatGroups)),
+    height: group.height,
+    icon: meta?.icon,
     id: group.id,
     label: meta?.label ?? group.id,
-    icon: meta?.icon,
     parentId: meta?.parentId,
+    width: group.width,
     x: group.x,
     y: group.y,
-    width: group.width,
-    height: group.height,
-    children: group.children.map((child) => mapGroup(child, groupsById, flatGroups)),
   }
   flatGroups.set(mapped.id, mapped)
   return mapped
@@ -166,7 +166,7 @@ function expandGroupBounds(
   services: PositionedArchitectureService[],
   junctions: PositionedArchitectureJunction[],
 ): void {
-  for (const group of groups) expandSingleGroup(group, services, junctions)
+  for (const group of groups) {expandSingleGroup(group, services, junctions)}
 }
 
 function expandSingleGroup(
@@ -175,15 +175,15 @@ function expandSingleGroup(
   junctions: PositionedArchitectureJunction[],
 ): Bounds {
   const childBounds: Bounds[] = []
-  for (const child of group.children) childBounds.push(expandSingleGroup(child, services, junctions))
+  for (const child of group.children) {childBounds.push(expandSingleGroup(child, services, junctions))}
   for (const service of services) {
-    if (service.parentId === group.id) childBounds.push(service)
+    if (service.parentId === group.id) {childBounds.push(service)}
   }
   for (const junction of junctions) {
-    if (junction.parentId === group.id) childBounds.push(junction)
+    if (junction.parentId === group.id) {childBounds.push(junction)}
   }
 
-  if (childBounds.length === 0) return group
+  if (childBounds.length === 0) {return group}
 
   const minX = Math.min(group.x, ...childBounds.map(child => child.x))
   const minY = Math.min(group.y, ...childBounds.map(child => child.y))
@@ -215,13 +215,13 @@ function routeArchitectureEdge(
   ])
 
   return {
+    hasArrowEnd: edge.hasArrowEnd,
+    hasArrowStart: edge.hasArrowStart,
+    label: edge.label,
+    labelPosition: edge.label ? edgeMidpoint(points) : undefined,
+    points,
     source: edge.source,
     target: edge.target,
-    label: edge.label,
-    hasArrowStart: edge.hasArrowStart,
-    hasArrowEnd: edge.hasArrowEnd,
-    points,
-    labelPosition: edge.label ? edgeMidpoint(points) : undefined,
   }
 }
 
@@ -257,10 +257,14 @@ function resolveEndpoint(
 
 function rectAnchor(bounds: Bounds, side: ArchitectureEndpoint['side']): Point {
   switch (side) {
-    case 'L': return { x: bounds.x, y: bounds.y + bounds.height / 2 }
-    case 'R': return { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 }
-    case 'T': return { x: bounds.x + bounds.width / 2, y: bounds.y }
-    case 'B': return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height }
+    case 'L': { return { x: bounds.x, y: bounds.y + bounds.height / 2 }
+    }
+    case 'R': { return { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 }
+    }
+    case 'T': { return { x: bounds.x + bounds.width / 2, y: bounds.y }
+    }
+    case 'B': { return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height }
+    }
   }
 }
 
@@ -270,10 +274,14 @@ function circleAnchor(bounds: Bounds, side: ArchitectureEndpoint['side']): Point
   const r = Math.min(bounds.width, bounds.height) / 2
 
   switch (side) {
-    case 'L': return { x: cx - r, y: cy }
-    case 'R': return { x: cx + r, y: cy }
-    case 'T': return { x: cx, y: cy - r }
-    case 'B': return { x: cx, y: cy + r }
+    case 'L': { return { x: cx - r, y: cy }
+    }
+    case 'R': { return { x: cx + r, y: cy }
+    }
+    case 'T': { return { x: cx, y: cy - r }
+    }
+    case 'B': { return { x: cx, y: cy + r }
+    }
   }
 }
 
@@ -282,26 +290,30 @@ function groupAnchor(group: PositionedArchitectureGroup, child: Bounds, side: Ar
   const childCy = child.y + child.height / 2
 
   switch (side) {
-    case 'L':
+    case 'L': {
       return {
         x: group.x,
         y: clamp(childCy, group.y + GROUP_EDGE_PAD, group.y + group.height - GROUP_EDGE_PAD),
       }
-    case 'R':
+    }
+    case 'R': {
       return {
         x: group.x + group.width,
         y: clamp(childCy, group.y + GROUP_EDGE_PAD, group.y + group.height - GROUP_EDGE_PAD),
       }
-    case 'T':
+    }
+    case 'T': {
       return {
         x: clamp(childCx, group.x + GROUP_EDGE_PAD, group.x + group.width - GROUP_EDGE_PAD),
         y: group.y,
       }
-    case 'B':
+    }
+    case 'B': {
       return {
         x: clamp(childCx, group.x + GROUP_EDGE_PAD, group.x + group.width - GROUP_EDGE_PAD),
         y: group.y + group.height,
       }
+    }
   }
 }
 
@@ -311,7 +323,7 @@ function routeBetween(
   sourceSide: ArchitectureEndpoint['side'],
   targetSide: ArchitectureEndpoint['side'],
 ): Point[] {
-  if (start.x === end.x || start.y === end.y) return []
+  if (start.x === end.x || start.y === end.y) {return []}
 
   const sourceAxis = sideAxis(sourceSide)
   const targetAxis = sideAxis(targetSide)
@@ -343,10 +355,14 @@ function sideAxis(side: ArchitectureEndpoint['side']): 'horizontal' | 'vertical'
 
 function movePoint(point: Point, side: ArchitectureEndpoint['side'], distance: number): Point {
   switch (side) {
-    case 'L': return { x: point.x - distance, y: point.y }
-    case 'R': return { x: point.x + distance, y: point.y }
-    case 'T': return { x: point.x, y: point.y - distance }
-    case 'B': return { x: point.x, y: point.y + distance }
+    case 'L': { return { x: point.x - distance, y: point.y }
+    }
+    case 'R': { return { x: point.x + distance, y: point.y }
+    }
+    case 'T': { return { x: point.x, y: point.y - distance }
+    }
+    case 'B': { return { x: point.x, y: point.y + distance }
+    }
   }
 }
 
@@ -354,7 +370,7 @@ function simplifyOrthogonalPoints(points: Point[]): Point[] {
   const simplified: Point[] = []
 
   for (const point of points) {
-    const last = simplified[simplified.length - 1]
+    const last = simplified.at(-1)
     if (last && last.x === point.x && last.y === point.y) {
       continue
     }
@@ -382,8 +398,8 @@ function simplifyOrthogonalPoints(points: Point[]): Point[] {
 }
 
 function edgeMidpoint(points: Point[]): Point {
-  if (points.length === 0) return { x: 0, y: 0 }
-  if (points.length === 1) return points[0]!
+  if (points.length === 0) {return { x: 0, y: 0 }}
+  if (points.length === 1) {return points[0]!}
 
   let total = 0
   for (let i = 1; i < points.length; i++) {
@@ -405,7 +421,7 @@ function edgeMidpoint(points: Point[]): Point {
     remaining -= length
   }
 
-  return points[points.length - 1]!
+  return points.at(-1)!
 }
 
 function segmentLength(a: Point, b: Point): number {

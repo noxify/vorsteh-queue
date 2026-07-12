@@ -48,9 +48,9 @@ export function PanZoomDialog({
   const previewContentRef = React.useRef<HTMLDivElement>(null)
 
   const [transform, setTransform] = React.useState<Transform>({
+    scale: initialZoom,
     x: 0,
     y: 0,
-    scale: initialZoom,
   })
 
   const [isPanning, setIsPanning] = React.useState(false)
@@ -113,7 +113,7 @@ export function PanZoomDialog({
   const centerView = React.useCallback(
     (scale: number) => {
       // Base centering is handled by CSS. x/y are only delta offsets from center.
-      setTransform({ x: 0, y: 0, scale })
+      setTransform({ scale, x: 0, y: 0 })
     },
     [setTransform]
   )
@@ -211,9 +211,9 @@ export function PanZoomDialog({
         const newY = point.y - (point.y - transform.y) * scaleFactor
 
         setTransform({
+          scale: newScale,
           x: newX,
           y: newY,
-          scale: newScale,
         })
       }
     },

@@ -38,6 +38,6 @@ export async function prepareTable() {
       "Migration error:",
       stderr || (error instanceof Error ? error.message : error)
     )
-    return { result: false, error }
+    return { error, result: false }
   }
 }

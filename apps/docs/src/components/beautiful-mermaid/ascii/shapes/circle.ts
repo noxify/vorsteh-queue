@@ -16,12 +16,12 @@ import { getCorners } from './corners'
  *   ◯─────────◯
  */
 export const circleRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions: getBoxDimensions,
 
   render(label, dimensions, options) {
     const corners = getCorners('circle', options.useAscii)
     return renderBox(label, dimensions, corners, options.useAscii)
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }

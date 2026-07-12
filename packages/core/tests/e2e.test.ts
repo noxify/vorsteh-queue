@@ -26,9 +26,9 @@ describe("E2E: Queue + Worker", () => {
     adapter = new MemoryQueueAdapter()
     queue = new Queue(adapter, { name: "e2e-queue" })
     worker = new Worker(adapter, {
+      concurrency: 3,
       name: "e2e-queue",
       pollInterval: 10,
-      concurrency: 3,
     })
     await queue.connect()
   })
@@ -258,14 +258,14 @@ describe("E2E: Queue + Worker", () => {
       await queue.add(
         "unique-job",
         { v: 1 },
-        { unique: { key: "u1", action: "reject" } }
+        { unique: { action: "reject", key: "u1" } }
       )
 
       await expect(
         queue.add(
           "unique-job",
           { v: 2 },
-          { unique: { key: "u1", action: "reject" } }
+          { unique: { action: "reject", key: "u1" } }
         )
       ).rejects.toThrow(DuplicateJobError)
     })
@@ -277,14 +277,14 @@ describe("E2E: Queue + Worker", () => {
         "unique-job",
         { v: 1 },
         {
-          unique: { key: "replace-key", action: "replace" },
+          unique: { action: "replace", key: "replace-key" },
         }
       )
       const second = await queue.add(
         "unique-job",
         { v: 2 },
         {
-          unique: { key: "replace-key", action: "replace" },
+          unique: { action: "replace", key: "replace-key" },
         }
       )
 
@@ -344,7 +344,7 @@ describe("E2E: Queue + Worker", () => {
           batches.push(jobs.map((j) => (j.payload as { n: number }).n))
           return jobs.map(() => ({ ok: true }))
         },
-        { minSize: 2, maxSize: 5 }
+        { maxSize: 5, minSize: 2 }
       )
 
       await queue.addJobs("batch-job", [{ n: 1 }, { n: 2 }, { n: 3 }])
@@ -369,7 +369,7 @@ describe("E2E: Queue + Worker", () => {
       const result = await queue.enqueueAndWait<
         { a: number; b: number },
         { sum: number }
-      >("compute", { a: 3, b: 4 }, { waitTimeout: 5000, pollInterval: 10 })
+      >("compute", { a: 3, b: 4 }, { pollInterval: 10, waitTimeout: 5000 })
 
       expect(result).toStrictEqual({ sum: 7 })
     })
@@ -382,7 +382,7 @@ describe("E2E: Queue + Worker", () => {
       worker.start()
 
       await expect(
-        queue.enqueueAndWait("slow", {}, { waitTimeout: 50, pollInterval: 10 })
+        queue.enqueueAndWait("slow", {}, { pollInterval: 10, waitTimeout: 50 })
       ).rejects.toThrow("did not complete within")
     })
   })

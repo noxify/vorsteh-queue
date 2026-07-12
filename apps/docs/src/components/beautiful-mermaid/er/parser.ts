@@ -109,15 +109,15 @@ function parseAccessibilityLine(line: string, directive: 'accTitle' | 'accDescr'
 
 function collectAccessibilityBlock(initial: string, lines: string[], startIndex: number): { text: string; nextIndex: number } {
   const initialEnd = initial.indexOf('}')
-  if (initialEnd !== -1) return { text: initial.slice(0, initialEnd).trim(), nextIndex: startIndex }
+  if (initialEnd !== -1) {return { text: initial.slice(0, initialEnd).trim(), nextIndex: startIndex }}
   const parts = [initial.trim()].filter(Boolean)
   for (let i = startIndex + 1; i < lines.length; i++) {
     const line = lines[i]!
     const end = line.indexOf('}')
     if (end !== -1) {
       const beforeBrace = line.slice(0, end).trim()
-      if (beforeBrace) parts.push(beforeBrace)
-      return { text: parts.join('\n'), nextIndex: i }
+      if (beforeBrace) {parts.push(beforeBrace)}
+      return { nextIndex: i, text: parts.join('\n') }
     }
     parts.push(line)
   }
@@ -128,7 +128,7 @@ function collectAccessibilityBlock(initial: string, lines: string[], startIndex:
 function ensureEntity(entityMap: Map<string, ErEntity>, id: string): ErEntity {
   let entity = entityMap.get(id)
   if (!entity) {
-    entity = { id, label: id, attributes: [] }
+    entity = { attributes: [], id, label: id }
     entityMap.set(id, entity)
   }
   return entity
@@ -138,7 +138,7 @@ function ensureEntity(entityMap: Map<string, ErEntity>, id: string): ErEntity {
 function parseAttribute(line: string): ErAttribute | null {
   // Format: type name [PK|FK|UK [...]] ["comment"]
   const match = line.match(/^(\S+)\s+(\S+)(?:\s+(.+))?$/)
-  if (!match) return null
+  if (!match) {return null}
 
   const type = match[1]!
   const name = match[2]!
@@ -163,7 +163,7 @@ function parseAttribute(line: string): ErAttribute | null {
     }
   }
 
-  return { type, name, keys, comment }
+  return { comment, keys, name, type }
 }
 
 /**
@@ -179,18 +179,18 @@ function parseAttribute(line: string): ErAttribute | null {
 function parseRelationshipLine(line: string): ErRelationship | null {
   // Match: ENTITY1 <cardinality_and_line> ENTITY2 : label
   const match = line.match(/^(\S+)\s+([|o}{]+(?:--|\.\.)[|o}{]+)\s+(\S+)\s*:\s*(.+)$/)
-  if (!match) return null
+  if (!match) {return null}
 
   const entity1 = match[1]!
   const cardinalityStr = match[2]!
   const entity2 = match[3]!
   // Strip surrounding quotes if present, then normalize br tags
-  const rawLabel = match[4]!.trim().replace(/^["']|["']$/g, '')
+  const rawLabel = match[4]!.trim().replaceAll(/^["']|["']$/g, '')
   const label = normalizeBrTags(rawLabel)
 
   // Split the cardinality string into left side, line style, right side
   const lineMatch = cardinalityStr.match(/^([|o}{]+)(--|\.\.?)([|o}{]+)$/)
-  if (!lineMatch) return null
+  if (!lineMatch) {return null}
 
   const leftStr = lineMatch[1]!
   const lineStyle = lineMatch[2]!
@@ -200,24 +200,24 @@ function parseRelationshipLine(line: string): ErRelationship | null {
   const cardinality2 = parseCardinality(rightStr)
   const identifying = lineStyle === '--'
 
-  if (!cardinality1 || !cardinality2) return null
+  if (!cardinality1 || !cardinality2) {return null}
 
-  return { entity1, entity2, cardinality1, cardinality2, label, identifying }
+  return { cardinality1, cardinality2, entity1, entity2, identifying, label }
 }
 
 /** Parse a cardinality notation string into a Cardinality type */
 function parseCardinality(str: string): Cardinality | null {
   // Normalize: sort the characters to handle both orders (e.g., |o and o|)
-  const sorted = str.split('').sort().join('')
+  const sorted = [...str].toSorted().join('')
 
   // Exact one: || → sorted "||"
-  if (sorted === '||') return 'one'
+  if (sorted === '||') {return 'one'}
   // Zero or one: o| or |o → sorted "o|" (o=111 < |=124 in char codes)
-  if (sorted === 'o|') return 'zero-one'
+  if (sorted === 'o|') {return 'zero-one'}
   // One or more: }| or |{ → sorted "|}" or "{|"
-  if (sorted === '|}' || sorted === '{|') return 'many'
+  if (sorted === '|}' || sorted === '{|') {return 'many'}
   // Zero or more: o{ or {o → sorted "{o" or "o{"
-  if (sorted === '{o' || sorted === 'o{') return 'zero-many'
+  if (sorted === '{o' || sorted === 'o{') {return 'zero-many'}
 
   return null
 }

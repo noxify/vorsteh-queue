@@ -7,9 +7,9 @@ describe(calculateRetryDelay, () => {
     it("should increase delay exponentially", () => {
       /* eslint-disable vitest/max-expects */
       const strategy = {
-        type: "exponential" as const,
         delay: 1000,
         maxDelay: 60_000,
+        type: "exponential" as const,
       }
 
       const delay0 = calculateRetryDelay(strategy, 0)
@@ -32,9 +32,9 @@ describe(calculateRetryDelay, () => {
 
     it("should cap at maxDelay", () => {
       const strategy = {
-        type: "exponential" as const,
         delay: 1000,
         maxDelay: 5000,
+        type: "exponential" as const,
       }
 
       const delay = calculateRetryDelay(strategy, 10) // 1000 * 2^10 = 1_024_000 >> 5000
@@ -46,9 +46,9 @@ describe(calculateRetryDelay, () => {
     it("should increase delay linearly", () => {
       /* eslint-disable vitest/max-expects */
       const strategy = {
-        type: "linear" as const,
         delay: 1000,
         maxDelay: 10_000,
+        type: "linear" as const,
       }
 
       expect(calculateRetryDelay(strategy, 0)).toBe(1000) // 1000 * (0+1)
@@ -59,7 +59,7 @@ describe(calculateRetryDelay, () => {
     })
 
     it("should cap at maxDelay", () => {
-      const strategy = { type: "linear" as const, delay: 1000, maxDelay: 3000 }
+      const strategy = { delay: 1000, maxDelay: 3000, type: "linear" as const }
 
       expect(calculateRetryDelay(strategy, 5)).toBe(3000)
       expect(calculateRetryDelay(strategy, 100)).toBe(3000)
@@ -69,7 +69,7 @@ describe(calculateRetryDelay, () => {
   describe("fixed strategy", () => {
     it("should always return the same delay", () => {
       /* eslint-disable vitest/max-expects */
-      const strategy = { type: "fixed" as const, delay: 2000, maxDelay: 10_000 }
+      const strategy = { delay: 2000, maxDelay: 10_000, type: "fixed" as const }
 
       expect(calculateRetryDelay(strategy, 0)).toBe(2000)
       expect(calculateRetryDelay(strategy, 1)).toBe(2000)
@@ -94,9 +94,9 @@ describe(calculateRetryDelay, () => {
   describe("default retry strategy", () => {
     it("should be exponential with 1s base and 30s max", () => {
       expect(DEFAULT_RETRY_STRATEGY).toStrictEqual({
-        type: "exponential",
         delay: 1000,
         maxDelay: 30_000,
+        type: "exponential",
       })
     })
   })

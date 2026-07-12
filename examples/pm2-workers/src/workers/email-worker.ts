@@ -15,8 +15,8 @@ interface SendEmailResult {
 
 // Worker for the email queue
 const worker = new Worker(adapter, {
-  name: "email-queue",
   concurrency: 3,
+  name: "email-queue",
   removeOnComplete: 100,
   removeOnFail: 50,
 })

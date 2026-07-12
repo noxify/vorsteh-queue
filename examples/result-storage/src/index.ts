@@ -18,8 +18,8 @@ interface ProcessDataResult {
 }
 
 const worker = new Worker(adapter, {
-  name: "result-demo",
   concurrency: 2,
+  name: "result-demo",
   removeOnComplete: 10,
   removeOnFail: 5,
 })
@@ -47,7 +47,7 @@ worker.register<ProcessDataPayload, ProcessDataResult>(
       )
     }
 
-    return { processed, failed, duration: Date.now() - startTime }
+    return { duration: Date.now() - startTime, failed, processed }
   }
 )
 
@@ -64,8 +64,8 @@ async function main() {
   await queue.connect()
 
   await queue.add("process-data", {
-    items: Array.from({ length: 50 }, (_, i) => `item-${i + 1}`),
     batchSize: 10,
+    items: Array.from({ length: 50 }, (_, i) => `item-${i + 1}`),
   })
 
   worker.start()

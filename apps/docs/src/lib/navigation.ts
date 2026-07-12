@@ -65,8 +65,8 @@ async function buildCollectionTreeNode(
   )
 
   return {
-    entry,
     children: children.filter((child): child is TreeNode => child !== null),
+    entry,
   }
 }
 
@@ -113,14 +113,14 @@ async function mapTreeNode(
     : []
 
   return {
+    children,
+    external,
+    favorite: frontmatter?.favorite ?? false,
     navBadge: frontmatter?.navBadge,
     navIcon: frontmatter?.navIcon,
     separator: frontmatter?.separator ?? false,
     title,
     url,
-    external,
-    children,
-    favorite: frontmatter?.favorite ?? false,
   }
 }
 
@@ -218,9 +218,9 @@ export const getCollectionNavigation = cache(
       for (const child of rootNode.children) {
         if (child.children.length === 0) {
           // Leaf item — render as a standalone group without a label
-          groups.push({ label: "", items: [child] })
+          groups.push({ items: [child], label: "" })
         } else {
-          groups.push({ label: child.title, items: child.children })
+          groups.push({ items: child.children, label: child.title })
         }
       }
 

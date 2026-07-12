@@ -6,19 +6,19 @@ import type { GlobalOptions } from "../transport/with-transport"
 import { withTransport } from "../transport/with-transport"
 
 const STATUS_ICONS: Record<string, string> = {
-  pending: "○",
-  delayed: "◷",
-  processing: "⟳",
-  completed: "✓",
-  failed: "✗",
   cancelled: "⊘",
+  completed: "✓",
   dead: "☠",
+  delayed: "◷",
+  failed: "✗",
+  pending: "○",
+  processing: "⟳",
   "waiting-children": "⏳",
 }
 
 function renderTree(node: FlowNode, prefix = "", isLast = true): string {
   const icon = STATUS_ICONS[node.job.status] ?? "?"
-  const connector = prefix === "" ? "" : isLast ? "└── " : "├── "
+  const connector = prefix === "" ? "" : (isLast ? "└── " : "├── ")
   const statusColor = node.job.status === "completed" ? "✓" : icon
 
   let line = `${prefix}${connector}${node.job.name} (${node.job.status}) ${statusColor}`
@@ -28,7 +28,7 @@ function renderTree(node: FlowNode, prefix = "", isLast = true): string {
   }
 
   const lines = [line]
-  const childPrefix = prefix + (prefix === "" ? "" : isLast ? "    " : "│   ")
+  const childPrefix = prefix + (prefix === "" ? "" : (isLast ? "    " : "│   "))
 
   for (let i = 0; i < node.children.length; i += 1) {
     const child = node.children[i]
@@ -50,7 +50,7 @@ export function createFlowCommand() {
       typeof options
 
     await withTransport(
-      { url: globalOpts.url, token: globalOpts.token, queue: globalOpts.queue },
+      { queue: globalOpts.queue, token: globalOpts.token, url: globalOpts.url },
       async (transport) => {
         const tree = await transport.getFlowTree(id)
 

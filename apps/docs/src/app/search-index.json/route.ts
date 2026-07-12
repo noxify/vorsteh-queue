@@ -25,14 +25,14 @@ async function buildPersistedSearchIndexJson(): Promise<string> {
 
   const db = create({
     schema: {
-      page_id: "string",
-      type: "enum" as const,
-      title: "string",
-      section: "string",
-      heading: "string",
-      content: "string",
-      url: "string",
       breadcrumb: "string",
+      content: "string",
+      heading: "string",
+      page_id: "string",
+      section: "string",
+      title: "string",
+      type: "enum" as const,
+      url: "string",
     },
   })
   await insertMultiple(db, docs)

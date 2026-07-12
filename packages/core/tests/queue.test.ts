@@ -62,17 +62,17 @@ describe("Queue (Producer)", () => {
         "sync",
         {},
         {
-          unique: { key: "sync:123", action: "reject" },
+          unique: { action: "reject", key: "sync:123" },
         }
       )
       expect(job.uniqueKey).toBe("sync:123")
     })
 
     it("should reject duplicate unique jobs", async () => {
-      await queue.add("sync", {}, { unique: { key: "dup", action: "reject" } })
+      await queue.add("sync", {}, { unique: { action: "reject", key: "dup" } })
 
       await expect(
-        queue.add("sync", {}, { unique: { key: "dup", action: "reject" } })
+        queue.add("sync", {}, { unique: { action: "reject", key: "dup" } })
       ).rejects.toThrow(DuplicateJobError)
     })
 
@@ -81,7 +81,7 @@ describe("Queue (Producer)", () => {
         "sync",
         { v: 1 },
         {
-          unique: { key: "replace-me", action: "replace" },
+          unique: { action: "replace", key: "replace-me" },
         }
       )
 
@@ -89,7 +89,7 @@ describe("Queue (Producer)", () => {
         "sync",
         { v: 2 },
         {
-          unique: { key: "replace-me", action: "replace" },
+          unique: { action: "replace", key: "replace-me" },
         }
       )
 
@@ -218,8 +218,8 @@ describe("Queue (Producer)", () => {
   describe("defaultJobOptions", () => {
     it("should apply default options from config", async () => {
       const customQueue = new Queue(adapter, {
+        defaultJobOptions: { maxAttempts: 5, priority: 1 },
         name: "test-queue",
-        defaultJobOptions: { priority: 1, maxAttempts: 5 },
       })
       await customQueue.connect()
 
@@ -230,8 +230,8 @@ describe("Queue (Producer)", () => {
 
     it("should allow per-job override of defaults", async () => {
       const customQueue = new Queue(adapter, {
-        name: "test-queue",
         defaultJobOptions: { priority: 1 },
+        name: "test-queue",
       })
       await customQueue.connect()
 
@@ -244,8 +244,8 @@ describe("Queue (Producer)", () => {
     it("should retry a failed job", async () => {
       const job = await queue.add("failing", {})
       await adapter.updateJobStatus(job.id, {
+        error: { message: "fail", name: "Error" },
         status: "failed",
-        error: { name: "Error", message: "fail" },
       })
 
       const success = await queue.retry(job.id)

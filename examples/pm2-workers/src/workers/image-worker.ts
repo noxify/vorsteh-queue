@@ -14,8 +14,8 @@ interface ProcessImageResult {
 }
 
 const worker = new Worker(adapter, {
-  name: "image-queue",
   concurrency: 2,
+  name: "image-queue",
   removeOnComplete: 50,
   removeOnFail: 20,
 })

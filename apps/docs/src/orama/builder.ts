@@ -125,7 +125,7 @@ export function splitContentByHeadings(
   }
 
   if (headingMatches.length === 0) {
-    return [{ heading: null, content: withoutFrontmatter }]
+    return [{ content: withoutFrontmatter, heading: null }]
   }
 
   const normalizedSectionMap = new Map<string, HeadingSection[]>()
@@ -139,12 +139,12 @@ export function splitContentByHeadings(
   const chunks: { heading: HeadingSection | null; content: string }[] = []
   const [firstHeadingMatch] = headingMatches
   if (!firstHeadingMatch) {
-    return [{ heading: null, content: withoutFrontmatter }]
+    return [{ content: withoutFrontmatter, heading: null }]
   }
 
   const introLines = lines.slice(0, firstHeadingMatch.lineIndex)
   if (introLines.length > 0) {
-    chunks.push({ heading: null, content: introLines.join("\n") })
+    chunks.push({ content: introLines.join("\n"), heading: null })
   }
 
   for (const [index, match] of headingMatches.entries()) {
@@ -161,7 +161,7 @@ export function splitContentByHeadings(
     const matchingSections = normalizedSectionMap.get(key)
     const heading = matchingSections?.shift() ?? null
 
-    chunks.push({ heading, content: chunkContent })
+    chunks.push({ content: chunkContent, heading })
   }
 
   return chunks
@@ -224,29 +224,29 @@ export async function buildSearchDocuments(
 
       // Page document (title + description)
       allDocs.push({
+        breadcrumb: breadcrumbStr,
+        content: metadata?.description ?? title,
+        heading: "",
         id: pathname,
         page_id: pathname,
-        type: "page",
-        title,
         section: sectionName,
-        heading: "",
-        content: metadata?.description ?? title,
+        title,
+        type: "page",
         url: pathname,
-        breadcrumb: breadcrumbStr,
       })
 
       // Heading documents
       for (const s of sections) {
         allDocs.push({
+          breadcrumb: breadcrumbStr,
+          content: s.title,
+          heading: s.title,
           id: nextId(),
           page_id: pathname,
-          type: "heading",
-          title,
           section: sectionName,
-          heading: s.title,
-          content: s.title,
+          title,
+          type: "heading",
           url: `${pathname}#${s.id}`,
-          breadcrumb: breadcrumbStr,
         })
       }
 
@@ -259,15 +259,15 @@ export async function buildSearchDocuments(
         }
 
         allDocs.push({
+          breadcrumb: breadcrumbStr,
+          content: cleaned,
+          heading: chunk.heading?.title ?? "",
           id: nextId(),
           page_id: pathname,
-          type: "text",
-          title,
           section: sectionName,
-          heading: chunk.heading?.title ?? "",
-          content: cleaned,
+          title,
+          type: "text",
           url: chunk.heading ? `${pathname}#${chunk.heading.id}` : pathname,
-          breadcrumb: breadcrumbStr,
         })
       }
     },

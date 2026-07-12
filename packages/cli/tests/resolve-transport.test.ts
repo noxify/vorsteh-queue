@@ -12,19 +12,19 @@ vi.mock("../src/config", () => ({
 // Mock direct/graphql transport factories
 vi.mock("../src/transport/direct", () => ({
   createDirectTransport: vi.fn((_adapter, _queueName) => ({
-    type: "direct",
     connect: vi.fn(),
     disconnect: vi.fn(),
+    type: "direct",
   })),
 }))
 
 vi.mock("../src/transport/graphql", () => ({
   createGraphQLTransport: vi.fn((url, token, _queueName) => ({
-    type: "graphql",
-    url,
-    token,
     connect: vi.fn(),
     disconnect: vi.fn(),
+    token,
+    type: "graphql",
+    url,
   })),
 }))
 
@@ -43,7 +43,7 @@ const invalidUrlArb = fc
 const tokenArb = fc.string({ minLength: 1 })
 
 const queueNameArb = fc
-  .string({ minLength: 1, maxLength: 255 })
+  .string({ maxLength: 255, minLength: 1 })
   .filter((s) => s.trim().length > 0)
 
 describe("resolveTransport", () => {
@@ -76,8 +76,8 @@ describe("resolveTransport", () => {
           delete process.env.VORSTEH_QUEUE_TOKEN
 
           const result = (await resolveTransport({
-            url,
             queue,
+            url,
           })) as unknown as {
             type: string
           }
@@ -123,7 +123,7 @@ describe("resolveTransport", () => {
       const { loadCliConfig } = await import("../src/config")
       const { createDirectTransport } = await import("../src/transport/direct")
       const mockAdapter = { setQueueName: vi.fn() }
-      const mockQueue = { name: "test-queue", adapter: mockAdapter }
+      const mockQueue = { adapter: mockAdapter, name: "test-queue" }
 
       vi.mocked(loadCliConfig).mockResolvedValue({
         adapter: mockAdapter,
@@ -167,8 +167,8 @@ describe("resolveTransport", () => {
             delete process.env.VORSTEH_QUEUE_TOKEN
 
             const result = (await resolveTransport({
-              url: flagUrl,
               queue,
+              url: flagUrl,
             })) as unknown as {
               type: string
               url: string
@@ -211,7 +211,7 @@ describe("resolveTransport", () => {
             process.env.VORSTEH_QUEUE_TOKEN = envToken
             delete process.env.VORSTEH_QUEUE_URL
 
-            await resolveTransport({ url, token: flagToken, queue })
+            await resolveTransport({ queue, token: flagToken, url })
 
             expect(createGraphQLTransport).toHaveBeenCalledWith(
               url,
@@ -332,7 +332,7 @@ describe("resolveTransport", () => {
       delete process.env.VORSTEH_QUEUE_TOKEN
 
       const url = "https://example.com/graphql"
-      await resolveTransport({ url, queue: "my-queue" })
+      await resolveTransport({ queue: "my-queue", url })
 
       expect(createGraphQLTransport).toHaveBeenCalledWith(
         url,
@@ -350,8 +350,8 @@ describe("resolveTransport", () => {
 
       const url = "https://example.com/graphql"
       const result = (await resolveTransport({
-        url,
         queue: "my-queue",
+        url,
       })) as unknown as {
         type: string
       }
@@ -369,14 +369,14 @@ describe("resolveTransport", () => {
       const { createDirectTransport } = await import("../src/transport/direct")
       const mockAdapter = { setQueueName: vi.fn() }
       const mockQueues = [
-        { name: "email-queue", adapter: mockAdapter },
-        { name: "report-queue", adapter: mockAdapter },
+        { adapter: mockAdapter, name: "email-queue" },
+        { adapter: mockAdapter, name: "report-queue" },
       ]
 
       vi.mocked(loadCliConfig).mockResolvedValue({
         adapter: mockAdapter,
-        queues: mockQueues,
         defaultQueue: "email-queue",
+        queues: mockQueues,
       } as never)
 
       delete process.env.VORSTEH_QUEUE_URL
@@ -398,14 +398,14 @@ describe("resolveTransport", () => {
       const { createDirectTransport } = await import("../src/transport/direct")
       const mockAdapter = { setQueueName: vi.fn() }
       const mockQueues = [
-        { name: "email-queue", adapter: mockAdapter },
-        { name: "report-queue", adapter: mockAdapter },
+        { adapter: mockAdapter, name: "email-queue" },
+        { adapter: mockAdapter, name: "report-queue" },
       ]
 
       vi.mocked(loadCliConfig).mockResolvedValue({
         adapter: mockAdapter,
-        queues: mockQueues,
         defaultQueue: "email-queue",
+        queues: mockQueues,
       } as never)
 
       delete process.env.VORSTEH_QUEUE_URL

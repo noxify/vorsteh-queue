@@ -25,13 +25,13 @@ import {
 } from "./ui/sidebar"
 
 const badgeVariants: Record<Exclude<NavBadge, "pulse">, string> = {
+  beta: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400",
+  deprecated: "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400",
+  experimental:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400",
   new: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400",
   updated:
     "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400",
-  beta: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400",
-  experimental:
-    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400",
-  deprecated: "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400",
 }
 
 function PulseDot({ className }: { className?: string }) {
@@ -50,7 +50,7 @@ export function SidebarItem({
   isSubItem?: boolean
 }) {
   const pathname = usePathname()
-  const isActive = current({ pathname, item })
+  const isActive = current({ item, pathname })
   const icon = getNavIconComponent(item.navIcon)
 
   if (!item.children || item.children.length === 0) {
@@ -111,11 +111,11 @@ export function SidebarItem({
           )}
           {item.navBadge === "pulse" ? (
             <PulseDot className="top-1/2 right-2 -translate-y-1/2" />
-          ) : item.navBadge ? (
+          ) : (item.navBadge ? (
             <SidebarMenuBadge className={badgeVariants[item.navBadge]}>
               {item.navBadge}
             </SidebarMenuBadge>
-          ) : null}
+          ) : null)}
         </SidebarMenuItem>
       </>
     )
@@ -169,13 +169,13 @@ export function SidebarItem({
             </SidebarMenuButton>
             {item.navBadge === "pulse" ? (
               <PulseDot className="top-1/2 right-8 -translate-y-1/2" />
-            ) : item.navBadge ? (
+            ) : (item.navBadge ? (
               <SidebarMenuBadge
                 className={cn(badgeVariants[item.navBadge], "right-7")}
               >
                 {item.navBadge}
               </SidebarMenuBadge>
-            ) : null}
+            ) : null)}
           </div>
           <CollapsibleContent>
             <SidebarMenuSub className="mr-0 ml-2 pr-0 pl-2">

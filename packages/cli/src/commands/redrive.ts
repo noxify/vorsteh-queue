@@ -12,7 +12,7 @@ export function createRedriveCommand() {
       typeof options
 
     await withTransport(
-      { url: globalOpts.url, token: globalOpts.token, queue: globalOpts.queue },
+      { queue: globalOpts.queue, token: globalOpts.token, url: globalOpts.url },
       async (transport) => {
         if (options.all) {
           const count = await transport.redriveAll(
@@ -35,7 +35,7 @@ export function createRedriveCommand() {
         await transport.redriveJob(id)
 
         if (options.json) {
-          consola.log(JSON.stringify({ success: true, id }))
+          consola.log(JSON.stringify({ id, success: true }))
           return
         }
         consola.success(`Job "${id}" redriven to pending`)

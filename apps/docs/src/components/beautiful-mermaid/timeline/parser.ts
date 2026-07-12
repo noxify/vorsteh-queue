@@ -29,7 +29,7 @@ export function parseTimelineDiagram(lines: string[]): TimelineDiagram {
   let eventIndex = 0
 
   const ensureSection = (): TimelineSection => {
-    if (currentSection) return currentSection
+    if (currentSection) {return currentSection}
     currentSection = {
       id: `section-${sectionIndex++}`,
       periods: [],
@@ -41,7 +41,7 @@ export function parseTimelineDiagram(lines: string[]): TimelineDiagram {
   const pushEvents = (period: TimelinePeriod, rawEvents: string[]): void => {
     for (const rawEvent of rawEvents) {
       const normalized = normalizeBrTags(rawEvent.trim())
-      if (!normalized) continue
+      if (!normalized) {continue}
 
       const event: TimelineEvent = {
         id: `event-${eventIndex++}`,
@@ -54,8 +54,8 @@ export function parseTimelineDiagram(lines: string[]): TimelineDiagram {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i]!
 
-    if (/^timeline\b/i.test(line)) continue
-    if (/^#/.test(line)) continue
+    if (/^timeline\b/i.test(line)) {continue}
+    if (line.startsWith('#')) {continue}
 
     const titleMatch = line.match(/^title\s+(.+)$/i)
     if (titleMatch) {
@@ -127,9 +127,9 @@ export function parseTimelineDiagram(lines: string[]): TimelineDiagram {
       }
 
       const period: TimelinePeriod = {
+        events: [],
         id: `period-${periodIndex++}`,
         label: periodLabel,
-        events: [],
       }
 
       pushEvents(period, events)
@@ -158,8 +158,8 @@ function splitTimelineEvents(raw: string): string[] {
   let index = 0
 
   while (index < raw.length) {
-    while (index < raw.length && /\s/.test(raw[index]!)) index++
-    if (index >= raw.length) break
+    while (index < raw.length && /\s/.test(raw[index]!)) {index++}
+    if (index >= raw.length) {break}
 
     if (raw[index] !== ':') {
       throw new Error(`Invalid timeline event list: "${raw}"`)
@@ -170,11 +170,11 @@ function splitTimelineEvents(raw: string): string[] {
       throw new Error(`Timeline events must use ": " separators: "${raw}"`)
     }
 
-    while (index < raw.length && /\s/.test(raw[index]!)) index++
+    while (index < raw.length && /\s/.test(raw[index]!)) {index++}
     const start = index
 
     while (index < raw.length) {
-      if (raw[index] === ':' && /\s/.test(raw[index + 1] ?? '')) break
+      if (raw[index] === ':' && /\s/.test(raw[index + 1] ?? '')) {break}
       index++
     }
 

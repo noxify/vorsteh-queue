@@ -10,26 +10,27 @@ vi.mock("../src/transport/resolve", () => ({
 }))
 
 import { resolveTransport } from "../src/transport/resolve"
+
 const mockedResolveTransport = vi.mocked(resolveTransport)
 
 function createMockTransport(
   connectBehavior: () => Promise<void> = async () => {}
 ) {
   return {
-    connect: vi.fn(connectBehavior),
-    disconnect: vi.fn(async () => {}),
-    getStats: vi.fn(),
-    getJob: vi.fn(),
-    getDeadJobs: vi.fn(),
     cancelJob: vi.fn(),
+    clearJobs: vi.fn(),
+    connect: vi.fn(connectBehavior),
+    deleteJob: vi.fn(),
+    disconnect: vi.fn(async () => {}),
+    getDeadJobs: vi.fn(),
+    getFlowTree: vi.fn(),
+    getJob: vi.fn(),
+    getStats: vi.fn(),
+    redriveAll: vi.fn(),
+    redriveJob: vi.fn(),
     retryJob: vi.fn(),
     runJobNow: vi.fn(),
-    deleteJob: vi.fn(),
-    redriveJob: vi.fn(),
-    redriveAll: vi.fn(),
-    clearJobs: vi.fn(),
     size: vi.fn(),
-    getFlowTree: vi.fn(),
   }
 }
 
@@ -49,13 +50,13 @@ describe("doctor command", () => {
     consolaMessages = []
 
     vi.spyOn(consola, "info").mockImplementation((...args: unknown[]) => {
-      consolaMessages.push({ type: "info", message: String(args[0]) })
+      consolaMessages.push({ message: String(args[0]), type: "info" })
     })
     vi.spyOn(consola, "success").mockImplementation((...args: unknown[]) => {
-      consolaMessages.push({ type: "success", message: String(args[0]) })
+      consolaMessages.push({ message: String(args[0]), type: "success" })
     })
     vi.spyOn(consola, "error").mockImplementation((...args: unknown[]) => {
-      consolaMessages.push({ type: "error", message: String(args[0]) })
+      consolaMessages.push({ message: String(args[0]), type: "error" })
     })
 
     process.exitCode = undefined

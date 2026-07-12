@@ -69,11 +69,11 @@ export function normalizeMermaidSource(
   const processed = preprocessMermaidSource(text, runtimeConfigToFrontmatterMap(baseConfig))
 
   return {
-    text: processed.lines.join('\n'),
-    lines: processed.lines,
-    firstLine: processed.lines[0]?.toLowerCase() ?? '',
     config: normalizeMermaidRuntimeConfig(processed.frontmatter),
+    firstLine: processed.lines[0]?.toLowerCase() ?? '',
     frontmatter: processed.frontmatter,
+    lines: processed.lines,
+    text: processed.lines.join('\n'),
   }
 }
 
@@ -92,8 +92,8 @@ export function preprocessMermaidSource(
 
   return {
     body,
-    lines: toMermaidLines(body),
     frontmatter,
+    lines: toMermaidLines(body),
   }
 }
 
@@ -122,7 +122,7 @@ export function mergeFrontmatterMaps(
   const merged = cloneFrontmatterMap(base)
 
   for (const [key, value] of Object.entries(override)) {
-    if (value === undefined) continue
+    if (value === undefined) {continue}
 
     const existing = merged[key]
     if (isFrontmatterMap(existing) && isFrontmatterMap(value)) {
@@ -142,7 +142,7 @@ export function getFrontmatterMap(
 ): MermaidFrontmatterMap | undefined {
   let current: MermaidFrontmatterValue | undefined = root
   for (const segment of path) {
-    if (!isFrontmatterMap(current)) return undefined
+    if (!isFrontmatterMap(current)) {return undefined}
     current = current[segment]
   }
   return isFrontmatterMap(current) ? current : undefined
@@ -154,7 +154,7 @@ export function getFrontmatterScalar<T extends MermaidFrontmatterScalar>(
 ): T | undefined {
   let current: MermaidFrontmatterValue | undefined = root
   for (const segment of path) {
-    if (!isFrontmatterMap(current)) return undefined
+    if (!isFrontmatterMap(current)) {return undefined}
     current = current[segment]
   }
   return current !== undefined && !Array.isArray(current) && (typeof current !== 'object' || current === null)
@@ -168,7 +168,7 @@ export function getFrontmatterList<T extends MermaidFrontmatterValue = MermaidFr
 ): T[] | undefined {
   let current: MermaidFrontmatterValue | undefined = root
   for (const segment of path) {
-    if (!isFrontmatterMap(current)) return undefined
+    if (!isFrontmatterMap(current)) {return undefined}
     current = current[segment]
   }
   return Array.isArray(current) ? current as T[] : undefined
@@ -225,10 +225,10 @@ function normalizeStringArray(value: MermaidConfigValue | undefined): string[] {
 }
 
 function mergeInto(target: MermaidFrontmatterMap, source: MermaidFrontmatterMap | undefined): void {
-  if (!source) return
+  if (!source) {return}
 
   for (const [key, value] of Object.entries(source)) {
-    if (value === undefined) continue
+    if (value === undefined) {continue}
 
     if (Array.isArray(value)) {
       target[key] = value.map(entry => cloneFrontmatterValue(entry)!)
@@ -267,7 +267,7 @@ function extractInitDirectives(text: string): { body: string; frontmatter: Merma
 
   const body = text.replace(INIT_DIRECTIVE_REGEX, (_match, payload: string) => {
     const parsed = parseDirectiveMap(payload)
-    if (parsed) merged = mergeFrontmatterMaps(merged, canonicalizeFrontmatterMap(parsed))
+    if (parsed) {merged = mergeFrontmatterMaps(merged, canonicalizeFrontmatterMap(parsed))}
     return ''
   })
 
@@ -283,25 +283,25 @@ function parseDirectiveMap(text: string): MermaidFrontmatterMap | undefined {
 }
 
 function toFrontmatterMap(value: unknown): MermaidFrontmatterMap | undefined {
-  if (!isPlainObject(value)) return undefined
+  if (!isPlainObject(value)) {return undefined}
 
   const map: MermaidFrontmatterMap = {}
   for (const [key, entry] of Object.entries(value)) {
     const parsed = toFrontmatterValue(entry)
-    if (parsed !== undefined) map[key] = parsed
+    if (parsed !== undefined) {map[key] = parsed}
   }
   return map
 }
 
 function toFrontmatterValue(value: unknown): MermaidFrontmatterValue | undefined {
-  if (value === null) return null
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value
+  if (value === null) {return null}
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {return value}
 
   if (Array.isArray(value)) {
     const items: MermaidFrontmatterList = []
     for (const entry of value) {
       const parsed = toFrontmatterValue(entry)
-      if (parsed === undefined) return undefined
+      if (parsed === undefined) {return undefined}
       items.push(parsed)
     }
     return items
@@ -319,9 +319,9 @@ function cloneFrontmatterMap(value: MermaidFrontmatterMap): MermaidFrontmatterMa
 }
 
 function cloneFrontmatterValue(value: MermaidFrontmatterValue | undefined): MermaidFrontmatterValue | undefined {
-  if (value === undefined || value === null) return value
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value
-  if (Array.isArray(value)) return value.map(entry => cloneFrontmatterValue(entry)!)
+  if (value === undefined || value === null) {return value}
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {return value}
+  if (Array.isArray(value)) {return value.map(entry => cloneFrontmatterValue(entry)!)}
   return cloneFrontmatterMap(value)
 }
 
@@ -337,10 +337,10 @@ function parseScalar(valueText: string): MermaidFrontmatterScalar {
   if ((valueText.startsWith('"') && valueText.endsWith('"')) || (valueText.startsWith("'") && valueText.endsWith("'"))) {
     return unescapeQuotedString(valueText)
   }
-  if (valueText === 'true') return true
-  if (valueText === 'false') return false
-  if (valueText === 'null') return null
-  if (/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(valueText)) return Number(valueText)
+  if (valueText === 'true') {return true}
+  if (valueText === 'false') {return false}
+  if (valueText === 'null') {return null}
+  if (/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(valueText)) {return Number(valueText)}
   return valueText
 }
 
@@ -351,7 +351,7 @@ function parseLooseObjectLiteral(text: string): MermaidFrontmatterMap | undefine
 
 function parseFlowValue(text: string): MermaidFrontmatterValue | undefined {
   const trimmed = text.trim()
-  if (trimmed.length === 0) return undefined
+  if (trimmed.length === 0) {return undefined}
 
   if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
     return parseFlowMap(trimmed.slice(1, -1))
@@ -367,15 +367,15 @@ function parseFlowMap(text: string): MermaidFrontmatterMap | undefined {
   const map: MermaidFrontmatterMap = {}
   for (const entry of splitFlowEntries(text)) {
     const colonIdx = findSeparatorIndex(entry, ':')
-    if (colonIdx === -1) return undefined
+    if (colonIdx === -1) {return undefined}
 
     const rawKey = entry.slice(0, colonIdx).trim()
     const rawValue = entry.slice(colonIdx + 1).trim()
     const key = parseFlowKey(rawKey)
-    if (!key) return undefined
+    if (!key) {return undefined}
 
     const value = parseFlowValue(rawValue)
-    if (value === undefined) return undefined
+    if (value === undefined) {return undefined}
     map[key] = value
   }
   return map
@@ -385,7 +385,7 @@ function parseFlowList(text: string): MermaidFrontmatterList | undefined {
   const values: MermaidFrontmatterList = []
   for (const entry of splitFlowEntries(text)) {
     const value = parseFlowValue(entry)
-    if (value === undefined) return undefined
+    if (value === undefined) {return undefined}
     values.push(value)
   }
   return values
@@ -393,7 +393,7 @@ function parseFlowList(text: string): MermaidFrontmatterList | undefined {
 
 function parseFlowKey(text: string): string | undefined {
   const trimmed = text.trim()
-  if (!trimmed) return undefined
+  if (!trimmed) {return undefined}
   if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
     return unescapeQuotedString(trimmed)
   }
@@ -411,7 +411,7 @@ function splitFlowEntries(text: string): string[] {
     const char = text[i]!
     if (quote) {
       current += char
-      if (char === quote && text[i - 1] !== '\\') quote = null
+      if (char === quote && text[i - 1] !== '\\') {quote = null}
       continue
     }
 
@@ -442,7 +442,7 @@ function splitFlowEntries(text: string): string[] {
     }
     if (char === ',' && braceDepth === 0 && bracketDepth === 0) {
       const value = current.trim()
-      if (value) entries.push(value)
+      if (value) {entries.push(value)}
       current = ''
       continue
     }
@@ -451,7 +451,7 @@ function splitFlowEntries(text: string): string[] {
   }
 
   const trailing = current.trim()
-  if (trailing) entries.push(trailing)
+  if (trailing) {entries.push(trailing)}
   return entries
 }
 
@@ -463,7 +463,7 @@ function findSeparatorIndex(text: string, separator: ':' | ','): number {
   for (let i = 0; i < text.length; i++) {
     const char = text[i]!
     if (quote) {
-      if (char === quote && text[i - 1] !== '\\') quote = null
+      if (char === quote && text[i - 1] !== '\\') {quote = null}
       continue
     }
     if (char === '"' || char === "'") {
@@ -486,7 +486,7 @@ function findSeparatorIndex(text: string, separator: ':' | ','): number {
       bracketDepth--
       continue
     }
-    if (char === separator && braceDepth === 0 && bracketDepth === 0) return i
+    if (char === separator && braceDepth === 0 && bracketDepth === 0) {return i}
   }
 
   return -1
@@ -497,8 +497,8 @@ function unescapeQuotedString(valueText: string): string {
     if (valueText.startsWith("'")) {
       return valueText
         .slice(1, -1)
-        .replace(/\\\\/g, '\\')
-        .replace(/\\'/g, "'")
+        .replaceAll(/\\\\/g, '\\')
+        .replaceAll(/\\'/g, "'")
     }
     return JSON.parse(valueText)
   } catch {
@@ -523,12 +523,12 @@ export function preprocessMermaidLines(text: string): string[] {
 export function detectDiagramType(text: string): RoutedDiagramType {
   const firstLine = preprocessMermaidLines(text)[0]?.split(';')[0]?.trim().toLowerCase() ?? ''
 
-  if (/^xychart(-beta)?\b/.test(firstLine)) return 'xychart'
-  if (/^timeline\s*$/.test(firstLine)) return 'timeline'
-  if (/^journey\s*$/.test(firstLine)) return 'journey'
-  if (/^sequencediagram\s*$/.test(firstLine)) return 'sequence'
-  if (/^classdiagram\s*$/.test(firstLine)) return 'class'
-  if (/^erdiagram\s*$/.test(firstLine)) return 'er'
+  if (/^xychart(-beta)?\b/.test(firstLine)) {return 'xychart'}
+  if (/^timeline\s*$/.test(firstLine)) {return 'timeline'}
+  if (/^journey\s*$/.test(firstLine)) {return 'journey'}
+  if (/^sequencediagram\s*$/.test(firstLine)) {return 'sequence'}
+  if (/^classdiagram\s*$/.test(firstLine)) {return 'class'}
+  if (/^erdiagram\s*$/.test(firstLine)) {return 'er'}
 
   return 'flowchart'
 }

@@ -75,34 +75,34 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
 
   // Set up GraphQL Yoga
   const yoga = createYoga<SchemaContext>({
-    schema,
-    graphqlEndpoint: "/graphql",
     context: () => ({
       queues: config.queues,
       pubsub,
     }),
+    graphqlEndpoint: "/graphql",
+    schema,
   })
 
   // Mount GraphQL endpoint
   app.on(["GET", "POST"], "/graphql", async (c) => {
     const response = await yoga.handle(c.req.raw, {
-      queues: config.queues,
       pubsub,
+      queues: config.queues,
     })
     return response
   })
 
   // Health check
   app.get("/health", (c) =>
-    c.json({ status: "ok", queues: config.queues.map((q) => q.name) })
+    c.json({ queues: config.queues.map((q) => q.name), status: "ok" })
   )
 
   // Dashboard config endpoint (unauthenticated — consumed by the SPA)
   app.get("/api/config", (c) =>
     c.json({
+      authEnabled: config.auth !== false,
       graphqlEndpoint: config.graphqlEndpoint ?? "/graphql",
       queues: config.queues.map((q) => q.name),
-      authEnabled: config.auth !== false,
     })
   )
 

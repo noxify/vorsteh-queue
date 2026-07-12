@@ -10,7 +10,7 @@ const wait = (ms: number) =>
 
 describe(RateLimiter, () => {
   it("should allow requests within limit", () => {
-    const limiter = new RateLimiter({ max: 3, duration: 1000 })
+    const limiter = new RateLimiter({ duration: 1000, max: 3 })
 
     expect(limiter.tryConsume()).toBeTruthy()
     expect(limiter.tryConsume()).toBeTruthy()
@@ -19,7 +19,7 @@ describe(RateLimiter, () => {
   })
 
   it("should replenish tokens after duration", async () => {
-    const limiter = new RateLimiter({ max: 2, duration: 50 })
+    const limiter = new RateLimiter({ duration: 50, max: 2 })
 
     expect(limiter.tryConsume()).toBeTruthy()
     expect(limiter.tryConsume()).toBeTruthy()
@@ -31,7 +31,7 @@ describe(RateLimiter, () => {
   })
 
   it("should report available tokens", () => {
-    const limiter = new RateLimiter({ max: 5, duration: 1000 })
+    const limiter = new RateLimiter({ duration: 1000, max: 5 })
 
     expect(limiter.available).toBe(5)
     limiter.tryConsume()
@@ -39,7 +39,7 @@ describe(RateLimiter, () => {
   })
 
   it("should report wait time", () => {
-    const limiter = new RateLimiter({ max: 1, duration: 100 })
+    const limiter = new RateLimiter({ duration: 100, max: 1 })
 
     limiter.tryConsume()
     const waitTime = limiter.getWaitTime()
@@ -49,7 +49,7 @@ describe(RateLimiter, () => {
   })
 
   it("should report 0 wait time when tokens available", () => {
-    const limiter = new RateLimiter({ max: 5, duration: 1000 })
+    const limiter = new RateLimiter({ duration: 1000, max: 5 })
 
     expect(limiter.getWaitTime()).toBe(0)
   })
@@ -63,7 +63,7 @@ describe(RateLimiterRegistry, () => {
 
   it("should enforce rate limits for registered handlers", () => {
     const registry = new RateLimiterRegistry()
-    registry.register("send-sms", { max: 2, duration: 1000 })
+    registry.register("send-sms", { duration: 1000, max: 2 })
 
     expect(registry.canProcess("send-sms")).toBeTruthy()
     expect(registry.canProcess("send-sms")).toBeTruthy()
@@ -72,8 +72,8 @@ describe(RateLimiterRegistry, () => {
 
   it("should track handlers independently", () => {
     const registry = new RateLimiterRegistry()
-    registry.register("sms", { max: 1, duration: 1000 })
-    registry.register("email", { max: 1, duration: 1000 })
+    registry.register("sms", { duration: 1000, max: 1 })
+    registry.register("email", { duration: 1000, max: 1 })
 
     expect(registry.canProcess("sms")).toBeTruthy()
     expect(registry.canProcess("email")).toBeTruthy()
@@ -83,7 +83,7 @@ describe(RateLimiterRegistry, () => {
 
   it("should report has()", () => {
     const registry = new RateLimiterRegistry()
-    registry.register("limited", { max: 5, duration: 1000 })
+    registry.register("limited", { duration: 1000, max: 5 })
 
     expect(registry.has("limited")).toBeTruthy()
     expect(registry.has("unlimited")).toBeFalsy()

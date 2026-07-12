@@ -27,32 +27,32 @@ const PLOT_HEIGHT = 20
 
 // Unicode box-drawing characters
 const UNI = {
-  hLine: '─',
-  vLine: '│',
-  origin: '┼',
-  yTick: '┤',
-  xTick: '┬',
   bar: '█',
-  grid: '·',
-  cornerTL: '╭',  // top-left: down+right
-  cornerTR: '╮',  // top-right: down+left
   cornerBL: '╰',  // bottom-left: up+right
   cornerBR: '╯',  // bottom-right: up+left
+  cornerTL: '╭',  // top-left: down+right
+  cornerTR: '╮',  // top-right: down+left
+  grid: '·',
+  hLine: '─',
+  origin: '┼',
+  vLine: '│',
+  xTick: '┬',
+  yTick: '┤',
 } as const
 
 // ASCII fallback characters
 const ASC = {
-  hLine: '-',
-  vLine: '|',
-  origin: '+',
-  yTick: '+',
-  xTick: '+',
   bar: '#',
-  grid: '.',
-  cornerTL: '+',
-  cornerTR: '+',
   cornerBL: '+',
   cornerBR: '+',
+  cornerTL: '+',
+  cornerTR: '+',
+  grid: '.',
+  hLine: '-',
+  origin: '+',
+  vLine: '|',
+  xTick: '+',
+  yTick: '+',
 } as const
 
 // ============================================================================
@@ -71,20 +71,27 @@ function getSeriesColors(total: number, theme: AsciiTheme, palette?: string[]): 
     }
   }
   const accent = theme.accent ?? CHART_ACCENT_FALLBACK
-  if (total <= 1) return [accent]
+  if (total <= 1) {return [accent]}
   return Array.from({ length: total }, (_, i) => getSeriesColor(i, accent, theme.bg))
 }
 
 /** Map a CharRole to its hex color from the theme (for canvasToString fallback). */
 function roleToHex(role: CharRole, theme: AsciiTheme): string {
   switch (role) {
-    case 'text': return theme.fg
-    case 'border': return theme.border
-    case 'line': return theme.line
-    case 'arrow': return theme.arrow
-    case 'corner': return theme.corner ?? theme.line
-    case 'junction': return theme.junction ?? theme.border
-    default: return theme.fg
+    case 'text': { return theme.fg
+    }
+    case 'border': { return theme.border
+    }
+    case 'line': { return theme.line
+    }
+    case 'arrow': { return theme.arrow
+    }
+    case 'corner': { return theme.corner ?? theme.line
+    }
+    case 'junction': { return theme.junction ?? theme.border
+    }
+    default: { return theme.fg
+    }
   }
 }
 
@@ -120,7 +127,7 @@ function renderVertical(
   theme: AsciiTheme,
 ): string {
   const dataCount = getDataCount(chart)
-  if (dataCount === 0) return ''
+  if (dataCount === 0) {return ''}
 
   const yRange = chart.yAxis.range!
   const yTicks = niceTickValues(yRange.min, yRange.max)
@@ -183,7 +190,7 @@ function renderVertical(
 
   for (const tick of yTicks) {
     const row = valueToRow(tick)
-    if (row < 0 || row >= plotH) continue
+    if (row < 0 || row >= plotH) {continue}
     const displayRow = plotTop + (plotH - 1 - row)
     const label = formatTickValue(tick)
     // Tick mark on axis
@@ -218,7 +225,7 @@ function renderVertical(
   // 6. Grid lines (subtle horizontal dots at y-tick positions)
   for (const tick of yTicks) {
     const row = valueToRow(tick)
-    if (row < 0 || row >= plotH) continue
+    if (row < 0 || row >= plotH) {continue}
     const displayRow = plotTop + (plotH - 1 - row)
     for (let c = plotLeft; c < plotLeft + bandW * dataCount; c++) {
       if (get(canvas, displayRow, c) === ' ') {
@@ -230,7 +237,7 @@ function renderVertical(
   // 7. Bars — track global series index for per-series colors
   const barEntries: { data: number[]; globalIdx: number }[] = []
   for (let si = 0; si < chart.series.length; si++) {
-    if (chart.series[si]!.type === 'bar') barEntries.push({ data: chart.series[si]!.data, globalIdx: si })
+    if (chart.series[si]!.type === 'bar') {barEntries.push({ data: chart.series[si]!.data, globalIdx: si })}
   }
 
   if (barEntries.length > 0) {
@@ -275,12 +282,12 @@ function renderVertical(
   // 8. Lines (staircase routing with rounded corners)
   const lineEntries: { data: number[]; globalIdx: number }[] = []
   for (let si = 0; si < chart.series.length; si++) {
-    if (chart.series[si]!.type === 'line') lineEntries.push({ data: chart.series[si]!.data, globalIdx: si })
+    if (chart.series[si]!.type === 'line') {lineEntries.push({ data: chart.series[si]!.data, globalIdx: si })}
   }
 
   for (let lineIdx = 0; lineIdx < lineEntries.length; lineIdx++) {
     const entry = lineEntries[lineIdx]!
-    if (entry.data.length === 0) continue
+    if (entry.data.length === 0) {continue}
     const hexColor = seriesColors[entry.globalIdx]!
     drawStaircaseLine(canvas, roles, entry.data, bandCenter, valueToRow, plotTop, plotH, plotLeft, bandW * dataCount, ch, hexColors, hexColor)
   }
@@ -299,7 +306,7 @@ function renderHorizontal(
   theme: AsciiTheme,
 ): string {
   const dataCount = getDataCount(chart)
-  if (dataCount === 0) return ''
+  if (dataCount === 0) {return ''}
 
   const yRange = chart.yAxis.range!
   const valueTicks = niceTickValues(yRange.min, yRange.max)
@@ -368,7 +375,7 @@ function renderHorizontal(
   }
   for (const tick of valueTicks) {
     const cx = valueToCol(tick)
-    if (cx < plotLeft || cx >= plotLeft + plotW) continue
+    if (cx < plotLeft || cx >= plotLeft + plotW) {continue}
     set(canvas, roles, xAxisRow, cx, ch.xTick, 'border')
     if (showValueLabels) {
       const label = formatTickValue(tick)
@@ -385,7 +392,7 @@ function renderHorizontal(
   // Grid lines (vertical at value tick positions)
   for (const tick of valueTicks) {
     const cx = valueToCol(tick)
-    if (cx < plotLeft || cx >= plotLeft + plotW) continue
+    if (cx < plotLeft || cx >= plotLeft + plotW) {continue}
     for (let r = plotTop; r < plotTop + plotH; r++) {
       if (get(canvas, r, cx) === ' ') {
         set(canvas, roles, r, cx, ch.grid, 'line')
@@ -396,7 +403,7 @@ function renderHorizontal(
   // Bars (horizontal) — with per-series colors
   const barEntries: { data: number[]; globalIdx: number }[] = []
   for (let si = 0; si < chart.series.length; si++) {
-    if (chart.series[si]!.type === 'bar') barEntries.push({ data: chart.series[si]!.data, globalIdx: si })
+    if (chart.series[si]!.type === 'bar') {barEntries.push({ data: chart.series[si]!.data, globalIdx: si })}
   }
 
   if (barEntries.length > 0) {
@@ -436,12 +443,12 @@ function renderHorizontal(
   // Lines (horizontal staircase: value on x, category on y) — with per-series colors
   const lineEntries: { data: number[]; globalIdx: number }[] = []
   for (let si = 0; si < chart.series.length; si++) {
-    if (chart.series[si]!.type === 'line') lineEntries.push({ data: chart.series[si]!.data, globalIdx: si })
+    if (chart.series[si]!.type === 'line') {lineEntries.push({ data: chart.series[si]!.data, globalIdx: si })}
   }
 
   for (let lineIdx = 0; lineIdx < lineEntries.length; lineIdx++) {
     const entry = lineEntries[lineIdx]!
-    if (entry.data.length === 0) continue
+    if (entry.data.length === 0) {continue}
     const hexColor = seriesColors[entry.globalIdx]!
     drawHorizontalStaircaseLine(canvas, roles, entry.data, bandMid, valueToCol, plotTop, plotH, plotLeft, plotW, ch, hexColors, hexColor)
   }
@@ -472,7 +479,7 @@ function drawStaircaseLine(
   hexCanvas?: HexCanvas,
   hexColor?: string | null,
 ): void {
-  if (data.length === 0) return
+  if (data.length === 0) {return}
 
   const points = data.map((v, i) => ({
     col: bandCenter(i),
@@ -584,11 +591,11 @@ function drawHorizontalStaircaseLine(
   hexCanvas?: HexCanvas,
   hexColor?: string | null,
 ): void {
-  if (data.length === 0) return
+  if (data.length === 0) {return}
 
   const points = data.map((v, i) => ({
-    row: bandMid(i),
     col: valueToCol(v),
+    row: bandMid(i),
   }))
 
   const drawAt = (row: number, col: number, char: string) => {
@@ -669,16 +676,16 @@ function drawLegend(
   seriesColors: string[],
 ): void {
   // Build legend items with global series indices
-  type LegendItem = { symbol: string; label: string; globalIdx: number }
+  interface LegendItem { symbol: string; label: string; globalIdx: number }
   const items: LegendItem[] = []
   let barIdx = 0, lineIdx = 0
   for (let si = 0; si < chart.series.length; si++) {
     const s = chart.series[si]!
     if (s.type === 'bar') {
-      items.push({ symbol: ch.bar, label: `Bar ${barIdx + 1}`, globalIdx: si })
+      items.push({ globalIdx: si, label: `Bar ${barIdx + 1}`, symbol: ch.bar })
       barIdx++
     } else {
-      items.push({ symbol: ch.hLine, label: `Line ${lineIdx + 1}`, globalIdx: si })
+      items.push({ globalIdx: si, label: `Line ${lineIdx + 1}`, symbol: ch.hLine })
       lineIdx++
     }
   }
@@ -686,7 +693,7 @@ function drawLegend(
   // Calculate total legend width: "symbol space label  symbol space label ..."
   let totalLen = 0
   for (let i = 0; i < items.length; i++) {
-    if (i > 0) totalLen += 2 // gap between items
+    if (i > 0) {totalLen += 2} // gap between items
     totalLen += 1 + 1 + items[i]!.label.length // symbol + space + label
   }
 
@@ -694,7 +701,7 @@ function drawLegend(
   let col = startCol
 
   for (let i = 0; i < items.length; i++) {
-    if (i > 0) col += 2 // gap
+    if (i > 0) {col += 2} // gap
     const item = items[i]!
     // Symbol with series-specific color
     set(canvas, roles, row, col, item.symbol, 'arrow', hexCanvas, seriesColors[item.globalIdx])
@@ -731,7 +738,7 @@ function set(
   if (col >= 0 && col < canvas.length && row >= 0 && row < canvas[0]!.length) {
     canvas[col]![row] = char
     roles[col]![row] = role
-    if (hexCanvas && hex) hexCanvas[col]![row] = hex
+    if (hexCanvas && hex) {hexCanvas[col]![row] = hex}
   }
 }
 
@@ -774,7 +781,7 @@ function canvasToString(
   colorMode: ColorMode,
   theme: AsciiTheme,
 ): string {
-  if (canvas.length === 0) return ''
+  if (canvas.length === 0) {return ''}
   const height = canvas[0]!.length
   const width = canvas.length
   const lines: string[] = []
@@ -790,7 +797,7 @@ function canvasToString(
     }
     // Trim trailing spaces
     let end = chars.length - 1
-    while (end >= 0 && chars[end] === ' ') end--
+    while (end >= 0 && chars[end] === ' ') {end--}
     if (end < 0) {
       lines.push('')
     } else {
@@ -805,7 +812,7 @@ function canvasToString(
   }
 
   // Trim trailing empty lines
-  while (lines.length > 0 && lines[lines.length - 1] === '') {
+  while (lines.length > 0 && lines.at(-1) === '') {
     lines.pop()
   }
 
@@ -824,7 +831,7 @@ function colorizeRow(
   theme: AsciiTheme,
   mode: ColorMode,
 ): string {
-  if (mode === 'none') return chars.join('')
+  if (mode === 'none') {return chars.join('')}
 
   let result = ''
   let currentColor: string | null = null
@@ -874,15 +881,15 @@ function colorizeRow(
 // ============================================================================
 
 function getDataCount(chart: XYChart): number {
-  if (chart.xAxis.categories) return chart.xAxis.categories.length
+  if (chart.xAxis.categories) {return chart.xAxis.categories.length}
   for (const s of chart.series) {
-    if (s.data.length > 0) return s.data.length
+    if (s.data.length > 0) {return s.data.length}
   }
   return 0
 }
 
 function getCategoryLabels(chart: XYChart, count: number): string[] {
-  if (chart.xAxis.categories) return chart.xAxis.categories
+  if (chart.xAxis.categories) {return chart.xAxis.categories}
   if (chart.xAxis.range) {
     const { min, max } = chart.xAxis.range
     const step = count > 1 ? (max - min) / (count - 1) : 0
@@ -894,16 +901,16 @@ function getCategoryLabels(chart: XYChart, count: number): string[] {
 /** Generate nice tick values for a numeric range. */
 function niceTickValues(min: number, max: number): number[] {
   const range = max - min
-  if (range <= 0) return [min]
+  if (range <= 0) {return [min]}
 
   const rawInterval = range / 6
-  const magnitude = Math.pow(10, Math.floor(Math.log10(rawInterval)))
+  const magnitude = 10 ** Math.floor(Math.log10(rawInterval))
   const residual = rawInterval / magnitude
   let niceInterval: number
-  if (residual <= 1.5) niceInterval = magnitude
-  else if (residual <= 3) niceInterval = 2 * magnitude
-  else if (residual <= 7) niceInterval = 5 * magnitude
-  else niceInterval = 10 * magnitude
+  if (residual <= 1.5) {niceInterval = magnitude}
+  else if (residual <= 3) {niceInterval = 2 * magnitude}
+  else if (residual <= 7) {niceInterval = 5 * magnitude}
+  else {niceInterval = 10 * magnitude}
 
   const start = Math.ceil(min / niceInterval) * niceInterval
   const ticks: number[] = []
@@ -914,6 +921,6 @@ function niceTickValues(min: number, max: number): number[] {
 }
 
 function formatTickValue(v: number): string {
-  if (Number.isInteger(v)) return String(v)
+  if (Number.isInteger(v)) {return String(v)}
   return v.toFixed(Math.abs(v) < 10 ? 1 : 0)
 }

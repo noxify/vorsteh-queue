@@ -19,9 +19,9 @@ describe("Worker (Consumer)", () => {
     await adapter.connect()
     adapter.setQueueName("test-queue")
     worker = new Worker(adapter, {
+      concurrency: 2,
       name: "test-queue",
       pollInterval: 10,
-      concurrency: 2,
     })
   })
 
@@ -84,15 +84,15 @@ describe("Worker (Consumer)", () => {
       worker.register("test-job", handler)
 
       await adapter.addJob({
-        name: "test-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "test-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       // Start and immediately pause before poll loop runs
@@ -117,15 +117,15 @@ describe("Worker (Consumer)", () => {
       worker.register("test-job", handler)
 
       await adapter.addJob({
-        name: "test-job",
-        payload: { x: 1 },
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "test-job",
+        payload: { x: 1 },
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       worker.start()
@@ -143,15 +143,15 @@ describe("Worker (Consumer)", () => {
       worker.register("test-job", async () => ({ result: true }))
 
       await adapter.addJob({
-        name: "test-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "test-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       worker.start()
@@ -159,8 +159,8 @@ describe("Worker (Consumer)", () => {
 
       expect(listener).toHaveBeenCalledExactlyOnceWith(
         expect.objectContaining({
-          status: "completed",
           result: { result: true },
+          status: "completed",
         })
       )
     })
@@ -176,15 +176,15 @@ describe("Worker (Consumer)", () => {
       })
 
       await adapter.addJob({
-        name: "progress-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "progress-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       worker.start()
@@ -209,15 +209,15 @@ describe("Worker (Consumer)", () => {
       })
 
       const job = await adapter.addJob({
-        name: "failing",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "failing",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       worker.start()
@@ -237,15 +237,15 @@ describe("Worker (Consumer)", () => {
       })
 
       const job = await adapter.addJob({
-        name: "always-fails",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 2, // already tried twice
         maxAttempts: 3,
+        name: "always-fails",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       worker.start()
@@ -278,15 +278,15 @@ describe("Worker (Consumer)", () => {
       )
 
       await adapter.addJob({
-        name: "slow-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "slow-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
         timeout: 20,
       })
 
@@ -318,15 +318,15 @@ describe("Worker (Consumer)", () => {
       )
 
       const job = await adapter.addJob({
-        name: "long-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "long-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       worker.start()
@@ -355,28 +355,28 @@ describe("Worker (Consumer)", () => {
 
       // Add 2 jobs with same group
       await adapter.addJob({
+        attempts: 0,
+        groupKey: "group-a",
+        maxAttempts: 3,
         name: "grouped",
         payload: { n: 1 },
-        status: "pending",
         priority: 2,
-        attempts: 0,
-        maxAttempts: 3,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
-        groupKey: "group-a",
+        status: "pending",
       })
       await adapter.addJob({
+        attempts: 0,
+        groupKey: "group-a",
+        maxAttempts: 3,
         name: "grouped",
         payload: { n: 2 },
-        status: "pending",
         priority: 2,
-        attempts: 0,
-        maxAttempts: 3,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
-        groupKey: "group-a",
+        status: "pending",
       })
 
       worker.start()
@@ -392,16 +392,16 @@ describe("Worker (Consumer)", () => {
       worker.register("cron-job", async () => ({ done: true }))
 
       await adapter.addJob({
+        attempts: 0,
+        cron: "0 9 * * *",
+        maxAttempts: 3,
         name: "cron-job",
         payload: {},
-        status: "pending",
         priority: 2,
-        attempts: 0,
-        maxAttempts: 3,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
-        cron: "0 9 * * *",
+        status: "pending",
       })
 
       worker.start()
@@ -416,17 +416,17 @@ describe("Worker (Consumer)", () => {
       worker.register("limited", async () => ({ done: true }))
 
       await adapter.addJob({
-        name: "limited",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "limited",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 5,
-        repeatLimit: 5,
         repeatEvery: 1000,
+        repeatLimit: 5,
+        status: "pending",
       })
 
       worker.start()

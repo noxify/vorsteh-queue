@@ -422,10 +422,10 @@ export async function getBreadcrumbItems(
 
         const resolved = await resolveDocEntry(entry)
         return {
-          title: resolved.title,
           path: resolved.entry.getPathnameSegments({
             includeBasePathname: true,
           }),
+          title: resolved.title,
         }
       })
     )
@@ -577,12 +577,12 @@ async function mapLlmsTreeNode(
   }
 
   return {
-    title,
+    children,
     description: frontmatter?.description,
     docsHref,
-    rawHref,
     isDirectory: isDirectory(targetEntry),
-    children,
+    rawHref,
+    title,
   }
 }
 
@@ -677,21 +677,21 @@ export const getApiReferenceExports = cache(
                             m.name && m.scope !== "static"
                         )
                         .map((m: { name?: string }) => ({
-                          slug: `${(e.slug ?? e.name).toLowerCase().replaceAll(/[^a-z0-9]+/gu, "-")}-${(m.name ?? "unknown").toLowerCase().replaceAll(/[^a-z0-9]+/gu, "-")}`,
                           name: m.name ?? "unknown",
+                          slug: `${(e.slug ?? e.name).toLowerCase().replaceAll(/[^a-z0-9]+/gu, "-")}-${(m.name ?? "unknown").toLowerCase().replaceAll(/[^a-z0-9]+/gu, "-")}`,
                           title: m.name ?? "unknown",
                         }))
                     : undefined
                 return {
-                  slug: e.slug ?? e.name,
-                  name: e.name,
-                  title: e.name,
                   kind: typeInfo?.kind ? kindToLabel(typeInfo.kind) : null,
                   methods,
+                  name: e.name,
+                  slug: e.slug ?? e.name,
+                  title: e.name,
                 }
               })
             )
-            return { name: ref.name, exports }
+            return { exports, name: ref.name }
           } catch {
             return null
           }

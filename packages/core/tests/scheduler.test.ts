@@ -49,8 +49,8 @@ describe("scheduler utilities", () => {
     it("should calculate next run for repeatEvery", () => {
       const lastRun = new Date("2025-01-15T09:00:00Z")
       const result = calculateNextRun({
-        repeatEvery: 3_600_000, // 1 hour
         lastRun,
+        repeatEvery: 3_600_000, // 1 hour,
       })
 
       expect(result.getTime()).toBe(lastRun.getTime() + 3_600_000)

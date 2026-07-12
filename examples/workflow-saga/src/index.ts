@@ -9,16 +9,16 @@ import { MemoryQueueAdapter, Queue, Worker } from "@vorsteh-queue/core"
 
 const adapter = new MemoryQueueAdapter()
 const queue = new Queue(adapter, { name: "saga-queue" })
-const worker = new Worker(adapter, { name: "saga-queue", concurrency: 1 })
+const worker = new Worker(adapter, { concurrency: 1, name: "saga-queue" })
 
 // Simulate external services
 const inventory = {
+  release: async (reservationId: string) => {
+    console.log(`  [inventory] Releasing reservation ${reservationId}`)
+  },
   reserve: async (items: string[]) => {
     console.log(`  [inventory] Reserving ${items.length} items`)
     return { reservationId: `res_${Date.now()}` }
-  },
-  release: async (reservationId: string) => {
-    console.log(`  [inventory] Releasing reservation ${reservationId}`)
   },
 }
 
@@ -89,8 +89,8 @@ async function main() {
   await queue.add(
     "checkout",
     {
-      items: ["widget-a", "widget-b"],
       amount: 99.99,
+      items: ["widget-a", "widget-b"],
     },
     { maxAttempts: 1 }
   )

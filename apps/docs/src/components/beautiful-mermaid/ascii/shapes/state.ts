@@ -22,6 +22,23 @@ import { dirEquals } from '../edge-routing'
  * This represents the UML initial pseudo-state.
  */
 export const stateStartRenderer: ShapeRenderer = {
+  getAttachmentPoint(
+    dir: Direction,
+    dimensions: ShapeDimensions,
+    baseCoord: DrawingCoord
+  ): DrawingCoord {
+    const { width, height } = dimensions
+    const centerX = baseCoord.x + Math.floor(width / 2)
+    const centerY = baseCoord.y + Math.floor(height / 2)
+
+    if (dirEquals(dir, Up)) return { x: centerX, y: baseCoord.y }
+    if (dirEquals(dir, Down)) return { x: centerX, y: baseCoord.y + height - 1 }
+    if (dirEquals(dir, Left)) return { x: baseCoord.x, y: centerY }
+    if (dirEquals(dir, Right)) return { x: baseCoord.x + width - 1, y: centerY }
+    // All diagonals and middle point to center
+    return { x: centerX, y: centerY }
+  },
+
   getDimensions(_label: string, _options: ShapeRenderOptions): ShapeDimensions {
     // Start state is a 5x3 rounded box with centered symbol
     const width = 5
@@ -80,23 +97,6 @@ export const stateStartRenderer: ShapeRenderer = {
 
     return canvas
   },
-
-  getAttachmentPoint(
-    dir: Direction,
-    dimensions: ShapeDimensions,
-    baseCoord: DrawingCoord
-  ): DrawingCoord {
-    const { width, height } = dimensions
-    const centerX = baseCoord.x + Math.floor(width / 2)
-    const centerY = baseCoord.y + Math.floor(height / 2)
-
-    if (dirEquals(dir, Up)) return { x: centerX, y: baseCoord.y }
-    if (dirEquals(dir, Down)) return { x: centerX, y: baseCoord.y + height - 1 }
-    if (dirEquals(dir, Left)) return { x: baseCoord.x, y: centerY }
-    if (dirEquals(dir, Right)) return { x: baseCoord.x + width - 1, y: centerY }
-    // All diagonals and middle point to center
-    return { x: centerX, y: centerY }
-  },
 }
 
 /**
@@ -114,6 +114,23 @@ export const stateStartRenderer: ShapeRenderer = {
  * from the start state's single rounded border.
  */
 export const stateEndRenderer: ShapeRenderer = {
+  getAttachmentPoint(
+    dir: Direction,
+    dimensions: ShapeDimensions,
+    baseCoord: DrawingCoord
+  ): DrawingCoord {
+    const { width, height } = dimensions
+    const centerX = baseCoord.x + Math.floor(width / 2)
+    const centerY = baseCoord.y + Math.floor(height / 2)
+
+    if (dirEquals(dir, Up)) return { x: centerX, y: baseCoord.y }
+    if (dirEquals(dir, Down)) return { x: centerX, y: baseCoord.y + height - 1 }
+    if (dirEquals(dir, Left)) return { x: baseCoord.x, y: centerY }
+    if (dirEquals(dir, Right)) return { x: baseCoord.x + width - 1, y: centerY }
+    // All diagonals and middle point to center
+    return { x: centerX, y: centerY }
+  },
+
   getDimensions(_label: string, _options: ShapeRenderOptions): ShapeDimensions {
     // End state is a 5x3 double-bordered box with centered symbol
     const width = 5
@@ -171,22 +188,5 @@ export const stateEndRenderer: ShapeRenderer = {
     }
 
     return canvas
-  },
-
-  getAttachmentPoint(
-    dir: Direction,
-    dimensions: ShapeDimensions,
-    baseCoord: DrawingCoord
-  ): DrawingCoord {
-    const { width, height } = dimensions
-    const centerX = baseCoord.x + Math.floor(width / 2)
-    const centerY = baseCoord.y + Math.floor(height / 2)
-
-    if (dirEquals(dir, Up)) return { x: centerX, y: baseCoord.y }
-    if (dirEquals(dir, Down)) return { x: centerX, y: baseCoord.y + height - 1 }
-    if (dirEquals(dir, Left)) return { x: baseCoord.x, y: centerY }
-    if (dirEquals(dir, Right)) return { x: baseCoord.x + width - 1, y: centerY }
-    // All diagonals and middle point to center
-    return { x: centerX, y: centerY }
   },
 }

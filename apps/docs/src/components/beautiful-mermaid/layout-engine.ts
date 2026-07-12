@@ -43,10 +43,10 @@ import type {
 /** Default render options (layout-only) */
 const DEFAULTS = {
   font: "Inter",
-  padding: 40,
-  nodeSpacing: 28,
   layerSpacing: 48,
   mergeEdges: true,
+  nodeSpacing: 28,
+  padding: 40,
   thoroughness: 3,
 } as const
 
@@ -124,13 +124,13 @@ function estimateNodeSize(
   }
 
   if (shape === "state-start" || shape === "state-end") {
-    return { width: 28, height: 28 }
+    return { height: 28, width: 28 }
   }
 
   width = Math.max(width, 60)
   height = Math.max(height, 36)
 
-  return { width, height }
+  return { height, width }
 }
 
 // ============================================================================
@@ -206,15 +206,15 @@ function mermaidToElk(
       if (!edgesBySubgraph.has(sourceSubgraph)) {
         edgesBySubgraph.set(sourceSubgraph, [])
       }
-      edgesBySubgraph.get(sourceSubgraph)!.push({ index: i, edge })
+      edgesBySubgraph.get(sourceSubgraph)!.push({ edge, index: i })
     } else if (!sourceSubgraph && !targetSubgraph) {
       // Root-level edge: neither endpoint in a subgraph
-      edgesBySubgraph.get(null)!.push({ index: i, edge })
+      edgesBySubgraph.get(null)!.push({ edge, index: i })
     } else {
       // Cross-hierarchy edge: need hierarchical ports
       crossHierarchyEdges.push({
-        index: i,
         edge,
+        index: i,
         sourceSubgraph,
         targetSubgraph,
       })
@@ -229,6 +229,8 @@ function mermaidToElk(
 
   // Build the root ELK graph
   const elkGraph: ElkGraphNode = {
+    children: [],
+    edges: [],
     id: "root",
     layoutOptions: {
       "elk.algorithm": "layered",
@@ -255,8 +257,6 @@ function mermaidToElk(
         ? "SEPARATE"
         : "INCLUDE_CHILDREN",
     },
-    children: [],
-    edges: [],
   }
 
   // Track hierarchical ports per subgraph for cross-hierarchy edges
@@ -285,10 +285,10 @@ function mermaidToElk(
           subgraphPorts.set(sourceSubgraph, [])
         }
         subgraphPorts.get(sourceSubgraph)!.push({
-          portId,
-          edgeIndex: index,
           direction: "outgoing",
+          edgeIndex: index,
           internalNodeId: edge.source,
+          portId,
         })
       }
 
@@ -299,10 +299,10 @@ function mermaidToElk(
           subgraphPorts.set(targetSubgraph, [])
         }
         subgraphPorts.get(targetSubgraph)!.push({
-          portId,
-          edgeIndex: index,
           direction: "incoming",
+          edgeIndex: index,
           internalNodeId: edge.target,
+          portId,
         })
       }
     }
@@ -313,10 +313,10 @@ function mermaidToElk(
     if (!subgraphNodeIds.has(id) && !subgraphIds.has(id)) {
       const size = estimateNodeSize(id, node.label, node.shape, style)
       elkGraph.children!.push({
-        id,
-        width: size.width,
         height: size.height,
+        id,
         labels: [{ text: node.label }],
+        width: size.width,
       })
     }
   }
@@ -343,13 +343,13 @@ function mermaidToElk(
       )
       elkEdge.labels = [
         {
-          text: edge.label,
-          width: metrics.width + 8,
           height: metrics.height + 6,
           layoutOptions: {
             "elk.edgeLabels.inline": "true",
             "elk.edgeLabels.placement": "CENTER",
           },
+          text: edge.label,
+          width: metrics.width + 8,
         },
       ]
     }
@@ -382,13 +382,13 @@ function mermaidToElk(
       )
       elkEdge.labels = [
         {
-          text: edge.label,
-          width: metrics.width + 8,
           height: metrics.height + 6,
           layoutOptions: {
             "elk.edgeLabels.inline": "true",
             "elk.edgeLabels.placement": "CENTER",
           },
+          text: edge.label,
+          width: metrics.width + 8,
         },
       ]
     }
@@ -427,14 +427,14 @@ function subgraphToElk(
   const groupHeaderHeight = style.groupHeaderFontSize + 16
   const layoutOptions: LayoutOptions = {
     "elk.algorithm": "layered",
-    "elk.padding": `[top=${groupHeaderHeight + style.groupPaddingY},left=${style.groupPaddingX},bottom=${style.groupPaddingY},right=${style.groupPaddingX}]`,
-    "elk.edgeRouting": "ORTHOGONAL",
     "elk.contentAlignment": "H_CENTER V_CENTER",
-    "elk.spacing.edgeEdge": "12",
+    "elk.edgeRouting": "ORTHOGONAL",
+    "elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
     "elk.layered.spacing.edgeEdgeBetweenLayers": "12",
     "elk.layered.spacing.edgeNodeBetweenLayers": "12",
-    "elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
     "elk.layered.spacing.nodeNodeBetweenLayers": String(opts.layerSpacing),
+    "elk.padding": `[top=${groupHeaderHeight + style.groupPaddingY},left=${style.groupPaddingX},bottom=${style.groupPaddingY},right=${style.groupPaddingX}]`,
+    "elk.spacing.edgeEdge": "12",
     "elk.spacing.nodeNode": String(opts.nodeSpacing),
   }
 
@@ -444,11 +444,11 @@ function subgraphToElk(
   }
 
   const elkNode: ElkGraphNode = {
-    id: sg.id,
-    layoutOptions,
-    labels: sg.label ? [{ text: sg.label }] : undefined,
     children: [],
     edges: [],
+    id: sg.id,
+    labels: sg.label ? [{ text: sg.label }] : undefined,
+    layoutOptions,
   }
 
   // Add hierarchical ports for cross-hierarchy edges (when using SEPARATE)
@@ -467,10 +467,10 @@ function subgraphToElk(
     if (node) {
       const size = estimateNodeSize(nodeId, node.label, node.shape, style)
       elkNode.children!.push({
-        id: nodeId,
-        width: size.width,
         height: size.height,
+        id: nodeId,
         labels: [{ text: node.label }],
+        width: size.width,
       })
     }
   }
@@ -498,13 +498,13 @@ function subgraphToElk(
       )
       elkEdge.labels = [
         {
-          text: edge.label,
-          width: metrics.width + 8,
           height: metrics.height + 6,
           layoutOptions: {
             "elk.edgeLabels.inline": "true",
             "elk.edgeLabels.placement": "CENTER",
           },
+          text: edge.label,
+          width: metrics.width + 8,
         },
       ]
     }
@@ -596,12 +596,11 @@ function flattenGroupBounds(
   const bounds: { x: number; y: number; right: number; bottom: number }[] = []
   for (const g of groups) {
     bounds.push({
+      bottom: g.y + g.height,
+      right: g.x + g.width,
       x: g.x,
       y: g.y,
-      right: g.x + g.width,
-      bottom: g.y + g.height,
-    })
-    bounds.push(...flattenGroupBounds(g.children))
+    }, ...flattenGroupBounds(g.children))
   }
   return bounds
 }
@@ -687,11 +686,11 @@ function elkToPositioned(
   }
 
   return {
-    width,
-    height,
-    nodes,
     edges,
     groups,
+    height,
+    nodes,
+    width,
   }
 }
 
@@ -726,13 +725,13 @@ function extractNodesAndGroups(
 
       const mermaidSg = findSubgraph(graph.subgraphs, child.id)
       groups.push({
+        children: childGroups,
+        height,
         id: child.id,
         label: mermaidSg?.label ?? "",
+        width,
         x,
         y,
-        width,
-        height,
-        children: childGroups,
       })
     } else {
       // This is a leaf node
@@ -742,14 +741,14 @@ function extractNodesAndGroups(
         const inlineStyle = resolveNodeStyle(child.id, graph)
 
         nodes.push({
+          height,
           id: child.id,
+          inlineStyle,
           label: mNode.label,
           shape: mNode.shape,
+          width,
           x,
           y,
-          width,
-          height,
-          inlineStyle,
         })
       }
 
@@ -908,17 +907,17 @@ function extractEdgesRecursively(
     }
 
     edges.push({
-      source: originalEdge.source,
-      target: originalEdge.target,
-      label: originalEdge.label,
-      style: originalEdge.style,
-      hasArrowStart: originalEdge.hasArrowStart,
-      hasArrowEnd: originalEdge.hasArrowEnd,
-      startMarker: originalEdge.startMarker,
       endMarker: originalEdge.endMarker,
-      points: orthogonalPoints,
-      labelPosition,
+      hasArrowEnd: originalEdge.hasArrowEnd,
+      hasArrowStart: originalEdge.hasArrowStart,
       inlineStyle: resolveEdgeStyle(edgeIndex, graph),
+      label: originalEdge.label,
+      labelPosition,
+      points: orthogonalPoints,
+      source: originalEdge.source,
+      startMarker: originalEdge.startMarker,
+      style: originalEdge.style,
+      target: originalEdge.target,
     })
   }
 }
@@ -981,13 +980,11 @@ function orthogonalizeEdgePoints(
           ? margins.rightX + offset
           : margins.leftX - offset
 
-        result.push({ x: marginX, y: prev.y })
-        result.push({ x: marginX, y: curr.y })
+        result.push({ x: marginX, y: prev.y }, { x: marginX, y: curr.y })
       } else {
         // Fallback: Z-path through vertical midpoint
         const midY = (prev.y + curr.y) / 2
-        result.push({ x: prev.x, y: midY })
-        result.push({ x: curr.x, y: midY })
+        result.push({ x: prev.x, y: midY }, { x: curr.x, y: midY })
       }
     }
 
@@ -1065,13 +1062,13 @@ function collectEdgeSegments(
 
         if (sourceIsPort) {
           // Port → node: incoming internal segment
-          seg.incoming = { edgeIndex, isInternal, points, labelPosition }
+          seg.incoming = { edgeIndex, isInternal, labelPosition, points }
         } else if (targetIsPort) {
           // Node → port: outgoing internal segment
-          seg.outgoing = { edgeIndex, isInternal, points, labelPosition }
+          seg.outgoing = { edgeIndex, isInternal, labelPosition, points }
         }
       } else {
-        seg.external = { edgeIndex, isInternal, points, labelPosition }
+        seg.external = { edgeIndex, isInternal, labelPosition, points }
       }
     }
   }
@@ -1348,8 +1345,7 @@ function findGroupsContainingPoint(
   const result: PositionedGroup[] = []
   for (const g of groups) {
     if (x >= g.x && x <= g.x + g.width && y >= g.y && y <= g.y + g.height) {
-      result.push(g)
-      result.push(...findGroupsContainingPoint(x, y, g.children))
+      result.push(g, ...findGroupsContainingPoint(x, y, g.children))
     }
   }
   return result

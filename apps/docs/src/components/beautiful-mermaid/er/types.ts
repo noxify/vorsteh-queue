@@ -31,7 +31,7 @@ export interface ErAttribute {
   /** Attribute name */
   name: string
   /** Key constraints: PK, FK, UK */
-  keys: Array<'PK' | 'FK' | 'UK'>
+  keys: ('PK' | 'FK' | 'UK')[]
   /** Optional comment */
   comment?: string
 }
@@ -93,5 +93,5 @@ export interface PositionedErRelationship {
   label: string
   identifying: boolean
   /** Path points from entity1 to entity2 */
-  points: Array<{ x: number; y: number }>
+  points: { x: number; y: number }[]
 }

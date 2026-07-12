@@ -15,39 +15,39 @@ import { getSeriesColor, CHART_ACCENT_FALLBACK } from './colors'
 // ============================================================================
 
 const CHART_FONT = {
-  titleWeight: 500,
   axisTitleWeight: 400,
-  labelWeight: 400,
   dotRadius: 4,
+  labelWeight: 400,
   lineWidth: 3,
+  titleWeight: 500,
 } as const
 
 const XY_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: 14,
   edgeLabelFontSize: 16,
-  groupHeaderFontSize: 20,
-  nodeLabelFontWeight: CHART_FONT.labelWeight,
   edgeLabelFontWeight: CHART_FONT.axisTitleWeight,
-  groupHeaderFontWeight: CHART_FONT.titleWeight,
-  nodePaddingX: 0,
-  nodePaddingY: 0,
-  nodeLineWidth: 0,
   edgeLineWidth: CHART_FONT.lineWidth,
   groupCornerRadius: 0,
+  groupHeaderFontSize: 20,
+  groupHeaderFontWeight: CHART_FONT.titleWeight,
+  groupLineWidth: STROKE_WIDTHS.outerBox,
   groupPaddingX: 0,
   groupPaddingY: 0,
-  groupLineWidth: STROKE_WIDTHS.outerBox,
+  nodeLabelFontSize: 14,
+  nodeLabelFontWeight: CHART_FONT.labelWeight,
+  nodeLineWidth: 0,
+  nodePaddingX: 0,
+  nodePaddingY: 0,
 }
 
 const TIP = {
   fontSize: 15,
   fontWeight: 500,
   height: 32,
-  padX: 14,
-  offsetY: 12,
-  rx: 8,
   minY: 4,
+  offsetY: 12,
+  padX: 14,
   pointerSize: 6,
+  rx: 8,
 } as const
 
 export function renderXYChartSvg(
@@ -65,14 +65,13 @@ export function renderXYChartSvg(
   const svgMeta = buildSvgMetadata(chart)
   const svgTag = svgOpenTag(chart.width, chart.height, colors, transparent, svgMeta.openTag)
     .replace('<svg ', `<svg data-xychart-colors="${maxColorIdx}" `)
-  parts.push(svgTag)
-  parts.push(buildStyleBlock(font, false, colors.shadow))
+  parts.push(svgTag, buildStyleBlock(font, false, colors.shadow))
 
   const { style: chartStyle, defs } = chartStyles(chart, interactive, colors.accent, colors.bg, options)
   parts.push(chartStyle)
-  if (defs) parts.push(defs)
-  if (svgMeta.title) parts.push(svgMeta.title)
-  if (svgMeta.description) parts.push(svgMeta.description)
+  if (defs) {parts.push(defs)}
+  if (svgMeta.title) {parts.push(svgMeta.title)}
+  if (svgMeta.description) {parts.push(svgMeta.description)}
 
   for (const gridLine of chart.gridLines) {
     parts.push(
@@ -99,15 +98,15 @@ export function renderXYChartSvg(
       barOverlay.push(
         `<g class="xychart-bar-group">` +
         `<rect x="${r(bar.x)}" y="${r(bar.y)}" width="${r(bar.width)}" height="${r(bar.height)}" fill="transparent"/>` +
-        `<title>${escapeXml(tipTitle)}</title>` +
-        tooltipAbove(tipAnchorX, tipAnchorY, tipText) +
-        `</g>`
+        `<title>${escapeXml(tipTitle)}</title>${ 
+        tooltipAbove(tipAnchorX, tipAnchorY, tipText) 
+        }</g>`
       )
     }
   }
 
   for (const line of chart.lines) {
-    if (line.points.length === 0) continue
+    if (line.points.length === 0) {continue}
     parts.push(`<path d="${polylinePath(line.points)}" class="xychart-line xychart-color-${line.colorIndex}"/>`)
   }
 
@@ -122,9 +121,9 @@ export function renderXYChartSvg(
           `<g class="xychart-dot-group">` +
           `<circle cx="${r(point.x)}" cy="${r(point.y)}" r="${CHART_FONT.dotRadius * 3}" fill="transparent" class="xychart-hit"/>` +
           `<circle cx="${r(point.x)}" cy="${r(point.y)}" r="${CHART_FONT.dotRadius}" class="xychart-dot xychart-color-${line.colorIndex}"${dataAttrs}/>` +
-          `<title>${escapeXml(tipTitle)}</title>` +
-          tooltipAbove(point.x, point.y - CHART_FONT.dotRadius, tipText) +
-          `</g>`
+          `<title>${escapeXml(tipTitle)}</title>${ 
+          tooltipAbove(point.x, point.y - CHART_FONT.dotRadius, tipText) 
+          }</g>`
         )
       }
     }
@@ -144,7 +143,7 @@ export function renderXYChartSvg(
   renderAxisLabels(parts, chart.yAxis.ticks, chart.yAxis.config.labelFontSize, 'y', style)
 
   if (chart.xAxis.title) {
-    const title = chart.xAxis.title
+    const {title} = chart.xAxis
     const transform = title.rotate ? ` transform="rotate(${title.rotate},${title.x},${title.y})"` : ''
     parts.push(
       `<text x="${title.x}" y="${title.y}" text-anchor="middle"${transform} ` +
@@ -154,7 +153,7 @@ export function renderXYChartSvg(
   }
 
   if (chart.yAxis.title) {
-    const title = chart.yAxis.title
+    const {title} = chart.yAxis
     const transform = title.rotate ? ` transform="rotate(${title.rotate},${title.x},${title.y})"` : ''
     parts.push(
       `<text x="${title.x}" y="${title.y}" text-anchor="middle"${transform} ` +
@@ -171,8 +170,8 @@ export function renderXYChartSvg(
     )
   }
 
-  for (const group of barOverlay) parts.push(group)
-  for (const group of dotOverlay) parts.push(group)
+  for (const group of barOverlay) {parts.push(group)}
+  for (const group of dotOverlay) {parts.push(group)}
 
   parts.push('</svg>')
   return parts.join('\n')
@@ -186,7 +185,7 @@ function renderAxis(parts: string[], axis: PositionedXYChart['xAxis'], axisName:
     )
   }
 
-  if (!axis.config.showTick) return
+  if (!axis.config.showTick) {return}
   for (const tick of axis.ticks) {
     parts.push(
       `<line x1="${r(tick.x)}" y1="${r(tick.y)}" x2="${r(tick.tx)}" y2="${r(tick.ty)}" ` +
@@ -224,12 +223,12 @@ function chartStyles(
   const accentHex = themeAccent ?? CHART_ACCENT_FALLBACK
   const themeOverrides = chart.theme
   const colorIndices = new Set<number>()
-  for (const bar of chart.bars) colorIndices.add(bar.colorIndex)
-  for (const line of chart.lines) colorIndices.add(line.colorIndex)
+  for (const bar of chart.bars) {colorIndices.add(bar.colorIndex)}
+  for (const line of chart.lines) {colorIndices.add(line.colorIndex)}
 
   const colorVarDefs: string[] = []
   const explicitPalette = themeOverrides.plotColorPalette
-  for (const index of [...colorIndices].sort((a, b) => a - b)) {
+  for (const index of [...colorIndices].toSorted((a, b) => a - b)) {
     const value = explicitPalette && explicitPalette.length > 0
       ? explicitPalette[index % explicitPalette.length]!
       : (index === 0 ? `var(--accent, ${CHART_ACCENT_FALLBACK})` : getSeriesColor(index, accentHex, bgColor))
@@ -237,10 +236,9 @@ function chartStyles(
   }
 
   const seriesRules: string[] = []
-  for (const index of [...colorIndices].sort((a, b) => a - b)) {
+  for (const index of [...colorIndices].toSorted((a, b) => a - b)) {
     const color = `var(--xychart-color-${index})`
-    seriesRules.push(`  .xychart-bar.xychart-color-${index} { fill: ${color}; }`)
-    seriesRules.push(`  path.xychart-color-${index}, line.xychart-color-${index} { stroke: ${color}; }`)
+    seriesRules.push(`  .xychart-bar.xychart-color-${index} { fill: ${color}; }`, `  path.xychart-color-${index}, line.xychart-color-${index} { stroke: ${color}; }`)
     seriesRules.push(`  circle.xychart-color-${index} { fill: ${color}; }`)
   }
 
@@ -286,11 +284,11 @@ function chartStyles(
 ${seriesRules.join('\n')}${tipRules}${extraThemeCss}
 </style>`
 
-  return { style, defs: '' }
+  return { defs: '', style }
 }
 
-function polylinePath(points: Array<{ x: number; y: number }>): string {
-  if (points.length === 0) return ''
+function polylinePath(points: { x: number; y: number }[]): string {
+  if (points.length === 0) {return ''}
   let path = `M${r(points[0]!.x)},${r(points[0]!.y)}`
   for (let i = 1; i < points.length; i++) {
     path += ` L${r(points[i]!.x)},${r(points[i]!.y)}`
@@ -301,16 +299,16 @@ function polylinePath(points: Array<{ x: number; y: number }>): string {
 function buildBarDataLabels(
   bars: PositionedBar[],
   horizontal: boolean,
-): Array<{
+): {
   x: number
   y: number
   text: string
   anchor: 'middle' | 'end'
   fontSize: number
   dominantBaseline?: 'middle' | 'hanging'
-}> {
+}[] {
   const visibleBars = bars.filter(bar => bar.width > 0 && bar.height > 0)
-  if (visibleBars.length === 0) return []
+  if (visibleBars.length === 0) {return []}
 
   const texts = visibleBars.map(bar => formatTipValue(bar.value))
   const candidates = visibleBars.map((bar, index) => {
@@ -325,25 +323,25 @@ function buildBarDataLabels(
   })
 
   const rawFontSize = Math.floor(Math.min(...candidates))
-  if (!Number.isFinite(rawFontSize) || rawFontSize < 8) return []
+  if (!Number.isFinite(rawFontSize) || rawFontSize < 8) {return []}
   const fontSize = Math.min(16, rawFontSize)
 
   return visibleBars.map((bar, index) => horizontal
     ? {
+      anchor: 'end',
+      dominantBaseline: 'middle',
+      fontSize,
+      text: texts[index]!,
       x: bar.x + bar.width - 8,
       y: bar.y + bar.height / 2,
-      text: texts[index]!,
-      anchor: 'end',
-      fontSize,
-      dominantBaseline: 'middle',
     }
     : {
+      anchor: 'middle',
+      dominantBaseline: 'hanging',
+      fontSize,
+      text: texts[index]!,
       x: bar.x + bar.width / 2,
       y: bar.y + 8,
-      text: texts[index]!,
-      anchor: 'middle',
-      fontSize,
-      dominantBaseline: 'hanging',
     })
 }
 
@@ -374,7 +372,7 @@ function tooltipAbove(cx: number, topY: number, text: string): string {
 }
 
 function formatTipValue(value: number): string {
-  if (Number.isInteger(value)) return String(value)
+  if (Number.isInteger(value)) {return String(value)}
   return value.toFixed(Math.abs(value) < 10 ? 1 : 0)
 }
 
@@ -383,15 +381,15 @@ function r(value: number): string {
 }
 
 function letterAttr(value: number): string {
-  return value !== 0 ? ` letter-spacing="${value}"` : ''
+  return value === 0 ? '' : ` letter-spacing="${value}"`
 }
 
 function escapeXml(text: string): string {
   return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;')
 }
 
 function buildSvgMetadata(chart: PositionedXYChart): {
@@ -410,24 +408,24 @@ function buildSvgMetadata(chart: PositionedXYChart): {
   const style = chart.config.useMaxWidth ? `max-width:${responsiveWidth}px` : undefined
 
   return {
+    description: chart.accessibility?.description
+      ? `<desc id="${accDescId}">${escapeXml(chart.accessibility.description)}</desc>`
+      : undefined,
     openTag: {
-      width,
+      attrs: {
+        'aria-describedby': accDescId,
+        'aria-labelledby': accTitleId,
+        'aria-roledescription': 'xychart',
+        class: 'xychart',
+        id: svgId,
+        role: (accTitleId || accDescId) ? 'img' : undefined,
+      },
       height,
       style,
-      attrs: {
-        id: svgId,
-        class: 'xychart',
-        role: (accTitleId || accDescId) ? 'img' : undefined,
-        'aria-roledescription': 'xychart',
-        'aria-labelledby': accTitleId,
-        'aria-describedby': accDescId,
-      },
+      width,
     },
     title: chart.accessibility?.title
       ? `<title id="${accTitleId}">${escapeXml(chart.accessibility.title)}</title>`
-      : undefined,
-    description: chart.accessibility?.description
-      ? `<desc id="${accDescId}">${escapeXml(chart.accessibility.description)}</desc>`
       : undefined,
   }
 }
@@ -444,7 +442,7 @@ function hashChart(chart: PositionedXYChart): string {
   ].join('|')
   let hash = 5381
   for (let i = 0; i < text.length; i++) {
-    hash = ((hash << 5) + hash) ^ text.charCodeAt(i)
+    hash = ((hash << 5) + hash) ^ text.codePointAt(i)
   }
   return Math.abs(hash >>> 0).toString(36)
 }

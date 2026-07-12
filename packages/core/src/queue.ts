@@ -64,9 +64,9 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     super()
     this._adapter = adapter
     this._config = {
+      deadLetterQueue: { enabled: true },
       removeOnComplete: 100,
       removeOnFail: 50,
-      deadLetterQueue: { enabled: true },
       ...config,
     }
     this._telemetry = createTelemetry({ queueName: this._config.name })
@@ -157,22 +157,22 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     }
 
     const job = await this._adapter.addJob({
+      attempts: 0,
+      cron: jobOptions.cron,
+      dependsOn: jobOptions.dependsOn,
+      groupKey: jobOptions.group,
+      maxAttempts: jobOptions.maxAttempts ?? 3,
       name,
       payload,
-      status,
       priority: jobOptions.priority ?? 2,
-      attempts: 0,
-      maxAttempts: jobOptions.maxAttempts ?? 3,
       processAt,
       progress: 0,
       repeatCount: 0,
-      timeout: jobOptions.timeout,
-      cron: jobOptions.cron,
       repeatEvery: jobOptions.repeat?.every,
       repeatLimit: jobOptions.repeat?.limit,
-      groupKey: jobOptions.group,
+      status,
+      timeout: jobOptions.timeout,
       uniqueKey: jobOptions.unique?.key,
-      dependsOn: jobOptions.dependsOn,
     })
 
     this.emit("job:added", job)
@@ -197,17 +197,17 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     const now = new Date()
 
     const newJobs = payloads.map((payload) => ({
+      attempts: 0,
+      groupKey: jobOptions.group,
+      maxAttempts: jobOptions.maxAttempts ?? 3,
       name,
       payload,
-      status: "pending" as JobStatus,
       priority: jobOptions.priority ?? 2,
-      attempts: 0,
-      maxAttempts: jobOptions.maxAttempts ?? 3,
       processAt: asUtc(now),
       progress: 0,
       repeatCount: 0,
+      status: "pending" as JobStatus,
       timeout: jobOptions.timeout,
-      groupKey: jobOptions.group,
     }))
 
     const jobs = await this._adapter.addJobs(newJobs)

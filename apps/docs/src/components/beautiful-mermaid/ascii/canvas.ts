@@ -296,7 +296,7 @@ export function canvasToString(canvas: Canvas, options?: CanvasToStringOptions):
       let line = ''
       for (let x = 0; x <= maxX; x++) {
         const ch = canvas[x]![y]!
-        if (ch !== WIDE_CHAR_CONTINUATION) line += ch
+        if (ch !== WIDE_CHAR_CONTINUATION) {line += ch}
       }
       lines.push(line)
     } else {
@@ -363,7 +363,7 @@ export function flipCanvasVertically(canvas: Canvas): Canvas {
   for (const col of canvas) {
     for (let y = 0; y < col.length; y++) {
       const flipped = VERTICAL_FLIP_MAP[col[y]!]
-      if (flipped) col[y] = flipped
+      if (flipped) {col[y] = flipped}
     }
   }
 
@@ -393,7 +393,7 @@ export function drawText(
   forceOverwrite = false
 ): void {
   let width = 0
-  for (const ch of text) width += charVisualWidth(ch)
+  for (const ch of text) {width += charVisualWidth(ch)}
   increaseSize(canvas, start.x + width, start.y)
   let offset = 0
   for (const ch of text) {
@@ -421,8 +421,8 @@ export function setCanvasSizeToGrid(
 ): void {
   let maxX = 0
   let maxY = 0
-  for (const w of columnWidth.values()) maxX += w
-  for (const h of rowHeight.values()) maxY += h
+  for (const w of columnWidth.values()) {maxX += w}
+  for (const h of rowHeight.values()) {maxY += h}
   increaseSize(canvas, maxX - 1, maxY - 1)
 }
 
@@ -437,7 +437,7 @@ export function setRoleCanvasSizeToGrid(
 ): void {
   let maxX = 0
   let maxY = 0
-  for (const w of columnWidth.values()) maxX += w
-  for (const h of rowHeight.values()) maxY += h
+  for (const w of columnWidth.values()) {maxX += w}
+  for (const h of rowHeight.values()) {maxY += h}
   increaseRoleCanvasSize(roleCanvas, maxX - 1, maxY - 1)
 }

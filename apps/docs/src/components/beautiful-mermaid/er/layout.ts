@@ -16,33 +16,33 @@ import { elkLayoutSync } from '../elk-instance'
 
 /** Layout constants for ER diagrams */
 const ER = {
-  padding: 40,
-  boxPadX: 14,
-  headerHeight: 34,
-  rowHeight: 22,
-  minWidth: 140,
   attrFontSize: 11,
   attrFontWeight: 400,
-  nodeSpacing: 70,
+  boxPadX: 14,
+  headerHeight: 34,
   layerSpacing: 90,
+  minWidth: 140,
+  nodeSpacing: 70,
+  padding: 40,
+  rowHeight: 22,
 } as const
 
 const ER_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: FONT_SIZES.nodeLabel,
   edgeLabelFontSize: FONT_SIZES.edgeLabel,
-  groupHeaderFontSize: FONT_SIZES.groupHeader,
-  nodeLabelFontWeight: FONT_WEIGHTS.nodeLabel,
   edgeLabelFontWeight: FONT_WEIGHTS.edgeLabel,
-  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
-  nodePaddingX: ER.boxPadX,
-  nodePaddingY: 8,
-  nodeCornerRadius: 0,
-  nodeLineWidth: STROKE_WIDTHS.outerBox,
   edgeLineWidth: STROKE_WIDTHS.connector,
   groupCornerRadius: 0,
+  groupHeaderFontSize: FONT_SIZES.groupHeader,
+  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
+  groupLineWidth: STROKE_WIDTHS.outerBox,
   groupPaddingX: ER.boxPadX,
   groupPaddingY: 8,
-  groupLineWidth: STROKE_WIDTHS.outerBox,
+  nodeCornerRadius: 0,
+  nodeLabelFontSize: FONT_SIZES.nodeLabel,
+  nodeLabelFontWeight: FONT_WEIGHTS.nodeLabel,
+  nodeLineWidth: STROKE_WIDTHS.outerBox,
+  nodePaddingX: ER.boxPadX,
+  nodePaddingY: 8,
 }
 
 type EntitySizeMap = Map<string, { width: number; height: number; headerHeight: number }>
@@ -59,34 +59,34 @@ function buildErElkGraph(
     const headerTextW = estimateTextWidth(entity.label, style.nodeLabelFontSize, style.nodeLabelFontWeight)
     let maxAttrW = 0
     for (const attr of entity.attributes) {
-      const attrText = `${attr.type}  ${attr.name}${attr.keys.length > 0 ? '  ' + attr.keys.join(',') : ''}`
+      const attrText = `${attr.type}  ${attr.name}${attr.keys.length > 0 ? `  ${  attr.keys.join(',')}` : ''}`
       const w = estimateMonoTextWidth(attrText, ER.attrFontSize)
-      if (w > maxAttrW) maxAttrW = w
+      if (w > maxAttrW) {maxAttrW = w}
     }
     const width = Math.max(ER.minWidth, headerTextW + style.nodePaddingX * 2, maxAttrW + style.nodePaddingX * 2)
     const headerHeight = Math.max(ER.headerHeight, measureMultilineText(entity.label, style.nodeLabelFontSize, style.nodeLabelFontWeight).height + style.nodePaddingY * 2)
     const height = headerHeight + Math.max(entity.attributes.length, 1) * ER.rowHeight
-    entitySizes.set(entity.id, { width, height, headerHeight })
+    entitySizes.set(entity.id, { headerHeight, height, width })
   }
 
   const elkGraph: ElkNode = {
+    children: [],
+    edges: [],
     id: 'root',
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': 'RIGHT',
-      'elk.spacing.nodeNode': String(ER.nodeSpacing),
+      'elk.edgeLabels.placement': 'CENTER',
+      'elk.edgeRouting': 'ORTHOGONAL',
       'elk.layered.spacing.nodeNodeBetweenLayers': String(ER.layerSpacing),
       'elk.padding': `[top=${ER.padding},left=${ER.padding},bottom=${ER.padding},right=${ER.padding}]`,
-      'elk.edgeRouting': 'ORTHOGONAL',
-      'elk.edgeLabels.placement': 'CENTER',
+      'elk.spacing.nodeNode': String(ER.nodeSpacing),
     },
-    children: [],
-    edges: [],
   }
 
   for (const entity of diagram.entities) {
     const size = entitySizes.get(entity.id)!
-    elkGraph.children!.push({ id: entity.id, width: size.width, height: size.height })
+    elkGraph.children!.push({ height: size.height, id: entity.id, width: size.width })
   }
 
   for (let i = 0; i < diagram.relationships.length; i++) {
@@ -94,7 +94,7 @@ function buildErElkGraph(
     const metrics = measureMultilineText(rel.label, style.edgeLabelFontSize, style.edgeLabelFontWeight)
     const edge: ElkExtendedEdge = { id: `e${i}`, sources: [rel.entity1], targets: [rel.entity2] }
     if (rel.label) {
-      edge.labels = [{ text: rel.label, width: metrics.width + 8, height: metrics.height + 6 }]
+      edge.labels = [{ height: metrics.height + 6, text: rel.label, width: metrics.width + 8 }]
     }
     elkGraph.edges!.push(edge)
   }
@@ -109,22 +109,22 @@ function extractErLayout(
   entitySizes: EntitySizeMap
 ): PositionedErDiagram {
   const entityLookup = new Map<string, ErEntity>()
-  for (const entity of diagram.entities) entityLookup.set(entity.id, entity)
+  for (const entity of diagram.entities) {entityLookup.set(entity.id, entity)}
 
   const positionedEntities: PositionedErEntity[] = []
   for (const child of result.children ?? []) {
     const entity = entityLookup.get(child.id)
     if (entity) {
       positionedEntities.push({
+        attributes: entity.attributes,
+        headerHeight: entitySizes.get(entity.id)!.headerHeight,
+        height: child.height ?? entitySizes.get(entity.id)!.height,
         id: entity.id,
         label: entity.label,
-        attributes: entity.attributes,
+        rowHeight: ER.rowHeight,
+        width: child.width ?? entitySizes.get(entity.id)!.width,
         x: child.x ?? 0,
         y: child.y ?? 0,
-        width: child.width ?? entitySizes.get(entity.id)!.width,
-        height: child.height ?? entitySizes.get(entity.id)!.height,
-        headerHeight: entitySizes.get(entity.id)!.headerHeight,
-        rowHeight: ER.rowHeight,
       })
     }
   }
@@ -147,23 +147,23 @@ function extractErLayout(
     }
 
     relationships.push({
-      entity1: rel.entity1,
-      entity2: rel.entity2,
       cardinality1: rel.cardinality1,
       cardinality2: rel.cardinality2,
-      label: rel.label,
+      entity1: rel.entity1,
+      entity2: rel.entity2,
       identifying: rel.identifying,
+      label: rel.label,
       points,
     })
   }
 
   return {
-    width: result.width ?? 600,
-    height: result.height ?? 400,
-    accessibilityTitle: diagram.accessibilityTitle,
     accessibilityDescription: diagram.accessibilityDescription,
+    accessibilityTitle: diagram.accessibilityTitle,
     entities: positionedEntities,
+    height: result.height ?? 400,
     relationships,
+    width: result.width ?? 600,
   }
 }
 
@@ -175,7 +175,7 @@ export function layoutErDiagramSync(
   options: RenderOptions = {}
 ): PositionedErDiagram {
   if (diagram.entities.length === 0) {
-    return { width: 0, height: 0, accessibilityTitle: diagram.accessibilityTitle, accessibilityDescription: diagram.accessibilityDescription, entities: [], relationships: [] }
+    return { accessibilityDescription: diagram.accessibilityDescription, accessibilityTitle: diagram.accessibilityTitle, entities: [], height: 0, relationships: [], width: 0 }
   }
 
   const { elkGraph, entitySizes } = buildErElkGraph(diagram, options)

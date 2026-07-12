@@ -284,8 +284,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     while (this.activeJobs.size < this.config.concurrency) {
       const currentActiveGroups = this.getActiveGroups()
       const getOptions: GetNextJobOptions = {
-        handlerNames: singleHandlerNames,
         activeGroups: currentActiveGroups,
+        handlerNames: singleHandlerNames,
       }
 
       // eslint-disable-next-line no-await-in-loop
@@ -323,8 +323,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
     this.activeJobs.set(job.id, {
       controller,
-      promise,
       handlerName: job.name,
+      promise,
       span,
     })
 
@@ -347,8 +347,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       await this.adapter.incrementJobAttempts(job.id)
       const processingJob: Job = {
         ...job,
-        status: "processing",
         attempts: job.attempts + 1,
+        status: "processing",
       }
       this.emit("job:processing", processingJob)
 
@@ -371,15 +371,15 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
       // Success
       await this.adapter.updateJobStatus(job.id, {
-        status: "completed",
         result,
+        status: "completed",
       })
       const completedJob: Job = {
         ...processingJob,
-        status: "completed",
-        result,
         completedAt: new Date(),
         processedAt: processingJob.processedAt ?? new Date(),
+        result,
+        status: "completed",
       }
       this.emit("job:completed", completedJob)
       this.telemetry.jobCompleted(completedJob, span)
@@ -419,8 +419,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     if (err instanceof SleepInterrupt) {
       const processAt = new Date(Date.now() + err.duration)
       await this.adapter.updateJobStatus(job.id, {
-        status: "delayed",
         processAt,
+        status: "delayed",
       })
       // SleepInterrupt is not a failure — end span without error
       span?.end()
@@ -433,8 +433,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         ? new Date(Date.now() + err.timeout)
         : new Date(Date.now() + 86_400_000) // default: check again in 24h
       await this.adapter.updateJobStatus(job.id, {
-        status: "delayed",
         processAt,
+        status: "delayed",
       })
       // WaitForInterrupt is not a failure — end span without error
       span?.end()
@@ -454,13 +454,13 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       if (reason !== "timeout") {
         // Explicit cancellation
         await this.adapter.updateJobStatus(job.id, {
-          status: "cancelled",
           cancellationReason: typeof reason === "string" ? reason : "cancelled",
+          status: "cancelled",
         })
         this.emit("job:cancelled", {
           ...job,
-          status: "cancelled",
           cancellationReason: typeof reason === "string" ? reason : undefined,
+          status: "cancelled",
         })
         this.telemetry.jobCancelled(job.name)
         span?.end()
@@ -483,28 +483,28 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       const processAt = new Date(Date.now() + delay)
 
       await this.adapter.updateJobStatus(job.id, {
-        status: "delayed",
         error,
         processAt,
+        status: "delayed",
       })
 
       const retriedJob: Job = {
         ...job,
-        status: "delayed",
-        error,
         attempts: currentAttempts,
+        error,
+        status: "delayed",
       }
       this.emit("job:retried", retriedJob)
       this.emit("job:failed", { ...retriedJob, error })
       this.telemetry.jobRetried(job.name)
     } else {
       // Move to DLQ (dead)
-      await this.adapter.updateJobStatus(job.id, { status: "dead", error })
+      await this.adapter.updateJobStatus(job.id, { error, status: "dead" })
       const deadJob: Job = {
         ...job,
-        status: "dead",
-        error,
         attempts: currentAttempts,
+        error,
+        status: "dead",
       }
       this.emit("job:dead", deadJob)
       this.emit("job:failed", { ...deadJob, error })
@@ -552,8 +552,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       this.trackGroupKey(job)
       this.activeJobs.set(job.id, {
         controller,
-        promise,
         handlerName: job.name,
+        promise,
         span: spans.get(job.id)!,
       })
     }
@@ -581,8 +581,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
       const processingJobs = jobs.map((j) => ({
         ...j,
-        status: "processing" as const,
         attempts: j.attempts + 1,
+        status: "processing" as const,
       }))
       this.emit("batch:processing", processingJobs)
 
@@ -608,16 +608,16 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         const result = results[i]
         // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential status updates per job
         await this.adapter.updateJobStatus(job.id, {
-          status: "completed",
           result,
+          status: "completed",
         })
 
         // Complete telemetry for each job
         const completedJob: Job = {
           ...job,
-          status: "completed",
-          result,
           completedAt: new Date(),
+          result,
+          status: "completed",
         }
         const span = spans.get(job.id)
         if (span) {
@@ -629,8 +629,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         "batch:completed",
         processingJobs.map((j, i) => ({
           ...j,
-          status: "completed" as const,
           result: results[i],
+          status: "completed" as const,
         }))
       )
     } catch (error) {
@@ -646,7 +646,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         await this.handleJobFailure(job, error, signal)
       }
 
-      this.emit("batch:failed", { jobs: [...jobs], error: serializedError })
+      this.emit("batch:failed", { error: serializedError, jobs: [...jobs] })
     } finally {
       for (const job of jobs) {
         this.untrackGroupKey(job)
@@ -678,15 +678,15 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       const payload = config.data(result, job)
       // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- triggers must fire sequentially
       await this.adapter.addJob({
-        name: config.create,
-        payload,
-        status: "pending",
-        priority: config.options?.priority ?? 2,
         attempts: 0,
         maxAttempts: config.options?.maxAttempts ?? 3,
+        name: config.create,
+        payload,
+        priority: config.options?.priority ?? 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
         timeout: config.options?.timeout,
       })
     }
@@ -715,11 +715,11 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     }
 
     await this.adapter.updateJobStatus(job.parentId, {
-      status: "failed",
       error: {
-        name: "ChildFailedError",
         message: `Child job ${job.id} (${job.name}) failed`,
+        name: "ChildFailedError",
       },
+      status: "failed",
     })
 
     // Cascade upward if parent also has a parent
@@ -741,24 +741,24 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
     const nextProcessAt = calculateNextRun({
       cron: job.cron,
-      repeatEvery: job.repeatEvery,
       lastRun: new Date(),
+      repeatEvery: job.repeatEvery,
     })
 
     await this.adapter.addJob({
+      attempts: 0,
+      cron: job.cron,
+      groupKey: job.groupKey,
+      maxAttempts: job.maxAttempts,
       name: job.name,
       payload: job.payload,
-      status: "delayed",
       priority: job.priority,
-      attempts: 0,
-      maxAttempts: job.maxAttempts,
       processAt: nextProcessAt,
       progress: 0,
-      cron: job.cron,
+      repeatCount: (job.repeatCount ?? 0) + 1,
       repeatEvery: job.repeatEvery,
       repeatLimit: job.repeatLimit,
-      repeatCount: (job.repeatCount ?? 0) + 1,
-      groupKey: job.groupKey,
+      status: "delayed",
       timeout: job.timeout,
     })
   }
@@ -810,8 +810,6 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
     return {
       ctx: {
-        signal,
-        step: context,
         getChildrenResults: async () => {
           const children = await this.adapter.getChildrenJobs(job.id)
           const results = new Map<string, unknown>()
@@ -820,6 +818,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
           }
           return results
         },
+        signal,
+        step: context,
       },
       getSteps,
       runCompensations,

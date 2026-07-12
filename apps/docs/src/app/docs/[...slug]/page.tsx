@@ -63,11 +63,11 @@ export async function generateMetadata(
   }
 
   return {
-    title: `${titles.join(" - ")}`,
-    description: metadata?.description ?? "",
     alternates: {
       types: alternateTypes,
     },
+    description: metadata?.description ?? "",
+    title: `${titles.join(" - ")}`,
   }
 }
 export default async function DocsPage({
@@ -235,7 +235,7 @@ export default async function DocsPage({
           } catch {
             // oxlint-disable-next-line no-console
             console.dir(
-              { message: "Unable to load api reference", file: ref.file },
+              { file: ref.file, message: "Unable to load api reference" },
               { depth: 0 }
             )
             return []

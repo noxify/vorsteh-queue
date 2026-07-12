@@ -9,8 +9,8 @@ interface ReportJob {
 }
 
 const worker = new Worker(adapter, {
-  name: "advanced-queue",
   concurrency: 2,
+  name: "advanced-queue",
   removeOnComplete: 20,
   removeOnFail: 10,
 })
@@ -41,12 +41,12 @@ async function main() {
 
   await queue.add(
     "generate-report",
-    { userId: "user123", type: "monthly" },
+    { type: "monthly", userId: "user123" },
     { priority: 1 }
   )
   await queue.add(
     "generate-report",
-    { userId: "user456", type: "weekly" },
+    { type: "weekly", userId: "user456" },
     { delay: 5000 }
   )
 

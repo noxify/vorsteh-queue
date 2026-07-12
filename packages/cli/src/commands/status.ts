@@ -13,7 +13,7 @@ export function createStatusCommand() {
       typeof options
 
     await withTransport(
-      { url: globalOpts.url, token: globalOpts.token, queue: globalOpts.queue },
+      { queue: globalOpts.queue, token: globalOpts.token, url: globalOpts.url },
       async (transport) => {
         const stats = await transport.getStats()
         // oxlint-disable-next-line react-doctor/server-sequential-independent-await

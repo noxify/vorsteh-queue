@@ -86,8 +86,8 @@ function validateConfig(config: Partial<QueueConfigFile>): QueueConfigFile {
 
   return {
     adapter: config.adapter,
-    queues: config.queues,
     defaultQueue: config.defaultQueue,
+    queues: config.queues,
   }
 }
 
@@ -106,8 +106,8 @@ function validateConfig(config: Partial<QueueConfigFile>): QueueConfigFile {
  */
 export async function loadCliConfig(cwd?: string): Promise<QueueConfigFile> {
   const { config } = await c12LoadConfig<Partial<QueueConfigFile>>({
-    name: "queue",
     cwd,
+    name: "queue",
   })
 
   if (!config) {

@@ -27,6 +27,8 @@ import { getCorners } from './corners'
  *   └┴─────────┴┘
  */
 export const subroutineRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions(label: string, options: ShapeRenderOptions): ShapeDimensions {
     const lines = splitLines(label)
     const maxLineWidth = Math.max(...lines.map(l => visualWidth(l)), 0)
@@ -96,8 +98,6 @@ export const subroutineRenderer: ShapeRenderer = {
 
     return canvas
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }
 
 // ============================================================================
@@ -114,14 +114,14 @@ export const subroutineRenderer: ShapeRenderer = {
  *   ◎─────────◎
  */
 export const doublecircleRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions: getBoxDimensions,
 
   render(label, dimensions, options) {
     const corners = getCorners('doublecircle', options.useAscii)
     return renderBox(label, dimensions, corners, options.useAscii)
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }
 
 // ============================================================================
@@ -138,6 +138,8 @@ export const doublecircleRenderer: ShapeRenderer = {
  *   ╰─────╯
  */
 export const cylinderRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions(label: string, options: ShapeRenderOptions): ShapeDimensions {
     const lines = splitLines(label)
     const maxLineWidth = Math.max(...lines.map(l => visualWidth(l)), 0)
@@ -211,8 +213,6 @@ export const cylinderRenderer: ShapeRenderer = {
 
     return canvas
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }
 
 // ============================================================================
@@ -229,14 +229,14 @@ export const cylinderRenderer: ShapeRenderer = {
  *   ▷─────────┘
  */
 export const asymmetricRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions: getBoxDimensions,
 
   render(label, dimensions, options) {
     const corners = getCorners('asymmetric', options.useAscii)
     return renderBox(label, dimensions, corners, options.useAscii)
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }
 
 // ============================================================================
@@ -253,14 +253,14 @@ export const asymmetricRenderer: ShapeRenderer = {
  *   └─────────┘
  */
 export const trapezoidRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions: getBoxDimensions,
 
   render(label, dimensions, options) {
     const corners = getCorners('trapezoid', options.useAscii)
     return renderBox(label, dimensions, corners, options.useAscii)
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }
 
 // ============================================================================
@@ -277,12 +277,12 @@ export const trapezoidRenderer: ShapeRenderer = {
  *   ◺─────────◿
  */
 export const trapezoidAltRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions: getBoxDimensions,
 
   render(label, dimensions, options) {
     const corners = getCorners('trapezoid-alt', options.useAscii)
     return renderBox(label, dimensions, corners, options.useAscii)
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }

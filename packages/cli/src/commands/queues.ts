@@ -27,8 +27,8 @@ export function createQueuesCommand() {
 
     const defaultQueue = resolveDefaultQueueName(config)
     const entries: QueueListEntry[] = config.queues.map((q) => ({
-      name: q.name,
       isDefault: q.name === defaultQueue,
+      name: q.name,
     }))
 
     if (options.json) {

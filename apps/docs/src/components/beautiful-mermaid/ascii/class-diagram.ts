@@ -19,7 +19,7 @@ import { splitLines } from './multiline-utils'
 
 /** Classify a character from a box drawing as 'border' or 'text'. */
 function classifyBoxChar(ch: string): CharRole {
-  if (/^[┌┐└┘├┤┬┴┼│─╭╮╰╯+\-|]$/.test(ch)) return 'border'
+  if (/^[┌┐└┘├┤┬┴┼│─╭╮╰╯+\-|]$/.test(ch)) {return 'border'}
   return 'text'
 }
 
@@ -38,7 +38,7 @@ function formatMember(m: ClassMember): string {
 function buildClassSections(cls: ClassNode): string[][] {
   // Header section: optional annotation + class name (may be multi-line)
   const header: string[] = []
-  if (cls.annotation) header.push(`<<${cls.annotation}>>`)
+  if (cls.annotation) {header.push(`<<${cls.annotation}>>`)}
   // Support multi-line class names
   const nameLines = splitLines(cls.label)
   header.push(...nameLines)
@@ -50,9 +50,9 @@ function buildClassSections(cls: ClassNode): string[][] {
   const methods = cls.methods.map(formatMember)
 
   // If no attrs and no methods, just return header (1-section box)
-  if (attrs.length === 0 && methods.length === 0) return [header]
+  if (attrs.length === 0 && methods.length === 0) {return [header]}
   // If no methods, return header + attrs (2-section box)
-  if (methods.length === 0) return [header, attrs]
+  if (methods.length === 0) {return [header, attrs]}
   // Full 3-section box
   return [header, attrs, methods]
 }
@@ -76,7 +76,7 @@ interface RelMarker {
  */
 function getRelMarker(type: RelationshipType, markerAt: 'from' | 'to'): RelMarker {
   const dashed = type === 'dependency' || type === 'realization'
-  return { type, markerAt, dashed }
+  return { dashed, markerAt, type }
 }
 
 /**
@@ -91,7 +91,7 @@ function getMarkerShape(
 ): string {
   switch (type) {
     case 'inheritance':
-    case 'realization':
+    case 'realization': {
       // Hollow triangle - rotate based on line direction
       // Triangle points TOWARD the parent class
       if (direction === 'down') {
@@ -107,14 +107,17 @@ function getMarkerShape(
         // Default: line goes right - triangle points RIGHT
         return useAscii ? '<' : '▷'
       }
-    case 'composition':
+    }
+    case 'composition': {
       // Filled diamond - omnidirectional shape
       return useAscii ? '*' : '◆'
-    case 'aggregation':
+    }
+    case 'aggregation': {
       // Hollow diamond - omnidirectional shape
       return useAscii ? 'o' : '◇'
+    }
     case 'association':
-    case 'dependency':
+    case 'dependency': {
       // Directional arrow - rotate based on line direction
       if (direction === 'down') {
         return useAscii ? 'v' : '▼'
@@ -126,6 +129,7 @@ function getMarkerShape(
         // Default to right (or when direction not specified)
         return useAscii ? '>' : '▶'
       }
+    }
   }
 }
 
@@ -152,9 +156,9 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('%%'))
   const diagram = parseClassDiagram(lines)
 
-  if (diagram.classes.length === 0) return ''
+  if (diagram.classes.length === 0) {return ''}
 
-  const useAscii = config.useAscii
+  const {useAscii} = config
   const hGap = 4  // horizontal gap between class boxes
   const vGap = 3  // vertical gap between levels (enough for relationship lines)
 
@@ -170,12 +174,12 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
     // Compute box dimensions from drawMultiBox logic
     let maxTextW = 0
     for (const section of sections) {
-      for (const line of section) maxTextW = Math.max(maxTextW, line.length)
+      for (const line of section) {maxTextW = Math.max(maxTextW, line.length)}
     }
     const boxW = maxTextW + 4 // 2 border + 2 padding
 
     let totalLines = 0
-    for (const section of sections) totalLines += Math.max(section.length, 1)
+    for (const section of sections) {totalLines += Math.max(section.length, 1)}
     const boxH = totalLines + (sections.length - 1) + 2 // section lines + dividers + top/bottom border
 
     classBoxW.set(cls.id, boxW)
@@ -192,7 +196,7 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
   // detour lines overlap with cross-level routing, and labels overwrite box borders.
 
   const classById = new Map<string, ClassNode>()
-  for (const cls of diagram.classes) classById.set(cls.id, cls)
+  for (const cls of diagram.classes) {classById.set(cls.id, cls)}
 
   const parents = new Map<string, Set<string>>()  // child → set of parent IDs
   const children = new Map<string, Set<string>>() // parent → set of child IDs
@@ -206,9 +210,9 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
     const parentId = isHierarchical && rel.markerAt === 'to' ? rel.to : rel.from
     const childId = isHierarchical && rel.markerAt === 'to' ? rel.from : rel.to
 
-    if (!parents.has(childId)) parents.set(childId, new Set())
+    if (!parents.has(childId)) {parents.set(childId, new Set())}
     parents.get(childId)!.add(parentId)
-    if (!children.has(parentId)) children.set(parentId, new Set())
+    if (!children.has(parentId)) {children.set(parentId, new Set())}
     children.get(parentId)!.add(childId)
   }
 
@@ -219,17 +223,17 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
   const level = new Map<string, number>()
   const roots = diagram.classes.filter(c => !parents.has(c.id) || parents.get(c.id)!.size === 0)
   const queue: string[] = roots.map(c => c.id)
-  for (const id of queue) level.set(id, 0)
+  for (const id of queue) {level.set(id, 0)}
 
   const levelCap = diagram.classes.length - 1
   let qi = 0
   while (qi < queue.length) {
     const id = queue[qi++]!
     const childSet = children.get(id)
-    if (!childSet) continue
+    if (!childSet) {continue}
     for (const childId of childSet) {
       const newLevel = (level.get(id) ?? 0) + 1
-      if (newLevel > levelCap) continue // cycle detected — skip to prevent infinite loop
+      if (newLevel > levelCap) {continue} // cycle detected — skip to prevent infinite loop
       if (!level.has(childId) || level.get(childId)! < newLevel) {
         level.set(childId, newLevel)
         queue.push(childId)
@@ -239,12 +243,12 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
 
   // Assign remaining (unconnected) classes to level 0
   for (const cls of diagram.classes) {
-    if (!level.has(cls.id)) level.set(cls.id, 0)
+    if (!level.has(cls.id)) {level.set(cls.id, 0)}
   }
 
   // --- Position classes by level ---
   // Group classes by level
-  const maxLevel = Math.max(...[...level.values()], 0)
+  const maxLevel = Math.max(...level.values(), 0)
   const levelGroups: string[][] = Array.from({ length: maxLevel + 1 }, () => [])
   for (const cls of diagram.classes) {
     levelGroups[level.get(cls.id)!]!.push(cls.id)
@@ -256,7 +260,7 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
 
   for (let lv = 0; lv <= maxLevel; lv++) {
     const group = levelGroups[lv]!
-    if (group.length === 0) continue
+    if (group.length === 0) {continue}
 
     let currentX = 0
     let maxH = 0
@@ -267,11 +271,11 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
       const h = classBoxH.get(id)!
       placed.set(id, {
         cls,
+        height: h,
         sections: classSections.get(id)!,
+        width: w,
         x: currentX,
         y: currentY,
-        width: w,
-        height: h,
       })
       currentX += w + hGap
       maxH = Math.max(maxH, h)
@@ -336,7 +340,7 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
   /** Check if a point (x, y) is inside any class box */
   function isInsideBox(x: number, y: number, excludeIds?: Set<string>): boolean {
     for (const [id, p] of placed.entries()) {
-      if (excludeIds?.has(id)) continue
+      if (excludeIds?.has(id)) {continue}
       if (x >= p.x && x <= p.x + p.width - 1 && y >= p.y && y <= p.y + p.height - 1) {
         return true
       }
@@ -354,7 +358,7 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
         break
       }
     }
-    if (clear) return startX
+    if (clear) {return startX}
 
     // Try columns to the left and right, alternating
     for (let offset = 1; offset < totalW + 10; offset++) {
@@ -367,7 +371,7 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
           break
         }
       }
-      if (clear) return rightX
+      if (clear) {return rightX}
 
       // Try left
       const leftX = startX - offset
@@ -379,7 +383,7 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
             break
           }
         }
-        if (clear) return leftX
+        if (clear) {return leftX}
       }
     }
 
@@ -396,7 +400,7 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
   for (const rel of diagram.relationships) {
     const fromP = placed.get(rel.from)
     const toP = placed.get(rel.to)
-    if (!fromP || !toP) continue
+    if (!fromP || !toP) {continue}
 
     const marker = getRelMarker(rel.type, rel.markerAt)
     const lineH = marker.dashed ? dashH : H
@@ -640,7 +644,7 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
             break
           }
         }
-        if (labelInBox) break
+        if (labelInBox) {break}
       }
 
       // If label is inside a box, find the gap between boxes
@@ -693,5 +697,5 @@ export function renderClassAscii(text: string, config: AsciiConfig, colorMode?: 
     }
   }
 
-  return canvasToString(canvas, { roleCanvas: rc, colorMode, theme })
+  return canvasToString(canvas, { colorMode, roleCanvas: rc, theme })
 }

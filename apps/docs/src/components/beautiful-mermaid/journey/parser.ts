@@ -37,7 +37,7 @@ export function parseJourneyDiagram(lines: string[]): JourneyDiagram {
   let taskIndex = 0
 
   const ensureSection = (): JourneySection => {
-    if (currentSection) return currentSection
+    if (currentSection) {return currentSection}
     currentSection = {
       id: `section-${sectionIndex++}`,
       tasks: [],
@@ -49,7 +49,7 @@ export function parseJourneyDiagram(lines: string[]): JourneyDiagram {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i]!
 
-    if (/^journey\b/i.test(line)) continue
+    if (/^journey\b/i.test(line)) {continue}
 
     const accTitle = parseAccessibilityLine(line, 'accTitle')
     if (accTitle !== undefined) {
@@ -109,10 +109,10 @@ export function parseJourneyDiagram(lines: string[]): JourneyDiagram {
         .filter(Boolean)
 
       const task: JourneyTask = {
-        id: `task-${taskIndex++}`,
-        text,
-        score,
         actors,
+        id: `task-${taskIndex++}`,
+        score,
+        text,
       }
 
       ensureSection().tasks.push(task)
@@ -147,8 +147,8 @@ function collectAccessibilityBlock(
   const initialEnd = initial.indexOf('}')
   if (initialEnd !== -1) {
     return {
-      text: initial.slice(0, initialEnd).trim(),
       nextIndex: startIndex,
+      text: initial.slice(0, initialEnd).trim(),
     }
   }
 
@@ -159,10 +159,10 @@ function collectAccessibilityBlock(
     const end = line.indexOf('}')
     if (end !== -1) {
       const beforeBrace = line.slice(0, end).trim()
-      if (beforeBrace) parts.push(beforeBrace)
+      if (beforeBrace) {parts.push(beforeBrace)}
       return {
-        text: parts.join('\n'),
         nextIndex: i,
+        text: parts.join('\n'),
       }
     }
     parts.push(line)

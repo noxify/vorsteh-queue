@@ -39,8 +39,8 @@ describe("Telemetry (OpenTelemetry Integration)", () => {
     meterProvider = new MeterProvider({
       readers: [
         new PeriodicExportingMetricReader({
-          exporter: metricExporter,
           exportIntervalMillis: 100,
+          exporter: metricExporter,
         }),
       ],
     })
@@ -59,9 +59,9 @@ describe("Telemetry (OpenTelemetry Integration)", () => {
     adapter.setQueueName("test-queue")
     queue = new Queue(adapter, { name: "test-queue" })
     worker = new Worker(adapter, {
+      concurrency: 2,
       name: "test-queue",
       pollInterval: 10,
-      concurrency: 2,
     })
   })
 
@@ -278,7 +278,7 @@ describe("Telemetry (OpenTelemetry Integration)", () => {
 
     it("should include job attributes in span", async () => {
       worker.register("attr-job", async () => ({}))
-      await queue.add("attr-job", {}, { priority: 1, maxAttempts: 5 })
+      await queue.add("attr-job", {}, { maxAttempts: 5, priority: 1 })
 
       worker.start()
       await wait(100)
@@ -293,9 +293,9 @@ describe("Telemetry (OpenTelemetry Integration)", () => {
     })
 
     it("should create spans for batch processing", async () => {
-      worker.registerBatch("batch-job", async (jobs) => {
-        return jobs.map(() => ({ processed: true }))
-      })
+      worker.registerBatch("batch-job", async (jobs) => 
+        jobs.map(() => ({ processed: true }))
+      )
 
       await queue.add("batch-job", { item: 1 })
       await queue.add("batch-job", { item: 2 })

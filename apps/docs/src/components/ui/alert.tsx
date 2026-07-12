@@ -15,11 +15,11 @@ const alertVariants = cva(
         default: "bg-card text-card-foreground",
         destructive:
           "bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current",
-        warning:
-          "border-amber-300/60 bg-amber-100/45 text-amber-950 dark:border-amber-500/45 dark:bg-amber-950/35 dark:text-amber-200 *:data-[slot=alert-description]:text-amber-900/90 dark:*:data-[slot=alert-description]:text-amber-200/85",
         note: "border-sky-300/60 bg-sky-100/45 text-sky-950 dark:border-sky-500/45 dark:bg-sky-950/35 dark:text-sky-200 *:data-[slot=alert-description]:text-sky-900/90 dark:*:data-[slot=alert-description]:text-sky-200/85",
         success:
           "border-emerald-300/60 bg-emerald-100/45 text-emerald-950 dark:border-emerald-500/45 dark:bg-emerald-950/35 dark:text-emerald-200 *:data-[slot=alert-description]:text-emerald-900/90 dark:*:data-[slot=alert-description]:text-emerald-200/85",
+        warning:
+          "border-amber-300/60 bg-amber-100/45 text-amber-950 dark:border-amber-500/45 dark:bg-amber-950/35 dark:text-amber-200 *:data-[slot=alert-description]:text-amber-900/90 dark:*:data-[slot=alert-description]:text-amber-200/85",
       },
     },
   }

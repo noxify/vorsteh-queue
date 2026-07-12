@@ -24,7 +24,7 @@ export function clipEdgeToShape(
   node: PositionedNode,
   isStart: boolean
 ): Point[] {
-  if (points.length < 2) return points
+  if (points.length < 2) {return points}
 
   // Only clip non-rectangular shapes
   if (node.shape === 'rectangle' || node.shape === 'service' || node.shape === 'rounded' || node.shape === 'stadium') {
@@ -93,11 +93,11 @@ function clipToDiamond(endpoint: Point, adjacent: Point, node: PositionedNode): 
       if (rayX <= cx) {
         // Intersect with left-top edge (from left vertex to top vertex)
         return intersectVerticalRayWithEdge(rayX, left, top) ?? top
-      } else {
+      }
         // Intersect with top-right edge (from top vertex to right vertex)
         return intersectVerticalRayWithEdge(rayX, top, right) ?? top
-      }
-    } else {
+      
+    }
       // Coming from below (moving up) → intersect with bottom half of diamond
       // Bottom half edges: left-bottom (bottom → left) and bottom-right (right → bottom)
       if (rayX <= cx) {
@@ -107,7 +107,7 @@ function clipToDiamond(endpoint: Point, adjacent: Point, node: PositionedNode): 
         // Intersect with bottom-right edge (from right vertex to bottom vertex)
         return intersectVerticalRayWithEdge(rayX, right, bottom) ?? bottom
       }
-    }
+    
   } else {
     // Horizontal ray at y = endpoint.y
     const rayY = endpoint.y
@@ -118,11 +118,11 @@ function clipToDiamond(endpoint: Point, adjacent: Point, node: PositionedNode): 
       if (rayY <= cy) {
         // Intersect with top-left edge (from top vertex to left vertex)
         return intersectHorizontalRayWithEdge(rayY, top, left) ?? left
-      } else {
+      }
         // Intersect with left-bottom edge (from left vertex to bottom vertex)
         return intersectHorizontalRayWithEdge(rayY, left, bottom) ?? left
-      }
-    } else {
+      
+    }
       // Coming from right (moving left) → intersect with right half of diamond
       // Right half edges: top-right (top → right) and right-bottom (right → bottom)
       if (rayY <= cy) {
@@ -132,7 +132,7 @@ function clipToDiamond(endpoint: Point, adjacent: Point, node: PositionedNode): 
         // Intersect with right-bottom edge (from right vertex to bottom vertex)
         return intersectHorizontalRayWithEdge(rayY, right, bottom) ?? right
       }
-    }
+    
   }
 }
 

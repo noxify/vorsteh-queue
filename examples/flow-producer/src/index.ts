@@ -16,8 +16,8 @@ import { MemoryQueueAdapter, Queue, Worker } from "@vorsteh-queue/core"
 const adapter = new MemoryQueueAdapter()
 const queue = new Queue(adapter, { name: "deploy-queue" })
 const worker = new Worker(adapter, {
-  name: "deploy-queue",
   concurrency: 4,
+  name: "deploy-queue",
   pollInterval: 20,
 })
 
@@ -58,8 +58,6 @@ async function main() {
 
   // Create the flow tree
   const flow = await queue.addFlow({
-    name: "deploy",
-    payload: { version: "1.2.0" },
     children: [
       { name: "build", payload: { target: "linux" } },
       { name: "build", payload: { target: "macos" } },
@@ -69,6 +67,8 @@ async function main() {
         children: [{ name: "lint", payload: {} }],
       },
     ],
+    name: "deploy",
+    payload: { version: "1.2.0" },
   })
 
   console.log(`Flow created: ${flow.id}`)

@@ -35,7 +35,7 @@ export function createClearCommand() {
       typeof options
 
     await withTransport(
-      { url: globalOpts.url, token: globalOpts.token, queue: globalOpts.queue },
+      { queue: globalOpts.queue, token: globalOpts.token, url: globalOpts.url },
       async (transport) => {
         const count = await transport.clearJobs(
           options.all ? undefined : (options.status as JobStatus)

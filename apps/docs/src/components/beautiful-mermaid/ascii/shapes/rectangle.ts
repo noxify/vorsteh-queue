@@ -13,7 +13,8 @@ import { splitLines } from '../multiline-utils'
 import { visualWidth } from '../width'
 import type { ShapeRenderer, ShapeDimensions, ShapeRenderOptions } from './types'
 import { dirEquals } from '../edge-routing'
-import { type CornerChars, getCorners } from './corners'
+import { getCorners } from './corners';
+import type { CornerChars } from './corners';
 
 // ============================================================================
 // Shared dimension calculation
@@ -42,10 +43,10 @@ export function getBoxDimensions(label: string, options: ShapeRenderOptions): Sh
     width,
     height,
     labelArea: {
+      height: lineCount,
+      width: maxLineWidth,
       x: 1 + options.padding,
       y: 1 + options.padding,
-      width: maxLineWidth,
-      height: lineCount,
     },
     // Grid layout: [border=1, content, border=1]
     gridColumns: [1, innerWidth, 1],
@@ -133,14 +134,14 @@ export function getBoxAttachmentPoint(
   const centerX = baseCoord.x + Math.floor(width / 2)
   const centerY = baseCoord.y + Math.floor(height / 2)
 
-  if (dirEquals(dir, Up)) return { x: centerX, y: baseCoord.y }
-  if (dirEquals(dir, Down)) return { x: centerX, y: baseCoord.y + height - 1 }
-  if (dirEquals(dir, Left)) return { x: baseCoord.x, y: centerY }
-  if (dirEquals(dir, Right)) return { x: baseCoord.x + width - 1, y: centerY }
-  if (dirEquals(dir, UpperLeft)) return { x: baseCoord.x, y: baseCoord.y }
-  if (dirEquals(dir, UpperRight)) return { x: baseCoord.x + width - 1, y: baseCoord.y }
-  if (dirEquals(dir, LowerLeft)) return { x: baseCoord.x, y: baseCoord.y + height - 1 }
-  if (dirEquals(dir, LowerRight)) return { x: baseCoord.x + width - 1, y: baseCoord.y + height - 1 }
+  if (dirEquals(dir, Up)) {return { x: centerX, y: baseCoord.y }}
+  if (dirEquals(dir, Down)) {return { x: centerX, y: baseCoord.y + height - 1 }}
+  if (dirEquals(dir, Left)) {return { x: baseCoord.x, y: centerY }}
+  if (dirEquals(dir, Right)) {return { x: baseCoord.x + width - 1, y: centerY }}
+  if (dirEquals(dir, UpperLeft)) {return { x: baseCoord.x, y: baseCoord.y }}
+  if (dirEquals(dir, UpperRight)) {return { x: baseCoord.x + width - 1, y: baseCoord.y }}
+  if (dirEquals(dir, LowerLeft)) {return { x: baseCoord.x, y: baseCoord.y + height - 1 }}
+  if (dirEquals(dir, LowerRight)) {return { x: baseCoord.x + width - 1, y: baseCoord.y + height - 1 }}
   // Middle
   return { x: centerX, y: centerY }
 }
@@ -157,12 +158,12 @@ export function getBoxAttachmentPoint(
  *   └─────────┘
  */
 export const rectangleRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions: getBoxDimensions,
 
   render(label: string, dimensions: ShapeDimensions, options: ShapeRenderOptions): Canvas {
     const corners = getCorners('rectangle', options.useAscii)
     return renderBox(label, dimensions, corners, options.useAscii)
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }

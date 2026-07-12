@@ -18,15 +18,15 @@ import { adapter, queue } from "./queues"
  */
 
 const worker = new Worker(adapter, {
-  name: "demo-queue",
   concurrency: 2,
+  name: "demo-queue",
   pollInterval: 100,
 })
 
 // Register a sample handler
 worker.register("demo-task", async (job) => {
   await new Promise((resolve) => setTimeout(resolve, 500))
-  return { processed: true, payload: job.payload }
+  return { payload: job.payload, processed: true }
 })
 
 async function main() {
@@ -42,9 +42,9 @@ async function main() {
 
   // Start the GraphQL server
   const server = createQueueServer({
-    queues: [queue],
-    port: 3000,
     auth: { tokens: ["my-secret-token"] },
+    port: 3000,
+    queues: [queue],
   })
 
   await server.start()

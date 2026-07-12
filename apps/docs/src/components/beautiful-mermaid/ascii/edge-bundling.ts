@@ -50,7 +50,7 @@ export function analyzeEdgeBundles(graph: AsciiGraph): EdgeBundle[] {
   const edgesByTarget = new Map<AsciiNode, AsciiEdge[]>()
   for (const edge of graph.edges) {
     // Skip self-loops
-    if (edge.from === edge.to) continue
+    if (edge.from === edge.to) {continue}
 
     const existing = edgesByTarget.get(edge.to) ?? []
     existing.push(edge)
@@ -59,21 +59,21 @@ export function analyzeEdgeBundles(graph: AsciiGraph): EdgeBundle[] {
 
   // Create fan-in bundles
   for (const [target, edges] of edgesByTarget) {
-    if (edges.length < 2) continue
-    if (!canBundle(edges, graph)) continue
+    if (edges.length < 2) {continue}
+    if (!canBundle(edges, graph)) {continue}
 
     // Check if all edges are already bundled
-    if (edges.some(e => bundledEdges.has(e))) continue
+    if (edges.some(e => bundledEdges.has(e))) {continue}
 
     const bundle: EdgeBundle = {
-      type: 'fan-in',
       edges: [...edges],
-      sharedNode: target,
-      otherNodes: edges.map(e => e.from),
-      junctionPoint: null,
-      sharedPath: [],
       junctionDir: Middle,
+      junctionPoint: null,
+      otherNodes: edges.map(e => e.from),
+      sharedNode: target,
       sharedNodeDir: Middle,
+      sharedPath: [],
+      type: 'fan-in',
     }
 
     // Mark edges as bundled
@@ -89,8 +89,8 @@ export function analyzeEdgeBundles(graph: AsciiGraph): EdgeBundle[] {
   const edgesBySource = new Map<AsciiNode, AsciiEdge[]>()
   for (const edge of graph.edges) {
     // Skip self-loops and already bundled edges
-    if (edge.from === edge.to) continue
-    if (bundledEdges.has(edge)) continue
+    if (edge.from === edge.to) {continue}
+    if (bundledEdges.has(edge)) {continue}
 
     const existing = edgesBySource.get(edge.from) ?? []
     existing.push(edge)
@@ -99,18 +99,18 @@ export function analyzeEdgeBundles(graph: AsciiGraph): EdgeBundle[] {
 
   // Create fan-out bundles
   for (const [source, edges] of edgesBySource) {
-    if (edges.length < 2) continue
-    if (!canBundle(edges, graph)) continue
+    if (edges.length < 2) {continue}
+    if (!canBundle(edges, graph)) {continue}
 
     const bundle: EdgeBundle = {
-      type: 'fan-out',
       edges: [...edges],
-      sharedNode: source,
-      otherNodes: edges.map(e => e.to),
-      junctionPoint: null,
-      sharedPath: [],
       junctionDir: Middle,
+      junctionPoint: null,
+      otherNodes: edges.map(e => e.to),
+      sharedNode: source,
       sharedNodeDir: Middle,
+      sharedPath: [],
+      type: 'fan-out',
     }
 
     // Mark edges as bundled
@@ -131,7 +131,7 @@ export function analyzeEdgeBundles(graph: AsciiGraph): EdgeBundle[] {
  * or if the edges span subgraph boundaries (which creates complex routing).
  */
 function canBundle(edges: AsciiEdge[], graph: AsciiGraph): boolean {
-  if (edges.length < 2) return false
+  if (edges.length < 2) {return false}
 
   const firstStyle = edges[0]!.style
   const firstFromSg = getNodeSubgraph(graph, edges[0]!.from)
@@ -139,20 +139,20 @@ function canBundle(edges: AsciiEdge[], graph: AsciiGraph): boolean {
 
   for (const edge of edges) {
     // Different styles can't be bundled (would look confusing)
-    if (edge.style !== firstStyle) return false
+    if (edge.style !== firstStyle) {return false}
 
     // Edges with labels can't be bundled (labels would overlap at junction)
-    if (edge.text.length > 0) return false
+    if (edge.text.length > 0) {return false}
 
     // Don't bundle if edges span different subgraph boundaries
     // (creates complex routing that doesn't look good)
     const fromSg = getNodeSubgraph(graph, edge.from)
     const toSg = getNodeSubgraph(graph, edge.to)
-    if (fromSg !== firstFromSg || toSg !== firstToSg) return false
+    if (fromSg !== firstFromSg || toSg !== firstToSg) {return false}
 
     // Don't bundle if source and target are in different subgraphs
     // (cross-boundary edges have special routing needs)
-    if (fromSg !== toSg) return false
+    if (fromSg !== toSg) {return false}
   }
 
   return true
@@ -200,14 +200,14 @@ export function calculateJunctionPoint(
       const junctionX = sharedCoord.x + 1 // Align with target's center
 
       return { x: junctionX, y: junctionY }
-    } else {
+    }
       // LR: Junction left of target, centered between sources
       const junctionX = sharedCoord.x - 1
       const junctionY = sharedCoord.y + 1 // Align with target's center
 
       return { x: junctionX, y: junctionY }
-    }
-  } else {
+    
+  }
     // fan-out: Junction is AFTER the shared source
     const minX = Math.min(...otherCoords.map(c => c.x))
     const maxX = Math.max(...otherCoords.map(c => c.x))
@@ -227,7 +227,7 @@ export function calculateJunctionPoint(
 
       return { x: junctionX, y: junctionY }
     }
-  }
+  
 }
 
 // ============================================================================

@@ -10,9 +10,9 @@
  * These should never appear in properly rendered diagrams.
  */
 export const DIAGONAL_CHARS = {
-  ascii: ['/', '\\'],
-  unicode: ['\u2571', '\u2572'], // ╱ ╲
   all: ['/', '\\', '\u2571', '\u2572'],
+  ascii: ['/', '\\'],
+  unicode: ['\u2571', '\u2572'], // ╱ ╲,
 } as const
 
 /**
@@ -81,9 +81,9 @@ export function findDiagonalLines(asciiOutput: string): DiagonalPosition[] {
 
         if (!insideNode) {
           positions.push({
-            line: lineNum + 1, // 1-indexed for human readability
-            col: col + 1,
             char,
+            col: col + 1,
+            line: lineNum + 1, // 1-indexed for human readability,
           })
         }
       }

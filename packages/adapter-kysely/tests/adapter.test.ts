@@ -10,14 +10,14 @@ import { PostgresQueueAdapter } from "../src"
 import { createQueueJobsTable } from "../src/helpers"
 
 runTests<Kysely<DB>>({
+  initAdapter: (db, adapterConfig) =>
+    new PostgresQueueAdapter(db, adapterConfig),
   initDbClient: (props: DatabaseConnectionProps): Kysely<DB> =>
     new Kysely<DB>({
       dialect: new PostgresJSDialect({
         postgres: postgres(props.container.getConnectionUri(), { max: 10 }),
       }),
     }),
-  initAdapter: (db, adapterConfig) =>
-    new PostgresQueueAdapter(db, adapterConfig),
   migrate: async (db) => {
     try {
       // Default table

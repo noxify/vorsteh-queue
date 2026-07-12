@@ -42,19 +42,17 @@ export function renderArchitectureSvg(
     a11yAttrs['role'] = 'img'
     a11yAttrs['aria-roledescription'] = 'architecture'
   }
-  if (hasTitle) a11yAttrs['aria-labelledby'] = titleId
-  if (hasDesc) a11yAttrs['aria-describedby'] = descId
+  if (hasTitle) {a11yAttrs['aria-labelledby'] = titleId}
+  if (hasDesc) {a11yAttrs['aria-describedby'] = descId}
 
   parts.push(svgOpenTag(diagram.width, diagram.height, colors, transparent, {
-    style: archVars,
     attrs: a11yAttrs,
+    style: archVars,
   }))
-  if (hasTitle) parts.push(`<title id="${titleId}">${escapeXml(diagram.accessibilityTitle!)}</title>`)
-  if (hasDesc) parts.push(`<desc id="${descId}">${escapeXml(diagram.accessibilityDescription!)}</desc>`)
-  parts.push(buildStyleBlock(font, false))
-  parts.push(architectureStyles(visual))
-  parts.push('<defs>')
-  parts.push(arrowMarkerDefs())
+  if (hasTitle) {parts.push(`<title id="${titleId}">${escapeXml(diagram.accessibilityTitle!)}</title>`)}
+  if (hasDesc) {parts.push(`<desc id="${descId}">${escapeXml(diagram.accessibilityDescription!)}</desc>`)}
+  parts.push(buildStyleBlock(font, false), architectureStyles(visual))
+  parts.push('<defs>', arrowMarkerDefs())
   parts.push('</defs>')
 
   for (const group of diagram.groups) {
@@ -66,7 +64,7 @@ export function renderArchitectureSvg(
   }
 
   for (const edge of diagram.edges) {
-    if (edge.label) parts.push(renderEdgeLabel(edge, visual))
+    if (edge.label) {parts.push(renderEdgeLabel(edge, visual))}
   }
 
   for (const junction of diagram.junctions) {
@@ -104,29 +102,23 @@ function renderGroup(group: PositionedArchitectureGroup, visual: ArchitectureVis
   const parts: string[] = []
   parts.push(
     `<g class="architecture-group" data-id="${escapeAttr(group.id)}" data-label="${escapeAttr(group.label)}">`
-  )
-  parts.push(
-    `  <rect class="architecture-group-frame" x="${group.x}" y="${group.y}" width="${group.width}" height="${group.height}" rx="${visual.groupCornerRadius}" ry="${visual.groupCornerRadius}" />`
-  )
+  , `  <rect class="architecture-group-frame" x="${group.x}" y="${group.y}" width="${group.width}" height="${group.height}" rx="${visual.groupCornerRadius}" ry="${visual.groupCornerRadius}" />`)
   parts.push(
     `  <path class="architecture-group-band" d="${topRoundedRectPath(group.x, group.y, group.width, visual.groupHeaderHeight, visual.groupCornerRadius)}" />`
-  )
-  parts.push(
-    `  <rect class="architecture-group-outline" x="${group.x}" y="${group.y}" width="${group.width}" height="${group.height}" rx="${visual.groupCornerRadius}" ry="${visual.groupCornerRadius}" />`
-  )
+  , `  <rect class="architecture-group-outline" x="${group.x}" y="${group.y}" width="${group.width}" height="${group.height}" rx="${visual.groupCornerRadius}" ry="${visual.groupCornerRadius}" />`)
 
   if (group.icon) {
     parts.push(`  ${renderIcon(group.x + 10, group.y + 6, visual.iconSize, group.icon, true)}`)
   }
 
   parts.push(
-    '  ' + renderMultilineText(
+    `  ${  renderMultilineText(
       transformText(group.label, visual.groupTextTransform),
       group.x + (group.icon ? 36 : visual.groupLabelPaddingX),
       group.y + visual.groupHeaderHeight / 2,
       visual.groupFontSize,
       `class="architecture-group-label" text-anchor="start" font-size="${visual.groupFontSize}" font-weight="${visual.groupFontWeight}"${visual.groupFont ? ` font-family="${escapeAttr(visual.groupFont)}"` : ''}${letterAttr(visual.groupLetterSpacing)}`,
-    )
+    )}`
   )
 
   for (const child of group.children) {
@@ -148,10 +140,7 @@ function renderService(service: PositionedArchitectureService, visual: Architect
 
   parts.push(
     `<g class="architecture-service" data-id="${escapeAttr(service.id)}" data-label="${escapeAttr(service.label)}">`
-  )
-  parts.push(
-    `  <rect class="architecture-service-card" x="${service.x}" y="${service.y}" width="${service.width}" height="${service.height}" rx="${visual.serviceCornerRadius}" ry="${visual.serviceCornerRadius}" />`
-  )
+  , `  <rect class="architecture-service-card" x="${service.x}" y="${service.y}" width="${service.width}" height="${service.height}" rx="${visual.serviceCornerRadius}" ry="${visual.serviceCornerRadius}" />`)
   parts.push(
     `  <rect class="architecture-service-outline" x="${service.x}" y="${service.y}" width="${service.width}" height="${service.height}" rx="${visual.serviceCornerRadius}" ry="${visual.serviceCornerRadius}" />`
   )
@@ -161,15 +150,14 @@ function renderService(service: PositionedArchitectureService, visual: Architect
   }
 
   parts.push(
-    '  ' + renderMultilineText(
+    `  ${  renderMultilineText(
       service.label,
       labelX,
       service.y + service.height / 2,
       visual.serviceFontSize,
       `class="architecture-service-label" text-anchor="start" font-size="${visual.serviceFontSize}" font-weight="${visual.serviceFontWeight}"${letterAttr(visual.serviceLetterSpacing)}`,
-    )
-  )
-  parts.push('</g>')
+    )}`
+  , '</g>')
   return parts.join('\n')
 }
 
@@ -188,8 +176,8 @@ function renderJunction(junction: PositionedArchitectureJunction, visual: Archit
 function renderEdge(edge: PositionedArchitectureEdge, visual: ArchitectureVisualConfig): string {
   const points = edge.points.map((point) => `${point.x},${point.y}`).join(' ')
   let markers = ''
-  if (edge.hasArrowStart) markers += ' marker-start="url(#architecture-arrow-start)"'
-  if (edge.hasArrowEnd) markers += ' marker-end="url(#architecture-arrow-end)"'
+  if (edge.hasArrowStart) {markers += ' marker-start="url(#architecture-arrow-start)"'}
+  if (edge.hasArrowEnd) {markers += ' marker-end="url(#architecture-arrow-end)"'}
 
   const attrs = [
     'class="architecture-edge"',
@@ -200,7 +188,7 @@ function renderEdge(edge: PositionedArchitectureEdge, visual: ArchitectureVisual
     `data-from-boundary="${edge.source.boundary}"`,
     `data-to-boundary="${edge.target.boundary}"`,
   ]
-  if (edge.label) attrs.push(`data-label="${escapeAttr(edge.label)}"`)
+  if (edge.label) {attrs.push(`data-label="${escapeAttr(edge.label)}"`)}
 
   if (visual.edgeBendRadius > 0 && edge.points.length > 2) {
     return `<path ${attrs.join(' ')} d="${pointsToPathD(edge.points, visual.edgeBendRadius)}"${markers} />`
@@ -228,8 +216,7 @@ function renderEdgeLabel(edge: PositionedArchitectureEdge, visual: ArchitectureV
 
 function renderIcon(x: number, y: number, size: number, icon: string, compact: boolean): string {
   const parts: string[] = []
-  parts.push(`<g class="architecture-icon" data-icon="${escapeAttr(icon)}">`)
-  parts.push(`  ${renderIconGlyph(x, y, size, icon, compact)}`)
+  parts.push(`<g class="architecture-icon" data-icon="${escapeAttr(icon)}">`, `  ${renderIconGlyph(x, y, size, icon, compact)}`)
   parts.push('</g>')
   return parts.join('\n')
 }
@@ -241,14 +228,15 @@ function renderIconGlyph(x: number, y: number, size: number, icon: string, compa
   const s = compact ? size * 0.92 : size
 
   switch (name) {
-    case 'cloud':
+    case 'cloud': {
       return [
         `<circle class="architecture-icon-mark" cx="${cx - s * 0.18}" cy="${cy + s * 0.02}" r="${s * 0.16}" />`,
         `<circle class="architecture-icon-mark" cx="${cx + s * 0.02}" cy="${cy - s * 0.08}" r="${s * 0.2}" />`,
         `<circle class="architecture-icon-mark" cx="${cx + s * 0.2}" cy="${cy + s * 0.02}" r="${s * 0.15}" />`,
         `<path class="architecture-icon-mark" d="M ${cx - s * 0.34} ${cy + s * 0.16} H ${cx + s * 0.33}" />`,
       ].join('\n')
-    case 'database':
+    }
+    case 'database': {
       return [
         `<ellipse class="architecture-icon-mark" cx="${cx}" cy="${cy - s * 0.16}" rx="${s * 0.24}" ry="${s * 0.1}" />`,
         `<path class="architecture-icon-mark" d="M ${cx - s * 0.24} ${cy - s * 0.16} V ${cy + s * 0.2}" />`,
@@ -256,12 +244,14 @@ function renderIconGlyph(x: number, y: number, size: number, icon: string, compa
         `<ellipse class="architecture-icon-mark" cx="${cx}" cy="${cy + s * 0.02}" rx="${s * 0.24}" ry="${s * 0.1}" />`,
         `<ellipse class="architecture-icon-mark" cx="${cx}" cy="${cy + s * 0.2}" rx="${s * 0.24}" ry="${s * 0.1}" />`,
       ].join('\n')
-    case 'disk':
+    }
+    case 'disk': {
       return [
         `<circle class="architecture-icon-mark" cx="${cx}" cy="${cy}" r="${s * 0.26}" />`,
         `<circle class="architecture-icon-mark" cx="${cx}" cy="${cy}" r="${s * 0.09}" />`,
       ].join('\n')
-    case 'internet':
+    }
+    case 'internet': {
       return [
         `<circle class="architecture-icon-mark" cx="${cx}" cy="${cy}" r="${s * 0.26}" />`,
         `<path class="architecture-icon-mark" d="M ${cx - s * 0.26} ${cy} H ${cx + s * 0.26}" />`,
@@ -269,12 +259,14 @@ function renderIconGlyph(x: number, y: number, size: number, icon: string, compa
         `<path class="architecture-icon-mark" d="M ${cx - s * 0.14} ${cy - s * 0.22} Q ${cx} ${cy} ${cx - s * 0.14} ${cy + s * 0.22}" />`,
         `<path class="architecture-icon-mark" d="M ${cx + s * 0.14} ${cy - s * 0.22} Q ${cx} ${cy} ${cx + s * 0.14} ${cy + s * 0.22}" />`,
       ].join('\n')
-    case 'server':
+    }
+    case 'server': {
       return [
         `<rect class="architecture-icon-mark" x="${cx - s * 0.22}" y="${cy - s * 0.24}" width="${s * 0.44}" height="${s * 0.48}" rx="0" ry="0" />`,
         `<path class="architecture-icon-mark" d="M ${cx - s * 0.16} ${cy - s * 0.08} H ${cx + s * 0.16}" />`,
         `<path class="architecture-icon-mark" d="M ${cx - s * 0.16} ${cy + s * 0.06} H ${cx + s * 0.16}" />`,
       ].join('\n')
+    }
     default: {
       const glyph = fallbackIconGlyph(icon)
       return renderMultilineText(
@@ -293,7 +285,7 @@ function normalizeIconName(icon: string): string {
 }
 
 function fallbackIconGlyph(icon: string): string {
-  const token = normalizeIconName(icon).replace(/[^a-z0-9]/g, '')
+  const token = normalizeIconName(icon).replaceAll(/[^a-z0-9]/g, '')
   return (token[0] ?? '?').toUpperCase()
 }
 
@@ -309,8 +301,8 @@ function arrowMarkerDefs(): string {
 }
 
 function edgeMidpoint(points: Point[]): Point {
-  if (points.length === 0) return { x: 0, y: 0 }
-  if (points.length === 1) return points[0]!
+  if (points.length === 0) {return { x: 0, y: 0 }}
+  if (points.length === 1) {return points[0]!}
 
   let total = 0
   for (let i = 1; i < points.length; i++) {
@@ -332,7 +324,7 @@ function edgeMidpoint(points: Point[]): Point {
     remaining -= length
   }
 
-  return points[points.length - 1]!
+  return points.at(-1)!
 }
 
 function segmentLength(a: Point, b: Point): number {
@@ -340,8 +332,8 @@ function segmentLength(a: Point, b: Point): number {
 }
 
 function pointsToPathD(points: Point[], radius: number): string {
-  if (points.length === 0) return ''
-  if (points.length === 1) return `M${points[0]!.x},${points[0]!.y}`
+  if (points.length === 0) {return ''}
+  if (points.length === 1) {return `M${points[0]!.x},${points[0]!.y}`}
   const parts = [`M${points[0]!.x},${points[0]!.y}`]
   for (let i = 1; i < points.length - 1; i++) {
     const prev = points[i - 1]!
@@ -356,17 +348,16 @@ function pointsToPathD(points: Point[], radius: number): string {
     }
     const before = pointToward(curr, prev, r)
     const after = pointToward(curr, next, r)
-    parts.push(`L${before.x},${before.y}`)
-    parts.push(`Q${curr.x},${curr.y} ${after.x},${after.y}`)
+    parts.push(`L${before.x},${before.y}`, `Q${curr.x},${curr.y} ${after.x},${after.y}`)
   }
-  const last = points[points.length - 1]!
+  const last = points.at(-1)!
   parts.push(`L${last.x},${last.y}`)
   return parts.join(' ')
 }
 
 function pointToward(from: Point, to: Point, distance: number): Point {
   const total = segmentLength(from, to)
-  if (total === 0) return { ...from }
+  if (total === 0) {return { ...from }}
   const t = distance / total
   return {
     x: Math.round((from.x + (to.x - from.x) * t) * 1000) / 1000,
@@ -375,15 +366,19 @@ function pointToward(from: Point, to: Point, distance: number): Point {
 }
 
 function letterAttr(value: number): string {
-  return value !== 0 ? ` letter-spacing="${value}"` : ''
+  return value === 0 ? '' : ` letter-spacing="${value}"`
 }
 
 function transformText(text: string, transform: string | undefined): string {
   switch (transform) {
-    case 'uppercase': return text.toUpperCase()
-    case 'lowercase': return text.toLowerCase()
-    case 'capitalize': return text.replace(/\b\p{L}/gu, ch => ch.toUpperCase())
-    default: return text
+    case 'uppercase': { return text.toUpperCase()
+    }
+    case 'lowercase': { return text.toLowerCase()
+    }
+    case 'capitalize': { return text.replace(/\b\p{L}/gu, ch => ch.toUpperCase())
+    }
+    default: { return text
+    }
   }
 }
 
@@ -392,11 +387,11 @@ function escapeAttr(text: string): string {
 }
 
 function hashDiagram(diagram: PositionedArchitectureDiagram): string {
-  let h = 0x811c9dc5
+  let h = 0x81_1c_9d_c5
   const s = `${diagram.width}|${diagram.height}|${diagram.services.map(s => s.id).join(',')}|${diagram.groups.map(g => g.id).join(',')}`
   for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
+    h ^= s.codePointAt(i)
+    h = Math.imul(h, 0x01_00_01_93)
   }
   return (h >>> 0).toString(36)
 }

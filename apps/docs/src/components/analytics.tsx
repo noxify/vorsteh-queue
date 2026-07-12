@@ -4,7 +4,7 @@ import { useEffect } from "react"
 
 export default function Analytics() {
   useEffect(() => {
-    configure({ hostname: "vorsteh-queue.dev", devmode: false })
+    configure({ devmode: false, hostname: "vorsteh-queue.dev" })
   }, [])
 
   return null

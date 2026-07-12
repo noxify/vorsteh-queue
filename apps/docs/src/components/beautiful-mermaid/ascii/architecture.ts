@@ -51,7 +51,7 @@ export function renderArchitectureAscii(
   theme: AsciiTheme = DEFAULT_ASCII_THEME,
 ): string {
   const diagram = parseArchitectureDiagram(lines)
-  const useAscii = config.useAscii
+  const {useAscii} = config
   const out: string[] = []
 
   const pushLine = (segments: StyledSegment[] = []): void => {
@@ -99,33 +99,33 @@ export function renderArchitectureAscii(
         renderJunction(junction, indent)
       }
 
-      if (ci < children.length - 1) pushLine()
+      if (ci < children.length - 1) {pushLine()}
     }
   }
 
   function renderGroup(group: ArchitectureGroup, indent: number): void {
     const pad = ' '.repeat(indent)
-    const label = group.label.replace(/\n/g, ' ')
+    const label = group.label.replaceAll(/\n/g, ' ')
     const iconTag = group.icon ? `(${group.icon})` : ''
     const header = `${iconTag}${iconTag ? ' ' : ''}${label}`
     const innerWidth = Math.max(header.length + 4, 30)
     const hBar = h.repeat(innerWidth - 2)
 
     pushLine([
-      { text: pad, role: null },
-      { text: tl + hBar + tr, role: 'border' },
+      { role: null, text: pad },
+      { role: 'border', text: tl + hBar + tr },
     ])
     pushLine([
-      { text: pad, role: null },
-      { text: v, role: 'border' },
-      { text: ' ', role: null },
-      { text: header, role: 'text' },
-      { text: ' '.repeat(Math.max(0, innerWidth - header.length - 3)), role: null },
-      { text: v, role: 'border' },
+      { role: null, text: pad },
+      { role: 'border', text: v },
+      { role: null, text: ' ' },
+      { role: 'text', text: header },
+      { role: null, text: ' '.repeat(Math.max(0, innerWidth - header.length - 3)) },
+      { role: 'border', text: v },
     ])
     pushLine([
-      { text: pad, role: null },
-      { text: v + h.repeat(innerWidth - 2) + v, role: 'border' },
+      { role: null, text: pad },
+      { role: 'border', text: v + h.repeat(innerWidth - 2) + v },
     ])
 
     for (const child of group.children) {
@@ -142,25 +142,25 @@ export function renderArchitectureAscii(
     }
 
     pushLine([
-      { text: pad, role: null },
-      { text: bl + hBar + br, role: 'border' },
+      { role: null, text: pad },
+      { role: 'border', text: bl + hBar + br },
     ])
   }
 
   function renderService(service: ArchitectureService, indent: number): void {
     const pad = ' '.repeat(indent)
     const icon = service.icon ? `[${service.icon}]` : ''
-    const label = service.label.replace(/\n/g, ' ')
+    const label = service.label.replaceAll(/\n/g, ' ')
 
     pushLine([
-      { text: pad, role: null },
+      { role: null, text: pad },
       ...(icon
         ? [
-            { text: icon, role: 'arrow' as CharRole },
-            { text: ' ', role: null as CharRole | null },
+            { role: 'arrow' as CharRole, text: icon },
+            { role: null as CharRole | null, text: ' ' },
           ]
         : []),
-      { text: label, role: 'text' },
+      { role: 'text', text: label },
     ])
   }
 
@@ -168,10 +168,10 @@ export function renderArchitectureAscii(
     const pad = ' '.repeat(indent)
 
     pushLine([
-      { text: pad, role: null },
-      { text: junctionMark, role: 'arrow' },
-      { text: ' ', role: null },
-      { text: junction.id, role: 'text' },
+      { role: null, text: pad },
+      { role: 'arrow', text: junctionMark },
+      { role: null, text: ' ' },
+      { role: 'text', text: junction.id },
     ])
   }
 
@@ -180,31 +180,31 @@ export function renderArchitectureAscii(
     const tgtName = itemLabel(edge.target.id)
     const left = edge.hasArrowStart ? arrowLeft + dash : dash + dash
     const right = edge.hasArrowEnd ? dash + arrow : dash + dash
-    const label = edge.label ? ` ${edge.label.replace(/\n/g, ' ')} ` : ''
+    const label = edge.label ? ` ${edge.label.replaceAll(/\n/g, ' ')} ` : ''
 
     pushLine([
-      { text: '  ', role: null },
-      { text: srcName, role: 'text' },
-      { text: `:${edge.source.side}`, role: 'border' },
-      { text: ' ', role: null },
-      { text: left, role: 'line' },
+      { role: null, text: '  ' },
+      { role: 'text', text: srcName },
+      { role: 'border', text: `:${edge.source.side}` },
+      { role: null, text: ' ' },
+      { role: 'line', text: left },
       ...(label
         ? [
-            { text: '[', role: 'border' as CharRole },
-            { text: label.trim(), role: 'text' as CharRole },
-            { text: ']', role: 'border' as CharRole },
+            { role: 'border' as CharRole, text: '[' },
+            { role: 'text' as CharRole, text: label.trim() },
+            { role: 'border' as CharRole, text: ']' },
           ]
         : []),
-      { text: right, role: 'line' },
-      { text: ' ', role: null },
-      { text: `${edge.target.side}:`, role: 'border' },
-      { text: tgtName, role: 'text' },
+      { role: 'line', text: right },
+      { role: null, text: ' ' },
+      { role: 'border', text: `${edge.target.side}:` },
+      { role: 'text', text: tgtName },
     ])
   }
 
   function itemLabel(id: string): string {
     const service = servicesById.get(id)
-    if (service) return service.label.replace(/\n/g, ' ')
+    if (service) {return service.label.replace(/\n/g, ' ')}
     return id
   }
 }

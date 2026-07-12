@@ -23,21 +23,21 @@ import { topRoundedRectPath } from '../svg-paths'
 
 
 const ER_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: FONT_SIZES.nodeLabel,
   edgeLabelFontSize: FONT_SIZES.edgeLabel,
-  groupHeaderFontSize: FONT_SIZES.groupHeader,
-  nodeLabelFontWeight: 700,
   edgeLabelFontWeight: FONT_WEIGHTS.edgeLabel,
-  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
-  nodePaddingX: 14,
-  nodePaddingY: 8,
-  nodeCornerRadius: 0,
-  nodeLineWidth: STROKE_WIDTHS.outerBox,
   edgeLineWidth: STROKE_WIDTHS.connector,
   groupCornerRadius: 0,
+  groupHeaderFontSize: FONT_SIZES.groupHeader,
+  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
+  groupLineWidth: STROKE_WIDTHS.outerBox,
   groupPaddingX: 14,
   groupPaddingY: 8,
-  groupLineWidth: STROKE_WIDTHS.outerBox,
+  nodeCornerRadius: 0,
+  nodeLabelFontSize: FONT_SIZES.nodeLabel,
+  nodeLabelFontWeight: 700,
+  nodeLineWidth: STROKE_WIDTHS.outerBox,
+  nodePaddingX: 14,
+  nodePaddingY: 8,
 }
 
 /** Font sizes specific to ER diagrams */
@@ -69,11 +69,10 @@ export function renderErSvg(
   const rootAttrs = buildAccessibilityAttrs(diagram.accessibilityTitle, diagram.accessibilityDescription, titleId, descId)
 
   // SVG root with CSS variables + style block (with mono font) + defs
-  parts.push(svgOpenTag(diagram.width, diagram.height, colors, transparent, rootAttrs))
-  parts.push(buildStyleBlock(font, true, colors.shadow))
+  parts.push(svgOpenTag(diagram.width, diagram.height, colors, transparent, rootAttrs), buildStyleBlock(font, true, colors.shadow))
   parts.push('<defs>')
   const shadowDefs = buildShadowDefs(colors)
-  if (shadowDefs) parts.push(shadowDefs)
+  if (shadowDefs) {parts.push(shadowDefs)}
   parts.push('</defs>')
 
   if (diagram.accessibilityTitle) {
@@ -138,13 +137,13 @@ function renderEntityBox(entity: PositionedErEntity, style: ResolvedRenderStyle)
 
   // Entity name (supports multi-line via <br> tags)
   parts.push(
-    '  ' + renderMultilineText(
+    `  ${  renderMultilineText(
       label,
       x + width / 2,
       y + headerHeight / 2,
       style.nodeLabelFontSize,
       `text-anchor="middle" font-size="${style.nodeLabelFontSize}" font-weight="${style.nodeLabelFontWeight}"${letterAttr(style.nodeLetterSpacing)} fill="var(--_text)"`
-    )
+    )}`
   )
 
   // Divider
@@ -158,7 +157,7 @@ function renderEntityBox(entity: PositionedErEntity, style: ResolvedRenderStyle)
   for (let i = 0; i < attributes.length; i++) {
     const attr = attributes[i]!
     const rowY = attrTop + i * rowHeight + rowHeight / 2
-    parts.push('  ' + renderAttribute(attr, x, rowY, width, style).replace(/\n/g, '\n  '))
+    parts.push(`  ${  renderAttribute(attr, x, rowY, width, style).replace(/\n/g, '\n  ')}`)
   }
 
   // Empty row placeholder when no attributes
@@ -188,7 +187,7 @@ function renderAttribute(attr: ErAttribute, boxX: number, y: number, boxWidth: n
   const hasComment = attr.comment && attr.comment.length > 0
   if (hasComment) {
     // Replace <br> with newlines for tooltip display
-    const tooltipText = attr.comment!.replace(/<br\s*\/?>/gi, '\n')
+    const tooltipText = attr.comment!.replaceAll(/<br\s*\/?>/gi, '\n')
     parts.push(`<g><title>${escapeXml(tooltipText)}</title>`)
   }
 
@@ -200,11 +199,8 @@ function renderAttribute(attr: ErAttribute, boxX: number, y: number, boxWidth: n
     parts.push(
       `<rect x="${boxX + Math.max(6, style.nodePaddingX / 2)}" y="${y - 7}" width="${keyWidth}" height="14" rx="2" ry="2" ` +
       `fill="var(--_key-badge)" />`
-    )
-    parts.push(
-      `<text x="${boxX + Math.max(6, style.nodePaddingX / 2) + keyWidth / 2}" y="${y}" text-anchor="middle" dy="${TEXT_BASELINE_SHIFT}" ` +
-      `font-size="${ER_FONT.keySize}" font-weight="${ER_FONT.keyWeight}" fill="var(--_text-sec)">${attr.keys.join(',')}</text>`
-    )
+    , `<text x="${boxX + Math.max(6, style.nodePaddingX / 2) + keyWidth / 2}" y="${y}" text-anchor="middle" dy="${TEXT_BASELINE_SHIFT}" ` +
+      `font-size="${ER_FONT.keySize}" font-weight="${ER_FONT.keyWeight}" fill="var(--_text-sec)">${attr.keys.join(',')}</text>`)
   }
 
   // Type (left-aligned after keys, monospace with syntax highlighting)
@@ -239,10 +235,10 @@ function renderAttribute(attr: ErAttribute, boxX: number, y: number, boxWidth: n
  * Render a relationship line with semantic data attributes.
  */
 function renderRelationshipLine(rel: PositionedErRelationship, style: ResolvedRenderStyle): string {
-  if (rel.points.length < 2) return ''
+  if (rel.points.length < 2) {return ''}
 
   const pathData = rel.points.map(p => `${p.x},${p.y}`).join(' ')
-  const dashArray = !rel.identifying ? ' stroke-dasharray="6 4"' : ''
+  const dashArray = rel.identifying ? '' : ' stroke-dasharray="6 4"'
 
   // Semantic data attributes for relationship inspection
   const labelAttr = rel.label ? ` data-label="${escapeAttr(rel.label)}"` : ''
@@ -270,7 +266,7 @@ function renderRelationshipLine(rel: PositionedErRelationship, style: ResolvedRe
 
 /** Render a relationship label at the midpoint (supports multi-line) */
 function renderRelationshipLabel(rel: PositionedErRelationship, style: ResolvedRenderStyle): string {
-  if (!rel.label || rel.points.length < 2) return ''
+  if (!rel.label || rel.points.length < 2) {return ''}
 
   const mid = midpoint(rel.points)
   const metrics = measureMultilineText(rel.label, style.edgeLabelFontSize, style.edgeLabelFontWeight)
@@ -297,7 +293,7 @@ function renderRelationshipLabel(rel: PositionedErRelationship, style: ResolvedR
  *   'zero-many': ─o╣─  (circle + crow's foot)
  */
 function renderCardinality(rel: PositionedErRelationship, style: ResolvedRenderStyle): string {
-  if (rel.points.length < 2) return ''
+  if (rel.points.length < 2) {return ''}
   const parts: string[] = []
 
   // Entity1 side (first point, direction toward second point)
@@ -306,8 +302,8 @@ function renderCardinality(rel: PositionedErRelationship, style: ResolvedRenderS
   parts.push(renderCrowsFoot(p1, p2, rel.cardinality1, style))
 
   // Entity2 side (last point, direction toward second-to-last point)
-  const pN = rel.points[rel.points.length - 1]!
-  const pN1 = rel.points[rel.points.length - 2]!
+  const pN = rel.points.at(-1)!
+  const pN1 = rel.points.at(-2)!
   parts.push(renderCrowsFoot(pN, pN1, rel.cardinality2, style))
 
   return parts.join('\n')
@@ -330,7 +326,7 @@ function renderCrowsFoot(
   const dx = point.x - toward.x
   const dy = point.y - toward.y
   const len = Math.sqrt(dx * dx + dy * dy)
-  if (len === 0) return ''
+  if (len === 0) {return ''}
   const ux = dx / len
   const uy = dy / len
 
@@ -408,9 +404,9 @@ function renderCrowsFoot(
   return parts.join('\n')
 }
 
-function pointsToPathD(points: Array<{ x: number; y: number }>, radius: number): string {
-  if (points.length === 0) return ''
-  if (points.length === 1) return `M${points[0]!.x},${points[0]!.y}`
+function pointsToPathD(points: { x: number; y: number }[], radius: number): string {
+  if (points.length === 0) {return ''}
+  if (points.length === 1) {return `M${points[0]!.x},${points[0]!.y}`}
   const parts = [`M${points[0]!.x},${points[0]!.y}`]
   for (let i = 1; i < points.length - 1; i++) {
     const prev = points[i - 1]!
@@ -425,17 +421,16 @@ function pointsToPathD(points: Array<{ x: number; y: number }>, radius: number):
     }
     const before = pointToward(curr, prev, r)
     const after = pointToward(curr, next, r)
-    parts.push(`L${before.x},${before.y}`)
-    parts.push(`Q${curr.x},${curr.y} ${after.x},${after.y}`)
+    parts.push(`L${before.x},${before.y}`, `Q${curr.x},${curr.y} ${after.x},${after.y}`)
   }
-  const last = points[points.length - 1]!
+  const last = points.at(-1)!
   parts.push(`L${last.x},${last.y}`)
   return parts.join(' ')
 }
 
 function pointToward(from: { x: number; y: number }, to: { x: number; y: number }, distance: number): { x: number; y: number } {
   const total = Math.abs(to.x - from.x) + Math.abs(to.y - from.y)
-  if (total === 0) return { ...from }
+  if (total === 0) {return { ...from }}
   const t = distance / total
   return {
     x: Math.round((from.x + (to.x - from.x) * t) * 1000) / 1000,
@@ -447,9 +442,9 @@ function pointToward(from: { x: number; y: number }, to: { x: number; y: number 
  *  Walks along each segment, finds the point at exactly 50% of total path length.
  *  This ensures the label sits ON the path even for orthogonal routes with bends,
  *  unlike the naive first/last geometric center which floats in space for L/Z shapes. */
-function midpoint(points: Array<{ x: number; y: number }>): { x: number; y: number } {
-  if (points.length === 0) return { x: 0, y: 0 }
-  if (points.length === 1) return points[0]!
+function midpoint(points: { x: number; y: number }[]): { x: number; y: number } {
+  if (points.length === 0) {return { x: 0, y: 0 }}
+  if (points.length === 1) {return points[0]!}
 
   // Compute total path length
   let totalLen = 0
@@ -459,7 +454,7 @@ function midpoint(points: Array<{ x: number; y: number }>): { x: number; y: numb
     totalLen += Math.sqrt(dx * dx + dy * dy)
   }
 
-  if (totalLen === 0) return points[0]!
+  if (totalLen === 0) {return points[0]!}
 
   // Walk to 50% of total length, interpolating within the segment that crosses the halfway mark
   const halfLen = totalLen / 2
@@ -478,7 +473,7 @@ function midpoint(points: Array<{ x: number; y: number }>): { x: number; y: numb
     walked += segLen
   }
 
-  return points[points.length - 1]!
+  return points.at(-1)!
 }
 
 // ============================================================================
@@ -486,7 +481,7 @@ function midpoint(points: Array<{ x: number; y: number }>): { x: number; y: numb
 // ============================================================================
 
 function letterAttr(value: number): string {
-  return value !== 0 ? ` letter-spacing="${value}"` : ''
+  return value === 0 ? '' : ` letter-spacing="${value}"`
 }
 
 // Use shared escapeXml from multiline-utils
@@ -498,19 +493,19 @@ function buildAccessibilityAttrs(
   titleId: string,
   descId: string,
 ): Record<string, string> {
-  if (!title && !description) return {}
+  if (!title && !description) {return {}}
   const attrs: Record<string, string> = { role: 'img' }
-  if (title) attrs['aria-labelledby'] = titleId
-  if (description) attrs['aria-describedby'] = descId
+  if (title) {attrs['aria-labelledby'] = titleId}
+  if (description) {attrs['aria-describedby'] = descId}
   return attrs
 }
 
-function hashAccessibility(...values: Array<string | number>): string {
-  let h = 0x811c9dc5
+function hashAccessibility(...values: (string | number)[]): string {
+  let h = 0x81_1c_9d_c5
   const text = values.join('|')
   for (let i = 0; i < text.length; i++) {
-    h ^= text.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
+    h ^= text.codePointAt(i)
+    h = Math.imul(h, 0x01_00_01_93)
   }
   return (h >>> 0).toString(36)
 }
@@ -520,8 +515,8 @@ function hashAccessibility(...values: Array<string | number>): string {
  */
 function escapeAttr(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
 }

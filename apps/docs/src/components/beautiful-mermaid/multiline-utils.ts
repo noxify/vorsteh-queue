@@ -17,13 +17,13 @@ export function normalizeBrTags(label: string): string {
   // Strip surrounding double quotes (Mermaid uses them for special chars in labels)
   const unquoted = label.startsWith('"') && label.endsWith('"') ? label.slice(1, -1) : label
   return unquoted
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/\\n/g, '\n')
-    .replace(/<\/?(?:sub|sup|small|mark)\s*>/gi, '')
+    .replaceAll(/<br\s*\/?>/gi, '\n')
+    .replaceAll(/\\n/g, '\n')
+    .replaceAll(/<\/?(?:sub|sup|small|mark)\s*>/gi, '')
     // Markdown formatting → HTML tags (order matters: ** before *)
-    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-    .replace(/(?<!\*)\*([^\s*](?:[^*]*[^\s*])?)\*(?!\*)/g, '<i>$1</i>')
-    .replace(/~~(.+?)~~/g, '<s>$1</s>')
+    .replaceAll(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replaceAll(/(?<!\*)\*([^\s*](?:[^*]*[^\s*])?)\*(?!\*)/g, '<i>$1</i>')
+    .replaceAll(/~~(.+?)~~/g, '<s>$1</s>')
 }
 
 /**
@@ -31,7 +31,7 @@ export function normalizeBrTags(label: string): string {
  * Used for text measurement where tag characters shouldn't affect width.
  */
 export function stripFormattingTags(text: string): string {
-  return text.replace(/<\/?(?:b|strong|i|em|u|s|del)\s*>/gi, '')
+  return text.replaceAll(/<\/?(?:b|strong|i|em|u|s|del)\s*>/gi, '')
 }
 
 /**
@@ -39,11 +39,11 @@ export function stripFormattingTags(text: string): string {
  */
 export function escapeXml(text: string): string {
   return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/'/g, '&#39;')
 }
 
 // ============================================================================
@@ -67,7 +67,7 @@ const FORMAT_TAG_REGEX = /<(\/)?(?:(b|strong)|(i|em)|(u)|(s|del))\s*>/gi
  */
 function parseInlineFormatting(line: string): StyledSegment[] {
   const segments: StyledSegment[] = []
-  let bold = false, italic = false, underline = false, strikethrough = false
+  let bold = false, italic = false, strikethrough = false, underline = false
   let lastIndex = 0
 
   // Reset lastIndex for global regex
@@ -77,21 +77,21 @@ function parseInlineFormatting(line: string): StyledSegment[] {
   while ((match = FORMAT_TAG_REGEX.exec(line)) !== null) {
     // Capture text before this tag
     if (match.index > lastIndex) {
-      segments.push({ text: line.slice(lastIndex, match.index), bold, italic, underline, strikethrough })
+      segments.push({ bold, italic, strikethrough, text: line.slice(lastIndex, match.index), underline })
     }
     lastIndex = match.index + match[0].length
 
     const isClosing = Boolean(match[1])
     // match[2] = b|strong, match[3] = i|em, match[4] = u, match[5] = s|del
-    if (match[2]) bold = !isClosing
-    else if (match[3]) italic = !isClosing
-    else if (match[4]) underline = !isClosing
-    else if (match[5]) strikethrough = !isClosing
+    if (match[2]) {bold = !isClosing}
+    else if (match[3]) {italic = !isClosing}
+    else if (match[4]) {underline = !isClosing}
+    else if (match[5]) {strikethrough = !isClosing}
   }
 
   // Remaining text after last tag
   if (lastIndex < line.length) {
-    segments.push({ text: line.slice(lastIndex), bold, italic, underline, strikethrough })
+    segments.push({ bold, italic, strikethrough, text: line.slice(lastIndex), underline })
   }
 
   return segments
@@ -106,27 +106,27 @@ const HAS_FORMAT_TAGS = /<\/?(?:b|strong|i|em|u|s|del)\s*>/i
  */
 function renderLineContent(line: string): string {
   // Fast path: no formatting tags
-  if (!HAS_FORMAT_TAGS.test(line)) return escapeXml(line)
+  if (!HAS_FORMAT_TAGS.test(line)) {return escapeXml(line)}
 
   const segments = parseInlineFormatting(line)
-  if (segments.length === 0) return ''
+  if (segments.length === 0) {return ''}
 
   // If all segments are unstyled, just escape
   const allPlain = segments.every(s => !s.bold && !s.italic && !s.underline && !s.strikethrough)
-  if (allPlain) return segments.map(s => escapeXml(s.text)).join('')
+  if (allPlain) {return segments.map(s => escapeXml(s.text)).join('')}
 
   return segments.map(seg => {
     const escaped = escapeXml(seg.text)
-    if (!seg.bold && !seg.italic && !seg.underline && !seg.strikethrough) return escaped
+    if (!seg.bold && !seg.italic && !seg.underline && !seg.strikethrough) {return escaped}
 
     const attrs: string[] = []
-    if (seg.bold) attrs.push('font-weight="bold"')
-    if (seg.italic) attrs.push('font-style="italic"')
+    if (seg.bold) {attrs.push('font-weight="bold"')}
+    if (seg.italic) {attrs.push('font-style="italic"')}
     // SVG text-decoration can combine values
     const deco: string[] = []
-    if (seg.underline) deco.push('underline')
-    if (seg.strikethrough) deco.push('line-through')
-    if (deco.length) attrs.push(`text-decoration="${deco.join(' ')}"`)
+    if (seg.underline) {deco.push('underline')}
+    if (seg.strikethrough) {deco.push('line-through')}
+    if (deco.length) {attrs.push(`text-decoration="${deco.join(' ')}"`)}
 
     return `<tspan ${attrs.join(' ')}>${escaped}</tspan>`
   }).join('')

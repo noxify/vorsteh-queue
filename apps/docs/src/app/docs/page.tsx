@@ -27,24 +27,24 @@ interface QuickLink {
 
 const QUICK_LINKS: readonly QuickLink[] = [
   {
-    title: "llms.txt",
     description:
       "Compact machine-readable index with key entry points and links to core documentation sections.",
     href: "/llms.txt",
     icon: FileTextIcon,
+    title: "llms.txt",
   },
   {
-    title: "llms-full.txt",
     description:
       "Full machine-readable export covering all docs pages and richer context for deeper AI ingestion workflows.",
     href: "/llms-full.txt",
     icon: BotIcon,
+    title: "llms-full.txt",
   },
   {
-    title: "View as Markdown",
     description:
       "Open any docs page and use the `View as Markdown` action to access the source markdown directly.",
     icon: SparklesIcon,
+    title: "View as Markdown",
   },
 ] as const
 

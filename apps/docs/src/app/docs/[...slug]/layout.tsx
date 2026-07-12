@@ -96,9 +96,9 @@ function flatExportsToTocItems(
   baseDepth: number
 ) {
   return exports.map((exp) => ({
+    depth: baseDepth,
     id: exp.slug,
     title: exp.title,
-    depth: baseDepth,
     ...(exp.kind
       ? {
           jsx: (
@@ -114,10 +114,10 @@ function flatExportsToTocItems(
     ...(exp.methods?.length
       ? {
           children: exp.methods.map((m) => ({
-            id: m.slug,
-            title: m.title,
             depth: baseDepth,
+            id: m.slug,
             jsx: <span className="ml-4">{m.title}</span>,
+            title: m.title,
           })),
         }
       : {}),
@@ -172,10 +172,10 @@ export default async function DocsSlugLayout({
       const hasMultipleSources = results.length > 1
       const referenceSections = hasMultipleSources
         ? results.map((result) => ({
+            children: flatExportsToTocItems(result.exports, 4),
+            depth: 3,
             id: result.name.replaceAll(/[^a-z0-9-]/gu, "-"),
             title: result.name,
-            depth: 3,
-            children: flatExportsToTocItems(result.exports, 4),
           }))
         : flatExportsToTocItems(
             results.flatMap((r) => r.exports),
@@ -188,10 +188,10 @@ export default async function DocsSlugLayout({
         ...(referenceSections.length
           ? [
               {
+                children: referenceSections,
+                depth: 2,
                 id: "api-reference",
                 title: "API Reference",
-                depth: 2,
-                children: referenceSections,
               },
             ]
           : []),

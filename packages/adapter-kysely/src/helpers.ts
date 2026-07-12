@@ -16,15 +16,15 @@ import { sql } from "kysely"
  */
 export function createQueueJobsTable(tableName: string, schemaName?: string) {
   return {
-    up: async (db: Kysely<unknown>) => {
-      await generateUp({ schemaName, tableName, db })
-    },
     down: async (db: Kysely<unknown>) => {
       const schema = schemaName ? db.schema.withSchema(schemaName) : db.schema
       await schema.dropTable(tableName).execute()
       if (schemaName) {
         await schema.dropSchema(schemaName).execute()
       }
+    },
+    up: async (db: Kysely<unknown>) => {
+      await generateUp({ schemaName, tableName, db })
     },
   }
 }

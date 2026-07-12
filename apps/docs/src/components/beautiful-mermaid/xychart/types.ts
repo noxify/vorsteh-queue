@@ -263,7 +263,7 @@ export interface PositionedBar {
 
 export interface PositionedLine {
   /** Polyline points */
-  points: Array<{ x: number; y: number; value: number; label?: string }>
+  points: { x: number; y: number; value: number; label?: string }[]
   /** Series index within line type (for layout grouping) */
   seriesIndex: number
   /** Global color index across all series */

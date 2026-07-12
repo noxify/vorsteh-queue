@@ -92,6 +92,12 @@ export function createStepContext(
   const compensations: CompensationEntry[] = []
 
   const context: StepContext = {
+    async all<TResults extends readonly unknown[]>(promises: {
+      [K in keyof TResults]: Promise<TResults[K]>
+    }): Promise<TResults> {
+      return Promise.all(promises) as Promise<TResults>
+    },
+
     async run<TResult>(
       name: string,
       fn: () => Promise<TResult>,
@@ -223,12 +229,6 @@ export function createStepContext(
         ? parseDuration(options.timeout)
         : undefined
       throw new WaitForInterrupt(name, event, timeout)
-    },
-
-    async all<TResults extends readonly unknown[]>(promises: {
-      [K in keyof TResults]: Promise<TResults[K]>
-    }): Promise<TResults> {
-      return Promise.all(promises) as Promise<TResults>
     },
   }
 

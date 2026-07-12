@@ -34,7 +34,7 @@ async function main() {
     "sync-user",
     { userId: "user-1" },
     {
-      unique: { key: "sync:user-1", action: "reject" },
+      unique: { action: "reject", key: "sync:user-1" },
     }
   )
   console.log("First job added successfully")
@@ -44,7 +44,7 @@ async function main() {
       "sync-user",
       { userId: "user-1" },
       {
-        unique: { key: "sync:user-1", action: "reject" },
+        unique: { action: "reject", key: "sync:user-1" },
       }
     )
   } catch (error) {
@@ -59,7 +59,7 @@ async function main() {
     "sync-user",
     { userId: "user-2", version: 1 },
     {
-      unique: { key: "sync:user-2", action: "replace" },
+      unique: { action: "replace", key: "sync:user-2" },
     }
   )
   console.log(`First job: ${first.id}`)
@@ -68,7 +68,7 @@ async function main() {
     "sync-user",
     { userId: "user-2", version: 2 },
     {
-      unique: { key: "sync:user-2", action: "replace" },
+      unique: { action: "replace", key: "sync:user-2" },
     }
   )
   console.log(`Second job (replaced first): ${second.id}`)

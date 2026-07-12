@@ -17,15 +17,15 @@ describe("CLI Transport (direct)", () => {
   describe("status", () => {
     it("should return queue stats", async () => {
       await adapter.addJob({
-        name: "test",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "test",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const stats = await transport.getStats()
@@ -34,15 +34,15 @@ describe("CLI Transport (direct)", () => {
 
     it("should return queue size", async () => {
       await adapter.addJob({
-        name: "test",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "test",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const size = await transport.size()
@@ -53,15 +53,15 @@ describe("CLI Transport (direct)", () => {
   describe("inspect", () => {
     it("should get a job by ID", async () => {
       const job = await adapter.addJob({
-        name: "inspect-me",
-        payload: { data: "hello" },
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "inspect-me",
+        payload: { data: "hello" },
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const result = await transport.getJob(job.id)
@@ -78,15 +78,15 @@ describe("CLI Transport (direct)", () => {
   describe("cancel", () => {
     it("should cancel a pending job", async () => {
       const job = await adapter.addJob({
-        name: "cancel-me",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "cancel-me",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const success = await transport.cancelJob(job.id, "test reason")
@@ -101,15 +101,15 @@ describe("CLI Transport (direct)", () => {
   describe("redrive", () => {
     it("should redrive a dead job", async () => {
       const job = await adapter.addJob({
-        name: "dead-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 3,
         maxAttempts: 3,
+        name: "dead-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await adapter.updateJobStatus(job.id, { status: "dead" })
 
@@ -121,26 +121,26 @@ describe("CLI Transport (direct)", () => {
 
     it("should redrive all dead jobs", async () => {
       const j1 = await adapter.addJob({
+        attempts: 0,
+        maxAttempts: 3,
         name: "dead-1",
         payload: {},
-        status: "pending",
         priority: 2,
-        attempts: 0,
-        maxAttempts: 3,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       const j2 = await adapter.addJob({
-        name: "dead-2",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "dead-2",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await adapter.updateJobStatus(j1.id, { status: "dead" })
       await adapter.updateJobStatus(j2.id, { status: "dead" })
@@ -153,26 +153,26 @@ describe("CLI Transport (direct)", () => {
   describe("clear", () => {
     it("should clear all jobs", async () => {
       await adapter.addJob({
+        attempts: 0,
+        maxAttempts: 3,
         name: "a",
         payload: {},
-        status: "pending",
         priority: 2,
-        attempts: 0,
-        maxAttempts: 3,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await adapter.addJob({
-        name: "b",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "b",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const count = await transport.clearJobs()
@@ -181,26 +181,26 @@ describe("CLI Transport (direct)", () => {
 
     it("should clear jobs by status", async () => {
       await adapter.addJob({
+        attempts: 0,
+        maxAttempts: 3,
         name: "pending-job",
         payload: {},
-        status: "pending",
         priority: 2,
-        attempts: 0,
-        maxAttempts: 3,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       const completed = await adapter.addJob({
-        name: "done-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "done-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await adapter.updateJobStatus(completed.id, { status: "completed" })
 
@@ -215,15 +215,15 @@ describe("CLI Transport (direct)", () => {
   describe("dead jobs", () => {
     it("should list dead jobs", async () => {
       const job = await adapter.addJob({
-        name: "dead",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "dead",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await adapter.updateJobStatus(job.id, { status: "dead" })
 
@@ -236,15 +236,15 @@ describe("CLI Transport (direct)", () => {
   describe("retry", () => {
     it("should retry a failed job", async () => {
       const job = await adapter.addJob({
-        name: "failed-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 2,
         maxAttempts: 3,
+        name: "failed-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
       await adapter.updateJobStatus(job.id, { status: "failed" })
 
@@ -257,15 +257,15 @@ describe("CLI Transport (direct)", () => {
 
     it("should not retry a non-failed job", async () => {
       const job = await adapter.addJob({
-        name: "pending-job",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "pending-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const success = await transport.retryJob(job.id)
@@ -276,15 +276,15 @@ describe("CLI Transport (direct)", () => {
   describe("run now", () => {
     it("should promote a delayed job", async () => {
       const job = await adapter.addJob({
-        name: "delayed-job",
-        payload: {},
-        status: "delayed",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "delayed-job",
+        payload: {},
+        priority: 2,
         processAt: new Date(Date.now() + 60_000),
         progress: 0,
         repeatCount: 0,
+        status: "delayed",
       })
 
       const success = await transport.runJobNow(job.id)
@@ -298,15 +298,15 @@ describe("CLI Transport (direct)", () => {
   describe("delete", () => {
     it("should delete a job", async () => {
       const job = await adapter.addJob({
-        name: "delete-me",
-        payload: {},
-        status: "pending",
-        priority: 2,
         attempts: 0,
         maxAttempts: 3,
+        name: "delete-me",
+        payload: {},
+        priority: 2,
         processAt: new Date(),
         progress: 0,
         repeatCount: 0,
+        status: "pending",
       })
 
       const success = await transport.deleteJob(job.id)

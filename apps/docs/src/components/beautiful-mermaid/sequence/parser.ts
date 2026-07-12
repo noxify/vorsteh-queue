@@ -31,15 +31,15 @@ import { normalizeBrTags } from '../multiline-utils'
 export function parseSequenceDiagram(lines: string[]): SequenceDiagram {
   const diagram: SequenceDiagram = {
     actors: [],
-    messages: [],
     blocks: [],
+    messages: [],
     notes: [],
   }
 
   // Track actor IDs to auto-create actors referenced in messages
   const actorIds = new Set<string>()
   // Track block nesting with a stack
-  const blockStack: Array<{ type: Block['type']; label: string; startIndex: number; dividers: Block['dividers'] }> = []
+  const blockStack: { type: Block['type']; label: string; startIndex: number; dividers: Block['dividers'] }[] = []
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i]!
@@ -95,14 +95,14 @@ export function parseSequenceDiagram(lines: string[]): SequenceDiagram {
       }
 
       let position: 'left' | 'right' | 'over' = 'over'
-      if (posStr === 'left of') position = 'left'
-      else if (posStr === 'right of') position = 'right'
+      if (posStr === 'left of') {position = 'left'}
+      else if (posStr === 'right of') {position = 'right'}
 
       diagram.notes.push({
         actorIds: noteActorIds,
-        text,
-        position,
         afterIndex: diagram.messages.length - 1,
+        position,
+        text,
       })
       continue
     }
@@ -114,10 +114,10 @@ export function parseSequenceDiagram(lines: string[]): SequenceDiagram {
       const rawBlockLabel = blockMatch[2]?.trim() ?? ''
       const label = normalizeBrTags(rawBlockLabel)
       blockStack.push({
-        type: blockType,
+        dividers: [],
         label,
         startIndex: diagram.messages.length,
-        dividers: [],
+        type: blockType,
       })
       continue
     }
@@ -127,7 +127,7 @@ export function parseSequenceDiagram(lines: string[]): SequenceDiagram {
     if (dividerMatch && blockStack.length > 0) {
       const rawDividerLabel = dividerMatch[2]?.trim() ?? ''
       const label = normalizeBrTags(rawDividerLabel)
-      blockStack[blockStack.length - 1]!.dividers.push({
+      blockStack.at(-1)!.dividers.push({
         index: diagram.messages.length,
         label,
       })
@@ -138,11 +138,11 @@ export function parseSequenceDiagram(lines: string[]): SequenceDiagram {
     if (line === 'end' && blockStack.length > 0) {
       const completed = blockStack.pop()!
       diagram.blocks.push({
-        type: completed.type,
+        dividers: completed.dividers,
+        endIndex: Math.max(diagram.messages.length - 1, completed.startIndex),
         label: completed.label,
         startIndex: completed.startIndex,
-        endIndex: Math.max(diagram.messages.length - 1, completed.startIndex),
-        dividers: completed.dividers,
+        type: completed.type,
       })
       continue
     }
@@ -170,16 +170,16 @@ export function parseSequenceDiagram(lines: string[]): SequenceDiagram {
       const arrowHead = arrow.includes('>>') || arrow.includes('x') ? 'filled' : 'open'
 
       const msg: Message = {
+        arrowHead,
         from,
-        to,
         label,
         lineStyle,
-        arrowHead,
+        to,
       }
 
       // Activation/deactivation via +/- prefix on target
-      if (activationMark === '+') msg.activate = true
-      if (activationMark === '-') msg.deactivate = true
+      if (activationMark === '+') {msg.activate = true}
+      if (activationMark === '-') {msg.deactivate = true}
 
       diagram.messages.push(msg)
       continue
@@ -202,9 +202,9 @@ export function parseSequenceDiagram(lines: string[]): SequenceDiagram {
       const lineStyle = arrow.startsWith('--') ? 'dashed' : 'solid'
       const arrowHead = arrow.includes('>>') || arrow.includes('x') ? 'filled' : 'open'
 
-      const msg: Message = { from, to, label, lineStyle, arrowHead }
-      if (activationMark === '+') msg.activate = true
-      if (activationMark === '-') msg.deactivate = true
+      const msg: Message = { arrowHead, from, label, lineStyle, to }
+      if (activationMark === '+') {msg.activate = true}
+      if (activationMark === '-') {msg.deactivate = true}
 
       diagram.messages.push(msg)
       continue
@@ -225,15 +225,15 @@ function parseAccessibilityLine(line: string, directive: 'accTitle' | 'accDescr'
 
 function collectAccessibilityBlock(initial: string, lines: string[], startIndex: number): { text: string; nextIndex: number } {
   const initialEnd = initial.indexOf('}')
-  if (initialEnd !== -1) return { text: initial.slice(0, initialEnd).trim(), nextIndex: startIndex }
+  if (initialEnd !== -1) {return { text: initial.slice(0, initialEnd).trim(), nextIndex: startIndex }}
   const parts = [initial.trim()].filter(Boolean)
   for (let i = startIndex + 1; i < lines.length; i++) {
     const line = lines[i]!
     const end = line.indexOf('}')
     if (end !== -1) {
       const beforeBrace = line.slice(0, end).trim()
-      if (beforeBrace) parts.push(beforeBrace)
-      return { text: parts.join('\n'), nextIndex: i }
+      if (beforeBrace) {parts.push(beforeBrace)}
+      return { nextIndex: i, text: parts.join('\n') }
     }
     parts.push(line)
   }

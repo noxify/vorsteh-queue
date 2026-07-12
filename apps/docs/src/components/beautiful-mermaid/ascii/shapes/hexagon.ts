@@ -16,12 +16,12 @@ import { getCorners } from './corners'
  *   ⬡─────────⬡
  */
 export const hexagonRenderer: ShapeRenderer = {
+  getAttachmentPoint: getBoxAttachmentPoint,
+
   getDimensions: getBoxDimensions,
 
   render(label, dimensions, options) {
     const corners = getCorners('hexagon', options.useAscii)
     return renderBox(label, dimensions, corners, options.useAscii)
   },
-
-  getAttachmentPoint: getBoxAttachmentPoint,
 }

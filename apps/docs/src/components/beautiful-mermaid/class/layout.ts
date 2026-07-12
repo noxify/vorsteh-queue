@@ -17,36 +17,36 @@ import { elkLayoutSync } from '../elk-instance'
 
 /** Layout constants for class diagrams */
 export const CLS = {
-  padding: 40,
-  boxPadX: 8,
-  headerBaseHeight: 32,
   annotationHeight: 16,
-  memberRowHeight: 20,
-  sectionPadY: 8,
+  boxPadX: 8,
   emptySectionHeight: 8,
-  minWidth: 120,
+  headerBaseHeight: 32,
+  layerSpacing: 60,
   memberFontSize: 11,
   memberFontWeight: 400,
+  memberRowHeight: 20,
+  minWidth: 120,
   nodeSpacing: 40,
-  layerSpacing: 60,
+  padding: 40,
+  sectionPadY: 8,
 } as const
 
 const CLASS_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: FONT_SIZES.nodeLabel,
   edgeLabelFontSize: FONT_SIZES.edgeLabel,
-  groupHeaderFontSize: FONT_SIZES.groupHeader,
-  nodeLabelFontWeight: FONT_WEIGHTS.nodeLabel,
   edgeLabelFontWeight: FONT_WEIGHTS.edgeLabel,
-  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
-  nodePaddingX: CLS.boxPadX,
-  nodePaddingY: CLS.sectionPadY,
-  nodeCornerRadius: 0,
-  nodeLineWidth: STROKE_WIDTHS.outerBox,
   edgeLineWidth: STROKE_WIDTHS.connector,
   groupCornerRadius: 0,
+  groupHeaderFontSize: FONT_SIZES.groupHeader,
+  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
+  groupLineWidth: STROKE_WIDTHS.outerBox,
   groupPaddingX: CLS.boxPadX,
   groupPaddingY: CLS.sectionPadY,
-  groupLineWidth: STROKE_WIDTHS.outerBox,
+  nodeCornerRadius: 0,
+  nodeLabelFontSize: FONT_SIZES.nodeLabel,
+  nodeLabelFontWeight: FONT_WEIGHTS.nodeLabel,
+  nodeLineWidth: STROKE_WIDTHS.outerBox,
+  nodePaddingX: CLS.boxPadX,
+  nodePaddingY: CLS.sectionPadY,
 }
 
 type ClassSizeMap = Map<string, { width: number; height: number; headerHeight: number; attrHeight: number; methodHeight: number }>
@@ -82,27 +82,27 @@ function buildClassElkGraph(
     const width = Math.max(CLS.minWidth, headerTextW + style.nodePaddingX * 2, maxAttrW + style.nodePaddingX * 2, maxMethodW + style.nodePaddingX * 2)
     const height = headerHeight + attrHeight + methodHeight
 
-    classSizes.set(cls.id, { width, height, headerHeight, attrHeight, methodHeight })
+    classSizes.set(cls.id, { attrHeight, headerHeight, height, methodHeight, width })
   }
 
   const elkGraph: ElkNode = {
+    children: [],
+    edges: [],
     id: 'root',
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': 'DOWN',
-      'elk.spacing.nodeNode': String(CLS.nodeSpacing),
+      'elk.edgeLabels.placement': 'CENTER',
+      'elk.edgeRouting': 'ORTHOGONAL',
       'elk.layered.spacing.nodeNodeBetweenLayers': String(CLS.layerSpacing),
       'elk.padding': `[top=${CLS.padding},left=${CLS.padding},bottom=${CLS.padding},right=${CLS.padding}]`,
-      'elk.edgeRouting': 'ORTHOGONAL',
-      'elk.edgeLabels.placement': 'CENTER',
+      'elk.spacing.nodeNode': String(CLS.nodeSpacing),
     },
-    children: [],
-    edges: [],
   }
 
   for (const cls of diagram.classes) {
     const size = classSizes.get(cls.id)!
-    elkGraph.children!.push({ id: cls.id, width: size.width, height: size.height })
+    elkGraph.children!.push({ height: size.height, id: cls.id, width: size.width })
   }
 
   for (let i = 0; i < diagram.relationships.length; i++) {
@@ -110,12 +110,12 @@ function buildClassElkGraph(
     const edge: ElkExtendedEdge = { id: `e${i}`, sources: [rel.from], targets: [rel.to] }
     if (rel.label) {
       const metrics = measureMultilineText(rel.label, style.edgeLabelFontSize, style.edgeLabelFontWeight)
-      edge.labels = [{ text: rel.label, width: metrics.width + 8, height: metrics.height + 6 }]
+      edge.labels = [{ height: metrics.height + 6, text: rel.label, width: metrics.width + 8 }]
     }
     elkGraph.edges!.push(edge)
   }
 
-  return { elkGraph, classSizes }
+  return { classSizes, elkGraph }
 }
 
 /** Extract positioned classes and relationships from ELK result. */
@@ -125,7 +125,7 @@ function extractClassLayout(
   classSizes: ClassSizeMap
 ): PositionedClassDiagram {
   const classLookup = new Map<string, ClassNode>()
-  for (const cls of diagram.classes) classLookup.set(cls.id, cls)
+  for (const cls of diagram.classes) {classLookup.set(cls.id, cls)}
 
   const positionedClasses: PositionedClassNode[] = []
   for (const child of result.children ?? []) {
@@ -133,18 +133,18 @@ function extractClassLayout(
     if (cls) {
       const size = classSizes.get(cls.id)!
       positionedClasses.push({
+        annotation: cls.annotation,
+        attrHeight: size.attrHeight,
+        attributes: cls.attributes,
+        headerHeight: size.headerHeight,
+        height: child.height ?? size.height,
         id: cls.id,
         label: cls.label,
-        annotation: cls.annotation,
-        attributes: cls.attributes,
+        methodHeight: size.methodHeight,
         methods: cls.methods,
+        width: child.width ?? size.width,
         x: child.x ?? 0,
         y: child.y ?? 0,
-        width: child.width ?? size.width,
-        height: child.height ?? size.height,
-        headerHeight: size.headerHeight,
-        attrHeight: size.attrHeight,
-        methodHeight: size.methodHeight,
       })
     }
   }
@@ -179,24 +179,24 @@ function extractClassLayout(
 
     relationships.push({
       from: rel.from,
-      to: rel.to,
-      type: rel.type,
-      markerAt: rel.markerAt,
-      label: rel.label,
       fromCardinality: rel.fromCardinality,
-      toCardinality: rel.toCardinality,
-      points,
+      label: rel.label,
       labelPosition,
+      markerAt: rel.markerAt,
+      points,
+      to: rel.to,
+      toCardinality: rel.toCardinality,
+      type: rel.type,
     })
   }
 
   return {
-    width: result.width ?? 600,
-    height: result.height ?? 400,
-    accessibilityTitle: diagram.accessibilityTitle,
     accessibilityDescription: diagram.accessibilityDescription,
+    accessibilityTitle: diagram.accessibilityTitle,
     classes: positionedClasses,
+    height: result.height ?? 400,
     relationships,
+    width: result.width ?? 600,
   }
 }
 
@@ -208,7 +208,7 @@ export function layoutClassDiagramSync(
   options: RenderOptions = {}
 ): PositionedClassDiagram {
   if (diagram.classes.length === 0) {
-    return { width: 0, height: 0, accessibilityTitle: diagram.accessibilityTitle, accessibilityDescription: diagram.accessibilityDescription, classes: [], relationships: [] }
+    return { accessibilityDescription: diagram.accessibilityDescription, accessibilityTitle: diagram.accessibilityTitle, classes: [], height: 0, relationships: [], width: 0 }
   }
 
   const { elkGraph, classSizes } = buildClassElkGraph(diagram, options)
@@ -218,12 +218,12 @@ export function layoutClassDiagramSync(
 
 /** Calculate the max width of a list of class members (uses mono metrics) */
 function maxMemberWidth(members: ClassMember[]): number {
-  if (members.length === 0) return 0
+  if (members.length === 0) {return 0}
   let maxW = 0
   for (const m of members) {
     const text = memberToString(m)
     const w = estimateMonoTextWidth(text, CLS.memberFontSize)
-    if (w > maxW) maxW = w
+    if (w > maxW) {maxW = w}
   }
   return maxW
 }

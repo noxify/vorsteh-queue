@@ -29,8 +29,8 @@ interface CleanupJobResult {
 
 // Worker setup (consumer)
 const worker = new Worker(adapter, {
-  name: "advanced-queue",
   concurrency: 2,
+  name: "advanced-queue",
   removeOnComplete: 20,
   removeOnFail: 10,
 })
@@ -58,9 +58,9 @@ worker.register<ReportJobPayload, ReportJobResult>(
     }
 
     return {
+      fileSize: Math.floor(Math.random() * 1_000_000) + 100_000,
       reportId: `report_${Date.now()}`,
       status: "completed",
-      fileSize: Math.floor(Math.random() * 1_000_000) + 100_000,
     }
   }
 )
@@ -114,9 +114,9 @@ async function main() {
   await queue.add(
     "generate-report",
     {
-      userId: "user123",
-      type: "monthly",
       includeCharts: true,
+      type: "monthly",
+      userId: "user123",
     },
     { priority: 1 }
   )
@@ -124,8 +124,8 @@ async function main() {
   await queue.add(
     "cleanup-files",
     {
-      olderThan: "30d",
       fileTypes: ["tmp", "log", "cache"],
+      olderThan: "30d",
     },
     { priority: 3 }
   )
@@ -133,10 +133,10 @@ async function main() {
   await queue.add(
     "generate-report",
     {
-      userId: "user456",
       type: "weekly",
+      userId: "user456",
     },
-    { priority: 2, delay: 5000 }
+    { delay: 5000, priority: 2 }
   )
 
   // Add recurring cleanup job
@@ -151,7 +151,7 @@ async function main() {
   // Add cron job
   await queue.add(
     "generate-report",
-    { userId: "system", type: "daily" },
+    { type: "daily", userId: "system" },
     {
       cron: "0 9 * * *", // Every day at 9 AM
     }

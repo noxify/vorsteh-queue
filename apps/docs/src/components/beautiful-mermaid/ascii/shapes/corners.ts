@@ -41,84 +41,84 @@ export interface ShapeCorners {
 export const SHAPE_CORNERS: Record<AsciiNodeShape, ShapeCorners> = {
   // Standard rectangular shapes
   rectangle: {
-    unicode: { tl: '┌', tr: '┐', bl: '└', br: '┘' },
-    ascii: { tl: '+', tr: '+', bl: '+', br: '+' },
+    ascii: { bl: '+', br: '+', tl: '+', tr: '+' },
+    unicode: { bl: '└', br: '┘', tl: '┌', tr: '┐' },
   },
   service: {
-    unicode: { tl: '┌', tr: '┐', bl: '└', br: '┘' },
-    ascii: { tl: '+', tr: '+', bl: '+', br: '+' },
+    ascii: { bl: '+', br: '+', tl: '+', tr: '+' },
+    unicode: { bl: '└', br: '┘', tl: '┌', tr: '┐' },
   },
   rounded: {
-    unicode: { tl: '╭', tr: '╮', bl: '╰', br: '╯' },
-    ascii: { tl: '.', tr: '.', bl: "'", br: "'" },
+    ascii: { bl: "'", br: "'", tl: '.', tr: '.' },
+    unicode: { bl: '╰', br: '╯', tl: '╭', tr: '╮' },
   },
 
   // Circular shapes - use circle markers at corners
   circle: {
-    unicode: { tl: '◯', tr: '◯', bl: '◯', br: '◯' },
-    ascii: { tl: 'o', tr: 'o', bl: 'o', br: 'o' },
+    ascii: { bl: 'o', br: 'o', tl: 'o', tr: 'o' },
+    unicode: { bl: '◯', br: '◯', tl: '◯', tr: '◯' },
   },
   doublecircle: {
-    unicode: { tl: '◎', tr: '◎', bl: '◎', br: '◎' },
-    ascii: { tl: '@', tr: '@', bl: '@', br: '@' },
+    ascii: { bl: '@', br: '@', tl: '@', tr: '@' },
+    unicode: { bl: '◎', br: '◎', tl: '◎', tr: '◎' },
   },
 
   // Diamond - decision nodes
   diamond: {
-    unicode: { tl: '◇', tr: '◇', bl: '◇', br: '◇' },
-    ascii: { tl: '<', tr: '>', bl: '<', br: '>' },
+    ascii: { bl: '<', br: '>', tl: '<', tr: '>' },
+    unicode: { bl: '◇', br: '◇', tl: '◇', tr: '◇' },
   },
 
   // Hexagon - process nodes (crop corners — monospace-safe, distinct from rectangle)
   hexagon: {
-    unicode: { tl: '⌜', tr: '⌝', bl: '⌞', br: '⌟' },
-    ascii: { tl: '*', tr: '*', bl: '*', br: '*' },
+    ascii: { bl: '*', br: '*', tl: '*', tr: '*' },
+    unicode: { bl: '⌞', br: '⌟', tl: '⌜', tr: '⌝' },
   },
 
   // Stadium/pill shape
   stadium: {
-    unicode: { tl: '(', tr: ')', bl: '(', br: ')' },
-    ascii: { tl: '(', tr: ')', bl: '(', br: ')' },
+    ascii: { bl: '(', br: ')', tl: '(', tr: ')' },
+    unicode: { bl: '(', br: ')', tl: '(', tr: ')' },
   },
 
   // Subroutine - double vertical bars
   subroutine: {
-    unicode: { tl: '╟', tr: '╢', bl: '╟', br: '╢' },
-    ascii: { tl: '|', tr: '|', bl: '|', br: '|' },
+    ascii: { bl: '|', br: '|', tl: '|', tr: '|' },
+    unicode: { bl: '╟', br: '╢', tl: '╟', tr: '╢' },
   },
 
   // Cylinder/database
   cylinder: {
-    unicode: { tl: '╭', tr: '╮', bl: '╰', br: '╯' },
-    ascii: { tl: '.', tr: '.', bl: "'", br: "'" },
+    ascii: { bl: "'", br: "'", tl: '.', tr: '.' },
+    unicode: { bl: '╰', br: '╯', tl: '╭', tr: '╮' },
   },
 
   // Asymmetric/flag - pointer on left side
   asymmetric: {
-    unicode: { tl: '▷', tr: '┐', bl: '▷', br: '┘' },
-    ascii: { tl: '>', tr: '+', bl: '>', br: '+' },
+    ascii: { bl: '>', br: '+', tl: '>', tr: '+' },
+    unicode: { bl: '▷', br: '┘', tl: '▷', tr: '┐' },
   },
 
   // Trapezoid - wider at bottom (top corners slope inward)
   trapezoid: {
-    unicode: { tl: '/', tr: '\\', bl: '└', br: '┘' },
-    ascii: { tl: '/', tr: '\\', bl: '+', br: '+' },
+    ascii: { bl: '+', br: '+', tl: '/', tr: '\\' },
+    unicode: { bl: '└', br: '┘', tl: '/', tr: '\\' },
   },
 
   // Trapezoid-alt - wider at top (bottom corners slope inward)
   'trapezoid-alt': {
-    unicode: { tl: '┌', tr: '┐', bl: '\\', br: '/' },
-    ascii: { tl: '+', tr: '+', bl: '\\', br: '/' },
+    ascii: { bl: '\\', br: '/', tl: '+', tr: '+' },
+    unicode: { bl: '\\', br: '/', tl: '┌', tr: '┐' },
   },
 
   // State diagram pseudostates (special handling, not corner-based)
   'state-start': {
-    unicode: { tl: '●', tr: '●', bl: '●', br: '●' },
-    ascii: { tl: '*', tr: '*', bl: '*', br: '*' },
+    ascii: { bl: '*', br: '*', tl: '*', tr: '*' },
+    unicode: { bl: '●', br: '●', tl: '●', tr: '●' },
   },
   'state-end': {
-    unicode: { tl: '◉', tr: '◉', bl: '◉', br: '◉' },
-    ascii: { tl: '@', tr: '@', bl: '@', br: '@' },
+    ascii: { bl: '@', br: '@', tl: '@', tr: '@' },
+    unicode: { bl: '◉', br: '◉', tl: '◉', tr: '◉' },
   },
 }
 

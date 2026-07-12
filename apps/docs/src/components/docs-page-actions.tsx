@@ -25,30 +25,30 @@ const AI_PROMPT_TEMPLATE =
 
 const AI_PROVIDERS = [
   {
+    description: "Ask questions about this page",
     key: "t3chat",
     title: "Open in T3Chat",
-    description: "Ask questions about this page",
     toUrl: (prompt: string) =>
       `https://t3.chat/new?q=${encodeURIComponent(prompt)}`,
   },
   {
+    description: "Ask questions about this page",
     key: "cursor",
     title: "Open in Cursor",
-    description: "Ask questions about this page",
     toUrl: (prompt: string) =>
       `https://cursor.com/link/prompt?text=${encodeURIComponent(prompt)}`,
   },
   {
+    description: "Ask questions about this page",
     key: "claude",
     title: "Open in Claude",
-    description: "Ask questions about this page",
     toUrl: (prompt: string) =>
       `https://claude.ai/new?q=${encodeURIComponent(prompt)}`,
   },
   {
+    description: "Ask questions about this page",
     key: "chatgpt",
     title: "Open in ChatGPT",
-    description: "Ask questions about this page",
     toUrl: (prompt: string) =>
       `https://chatgpt.com/?hints=search&q=${encodeURIComponent(prompt)}`,
   },
@@ -140,11 +140,11 @@ export function DocsPageActions({
           >
             {copyState === "copied" ? (
               <CheckIcon />
-            ) : copyState === "failed" ? (
+            ) : (copyState === "failed" ? (
               <XIcon />
             ) : (
               <CopyIcon />
-            )}
+            ))}
             Copy Markdown
           </Button>
 

@@ -23,29 +23,29 @@ import { topRoundedRectPath } from '../svg-paths'
 
 
 const CLASS_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: FONT_SIZES.nodeLabel,
   edgeLabelFontSize: FONT_SIZES.edgeLabel,
-  groupHeaderFontSize: FONT_SIZES.groupHeader,
-  nodeLabelFontWeight: 700,
   edgeLabelFontWeight: FONT_WEIGHTS.edgeLabel,
-  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
-  nodePaddingX: CLS.boxPadX,
-  nodePaddingY: CLS.sectionPadY,
-  nodeCornerRadius: 0,
-  nodeLineWidth: STROKE_WIDTHS.outerBox,
   edgeLineWidth: STROKE_WIDTHS.connector,
   groupCornerRadius: 0,
+  groupHeaderFontSize: FONT_SIZES.groupHeader,
+  groupHeaderFontWeight: FONT_WEIGHTS.groupHeader,
+  groupLineWidth: STROKE_WIDTHS.outerBox,
   groupPaddingX: CLS.boxPadX,
   groupPaddingY: CLS.sectionPadY,
-  groupLineWidth: STROKE_WIDTHS.outerBox,
+  nodeCornerRadius: 0,
+  nodeLabelFontSize: FONT_SIZES.nodeLabel,
+  nodeLabelFontWeight: 700,
+  nodeLineWidth: STROKE_WIDTHS.outerBox,
+  nodePaddingX: CLS.boxPadX,
+  nodePaddingY: CLS.sectionPadY,
 }
 
 /** Font sizes specific to class diagrams */
 const CLS_FONT = {
-  memberSize: 11,
-  memberWeight: 400,
   annotationSize: 10,
   annotationWeight: 500,
+  memberSize: 11,
+  memberWeight: 400,
 } as const
 
 /**
@@ -69,12 +69,10 @@ export function renderClassSvg(
   const rootAttrs = buildAccessibilityAttrs(diagram.accessibilityTitle, diagram.accessibilityDescription, titleId, descId)
 
   // SVG root with CSS variables + style block (with mono font) + defs
-  parts.push(svgOpenTag(diagram.width, diagram.height, colors, transparent, rootAttrs))
-  parts.push(buildStyleBlock(font, true, colors.shadow))
-  parts.push('<defs>')
-  parts.push(relationshipMarkerDefs())
+  parts.push(svgOpenTag(diagram.width, diagram.height, colors, transparent, rootAttrs), buildStyleBlock(font, true, colors.shadow))
+  parts.push('<defs>', relationshipMarkerDefs())
   const shadowDefs = buildShadowDefs(colors)
-  if (shadowDefs) parts.push(shadowDefs)
+  if (shadowDefs) {parts.push(shadowDefs)}
   parts.push('</defs>')
 
   if (diagram.accessibilityTitle) {
@@ -187,13 +185,13 @@ function renderClassBox(cls: PositionedClassNode, style: ResolvedRenderStyle): s
 
   // Class name (supports multi-line via <br> tags)
   parts.push(
-    '  ' + renderMultilineText(
+    `  ${  renderMultilineText(
       cls.label,
       x + width / 2,
       nameY,
       style.nodeLabelFontSize,
       `text-anchor="middle" font-size="${style.nodeLabelFontSize}" font-weight="${style.nodeLabelFontWeight}"${letterAttr(style.nodeLetterSpacing)} fill="var(--_text)"`
-    )
+    )}`
   )
 
   // Divider line between header and attributes
@@ -208,7 +206,7 @@ function renderClassBox(cls: PositionedClassNode, style: ResolvedRenderStyle): s
   for (let i = 0; i < cls.attributes.length; i++) {
     const member = cls.attributes[i]!
     const memberY = attrTop + 4 + i * memberRowH + memberRowH / 2
-    parts.push('  ' + renderMember(member, x + style.nodePaddingX, memberY))
+    parts.push(`  ${  renderMember(member, x + style.nodePaddingX, memberY)}`)
   }
 
   // Divider line between attributes and methods
@@ -222,7 +220,7 @@ function renderClassBox(cls: PositionedClassNode, style: ResolvedRenderStyle): s
   for (let i = 0; i < cls.methods.length; i++) {
     const member = cls.methods[i]!
     const memberY = methodTop + 4 + i * memberRowH + memberRowH / 2
-    parts.push('  ' + renderMember(member, x + style.nodePaddingX, memberY))
+    parts.push(`  ${  renderMember(member, x + style.nodePaddingX, memberY)}`)
   }
 
   parts.push('</g>')
@@ -256,8 +254,7 @@ function renderMember(member: ClassMember, x: number, y: number): string {
   spans.push(`<tspan fill="var(--_text-sec)">${escapeXml(displayName)}</tspan>`)
 
   if (member.type) {
-    spans.push(`<tspan fill="var(--_text-faint)">: </tspan>`)
-    spans.push(`<tspan fill="var(--_text-muted)">${escapeXml(member.type)}</tspan>`)
+    spans.push(`<tspan fill="var(--_text-faint)">: </tspan>`, `<tspan fill="var(--_text-muted)">${escapeXml(member.type)}</tspan>`)
   }
 
   return (
@@ -276,7 +273,7 @@ function renderMember(member: ClassMember, x: number, y: number): string {
  * Includes data-* attributes for programmatic inspection.
  */
 function renderRelationship(rel: PositionedClassRelationship, style: ResolvedRenderStyle): string {
-  if (rel.points.length < 2) return ''
+  if (rel.points.length < 2) {return ''}
 
   const pathData = rel.points.map(p => `${p.x},${p.y}`).join(' ')
   const isDashed = rel.type === 'dependency' || rel.type === 'realization'
@@ -330,37 +327,42 @@ function renderRelationship(rel: PositionedClassRelationship, style: ResolvedRen
  */
 function getRelationshipMarkers(type: RelationshipType, markerAt: 'from' | 'to'): string {
   const markerId = getMarkerDefId(type)
-  if (!markerId) return ''
+  if (!markerId) {return ''}
 
   if (markerAt === 'from') {
     return ` marker-start="url(#${markerId})"`
-  } else {
-    return ` marker-end="url(#${markerId})"`
   }
+    return ` marker-end="url(#${markerId})"`
+  
 }
 
 /** Map relationship type to its SVG marker definition ID */
 function getMarkerDefId(type: RelationshipType): string | null {
   switch (type) {
     case 'inheritance':
-    case 'realization':
+    case 'realization': {
       return 'cls-inherit'
-    case 'composition':
+    }
+    case 'composition': {
       return 'cls-composition'
-    case 'aggregation':
+    }
+    case 'aggregation': {
       return 'cls-aggregation'
+    }
     case 'association':
-    case 'dependency':
+    case 'dependency': {
       return 'cls-arrow'
-    default:
+    }
+    default: {
       return null
+    }
   }
 }
 
 /** Render relationship labels and cardinality text (supports multi-line) */
 function renderRelationshipLabels(rel: PositionedClassRelationship, style: ResolvedRenderStyle): string {
-  if (!rel.label && !rel.fromCardinality && !rel.toCardinality) return ''
-  if (rel.points.length < 2) return ''
+  if (!rel.label && !rel.fromCardinality && !rel.toCardinality) {return ''}
+  if (rel.points.length < 2) {return ''}
 
   const parts: string[] = []
 
@@ -386,8 +388,8 @@ function renderRelationshipLabels(rel: PositionedClassRelationship, style: Resol
 
   // To cardinality (near end)
   if (rel.toCardinality) {
-    const p = rel.points[rel.points.length - 1]!
-    const prev = rel.points[rel.points.length - 2]!
+    const p = rel.points.at(-1)!
+    const prev = rel.points.at(-2)!
     const offset = cardinalityOffset(p, prev)
     parts.push(
       renderMultilineText(rel.toCardinality, p.x + offset.x, p.y + offset.y, style.edgeLabelFontSize,
@@ -398,9 +400,9 @@ function renderRelationshipLabels(rel: PositionedClassRelationship, style: Resol
   return parts.join('\n')
 }
 
-function pointsToPathD(points: Array<{ x: number; y: number }>, radius: number): string {
-  if (points.length === 0) return ''
-  if (points.length === 1) return `M${points[0]!.x},${points[0]!.y}`
+function pointsToPathD(points: { x: number; y: number }[], radius: number): string {
+  if (points.length === 0) {return ''}
+  if (points.length === 1) {return `M${points[0]!.x},${points[0]!.y}`}
   const parts = [`M${points[0]!.x},${points[0]!.y}`]
   for (let i = 1; i < points.length - 1; i++) {
     const prev = points[i - 1]!
@@ -415,17 +417,16 @@ function pointsToPathD(points: Array<{ x: number; y: number }>, radius: number):
     }
     const before = pointToward(curr, prev, r)
     const after = pointToward(curr, next, r)
-    parts.push(`L${before.x},${before.y}`)
-    parts.push(`Q${curr.x},${curr.y} ${after.x},${after.y}`)
+    parts.push(`L${before.x},${before.y}`, `Q${curr.x},${curr.y} ${after.x},${after.y}`)
   }
-  const last = points[points.length - 1]!
+  const last = points.at(-1)!
   parts.push(`L${last.x},${last.y}`)
   return parts.join(' ')
 }
 
 function pointToward(from: { x: number; y: number }, to: { x: number; y: number }, distance: number): { x: number; y: number } {
   const total = Math.abs(to.x - from.x) + Math.abs(to.y - from.y)
-  if (total === 0) return { ...from }
+  if (total === 0) {return { ...from }}
   const t = distance / total
   return {
     x: Math.round((from.x + (to.x - from.x) * t) * 1000) / 1000,
@@ -434,8 +435,8 @@ function pointToward(from: { x: number; y: number }, to: { x: number; y: number 
 }
 
 /** Get the midpoint of a point array */
-function midpoint(points: Array<{ x: number; y: number }>): { x: number; y: number } {
-  if (points.length === 0) return { x: 0, y: 0 }
+function midpoint(points: { x: number; y: number }[]): { x: number; y: number } {
+  if (points.length === 0) {return { x: 0, y: 0 }}
   const mid = Math.floor(points.length / 2)
   return points[mid]!
 }
@@ -461,7 +462,7 @@ function cardinalityOffset(
 // ============================================================================
 
 function letterAttr(value: number): string {
-  return value !== 0 ? ` letter-spacing="${value}"` : ''
+  return value === 0 ? '' : ` letter-spacing="${value}"`
 }
 
 // Use shared escapeXml from multiline-utils
@@ -473,19 +474,19 @@ function buildAccessibilityAttrs(
   titleId: string,
   descId: string,
 ): Record<string, string> {
-  if (!title && !description) return {}
+  if (!title && !description) {return {}}
   const attrs: Record<string, string> = { role: 'img' }
-  if (title) attrs['aria-labelledby'] = titleId
-  if (description) attrs['aria-describedby'] = descId
+  if (title) {attrs['aria-labelledby'] = titleId}
+  if (description) {attrs['aria-describedby'] = descId}
   return attrs
 }
 
-function hashAccessibility(...values: Array<string | number>): string {
-  let h = 0x811c9dc5
+function hashAccessibility(...values: (string | number)[]): string {
+  let h = 0x81_1c_9d_c5
   const text = values.join('|')
   for (let i = 0; i < text.length; i++) {
-    h ^= text.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
+    h ^= text.codePointAt(i)
+    h = Math.imul(h, 0x01_00_01_93)
   }
   return (h >>> 0).toString(36)
 }
@@ -496,8 +497,8 @@ function hashAccessibility(...values: Array<string | number>): string {
  */
 function escapeAttr(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
 }

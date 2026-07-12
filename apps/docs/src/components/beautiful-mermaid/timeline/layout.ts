@@ -21,57 +21,57 @@ import { stripFormattingTags } from '../multiline-utils'
 // ============================================================================
 
 const TL = {
+  columnGap: 24,
+  eventFontSize: 12,
+  eventFontWeight: 400,
+  eventGap: 10,
+  eventMinWidth: 128,
+  eventPadX: 14,
+  eventPadY: 10,
+  eventWrapWidth: 148,
+  markerRadius: 8,
   paddingX: 32,
   paddingY: 28,
+  pillFontSize: 12,
+  pillFontWeight: 600,
+  pillMinWidth: 72,
+  pillPadX: 12,
+  pillPadY: 8,
+  pillWrapWidth: 116,
+  railToEventsGap: 28,
+  railToPillGap: 22,
+  sectionFontSize: 12,
+  sectionFontWeight: 600,
+  sectionGap: 28,
+  sectionHeaderGap: 14,
+  sectionHeaderHeight: 24,
+  sectionHeaderPadX: 12,
+  sectionPadBottom: 18,
+  sectionPadX: 18,
+  sectionWrapWidth: 168,
   titleFontSize: 18,
   titleFontWeight: 600,
   titleGap: 24,
   titleWrapWidth: 420,
-  sectionHeaderHeight: 24,
-  sectionFontSize: 12,
-  sectionFontWeight: 600,
-  sectionHeaderPadX: 12,
-  sectionHeaderGap: 14,
-  sectionWrapWidth: 168,
-  sectionPadX: 18,
-  sectionPadBottom: 18,
-  sectionGap: 28,
-  columnGap: 24,
-  pillFontSize: 12,
-  pillFontWeight: 600,
-  pillWrapWidth: 116,
-  pillPadX: 12,
-  pillPadY: 8,
-  pillMinWidth: 72,
-  railToPillGap: 22,
-  railToEventsGap: 28,
-  markerRadius: 8,
-  eventFontSize: 12,
-  eventFontWeight: 400,
-  eventWrapWidth: 148,
-  eventPadX: 14,
-  eventPadY: 10,
-  eventMinWidth: 128,
-  eventGap: 10,
 } as const
 
 const TIMELINE_STYLE_DEFAULTS: RenderStyleDefaults = {
-  nodeLabelFontSize: TL.eventFontSize,
   edgeLabelFontSize: TL.pillFontSize,
-  groupHeaderFontSize: TL.sectionFontSize,
-  nodeLabelFontWeight: TL.eventFontWeight,
   edgeLabelFontWeight: TL.pillFontWeight,
-  groupHeaderFontWeight: TL.sectionFontWeight,
-  nodePaddingX: TL.eventPadX,
-  nodePaddingY: TL.eventPadY,
-  nodeCornerRadius: 0,
-  nodeLineWidth: STROKE_WIDTHS.outerBox,
   edgeLineWidth: 1.5,
   groupCornerRadius: 0,
-  groupPaddingX: TL.sectionPadX,
-  groupPaddingY: TL.sectionPadBottom,
+  groupHeaderFontSize: TL.sectionFontSize,
+  groupHeaderFontWeight: TL.sectionFontWeight,
   groupLabelPaddingX: TL.sectionHeaderPadX,
   groupLineWidth: STROKE_WIDTHS.outerBox,
+  groupPaddingX: TL.sectionPadX,
+  groupPaddingY: TL.sectionPadBottom,
+  nodeCornerRadius: 0,
+  nodeLabelFontSize: TL.eventFontSize,
+  nodeLabelFontWeight: TL.eventFontWeight,
+  nodeLineWidth: STROKE_WIDTHS.outerBox,
+  nodePaddingX: TL.eventPadX,
+  nodePaddingY: TL.eventPadY,
 }
 
 interface PeriodMetric {
@@ -80,7 +80,7 @@ interface PeriodMetric {
   pillHeight: number
   columnWidth: number
   stackHeight: number
-  events: Array<{ text: string; width: number; height: number }>
+  events: { text: string; width: number; height: number }[]
 }
 
 interface SectionMetric {
@@ -126,9 +126,9 @@ export function layoutTimelineDiagram(
         const wrappedEventText = wrapTimelineText(event.text, TL.eventWrapWidth, style.nodeLabelFontSize, style.nodeLabelFontWeight)
         const text = measureMultilineText(wrappedEventText, style.nodeLabelFontSize, style.nodeLabelFontWeight)
         return {
+          height: text.height + style.nodePaddingY * 2,
           text: wrappedEventText,
           width: Math.max(TL.eventMinWidth, text.width + style.nodePaddingX * 2),
-          height: text.height + style.nodePaddingY * 2,
         }
       })
 
@@ -143,12 +143,12 @@ export function layoutTimelineDiagram(
       }, 0)
 
       return {
-        label: wrappedPeriodLabel,
-        pillWidth,
-        pillHeight,
         columnWidth,
-        stackHeight,
         events: eventMetrics,
+        label: wrappedPeriodLabel,
+        pillHeight,
+        pillWidth,
+        stackHeight,
       }
     })
 
@@ -165,12 +165,12 @@ export function layoutTimelineDiagram(
     const maxStackHeight = Math.max(0, ...periodMetrics.map(period => period.stackHeight))
 
     return {
-      label: wrappedSectionLabel,
+      columnAreaWidth,
       headerWidth,
       innerWidth,
-      columnAreaWidth,
-      periods: periodMetrics,
+      label: wrappedSectionLabel,
       maxStackHeight,
+      periods: periodMetrics,
     }
   })
 
@@ -212,15 +212,15 @@ export function layoutTimelineDiagram(
       const events: PositionedTimelineEvent[] = period.events.map((event, eventIndex) => {
         const eventMetric = periodMetric.events[eventIndex]!
         const positioned: PositionedTimelineEvent = {
+          height: eventMetric.height,
           id: event.id,
-          sectionId: section.id,
           periodId: period.id,
           periodLabel: periodMetric.label,
+          sectionId: section.id,
           text: eventMetric.text,
+          width: eventMetric.width,
           x: centerX - eventMetric.width / 2,
           y: eventY,
-          width: eventMetric.width,
-          height: eventMetric.height,
         }
         eventY += eventMetric.height + TL.eventGap
         return positioned
@@ -229,22 +229,22 @@ export function layoutTimelineDiagram(
       const stemBottomY = events.length > 0 ? events[0]!.y - 10 : railY + 16
 
       periods.push({
-        id: period.id,
-        sectionId: section.id,
-        label: periodMetric.label,
         centerX,
+        events,
+        id: period.id,
+        label: periodMetric.label,
         markerY: railY,
+        pillHeight: periodMetric.pillHeight,
+        pillWidth: periodMetric.pillWidth,
         pillX: centerX - periodMetric.pillWidth / 2,
         pillY,
-        pillWidth: periodMetric.pillWidth,
-        pillHeight: periodMetric.pillHeight,
-        stemTopY: railY + TL.markerRadius,
+        sectionId: section.id,
         stemBottomY,
-        events,
+        stemTopY: railY + TL.markerRadius,
       })
 
       if (events.length > 0) {
-        const lastEvent = events[events.length - 1]!
+        const lastEvent = events.at(-1)!
         sectionBottom = Math.max(sectionBottom, lastEvent.y + lastEvent.height)
       }
 
@@ -255,15 +255,15 @@ export function layoutTimelineDiagram(
     maxBottom = Math.max(maxBottom, sectionBottom)
 
     sections.push({
-      id: section.id,
-      label: metric.label,
-      x: cursorX,
-      y: contentTop,
-      width: sectionWidth,
-      height: sectionBottom - contentTop,
       framed: showSectionFrames,
       headerHeight: sectionHeaderHeight,
+      height: sectionBottom - contentTop,
+      id: section.id,
+      label: metric.label,
       periods,
+      width: sectionWidth,
+      x: cursorX,
+      y: contentTop,
     })
 
     cursorX += sectionWidth
@@ -276,11 +276,18 @@ export function layoutTimelineDiagram(
   const height = maxBottom + TL.paddingY
   const allPeriods = sections.flatMap(section => section.periods)
   const firstCenter = allPeriods[0]?.centerX ?? TL.paddingX
-  const lastCenter = allPeriods[allPeriods.length - 1]?.centerX ?? width - TL.paddingX
+  const lastCenter = allPeriods.at(-1)?.centerX ?? width - TL.paddingX
 
   return {
-    width,
+    accessibilityDescription: diagram.accessibilityDescription,
+    accessibilityTitle: diagram.accessibilityTitle,
     height,
+    rail: {
+      x1: firstCenter === lastCenter ? firstCenter - 42 : firstCenter,
+      x2: firstCenter === lastCenter ? lastCenter + 42 : lastCenter,
+      y: railY,
+    },
+    sections,
     title: titleText
       ? {
           text: titleText,
@@ -288,14 +295,7 @@ export function layoutTimelineDiagram(
           y: TL.paddingY + titleMetrics!.height / 2,
         }
       : undefined,
-    accessibilityTitle: diagram.accessibilityTitle,
-    accessibilityDescription: diagram.accessibilityDescription,
-    rail: {
-      x1: firstCenter === lastCenter ? firstCenter - 42 : firstCenter,
-      x2: firstCenter === lastCenter ? lastCenter + 42 : lastCenter,
-      y: railY,
-    },
-    sections,
+    width,
   }
 }
 
@@ -351,7 +351,7 @@ function wrapTimelineLine(
     }
   }
 
-  if (current) wrapped.push(current)
+  if (current) {wrapped.push(current)}
   return wrapped
 }
 
@@ -375,6 +375,6 @@ function breakLongToken(
     current = candidate
   }
 
-  if (current) chunks.push(current)
+  if (current) {chunks.push(current)}
   return chunks
 }

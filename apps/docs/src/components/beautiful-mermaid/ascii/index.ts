@@ -72,13 +72,13 @@ export interface AsciiRenderOptions {
  * Mirrors the detection logic in src/index.ts for the SVG renderer.
  */
 function detectDiagramType(firstLine: string): 'flowchart' | 'architecture' | 'sequence' | 'class' | 'er' | 'timeline' | 'journey' | 'xychart' {
-  if (/^architecture-beta\s*$/.test(firstLine)) return 'architecture'
-  if (/^xychart(-beta)?\b/.test(firstLine)) return 'xychart'
-  if (/^timeline\s*$/.test(firstLine)) return 'timeline'
-  if (/^journey\s*$/.test(firstLine)) return 'journey'
-  if (/^sequencediagram\s*$/.test(firstLine)) return 'sequence'
-  if (/^classdiagram\s*$/.test(firstLine)) return 'class'
-  if (/^erdiagram\s*$/.test(firstLine)) return 'er'
+  if (/^architecture-beta\s*$/.test(firstLine)) {return 'architecture'}
+  if (/^xychart(-beta)?\b/.test(firstLine)) {return 'xychart'}
+  if (/^timeline\s*$/.test(firstLine)) {return 'timeline'}
+  if (/^journey\s*$/.test(firstLine)) {return 'journey'}
+  if (/^sequencediagram\s*$/.test(firstLine)) {return 'sequence'}
+  if (/^classdiagram\s*$/.test(firstLine)) {return 'class'}
+  if (/^erdiagram\s*$/.test(firstLine)) {return 'er'}
 
   // Default: flowchart/state (handled by parseMermaid internally)
   return 'flowchart'
@@ -87,7 +87,7 @@ function detectDiagramType(firstLine: string): 'flowchart' | 'architecture' | 's
 function firstSignificantLine(text: string): string {
   for (const rawLine of text.split('\n')) {
     const line = rawLine.trim()
-    if (line.length === 0 || line.startsWith('%%')) continue
+    if (line.length === 0 || line.startsWith('%%')) {continue}
     return line.split(';')[0]!.trim().toLowerCase()
   }
   return ''
@@ -124,11 +124,11 @@ export function renderMermaidASCII(
   options: AsciiRenderOptions = {},
 ): string {
   const config: AsciiConfig = {
-    useAscii: options.useAscii ?? false,
-    paddingX: options.paddingX ?? 5,
-    paddingY: options.paddingY ?? 5,
     boxBorderPadding: options.boxBorderPadding ?? 1,
     graphDirection: 'TD', // default, overridden for flowcharts below
+    paddingX: options.paddingX ?? 5,
+    paddingY: options.paddingY ?? 5,
+    useAscii: options.useAscii ?? false,
   }
 
   // Resolve color mode ('auto' or unset → detect environment, otherwise use specified mode)
@@ -146,32 +146,38 @@ export function renderMermaidASCII(
     case 'architecture': {
       const vars = normalizedSource.config.themeVariables
       const archColors: import('../theme').DiagramColors = {
+        accent: vars?.primaryColor as string | undefined,
         bg: (vars?.background as string) ?? '#ffffff',
         fg: (vars?.primaryTextColor as string) ?? (vars?.textColor as string) ?? '#27272A',
         line: vars?.lineColor as string | undefined,
-        accent: vars?.primaryColor as string | undefined,
       }
       const archTheme = { ...theme, ...diagramColorsToAsciiTheme(archColors) }
       return renderArchitectureAscii(normalizedSource.lines, config, colorMode, archTheme)
     }
 
-    case 'xychart':
+    case 'xychart': {
       return renderXYChartAscii(normalizedSource.text, config, colorMode, theme, normalizedSource.frontmatter)
+    }
 
-    case 'sequence':
+    case 'sequence': {
       return renderSequenceAscii(normalizedSource.text, config, colorMode, theme)
+    }
 
-    case 'class':
+    case 'class': {
       return renderClassAscii(normalizedSource.text, config, colorMode, theme)
+    }
 
-    case 'er':
+    case 'er': {
       return renderErAscii(normalizedSource.text, config, colorMode, theme)
+    }
 
-    case 'timeline':
+    case 'timeline': {
       return renderTimelineAscii(normalizedSource.lines, config, colorMode, theme)
+    }
 
-    case 'journey':
+    case 'journey': {
       return renderJourneyAscii(normalizedSource.text, config, colorMode, theme)
+    }
 
     case 'flowchart':
     default: {
@@ -199,8 +205,8 @@ export function renderMermaidASCII(
       }
 
       return canvasToString(graph.canvas, {
-        roleCanvas: graph.roleCanvas,
         colorMode,
+        roleCanvas: graph.roleCanvas,
         theme,
       })
     }

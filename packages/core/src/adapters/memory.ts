@@ -56,8 +56,8 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
     const newJob: Job = {
       ...job,
-      id,
       createdAt,
+      id,
       progress: job.progress ?? 0,
       repeatCount: job.repeatCount ?? 0,
     }
@@ -73,8 +73,8 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
       const newJob: Job = {
         ...job,
-        id,
         createdAt,
+        id,
         progress: job.progress ?? 0,
         repeatCount: job.repeatCount ?? 0,
       }
@@ -181,15 +181,15 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     const now = new Date()
     const updated: Job = {
       ...job,
-      status: update.status,
-      error: update.error ?? job.error,
-      result: update.result === undefined ? job.result : update.result,
-      processAt: update.processAt ?? job.processAt,
       cancellationReason: update.cancellationReason ?? job.cancellationReason,
-      processedAt: update.status === "processing" ? now : job.processedAt,
-      completedAt: update.status === "completed" ? now : job.completedAt,
-      failedAt: update.status === "failed" ? now : job.failedAt,
       cancelledAt: update.status === "cancelled" ? now : job.cancelledAt,
+      completedAt: update.status === "completed" ? now : job.completedAt,
+      error: update.error ?? job.error,
+      failedAt: update.status === "failed" ? now : job.failedAt,
+      processAt: update.processAt ?? job.processAt,
+      processedAt: update.status === "processing" ? now : job.processedAt,
+      result: update.result === undefined ? job.result : update.result,
+      status: update.status,
     }
 
     this.jobs.set(id, updated)
@@ -228,9 +228,9 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     const now = new Date()
     this.jobs.set(id, {
       ...job,
-      status: "cancelled",
-      cancelledAt: now,
       cancellationReason: reason,
+      cancelledAt: now,
+      status: "cancelled",
     })
 
     return true
@@ -256,8 +256,8 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       const now = new Date()
       this.jobs.set(id, {
         ...job,
-        status: "cancelled",
         cancelledAt: now,
+        status: "cancelled",
       })
       count += 1
     }
@@ -285,12 +285,12 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
     this.jobs.set(id, {
       ...job,
-      status: "pending",
       attempts: 0,
       error: undefined,
       failedAt: undefined,
       processAt: new Date(),
       progress: 0,
+      status: "pending",
     })
   }
 
@@ -307,12 +307,12 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
       this.jobs.set(id, {
         ...job,
-        status: "pending",
         attempts: 0,
         error: undefined,
         failedAt: undefined,
         processAt: new Date(),
         progress: 0,
+        status: "pending",
       })
       count += 1
     }
@@ -324,13 +324,13 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
   async getQueueStats(): Promise<QueueStats> {
     const stats = {
-      pending: 0,
-      delayed: 0,
-      processing: 0,
-      completed: 0,
-      failed: 0,
       cancelled: 0,
+      completed: 0,
       dead: 0,
+      delayed: 0,
+      failed: 0,
+      pending: 0,
+      processing: 0,
       "waiting-children": 0,
     }
 
@@ -450,12 +450,12 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
     this.jobs.set(id, {
       ...job,
-      status: "pending",
       attempts: 0,
       error: undefined,
       failedAt: undefined,
       processAt: new Date(),
       progress: 0,
+      status: "pending",
     })
 
     return true
@@ -469,8 +469,8 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
     this.jobs.set(id, {
       ...job,
-      status: "pending",
       processAt: new Date(),
+      status: "pending",
     })
 
     return true
@@ -511,9 +511,9 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     const signals = { ...job.signals, [event]: data }
     this.jobs.set(id, {
       ...job,
+      processAt: new Date(),
       signals,
       status: "pending",
-      processAt: new Date(),
     })
     return true
   }
@@ -535,8 +535,8 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     const buildNode = (job: Job): FlowNode => {
       const children = flowJobs.filter((j) => j.parentId === job.id)
       return {
-        job,
         children: children.map((child) => buildNode(child)),
+        job,
       }
     }
 

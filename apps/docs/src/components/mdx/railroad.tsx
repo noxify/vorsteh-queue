@@ -53,8 +53,8 @@ export function RailroadDiagram({
     try {
       if (looksLikeLegacyRailroad(code)) {
         return {
-          mode: "legacy",
           diagram: parseLegacyRailroadDiagram(code),
+          mode: "legacy",
         }
       }
 
@@ -62,8 +62,8 @@ export function RailroadDiagram({
       return { mode: "ebnf" }
     } catch (error) {
       return {
-        mode: "error",
         error: error instanceof Error ? error : new Error(String(error)),
+        mode: "error",
       }
     }
   }, [code])

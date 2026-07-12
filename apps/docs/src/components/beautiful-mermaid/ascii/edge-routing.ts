@@ -19,14 +19,14 @@ import { getEffectiveDirection, getNodeSubgraph } from './grid'
 // ============================================================================
 
 export function getOpposite(d: Direction): Direction {
-  if (d === Up) return Down
-  if (d === Down) return Up
-  if (d === Left) return Right
-  if (d === Right) return Left
-  if (d === UpperRight) return LowerLeft
-  if (d === UpperLeft) return LowerRight
-  if (d === LowerRight) return UpperLeft
-  if (d === LowerLeft) return UpperRight
+  if (d === Up) {return Down}
+  if (d === Down) {return Up}
+  if (d === Left) {return Right}
+  if (d === Right) {return Left}
+  if (d === UpperRight) {return LowerLeft}
+  if (d === UpperLeft) {return LowerRight}
+  if (d === LowerRight) {return UpperLeft}
+  if (d === LowerLeft) {return UpperRight}
   return Middle
 }
 
@@ -46,9 +46,9 @@ export function determineDirection(from: { x: number; y: number }, to: { x: numb
     return from.x < to.x ? Right : Left
   } else if (from.x < to.x) {
     return from.y < to.y ? LowerRight : UpperRight
-  } else {
-    return from.y < to.y ? LowerLeft : UpperLeft
   }
+    return from.y < to.y ? LowerLeft : UpperLeft
+  
 }
 
 // ============================================================================
@@ -57,7 +57,7 @@ export function determineDirection(from: { x: number; y: number }, to: { x: numb
 
 /** Self-reference routing (node points to itself). */
 function selfReferenceDirection(graphDirection: string): [Direction, Direction, Direction, Direction] {
-  if (graphDirection === 'LR') return [Right, Down, Down, Right]
+  if (graphDirection === 'LR') {return [Right, Down, Down, Right]}
   return [Down, Right, Right, Down]
 }
 
@@ -72,7 +72,7 @@ export function determineStartAndEndDir(
   edge: AsciiEdge,
   graphDirection: string,
 ): [Direction, Direction, Direction, Direction] {
-  if (edge.from === edge.to) return selfReferenceDirection(graphDirection)
+  if (edge.from === edge.to) {return selfReferenceDirection(graphDirection)}
 
   const d = determineDirection(edge.from.gridCoord!, edge.to.gridCoord!)
 
@@ -225,7 +225,7 @@ export function determinePath(graph: AsciiGraph, edge: AsciiEdge): void {
  * Also increases the column width at the label position to fit the text.
  */
 export function determineLabelLine(graph: AsciiGraph, edge: AsciiEdge): void {
-  if (edge.text.length === 0) return
+  if (edge.text.length === 0) {return}
 
   const lenLabel = edge.text.length
   const pathLen = edge.path.length
@@ -246,7 +246,7 @@ export function determineLabelLine(graph: AsciiGraph, edge: AsciiEdge): void {
     const width = calculateLineWidth(graph, line)
     // A segment is vertical if X coords are same, horizontal if Y coords are same
     const isVertical = p1.x === p2.x
-    segments.push({ line, width, index: i, isVertical })
+    segments.push({ index: i, isVertical, line, width })
   }
 
   // Find segments wide enough for the label, excluding the first segment

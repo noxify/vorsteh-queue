@@ -26,27 +26,27 @@ export function getCliCommandTocSections(commandName: string) {
 
   if (config.arguments.length > 0) {
     sections.push({
-      id: "cli-arguments",
-      title: "Arguments",
-      depth: 2,
       children: config.arguments.map((arg) => ({
         id: arg.name,
         title: arg.name,
         depth: 3,
       })),
+      depth: 2,
+      id: "cli-arguments",
+      title: "Arguments",
     })
   }
 
   if (config.options.length > 0) {
     sections.push({
-      id: "cli-options",
-      title: "Options",
-      depth: 2,
       children: config.options.map((opt) => ({
         id: opt.long?.replace("--", "") ?? opt.flags,
         title: opt.flags,
         depth: 3,
       })),
+      depth: 2,
+      id: "cli-options",
+      title: "Options",
     })
   }
 

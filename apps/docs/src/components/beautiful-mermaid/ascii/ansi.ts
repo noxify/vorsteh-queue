@@ -21,12 +21,12 @@ declare const document: unknown
  * Uses the same mixing ratios to maintain visual consistency.
  */
 export const DEFAULT_ASCII_THEME: AsciiTheme = {
-  fg: '#27272a',      // zinc-800 — primary text
-  border: '#a1a1aa',  // zinc-400 — node borders (12% mix)
-  line: '#71717a',    // zinc-500 — edge lines (35% mix)
   arrow: '#52525b',   // zinc-600 — arrowheads (60% mix)
+  border: '#a1a1aa',  // zinc-400 — node borders (12% mix)
   corner: '#71717a',  // same as line
+  fg: '#27272a',      // zinc-800 — primary text
   junction: '#a1a1aa', // same as border
+  line: '#71717a',    // zinc-500 — edge lines (35% mix)
 }
 
 // ============================================================================
@@ -42,7 +42,7 @@ function mixColors(fg: string, bg: string, pct: number): string {
   const f = parseHex(fg), b = parseHex(bg)
   const mix = (a: number, z: number) => Math.round(a * (pct / 100) + z * (1 - pct / 100))
   const r = mix(f.r, b.r), g = mix(f.g, b.g), bl = mix(f.b, b.b)
-  return '#' + [r, g, bl].map(c => c.toString(16).padStart(2, '0')).join('')
+  return `#${  [r, g, bl].map(c => c.toString(16).padStart(2, '0')).join('')}`
 }
 
 /**
@@ -54,14 +54,14 @@ export function diagramColorsToAsciiTheme(colors: DiagramColors): AsciiTheme {
   const line = colors.line ?? mixColors(colors.fg, colors.bg, MIX.line)
   const border = colors.border ?? mixColors(colors.fg, colors.bg, MIX.nodeStroke)
   return {
-    fg:       colors.fg,
-    border,
-    line,
-    arrow:    colors.accent ?? mixColors(colors.fg, colors.bg, MIX.arrow),
     accent:   colors.accent,
+    arrow:    colors.accent ?? mixColors(colors.fg, colors.bg, MIX.arrow),
     bg:       colors.bg,
+    border,
     corner:   line,
+    fg:       colors.fg,
     junction: border,
+    line,
   }
 }
 
@@ -113,7 +113,7 @@ export function detectColorMode(): ColorMode {
   }
 
   // No process object → browser environment → use HTML color output
-  if (typeof document !== 'undefined') {
+  if (document !== undefined) {
     return 'html'
   }
 
@@ -132,15 +132,15 @@ function parseHex(hex: string): { r: number; g: number; b: number } {
   const h = hex.replace('#', '')
   if (h.length === 3) {
     return {
-      r: parseInt(h[0]! + h[0]!, 16),
-      g: parseInt(h[1]! + h[1]!, 16),
       b: parseInt(h[2]! + h[2]!, 16),
+      g: parseInt(h[1]! + h[1]!, 16),
+      r: parseInt(h[0]! + h[0]!, 16),
     }
   }
   return {
-    r: parseInt(h.substring(0, 2), 16),
-    g: parseInt(h.substring(2, 4), 16),
     b: parseInt(h.substring(4, 6), 16),
+    g: parseInt(h.substring(2, 4), 16),
+    r: parseInt(h.substring(0, 2), 16),
   }
 }
 
@@ -149,7 +149,7 @@ function parseHex(hex: string): { r: number; g: number; b: number } {
 // ============================================================================
 
 /** ANSI escape sequence prefix */
-const ESC = '\x1b['
+const ESC = '\u001b['
 /** Reset all attributes */
 const RESET = `${ESC}0m`
 
@@ -184,8 +184,8 @@ function rgbTo256(r: number, g: number, b: number): number {
   // Use 6x6x6 color cube (16-231)
   // Each channel maps to 0-5: 0, 95, 135, 175, 215, 255
   const toIndex = (v: number): number => {
-    if (v < 48) return 0
-    if (v < 115) return 1
+    if (v < 48) {return 0}
+    if (v < 115) {return 1}
     return Math.min(5, Math.floor((v - 35) / 40))
   }
 
@@ -223,15 +223,15 @@ function ansi16Fg(hex: string): string {
 
   // Determine base color based on dominant channel
   let code: number
-  if (r > 180 && g < 100 && b < 100) code = 31 // red
-  else if (g > 180 && r < 100 && b < 100) code = 32 // green
-  else if (r > 150 && g > 150 && b < 100) code = 33 // yellow
-  else if (b > 180 && r < 100 && g < 100) code = 34 // blue
-  else if (r > 150 && b > 150 && g < 100) code = 35 // magenta
-  else if (g > 150 && b > 150 && r < 100) code = 36 // cyan
-  else if (luma > 200) code = 37 // white
-  else if (luma < 50) code = 30 // black
-  else code = 37 // default to white for grays
+  if (r > 180 && g < 100 && b < 100) {code = 31} // red
+  else if (g > 180 && r < 100 && b < 100) {code = 32} // green
+  else if (r > 150 && g > 150 && b < 100) {code = 33} // yellow
+  else if (b > 180 && r < 100 && g < 100) {code = 34} // blue
+  else if (r > 150 && b > 150 && g < 100) {code = 35} // magenta
+  else if (g > 150 && b > 150 && r < 100) {code = 36} // cyan
+  else if (luma > 200) {code = 37} // white
+  else if (luma < 50) {code = 30} // black
+  else {code = 37} // default to white for grays
 
   return `${ESC}${code + bright}m`
 }
@@ -242,7 +242,7 @@ function ansi16Fg(hex: string): string {
 
 /** Escape characters that would break HTML output. */
 function escapeHtml(text: string): string {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return text.replaceAll(/&/g, '&amp;').replaceAll(/</g, '&lt;').replaceAll(/>/g, '&gt;')
 }
 
 /** Wrap text in a <span> with an inline color style. */
@@ -259,13 +259,20 @@ function htmlSpan(hex: string, text: string): string {
  */
 function getRoleColor(role: CharRole, theme: AsciiTheme): string {
   switch (role) {
-    case 'text': return theme.fg
-    case 'border': return theme.border
-    case 'line': return theme.line
-    case 'arrow': return theme.arrow
-    case 'corner': return theme.corner ?? theme.line
-    case 'junction': return theme.junction ?? theme.border
-    default: return theme.fg
+    case 'text': { return theme.fg
+    }
+    case 'border': { return theme.border
+    }
+    case 'line': { return theme.line
+    }
+    case 'arrow': { return theme.arrow
+    }
+    case 'corner': { return theme.corner ?? theme.line
+    }
+    case 'junction': { return theme.junction ?? theme.border
+    }
+    default: { return theme.fg
+    }
   }
 }
 
@@ -273,15 +280,19 @@ function getRoleColor(role: CharRole, theme: AsciiTheme): string {
  * Generate the ANSI escape sequence for a role color.
  */
 export function getAnsiColor(role: CharRole, theme: AsciiTheme, mode: ColorMode): string {
-  if (mode === 'none') return ''
+  if (mode === 'none') {return ''}
 
   const hex = getRoleColor(role, theme)
 
   switch (mode) {
-    case 'truecolor': return truecolorFg(hex)
-    case 'ansi256': return ansi256Fg(hex)
-    case 'ansi16': return ansi16Fg(hex)
-    default: return ''
+    case 'truecolor': { return truecolorFg(hex)
+    }
+    case 'ansi256': { return ansi256Fg(hex)
+    }
+    case 'ansi16': { return ansi16Fg(hex)
+    }
+    default: { return ''
+    }
   }
 }
 
@@ -339,10 +350,10 @@ export function colorizeLine(
     if (char === ' ') {
       // Flush any buffered characters (with or without color)
       if (buffer.length > 0) {
-        if (currentRole !== null) {
-          result += getAnsiColor(currentRole, theme, mode) + buffer + RESET
-        } else {
+        if (currentRole === null) {
           result += buffer
+        } else {
+          result += getAnsiColor(currentRole, theme, mode) + buffer + RESET
         }
         buffer = ''
         currentRole = null
@@ -359,10 +370,10 @@ export function colorizeLine(
 
     // Role changed — flush buffer (with or without color) and start new
     if (buffer.length > 0) {
-      if (currentRole !== null) {
-        result += getAnsiColor(currentRole, theme, mode) + buffer + RESET
-      } else {
+      if (currentRole === null) {
         result += buffer
+      } else {
+        result += getAnsiColor(currentRole, theme, mode) + buffer + RESET
       }
     }
     buffer = char
@@ -394,11 +405,11 @@ function colorizeLineHtml(
   let buffer = ''
 
   const flush = () => {
-    if (buffer.length === 0) return
-    if (currentRole !== null) {
-      result += htmlSpan(getRoleColor(currentRole, theme), buffer)
-    } else {
+    if (buffer.length === 0) {return}
+    if (currentRole === null) {
       result += escapeHtml(buffer)
+    } else {
+      result += htmlSpan(getRoleColor(currentRole, theme), buffer)
     }
     buffer = ''
     currentRole = null
@@ -434,14 +445,18 @@ function colorizeLineHtml(
  * Handles all output modes: ANSI (16/256/truecolor) and HTML.
  */
 export function colorizeText(text: string, hex: string, mode: ColorMode): string {
-  if (mode === 'none' || text.length === 0) return text
-  if (mode === 'html') return htmlSpan(hex, text)
+  if (mode === 'none' || text.length === 0) {return text}
+  if (mode === 'html') {return htmlSpan(hex, text)}
   let code: string
   switch (mode) {
-    case 'truecolor': code = truecolorFg(hex); break
-    case 'ansi256': code = ansi256Fg(hex); break
-    case 'ansi16': code = ansi16Fg(hex); break
-    default: return text
+    case 'truecolor': { code = truecolorFg(hex); break
+    }
+    case 'ansi256': { code = ansi256Fg(hex); break
+    }
+    case 'ansi16': { code = ansi16Fg(hex); break
+    }
+    default: { return text
+    }
   }
   return `${code}${text}${RESET}`
 }

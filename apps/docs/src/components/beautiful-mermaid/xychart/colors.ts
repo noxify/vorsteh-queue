@@ -18,23 +18,23 @@ export const CHART_ACCENT_FALLBACK = '#3b82f6' // blue-500
 
 function hexToHsl(hex: string): [number, number, number] {
   const h = hex.replace('#', '')
-  const ri = parseInt(h.substring(0, 2), 16) / 255
-  const gi = parseInt(h.substring(2, 4), 16) / 255
-  const bi = parseInt(h.substring(4, 6), 16) / 255
+  const ri = Number.parseInt(h.substring(0, 2), 16) / 255
+  const gi = Number.parseInt(h.substring(2, 4), 16) / 255
+  const bi = Number.parseInt(h.substring(4, 6), 16) / 255
 
   const max = Math.max(ri, gi, bi)
   const min = Math.min(ri, gi, bi)
   const l = (max + min) / 2
 
-  if (max === min) return [0, 0, l * 100]
+  if (max === min) {return [0, 0, l * 100]}
 
   const d = max - min
   const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
 
   let hue: number
-  if (max === ri) hue = ((gi - bi) / d + (gi < bi ? 6 : 0)) / 6
-  else if (max === gi) hue = ((bi - ri) / d + 2) / 6
-  else hue = ((ri - gi) / d + 4) / 6
+  if (max === ri) {hue = ((gi - bi) / d + (gi < bi ? 6 : 0)) / 6}
+  else if (max === gi) {hue = ((bi - ri) / d + 2) / 6}
+  else {hue = ((ri - gi) / d + 4) / 6}
 
   return [hue * 360, s * 100, l * 100]
 }
@@ -47,7 +47,7 @@ function hslToHex(h: number, s: number, l: number): string {
   const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
   const m = li - c / 2
 
-  let r: number, g: number, b: number
+  let b: number, g: number, r: number
   if (h < 60) { r = c; g = x; b = 0 }
   else if (h < 120) { r = x; g = c; b = 0 }
   else if (h < 180) { r = 0; g = c; b = x }
@@ -66,9 +66,9 @@ function hslToHex(h: number, s: number, l: number): string {
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '')
   return [
-    parseInt(h.substring(0, 2), 16),
-    parseInt(h.substring(2, 4), 16),
-    parseInt(h.substring(4, 6), 16),
+    Number.parseInt(h.substring(0, 2), 16),
+    Number.parseInt(h.substring(2, 4), 16),
+    Number.parseInt(h.substring(4, 6), 16),
   ]
 }
 
@@ -116,7 +116,7 @@ export function mixHexColors(bgHex: string, fgHex: string, ratio: number): strin
  *   - Dark bg:  odd = lighter, even = darker (so shades stay visible)
  */
 export function getSeriesColor(index: number, accentColor: string, bgColor?: string): string {
-  if (index === 0) return accentColor
+  if (index === 0) {return accentColor}
   // Fall back to defaults when inputs aren't valid hex (e.g. CSS variable refs like "var(--accent)")
   const safeAccent = isValidHex(accentColor) ? accentColor : CHART_ACCENT_FALLBACK
   const safeBg = bgColor && isValidHex(bgColor) ? bgColor : undefined

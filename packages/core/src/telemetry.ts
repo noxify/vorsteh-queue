@@ -146,16 +146,74 @@ export function createTelemetry(config: TelemetryConfig): Telemetry {
   const queueAttr = { "vorsteh_queue.queue": config.queueName }
 
   return {
-    tracer,
-    meter,
-
     jobAdded(jobName: string): void {
       jobsAdded.add(1, {
         ...queueAttr,
         "vorsteh_queue.job.name": jobName,
       })
     },
+    jobCancelled(jobName: string): void {
+      jobsCancelled.add(1, {
+        ...queueAttr,
+        "vorsteh_queue.job.name": jobName,
+      })
+    },
+    jobCompleted(job: Job, span: Span): void {
+      const attrs = {
+        ...queueAttr,
+        "vorsteh_queue.job.name": job.name,
+        "vorsteh_queue.job.id": job.id,
+      }
 
+      jobsProcessed.add(1, attrs)
+      jobsActive.add(-1, {
+        ...queueAttr,
+        "vorsteh_queue.job.name": job.name,
+      })
+
+      // Record duration from processedAt if available, otherwise span timing handles it
+      if (job.processedAt && job.completedAt) {
+        const durationMs = job.completedAt.getTime() - job.processedAt.getTime()
+        jobDuration.record(durationMs, attrs)
+      }
+
+      span.setStatus({ code: SpanStatusCode.OK })
+      span.end()
+    },
+    jobDead(jobName: string): void {
+      jobsDead.add(1, {
+        ...queueAttr,
+        "vorsteh_queue.job.name": jobName,
+      })
+    },
+    jobFailed(job: Job, error: unknown, span: Span): void {
+      const attrs = {
+        ...queueAttr,
+        "vorsteh_queue.job.name": job.name,
+        "vorsteh_queue.job.id": job.id,
+      }
+
+      jobsFailed.add(1, attrs)
+      jobsActive.add(-1, {
+        ...queueAttr,
+        "vorsteh_queue.job.name": job.name,
+      })
+
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: error instanceof Error ? error.message : String(error),
+      })
+      span.recordException(
+        error instanceof Error ? error : new Error(String(error))
+      )
+      span.end()
+    },
+    jobRetried(jobName: string): void {
+      jobsRetried.add(1, {
+        ...queueAttr,
+        "vorsteh_queue.job.name": jobName,
+      })
+    },
     jobStarted(job: Job): Span {
       const attrs = {
         ...queueAttr,
@@ -192,72 +250,7 @@ export function createTelemetry(config: TelemetryConfig): Telemetry {
 
       return span
     },
-
-    jobCompleted(job: Job, span: Span): void {
-      const attrs = {
-        ...queueAttr,
-        "vorsteh_queue.job.name": job.name,
-        "vorsteh_queue.job.id": job.id,
-      }
-
-      jobsProcessed.add(1, attrs)
-      jobsActive.add(-1, {
-        ...queueAttr,
-        "vorsteh_queue.job.name": job.name,
-      })
-
-      // Record duration from processedAt if available, otherwise span timing handles it
-      if (job.processedAt && job.completedAt) {
-        const durationMs = job.completedAt.getTime() - job.processedAt.getTime()
-        jobDuration.record(durationMs, attrs)
-      }
-
-      span.setStatus({ code: SpanStatusCode.OK })
-      span.end()
-    },
-
-    jobFailed(job: Job, error: unknown, span: Span): void {
-      const attrs = {
-        ...queueAttr,
-        "vorsteh_queue.job.name": job.name,
-        "vorsteh_queue.job.id": job.id,
-      }
-
-      jobsFailed.add(1, attrs)
-      jobsActive.add(-1, {
-        ...queueAttr,
-        "vorsteh_queue.job.name": job.name,
-      })
-
-      span.setStatus({
-        code: SpanStatusCode.ERROR,
-        message: error instanceof Error ? error.message : String(error),
-      })
-      span.recordException(
-        error instanceof Error ? error : new Error(String(error))
-      )
-      span.end()
-    },
-
-    jobRetried(jobName: string): void {
-      jobsRetried.add(1, {
-        ...queueAttr,
-        "vorsteh_queue.job.name": jobName,
-      })
-    },
-
-    jobDead(jobName: string): void {
-      jobsDead.add(1, {
-        ...queueAttr,
-        "vorsteh_queue.job.name": jobName,
-      })
-    },
-
-    jobCancelled(jobName: string): void {
-      jobsCancelled.add(1, {
-        ...queueAttr,
-        "vorsteh_queue.job.name": jobName,
-      })
-    },
+    meter,
+    tracer,
   }
 }

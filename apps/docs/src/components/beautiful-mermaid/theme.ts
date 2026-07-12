@@ -67,28 +67,28 @@ export const DEFAULTS: Readonly<{ bg: string; fg: string }> = {
 // ============================================================================
 
 export const MIX = {
-  /** Primary text: near-full fg */
-  text:         100, // just use --fg directly
-  /** Secondary text (group headers): fg mixed at 60% */
-  textSec:      60,
-  /** Muted text (edge labels, notes): fg mixed at 40% */
-  textMuted:    40,
-  /** Faint text (de-emphasized): fg mixed at 25% */
-  textFaint:    25,
-  /** Edge/connector lines: fg mixed at 50% for clear visibility */
-  line:         50,
   /** Arrow head fill: fg mixed at 85% for clear visibility */
   arrow:        85,
-  /** Node fill tint: fg mixed at 3% */
-  nodeFill:     3,
-  /** Node/group stroke: fg mixed at 20% */
-  nodeStroke:   20,
   /** Group header band tint: fg mixed at 5% */
   groupHeader:  5,
   /** Inner divider strokes: fg mixed at 12% */
   innerStroke:  12,
   /** Key badge background opacity (ER diagrams) */
   keyBadge:     10,
+  /** Edge/connector lines: fg mixed at 50% for clear visibility */
+  line:         50,
+  /** Node fill tint: fg mixed at 3% */
+  nodeFill:     3,
+  /** Node/group stroke: fg mixed at 20% */
+  nodeStroke:   20,
+  /** Primary text: near-full fg */
+  text:         100, // just use --fg directly
+  /** Faint text (de-emphasized): fg mixed at 25% */
+  textFaint:    25,
+  /** Muted text (edge labels, notes): fg mixed at 40% */
+  textMuted:    40,
+  /** Secondary text (group headers): fg mixed at 60% */
+  textSec:      60,
 } as const
 
 // ============================================================================
@@ -99,83 +99,62 @@ export const MIX = {
 // ============================================================================
 
 export const THEMES: Record<string, DiagramColors> = {
-  'zinc-light': {
-    bg: '#FFFFFF', fg: '#27272A',
+  'catppuccin-latte': {
+    accent: '#8839ef', bg: '#eff1f5', fg: '#4c4f69', line: '#9ca0b0', muted: '#9ca0b0',
+  },
+  'catppuccin-mocha': {
+    accent: '#cba6f7', bg: '#1e1e2e', fg: '#cdd6f4', line: '#585b70', muted: '#6c7086',
+  },
+  'dracula': {
+    accent: '#bd93f9', bg: '#282a36', fg: '#f8f8f2', line: '#6272a4', muted: '#6272a4',
+  },
+  'github-dark': {
+    accent: '#4493f8', bg: '#0d1117', fg: '#e6edf3', line: '#3d444d', muted: '#9198a1',
+  },
+  'github-light': {
+    accent: '#0969da', bg: '#ffffff', fg: '#1f2328', line: '#d1d9e0', muted: '#59636e',
+  },
+  'nord': {
+    accent: '#88c0d0', bg: '#2e3440', fg: '#d8dee9', line: '#4c566a', muted: '#616e88',
+  },
+  'nord-light': {
+    accent: '#5e81ac', bg: '#eceff4', fg: '#2e3440', line: '#aab1c0', muted: '#7b88a1',
+  },
+  'one-dark': {
+    accent: '#c678dd', bg: '#282c34', fg: '#abb2bf', line: '#4b5263', muted: '#5c6370',
+  },
+  'salmon': {
+    accent: '#FF4801', bg: '#FFFBF5', border: '#D4B89E', fg: '#521000', line: '#C9A88A', muted: '#85532E', surface: '#FFFDFB',
+  },
+  'salmon-dark': {
+    accent: '#FF6B35', bg: '#1F1008', border: '#5A3A22', fg: '#F5DCC8', line: '#6B4A2E', muted: '#A07858', surface: '#2A1810',
+  },
+  'solarized-dark': {
+    accent: '#268bd2', bg: '#002b36', fg: '#839496', line: '#586e75', muted: '#586e75',
+  },
+  'solarized-light': {
+    accent: '#268bd2', bg: '#fdf6e3', fg: '#657b83', line: '#93a1a1', muted: '#93a1a1',
+  },
+  'tokyo-night': {
+    accent: '#7aa2f7', bg: '#1a1b26', fg: '#a9b1d6', line: '#3d59a1', muted: '#565f89',
+  },
+  'tokyo-night-light': {
+    accent: '#34548a', bg: '#d5d6db', fg: '#343b58', line: '#34548a', muted: '#9699a3',
+  },
+  'tokyo-night-storm': {
+    accent: '#7aa2f7', bg: '#24283b', fg: '#a9b1d6', line: '#3d59a1', muted: '#565f89',
+  },
+  'tufte': {
+    accent: '#7A0000', bg: '#FFFFF8', border: '#CCCCCC', fg: '#111111', line: '#AAAAAA', muted: '#888888', surface: '#F5F0E8',
+  },
+  'tufte-dark': {
+    accent: '#C87070', bg: '#1C1C1A', border: '#444440', fg: '#E8E4DC', line: '#666660', muted: '#908880', surface: '#2A2926',
   },
   'zinc-dark': {
     bg: '#18181B', fg: '#FAFAFA',
   },
-  'tokyo-night': {
-    bg: '#1a1b26', fg: '#a9b1d6',
-    line: '#3d59a1', accent: '#7aa2f7', muted: '#565f89',
-  },
-  'tokyo-night-storm': {
-    bg: '#24283b', fg: '#a9b1d6',
-    line: '#3d59a1', accent: '#7aa2f7', muted: '#565f89',
-  },
-  'tokyo-night-light': {
-    bg: '#d5d6db', fg: '#343b58',
-    line: '#34548a', accent: '#34548a', muted: '#9699a3',
-  },
-  'catppuccin-mocha': {
-    bg: '#1e1e2e', fg: '#cdd6f4',
-    line: '#585b70', accent: '#cba6f7', muted: '#6c7086',
-  },
-  'catppuccin-latte': {
-    bg: '#eff1f5', fg: '#4c4f69',
-    line: '#9ca0b0', accent: '#8839ef', muted: '#9ca0b0',
-  },
-  'nord': {
-    bg: '#2e3440', fg: '#d8dee9',
-    line: '#4c566a', accent: '#88c0d0', muted: '#616e88',
-  },
-  'nord-light': {
-    bg: '#eceff4', fg: '#2e3440',
-    line: '#aab1c0', accent: '#5e81ac', muted: '#7b88a1',
-  },
-  'dracula': {
-    bg: '#282a36', fg: '#f8f8f2',
-    line: '#6272a4', accent: '#bd93f9', muted: '#6272a4',
-  },
-  'github-light': {
-    bg: '#ffffff', fg: '#1f2328',
-    line: '#d1d9e0', accent: '#0969da', muted: '#59636e',
-  },
-  'github-dark': {
-    bg: '#0d1117', fg: '#e6edf3',
-    line: '#3d444d', accent: '#4493f8', muted: '#9198a1',
-  },
-  'solarized-light': {
-    bg: '#fdf6e3', fg: '#657b83',
-    line: '#93a1a1', accent: '#268bd2', muted: '#93a1a1',
-  },
-  'solarized-dark': {
-    bg: '#002b36', fg: '#839496',
-    line: '#586e75', accent: '#268bd2', muted: '#586e75',
-  },
-  'one-dark': {
-    bg: '#282c34', fg: '#abb2bf',
-    line: '#4b5263', accent: '#c678dd', muted: '#5c6370',
-  },
-  'salmon': {
-    bg: '#FFFBF5', fg: '#521000',
-    line: '#C9A88A', accent: '#FF4801', muted: '#85532E',
-    surface: '#FFFDFB', border: '#D4B89E',
-  },
-  'salmon-dark': {
-    bg: '#1F1008', fg: '#F5DCC8',
-    line: '#6B4A2E', accent: '#FF6B35', muted: '#A07858',
-    surface: '#2A1810', border: '#5A3A22',
-  },
-  'tufte': {
-    bg: '#FFFFF8', fg: '#111111',
-    line: '#AAAAAA', accent: '#7A0000', muted: '#888888',
-    surface: '#F5F0E8', border: '#CCCCCC',
-  },
-  'tufte-dark': {
-    bg: '#1C1C1A', fg: '#E8E4DC',
-    line: '#666660', accent: '#C87070', muted: '#908880',
-    surface: '#2A2926', border: '#444440',
+  'zinc-light': {
+    bg: '#FFFFFF', fg: '#27272A',
   },
 } as const
 
@@ -195,10 +174,10 @@ export type ThemeName = keyof typeof THEMES
 interface ShikiThemeLike {
   type?: string
   colors?: Record<string, string>
-  tokenColors?: Array<{
+  tokenColors?: {
     scope?: string | string[]
     settings?: { foreground?: string }
-  }>
+  }[]
 }
 
 /**
@@ -235,13 +214,13 @@ export function fromShikiTheme(theme: ShikiThemeLike): DiagramColors {
     )?.settings?.foreground
 
   return {
+    accent:  c['focusBorder'] ?? tokenColor('keyword') ?? undefined,
     bg: c['editor.background'] ?? (dark ? '#1e1e1e' : '#ffffff'),
+    border:  c['editorWidget.border'] ?? undefined,
     fg: c['editor.foreground'] ?? (dark ? '#d4d4d4' : '#333333'),
     line:    c['editorLineNumber.foreground'] ?? undefined,
-    accent:  c['focusBorder'] ?? tokenColor('keyword') ?? undefined,
     muted:   tokenColor('comment') ?? c['editorLineNumber.foreground'] ?? undefined,
     surface: c['editor.selectionBackground'] ?? undefined,
-    border:  c['editorWidget.border'] ?? undefined,
   }
 }
 
@@ -262,7 +241,7 @@ export function fromShikiTheme(theme: ShikiThemeLike): DiagramColors {
  * on any light background. Dark themes should use a lighter base.
  */
 export function buildShadowDefs(colors: DiagramColors): string {
-  if (!colors.shadow) return ''
+  if (!colors.shadow) {return ''}
 
   // Detect dark theme by checking if bg luminance is low.
   // Use a lighter shadow base for dark backgrounds so it's visible.
@@ -283,10 +262,10 @@ export function buildShadowDefs(colors: DiagramColors): string {
  */
 function isColorDark(color: string): boolean {
   const hex = color.replace('#', '')
-  if (hex.length < 6) return false
-  const r = parseInt(hex.slice(0, 2), 16)
-  const g = parseInt(hex.slice(2, 4), 16)
-  const b = parseInt(hex.slice(4, 6), 16)
+  if (hex.length < 6) {return false}
+  const r = Number.parseInt(hex.slice(0, 2), 16)
+  const g = Number.parseInt(hex.slice(2, 4), 16)
+  const b = Number.parseInt(hex.slice(4, 6), 16)
   // Relative luminance approximation
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.4
 }
@@ -400,16 +379,16 @@ function parseHex(hex: string): [number, number, number] {
     ? h[0]! + h[0]! + h[1]! + h[1]! + h[2]! + h[2]!
     : h
   return [
-    parseInt(full.slice(0, 2), 16),
-    parseInt(full.slice(2, 4), 16),
-    parseInt(full.slice(4, 6), 16),
+    Number.parseInt(full.slice(0, 2), 16),
+    Number.parseInt(full.slice(2, 4), 16),
+    Number.parseInt(full.slice(4, 6), 16),
   ]
 }
 
 function toHex(r: number, g: number, b: number): string {
-  return '#' + [r, g, b]
+  return `#${  [r, g, b]
     .map(c => Math.round(Math.max(0, Math.min(255, c))).toString(16).padStart(2, '0'))
-    .join('')
+    .join('')}`
 }
 
 function mixHex(color1: string, color2: string, pct1: number): string {
@@ -455,20 +434,20 @@ export interface ResolvedColors {
 export function resolveColors(colors: DiagramColors): ResolvedColors {
   const { bg, fg } = colors
   return {
+    arrow: colors.accent ?? mixHex(fg, bg, MIX.arrow),
     bg,
     fg,
-    text: fg,
-    textSec: colors.muted ?? mixHex(fg, bg, MIX.textSec),
-    textMuted: colors.muted ?? mixHex(fg, bg, MIX.textMuted),
-    textFaint: mixHex(fg, bg, MIX.textFaint),
-    line: colors.line ?? mixHex(fg, bg, MIX.line),
-    arrow: colors.accent ?? mixHex(fg, bg, MIX.arrow),
-    nodeFill: colors.surface ?? mixHex(fg, bg, MIX.nodeFill),
-    nodeStroke: colors.border ?? mixHex(fg, bg, MIX.nodeStroke),
     groupFill: bg,
     groupHdr: mixHex(fg, bg, MIX.groupHeader),
     innerStroke: mixHex(fg, bg, MIX.innerStroke),
     keyBadge: mixHex(fg, bg, MIX.keyBadge),
+    line: colors.line ?? mixHex(fg, bg, MIX.line),
+    nodeFill: colors.surface ?? mixHex(fg, bg, MIX.nodeFill),
+    nodeStroke: colors.border ?? mixHex(fg, bg, MIX.nodeStroke),
+    text: fg,
+    textFaint: mixHex(fg, bg, MIX.textFaint),
+    textMuted: colors.muted ?? mixHex(fg, bg, MIX.textMuted),
+    textSec: colors.muted ?? mixHex(fg, bg, MIX.textSec),
   }
 }
 
@@ -489,7 +468,7 @@ export function resolveColors(colors: DiagramColors): ResolvedColors {
  * the SVG is returned as-is since resolution isn't possible.
  */
 export function inlineResolvedColors(svg: string, colors: DiagramColors): string {
-  if (!isHexColor(colors.bg) || !isHexColor(colors.fg)) return svg
+  if (!isHexColor(colors.bg) || !isHexColor(colors.fg)) {return svg}
 
   const rc = resolveColors(colors)
 
@@ -498,11 +477,11 @@ export function inlineResolvedColors(svg: string, colors: DiagramColors): string
   // User-facing variables
   vars.set('bg', rc.bg)
   vars.set('fg', rc.fg)
-  if (colors.line && isHexColor(colors.line)) vars.set('line', colors.line)
-  if (colors.accent && isHexColor(colors.accent)) vars.set('accent', colors.accent)
-  if (colors.muted && isHexColor(colors.muted)) vars.set('muted', colors.muted)
-  if (colors.surface && isHexColor(colors.surface)) vars.set('surface', colors.surface)
-  if (colors.border && isHexColor(colors.border)) vars.set('border', colors.border)
+  if (colors.line && isHexColor(colors.line)) {vars.set('line', colors.line)}
+  if (colors.accent && isHexColor(colors.accent)) {vars.set('accent', colors.accent)}
+  if (colors.muted && isHexColor(colors.muted)) {vars.set('muted', colors.muted)}
+  if (colors.surface && isHexColor(colors.surface)) {vars.set('surface', colors.surface)}
+  if (colors.border && isHexColor(colors.border)) {vars.set('border', colors.border)}
   // Derived internal variables
   vars.set('_text', rc.text)
   vars.set('_text-sec', rc.textSec)
@@ -524,25 +503,25 @@ export function inlineResolvedColors(svg: string, colors: DiagramColors): string
     const prev = text
 
     // Replace var(--name) without fallback
-    text = text.replace(/var\(--([\w-]+)\)/g, (match, name) => {
-      return vars.get(name) ?? match
-    })
+    text = text.replaceAll(/var\(--([\w-]+)\)/g, (match, name) => 
+      vars.get(name) ?? match
+    )
 
     // Replace var(--name, fallback) where fallback has no nested parens
-    text = text.replace(/var\(--([\w-]+),\s*([^()]+)\)/g, (_match, name, fallback) => {
-      return vars.get(name) ?? fallback.trim()
-    })
+    text = text.replaceAll(/var\(--([\w-]+),\s*([^()]+)\)/g, (_match, name, fallback) => 
+      vars.get(name) ?? fallback.trim()
+    )
 
     // Resolve color-mix(in srgb, #hex P%, #hex|transparent)
-    text = text.replace(
+    text = text.replaceAll(
       /color-mix\(in srgb,\s*(#[0-9a-fA-F]{3,8})\s+(\d+(?:\.\d+)?)%,\s*(#[0-9a-fA-F]{3,8}|transparent)\)/g,
       (_match, c1, pct, c2) => {
         const cc2 = c2 === 'transparent' ? rc.bg : c2
-        return mixHex(c1, cc2, parseFloat(pct))
+        return mixHex(c1, cc2, Number.parseFloat(pct))
       },
     )
 
-    if (text === prev) break
+    if (text === prev) {break}
   }
 
   // Phase 2: Extract CSS variable definitions from <style> blocks and resolve
@@ -557,13 +536,13 @@ export function inlineResolvedColors(svg: string, colors: DiagramColors): string
   if (cssDefs.size > 0) {
     for (let pass = 0; pass < 5; pass++) {
       const prev = text
-      text = text.replace(/var\(--([\w-]+)\)/g, (match, name) => {
-        return cssDefs.get(name) ?? match
-      })
-      text = text.replace(/var\(--([\w-]+),\s*([^()]+)\)/g, (_match, name, fallback) => {
-        return cssDefs.get(name) ?? fallback.trim()
-      })
-      if (text === prev) break
+      text = text.replaceAll(/var\(--([\w-]+)\)/g, (match, name) => 
+        cssDefs.get(name) ?? match
+      )
+      text = text.replaceAll(/var\(--([\w-]+),\s*([^()]+)\)/g, (_match, name, fallback) => 
+        cssDefs.get(name) ?? fallback.trim()
+      )
+      if (text === prev) {break}
     }
   }
 

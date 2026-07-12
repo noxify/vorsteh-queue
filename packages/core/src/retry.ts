@@ -55,7 +55,7 @@ export function calculateRetryDelay(
 
 /** Default retry strategy used when none is specified */
 export const DEFAULT_RETRY_STRATEGY: RetryStrategyConfig = {
-  type: "exponential",
   delay: 1000,
   maxDelay: 30_000,
+  type: "exponential",
 }
