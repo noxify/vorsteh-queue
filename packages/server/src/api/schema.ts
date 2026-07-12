@@ -13,7 +13,7 @@ import type {
 } from "@vorsteh-queue/core"
 import { createGraphQLError } from "graphql-yoga"
 
-import type { PubSub } from "./pubsub"
+import type { PubSub, JobLifecycleEvent } from "./pubsub"
 
 export interface SchemaContext {
   queues: readonly Queue[]
@@ -399,13 +399,37 @@ const FlowEntryType = builder
 
 // ─── Subscriptions ───────────────────────────────────────────────────────────
 
+const JobLifecycleEventType = builder
+  .objectRef<JobLifecycleEvent>("JobLifecycleEvent")
+  .implement({
+    fields: (t) => ({
+      currentStatus: t.field({
+        type: JobStatusEnum,
+        resolve: (parent) => parent.currentStatus,
+      }),
+      jobId: t.exposeID("jobId"),
+      jobName: t.exposeString("jobName"),
+      previousStatus: t.field({
+        type: JobStatusEnum,
+        nullable: true,
+        resolve: (parent) => parent.previousStatus ?? null,
+      }),
+      progress: t.int({
+        nullable: true,
+        resolve: (parent) => parent.progress ?? null,
+      }),
+      queueName: t.exposeString("queueName"),
+      timestamp: t.exposeString("timestamp"),
+    }),
+  })
+
 builder.subscriptionType({
   fields: (t) => ({
     jobStatusChanged: t.field({
-      resolve: (payload: Job) => payload,
+      resolve: (payload: JobLifecycleEvent) => payload,
       subscribe: (_parent, _args, ctx) =>
         ctx.pubsub.subscribe("job:statusChanged"),
-      type: JobType,
+      type: JobLifecycleEventType,
     }),
 
     statsUpdated: t.field({

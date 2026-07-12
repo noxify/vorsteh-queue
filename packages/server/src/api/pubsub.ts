@@ -5,10 +5,28 @@
  * Designed for in-process use — events are lost if no subscriber is listening.
  */
 
-import type { Job, QueueStats } from "@vorsteh-queue/core"
+import type { JobStatus, QueueStats } from "@vorsteh-queue/core"
+
+/** Lifecycle event envelope published via subscriptions */
+export interface JobLifecycleEvent {
+  /** Job ID */
+  readonly jobId: string
+  /** Queue name the job belongs to */
+  readonly queueName: string
+  /** Job handler name */
+  readonly jobName: string
+  /** Previous status (undefined for newly added jobs) */
+  readonly previousStatus?: JobStatus
+  /** Current status after the transition */
+  readonly currentStatus: JobStatus
+  /** ISO timestamp of the event */
+  readonly timestamp: string
+  /** Current progress (0-100), if applicable */
+  readonly progress?: number
+}
 
 export interface PubSubEvents {
-  "job:statusChanged": Job
+  "job:statusChanged": JobLifecycleEvent
   "stats:updated": QueueStats
 }
 

@@ -1,21 +1,28 @@
-import type { Job, QueueStats } from "@vorsteh-queue/core"
+import type { QueueStats } from "@vorsteh-queue/core"
 import { describe, expect, it } from "vitest"
 
+import type { JobLifecycleEvent } from "../src/api/pubsub"
 import { PubSub } from "../src/api/pubsub"
+
+const mockEvent: JobLifecycleEvent = {
+  currentStatus: "completed",
+  jobId: "1",
+  jobName: "test",
+  previousStatus: "processing",
+  queueName: "test-queue",
+  timestamp: new Date().toISOString(),
+}
 
 describe(PubSub, () => {
   it("should deliver events to subscribers", async () => {
     const pubsub = new PubSub()
     const subscription = pubsub.subscribe("job:statusChanged")
 
-    const mockJob = { id: "1", name: "test", status: "completed" } as Job
-
-    // Publish after subscribing
-    pubsub.publish("job:statusChanged", mockJob)
+    pubsub.publish("job:statusChanged", mockEvent)
 
     const result = await subscription.next()
     expect(result.done).toBeFalsy()
-    expect(result.value).toBe(mockJob)
+    expect(result.value).toBe(mockEvent)
 
     await subscription.return(undefined as never)
   })
@@ -25,14 +32,13 @@ describe(PubSub, () => {
     const sub1 = pubsub.subscribe("job:statusChanged")
     const sub2 = pubsub.subscribe("job:statusChanged")
 
-    const mockJob = { id: "2", name: "test", status: "processing" } as Job
-    pubsub.publish("job:statusChanged", mockJob)
+    pubsub.publish("job:statusChanged", mockEvent)
 
     const result1 = await sub1.next()
     const result2 = await sub2.next()
 
-    expect(result1.value).toBe(mockJob)
-    expect(result2.value).toBe(mockJob)
+    expect(result1.value).toBe(mockEvent)
+    expect(result2.value).toBe(mockEvent)
 
     await sub1.return(undefined as never)
     await sub2.return(undefined as never)
@@ -61,7 +67,6 @@ describe(PubSub, () => {
       processing: 0,
     } as QueueStats
 
-    // Publish multiple events before consuming
     pubsub.publish("stats:updated", stats1)
     pubsub.publish("stats:updated", stats2)
 
@@ -82,7 +87,7 @@ describe(PubSub, () => {
     await subscription.return(undefined as never)
 
     // Publishing after return should not accumulate anywhere
-    pubsub.publish("job:statusChanged", { id: "3" } as Job)
+    pubsub.publish("job:statusChanged", mockEvent)
 
     // No error thrown = success (listener was cleaned up)
   })
@@ -92,13 +97,11 @@ describe(PubSub, () => {
     const jobSub = pubsub.subscribe("job:statusChanged")
     const statsSub = pubsub.subscribe("stats:updated")
 
-    pubsub.publish("job:statusChanged", { id: "1" } as Job)
+    pubsub.publish("job:statusChanged", mockEvent)
 
     const jobResult = await jobSub.next()
-    expect(jobResult.value.id).toBe("1")
+    expect(jobResult.value.jobId).toBe("1")
 
-    // Stats subscription should not receive the job event
-    // (We verify by publishing a stats event and confirming only that arrives)
     const stats = { pending: 5 } as QueueStats
     pubsub.publish("stats:updated", stats)
 
@@ -113,20 +116,19 @@ describe(PubSub, () => {
     const pubsub = new PubSub()
     const subscription = pubsub.subscribe("job:statusChanged")
 
-    const jobs = [
-      { id: "a", name: "test" } as Job,
-      { id: "b", name: "test" } as Job,
+    const events: JobLifecycleEvent[] = [
+      { ...mockEvent, jobId: "a" },
+      { ...mockEvent, jobId: "b" },
     ]
 
-    // Publish then consume
-    for (const job of jobs) {
-      pubsub.publish("job:statusChanged", job)
+    for (const event of events) {
+      pubsub.publish("job:statusChanged", event)
     }
 
-    const received: Job[] = []
+    const received: JobLifecycleEvent[] = []
     let count = 0
-    for await (const job of subscription) {
-      received.push(job)
+    for await (const event of subscription) {
+      received.push(event)
       count += 1
       if (count >= 2) {
         break
@@ -134,7 +136,7 @@ describe(PubSub, () => {
     }
 
     expect(received).toHaveLength(2)
-    expect(received[0]?.id).toBe("a")
-    expect(received[1]?.id).toBe("b")
+    expect(received[0]?.jobId).toBe("a")
+    expect(received[1]?.jobId).toBe("b")
   })
 })

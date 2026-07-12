@@ -204,6 +204,11 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     return this.running
   }
 
+  /** The queue name this worker consumes from */
+  get name(): string {
+    return this.config.name
+  }
+
   /** Number of currently active (in-flight) jobs */
   get activeJobCount(): number {
     return this.activeJobs.size

@@ -2,7 +2,7 @@
  * Server configuration types and helpers.
  */
 
-import type { Queue } from "@vorsteh-queue/core"
+import type { Queue, Worker } from "@vorsteh-queue/core"
 import { loadConfig as c12LoadConfig } from "c12"
 import type { MiddlewareHandler } from "hono"
 
@@ -16,6 +16,10 @@ export type AuthConfig =
 export interface ServerConfig {
   /** Queue instances to manage */
   readonly queues: readonly Queue[]
+  /** Worker instances to observe for subscription events
+   * @default []
+   */
+  readonly workers?: readonly Worker[]
   /** Authentication
    * @default false
    */
