@@ -26,7 +26,7 @@ describe("GraphQL Server", () => {
       const body = await res.json()
 
       expect(res.status).toBe(200)
-      expect(body).toStrictEqual({ queues: ["test-queue"], status: "ok" })
+      expect(body).toStrictEqual({ status: "ok" })
     })
   })
 

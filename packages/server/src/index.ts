@@ -93,9 +93,7 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
   })
 
   // Health check
-  app.get("/health", (c) =>
-    c.json({ queues: config.queues.map((q) => q.name), status: "ok" })
-  )
+  app.get("/health", (c) => c.json({ status: "ok" }))
 
   return app
 }
