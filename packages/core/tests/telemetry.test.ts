@@ -51,7 +51,7 @@ describe("Telemetry (OpenTelemetry Integration)", () => {
     tracerProvider = new BasicTracerProvider({
       spanProcessors: [new SimpleSpanProcessor(spanExporter)],
     })
-    tracerProvider.register()
+    trace.setGlobalTracerProvider(tracerProvider)
 
     // Set up queue infrastructure
     adapter = new MemoryQueueAdapter()
@@ -293,7 +293,7 @@ describe("Telemetry (OpenTelemetry Integration)", () => {
     })
 
     it("should create spans for batch processing", async () => {
-      worker.registerBatch("batch-job", async (jobs) => 
+      worker.registerBatch("batch-job", async (jobs) =>
         jobs.map(() => ({ processed: true }))
       )
 

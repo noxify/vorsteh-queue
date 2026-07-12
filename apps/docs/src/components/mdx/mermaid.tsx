@@ -1,12 +1,11 @@
 "use client"
 
+import { renderMermaidSVG, THEMES } from "agentic-mermaid"
 import { useTheme } from "better-themes/rsc"
 import React from "react"
 
 import { PanZoomControl } from "@/components/pan-zoom/pan-zoom-control"
 import { PanZoomDialog } from "@/components/pan-zoom/pan-zoom-dialog"
-
-import { renderMermaidSVG, THEMES } from "../beautiful-mermaid"
 
 const DEFAULT_ASPECT_RATIO = 16 / 9
 
@@ -169,7 +168,7 @@ export function MermaidDiagram({
 
   const inlineMinHeight = inlineAspectRatio < 1 ? "18rem" : "20rem"
   const inlineMaxHeight =
-    inlineAspectRatio < 1 ? "48vh" : (inlineAspectRatio < 1.4 ? "54vh" : "60vh")
+    inlineAspectRatio < 1 ? "48vh" : inlineAspectRatio < 1.4 ? "54vh" : "60vh"
   const inlineHeight = inlineDimensions
     ? `min(calc(${Math.round(inlineDimensions.height)}px + 4rem), ${inlineMaxHeight})`
     : undefined

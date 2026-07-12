@@ -121,9 +121,9 @@ export function MarkdownImageHandler({
   const srcValue =
     typeof src === "string"
       ? src
-      : (typeof src === "object" && src && "src" in src
+      : typeof src === "object" && src && "src" in src
         ? String(src.src)
-        : "")
+        : ""
   const altValue = typeof alt === "string" ? alt : ""
   const srcFragment = srcValue?.split("#").at(1)
   const options = parseImageOptionsFromSources([title, altValue, srcFragment])
@@ -131,16 +131,16 @@ export function MarkdownImageHandler({
   const widthValue =
     typeof width === "number"
       ? width
-      : (typeof width === "string"
+      : typeof width === "string"
         ? Number(width)
-        : options.width)
+        : options.width
 
   const heightValue =
     typeof height === "number"
       ? height
-      : (typeof height === "string"
+      : typeof height === "string"
         ? Number(height)
-        : options.height)
+        : options.height
 
   return (
     <ImageHandler

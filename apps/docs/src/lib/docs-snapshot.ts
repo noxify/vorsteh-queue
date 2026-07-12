@@ -274,9 +274,9 @@ async function buildRecord(
   const titleValue =
     typeof frontmatter?.title === "string"
       ? frontmatter.title
-      : (typeof frontmatter?.navTitle === "string"
+      : typeof frontmatter?.navTitle === "string"
         ? frontmatter.navTitle
-        : undefined)
+        : undefined
 
   const title = titleValue?.trim()
   if (!title) {

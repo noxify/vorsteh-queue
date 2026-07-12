@@ -140,11 +140,11 @@ export function DocsPageActions({
           >
             {copyState === "copied" ? (
               <CheckIcon />
-            ) : (copyState === "failed" ? (
+            ) : copyState === "failed" ? (
               <XIcon />
             ) : (
               <CopyIcon />
-            ))}
+            )}
             Copy Markdown
           </Button>
 

@@ -55,14 +55,11 @@ try {
 
   if (error instanceof Error) {
     consola.error(`\nError: ${error.message}`)
-    if (debug) {
-      consola.error(error)
-    }
   } else {
     consola.error("\nAn unknown error occurred.")
-    if (debug) {
-      consola.error(error)
-    }
+  }
+  if (debug) {
+    consola.error(error)
   }
 
   process.exitCode = 1

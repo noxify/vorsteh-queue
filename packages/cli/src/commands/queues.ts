@@ -61,7 +61,7 @@ function resolveDefaultQueueName(config: {
   }
 
   if (config.queues.length === 1) {
-    return config.queues[0]!.name
+    return config.queues[0]?.name
   }
 
   return undefined

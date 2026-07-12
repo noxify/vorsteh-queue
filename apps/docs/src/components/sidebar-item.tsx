@@ -111,11 +111,11 @@ export function SidebarItem({
           )}
           {item.navBadge === "pulse" ? (
             <PulseDot className="top-1/2 right-2 -translate-y-1/2" />
-          ) : (item.navBadge ? (
+          ) : item.navBadge ? (
             <SidebarMenuBadge className={badgeVariants[item.navBadge]}>
               {item.navBadge}
             </SidebarMenuBadge>
-          ) : null)}
+          ) : null}
         </SidebarMenuItem>
       </>
     )
@@ -169,13 +169,13 @@ export function SidebarItem({
             </SidebarMenuButton>
             {item.navBadge === "pulse" ? (
               <PulseDot className="top-1/2 right-8 -translate-y-1/2" />
-            ) : (item.navBadge ? (
+            ) : item.navBadge ? (
               <SidebarMenuBadge
                 className={cn(badgeVariants[item.navBadge], "right-7")}
               >
                 {item.navBadge}
               </SidebarMenuBadge>
-            ) : null)}
+            ) : null}
           </div>
           <CollapsibleContent>
             <SidebarMenuSub className="mr-0 ml-2 pr-0 pl-2">

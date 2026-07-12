@@ -65,7 +65,10 @@ export function resolveQueueName(options: ResolveQueueOptions): string {
 
   // Priority 3: Single queue in array
   if (config.queues.length === 1) {
-    return config.queues[0]!.name
+    const [singleQueue] = config.queues
+    if (singleQueue) {
+      return singleQueue.name
+    }
   }
 
   // Defensive: should not reach here due to config validation requiring defaultQueue

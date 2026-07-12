@@ -10,7 +10,7 @@ vi.stubGlobal("fetch", mockFetch)
 
 // Generators
 const baseUrlArb = fc.webUrl().map((url) => url.replace(/\/$/, ""))
-const graphqlUrlArb = baseUrlArb.map((base) => `${base  }/graphql`)
+const graphqlUrlArb = baseUrlArb.map((base) => `${base}/graphql`)
 const tokenArb = fc.string({ minLength: 1 })
 const nonOkStatusArb = fc
   .integer({ max: 599, min: 300 })
@@ -41,8 +41,7 @@ describe("GraphQL Transport Health Check", () => {
           const transport = createGraphQLTransport(graphqlUrl)
           await transport.connect()
 
-          const expectedHealthUrl =
-            `${graphqlUrl.replace(/\/graphql$/, "")  }/health`
+          const expectedHealthUrl = `${graphqlUrl.replace(/\/graphql$/, "")}/health`
           expect(mockFetch).toHaveBeenCalledWith(expectedHealthUrl, {
             headers: {},
             method: "GET",
@@ -69,8 +68,7 @@ describe("GraphQL Transport Health Check", () => {
           const transport = createGraphQLTransport(graphqlUrl, token)
           await transport.connect()
 
-          const expectedHealthUrl =
-            `${graphqlUrl.replace(/\/graphql$/, "")  }/health`
+          const expectedHealthUrl = `${graphqlUrl.replace(/\/graphql$/, "")}/health`
           expect(mockFetch).toHaveBeenCalledWith(expectedHealthUrl, {
             headers: { Authorization: `Bearer ${token}` },
             method: "GET",
@@ -95,8 +93,7 @@ describe("GraphQL Transport Health Check", () => {
           mockFetch.mockRejectedValueOnce(new Error("Network failure"))
 
           const transport = createGraphQLTransport(graphqlUrl)
-          const expectedHealthUrl =
-            `${graphqlUrl.replace(/\/graphql$/, "")  }/health`
+          const expectedHealthUrl = `${graphqlUrl.replace(/\/graphql$/, "")}/health`
 
           await expect(transport.connect()).rejects.toSatisfy(
             (error: unknown) => {
@@ -137,7 +134,7 @@ describe("GraphQL Transport Health Check", () => {
             await expect(transport.connect()).rejects.toSatisfy(
               (error: unknown) => {
                 expect(error).toBeInstanceOf(CLIError)
-                const {message} = (error as CLIError)
+                const { message } = error as CLIError
                 expect(message).toContain(String(statusCode))
                 expect(message).toContain(statusText)
                 return true

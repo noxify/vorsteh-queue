@@ -550,12 +550,15 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     // Register all jobs in the batch
     for (const job of jobs) {
       this.trackGroupKey(job)
-      this.activeJobs.set(job.id, {
-        controller,
-        handlerName: job.name,
-        promise,
-        span: spans.get(job.id)!,
-      })
+      const span = spans.get(job.id)
+      if (span) {
+        this.activeJobs.set(job.id, {
+          controller,
+          handlerName: job.name,
+          promise,
+          span,
+        })
+      }
     }
 
     await promise
@@ -802,11 +805,11 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     getSteps: () => readonly StepState[]
     runCompensations: () => Promise<void>
   } {
-    const { context, getSteps, runCompensations } = createStepContext(
-      job.id,
-      job,
-      this.adapter
-    )
+    const {
+      context: stepContext,
+      getSteps,
+      runCompensations,
+    } = createStepContext(job.id, job, this.adapter)
 
     return {
       ctx: {
@@ -819,7 +822,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
           return results
         },
         signal,
-        step: context,
+        step: stepContext,
       },
       getSteps,
       runCompensations,

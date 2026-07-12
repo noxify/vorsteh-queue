@@ -35,6 +35,7 @@
     "@renoun/screenshot": "0.3.3",
     "@tailwindcss/typography": "0.5.20",
     "@vorsteh-queue/cli": "workspace:*",
+    "agentic-mermaid": "0.1.1",
     "better-themes": "1.1.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",

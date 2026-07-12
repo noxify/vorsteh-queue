@@ -223,7 +223,9 @@ builder.queryType({
         // Search all queues
         for (const queue of ctx.queues) {
           const job = await queue.adapter.getJobById(String(args.id))
-          if (job) return job
+          if (job) {
+            return job
+          }
         }
         return null
       },
@@ -251,12 +253,11 @@ builder.queryType({
 
     queues: t.field({
       type: [QueueInfoType],
-      resolve: (_parent, _args, ctx) => {
-        return ctx.queues.map((q) => ({
+      resolve: (_parent, _args, ctx) =>
+        ctx.queues.map((q) => ({
           name: q.name,
           isDefault: false,
-        }))
-      },
+        })),
     }),
 
     size: t.int({

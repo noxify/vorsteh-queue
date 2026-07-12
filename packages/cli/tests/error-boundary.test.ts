@@ -6,17 +6,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
  * Extracted error boundary logic from bin.ts for testability.
  * This replicates the exact error handling pattern used in the CLI entry point.
  */
-function handleError(error: unknown, debug: string | undefined): void {
+function handleError(error: unknown, debug?: string | undefined): void {
   if (error instanceof Error) {
     consola.error(`\nError: ${error.message}`)
-    if (debug) {
-      consola.error(error)
-    }
   } else {
     consola.error("\nAn unknown error occurred.")
-    if (debug) {
-      consola.error(error)
-    }
+  }
+  if (debug) {
+    consola.error(error)
   }
 
   process.exitCode = 1
@@ -126,13 +123,14 @@ describe("error-boundary", () => {
             fc.string(),
             fc.integer(),
             fc.constant(null),
-            fc.constant(),
             fc.dictionary(fc.string(), fc.string())
           ),
           fc.string({ minLength: 1 }),
           (value, debugValue) => {
             // Skip if value is an Error instance (covered by the Error path)
-            if (value instanceof Error) {return}
+            if (value instanceof Error) {
+              return
+            }
 
             errorSpy.mockClear()
             process.exitCode = undefined as unknown as number

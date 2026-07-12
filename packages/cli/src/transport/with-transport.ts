@@ -18,7 +18,7 @@ export interface GlobalOptions {
  * @param options - Global CLI options for transport resolution
  * @param callback - Command logic receiving the connected transport
  * @returns The value returned by the callback
- * @throws Re-throws any error from callback after disconnect
+ * @throws {Error} Re-throws any error from callback after disconnect
  */
 export async function withTransport<TResult>(
   options: GlobalOptions,

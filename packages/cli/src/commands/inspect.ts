@@ -7,9 +7,8 @@ import { withTransport } from "../transport/with-transport"
 export function createInspectCommand() {
   const command = buildInspectCommandStructure()
 
-  command.action(async (id, options, command) => {
-    const globalOpts = command.optsWithGlobals() as GlobalOptions &
-      typeof options
+  command.action(async (id, options, cmd) => {
+    const globalOpts = cmd.optsWithGlobals() as GlobalOptions & typeof options
 
     await withTransport(
       { queue: globalOpts.queue, token: globalOpts.token, url: globalOpts.url },

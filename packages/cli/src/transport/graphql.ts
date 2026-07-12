@@ -51,7 +51,7 @@ export function createGraphQLTransport(
 
   return {
     async connect() {
-      const healthUrl = `${url.replace(/\/graphql$/, "")  }/health`
+      const healthUrl = `${url.replace(/\/graphql$/u, "")}/health`
       const headers: Record<string, string> = {}
       if (token) {
         headers.Authorization = `Bearer ${token}`

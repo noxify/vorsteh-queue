@@ -182,9 +182,9 @@ class LegacyDslParser {
       value[key.value] =
         parsedValue.kind === "number"
           ? parsedValue.value
-          : (parsedValue.kind === "identifier"
+          : parsedValue.kind === "identifier"
             ? parsedValue.value
-            : parsedValue.value)
+            : parsedValue.value
 
       if (this.match("comma")) {
         continue

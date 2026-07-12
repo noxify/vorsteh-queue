@@ -15,16 +15,8 @@
  * ```
  */
 
-import { metrics, trace } from "@opentelemetry/api"
-import type {
-  Counter,
-  Histogram,
-  Meter,
-  Span,
-  Tracer,
-  UpDownCounter,
-} from "@opentelemetry/api"
-import { SpanKind, SpanStatusCode } from "@opentelemetry/api"
+import { metrics, trace, SpanKind, SpanStatusCode } from "@opentelemetry/api"
+import type { Meter, Span, Tracer } from "@opentelemetry/api"
 
 import type { Job } from "./types"
 
