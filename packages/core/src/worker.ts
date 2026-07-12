@@ -20,6 +20,11 @@
 import type { Span } from "@opentelemetry/api"
 import { context, trace } from "@opentelemetry/api"
 
+import {
+  areDependenciesMet,
+  cascadeDependencyFailure,
+  getFailedDependency,
+} from "./dependencies"
 import { TypedEventEmitter } from "./events"
 import { RateLimiterRegistry } from "./rate-limiter"
 import { calculateRetryDelay, DEFAULT_RETRY_STRATEGY } from "./retry"
@@ -317,6 +322,38 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         continue
       }
 
+      // Check dependency-gating: skip jobs whose dependencies are not yet met
+      if (job.dependsOn && job.dependsOn.length > 0) {
+        // eslint-disable-next-line no-await-in-loop
+        const failedDep = await getFailedDependency(job, this.adapter)
+        if (failedDep) {
+          // Dependency permanently failed — cascade failure to this job
+          // eslint-disable-next-line no-await-in-loop
+          await this.adapter.updateJobStatus(job.id, {
+            error: {
+              message: `Dependency job ${failedDep.id} (${failedDep.name}) failed`,
+              name: "DependencyFailedError",
+            },
+            status: "failed",
+          })
+          // eslint-disable-next-line no-await-in-loop
+          await cascadeDependencyFailure(job.id, this.adapter)
+          continue
+        }
+
+        // eslint-disable-next-line no-await-in-loop
+        const met = await areDependenciesMet(job, this.adapter)
+        if (!met) {
+          // Dependencies not yet completed — move back to delayed
+          // eslint-disable-next-line no-await-in-loop
+          await this.adapter.updateJobStatus(job.id, {
+            processAt: new Date(Date.now() + this.config.pollInterval),
+            status: "delayed",
+          })
+          continue
+        }
+      }
+
       void this.processJob(job, registered.handler)
     }
   }
@@ -526,6 +563,9 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
       // Cascade failure to parent if configured
       await this.failParentOnChildFailure(deadJob)
+
+      // Cascade failure to dependent jobs
+      await cascadeDependencyFailure(job.id, this.adapter)
 
       // Cleanup old failed/dead jobs
       await this.cleanupAfterFailure()

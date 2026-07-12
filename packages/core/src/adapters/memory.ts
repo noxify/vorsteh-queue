@@ -105,7 +105,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       }
     }
 
-    // Then: find the next pending job respecting handler names and group constraints
+    // Then: find the next pending job respecting handler names, group constraints, and dependencies
     const candidates = [...this.jobs.values()]
       .filter((job) => {
         if (job.status !== "pending") {
@@ -116,6 +116,15 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
         }
         if (job.groupKey && options.activeGroups.includes(job.groupKey)) {
           return false
+        }
+        // Skip jobs with unmet dependencies (they'll be checked by the worker too)
+        if (job.dependsOn && job.dependsOn.length > 0) {
+          for (const depId of job.dependsOn) {
+            const dep = this.jobs.get(depId)
+            if (!dep || dep.status !== "completed") {
+              return false
+            }
+          }
         }
         return true
       })

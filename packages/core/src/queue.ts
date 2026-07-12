@@ -16,6 +16,7 @@
  * ```
  */
 
+import { detectCircularDependencies } from "./dependencies"
 import {
   DuplicateJobError,
   JobCancelledError,
@@ -137,6 +138,16 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
         // action === "replace": cancel existing, then add new
         await this._adapter.cancelJob(existing.id, "Replaced by newer job")
       }
+    }
+
+    // Detect circular dependencies before adding
+    if (jobOptions.dependsOn && jobOptions.dependsOn.length > 0) {
+      const tempId = crypto.randomUUID()
+      await detectCircularDependencies(
+        tempId,
+        jobOptions.dependsOn,
+        this._adapter
+      )
     }
 
     // Determine initial status and processAt

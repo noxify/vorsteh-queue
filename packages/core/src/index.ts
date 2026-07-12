@@ -91,6 +91,8 @@ export {
 export {
   detectCircularDependencies,
   areDependenciesMet,
+  getFailedDependency,
+  cascadeDependencyFailure,
   CircularDependencyError,
 } from "./dependencies"
 

@@ -5,6 +5,7 @@
  * only be picked for processing once all its dependencies have completed.
  *
  * Circular dependency detection prevents infinite loops at enqueue time.
+ * Failure cascade ensures dependent jobs fail when their dependencies fail.
  */
 
 import type { Job, QueueAdapter } from "./types"
@@ -90,27 +91,65 @@ export async function areDependenciesMet(
 }
 
 /**
+ * Check if any dependency of a job has failed (dead/cancelled/failed terminally).
+ *
+ * @param job - Job to check dependencies for
+ * @param adapter - Queue adapter to look up dependency jobs
+ * @returns The failed dependency job, or null if no dependency has failed
+ */
+export async function getFailedDependency(
+  job: Job,
+  adapter: QueueAdapter
+): Promise<Job | null> {
+  if (!job.dependsOn || job.dependsOn.length === 0) {
+    return null
+  }
+
+  for (const depId of job.dependsOn) {
+    // eslint-disable-next-line no-await-in-loop
+    const depJob = await adapter.getJobById(depId)
+    if (depJob && (depJob.status === "dead" || depJob.status === "cancelled")) {
+      return depJob
+    }
+  }
+
+  return null
+}
+
+/**
  * Handle dependency failure cascade.
- * When a dependency fails/cancels, dependent jobs should be affected based on `onDependencyFailure`.
+ * When a job moves to dead/cancelled, all jobs that depend on it are failed.
  *
  * @param failedJobId - ID of the job that failed
  * @param adapter - Queue adapter
- * @param action - What to do with dependents ("cancel" | "fail" | "ignore")
  */
 export async function cascadeDependencyFailure(
   failedJobId: string,
-  adapter: QueueAdapter,
-  action: "cancel" | "fail" | "ignore"
+  adapter: QueueAdapter
 ): Promise<void> {
-  if (action === "ignore") {
-    return
-  }
+  // Find all jobs in the queue that have this job in their dependsOn list
+  const allJobs = await adapter.getJobs({ limit: 10_000 })
 
-  // For now, we don't have an efficient way to find all jobs that depend on this one
-  // without a reverse-dependency index. This will be implemented with a query at the adapter level.
-  // For the memory adapter and simple cases, this is acceptable.
-  // eslint-disable-next-line no-warning-comments
-  // TODO: Add findDependentJobs(jobId) to adapter interface for efficient cascade
-  void failedJobId
-  void adapter
+  for (const job of allJobs) {
+    if (!job.dependsOn?.includes(failedJobId)) {
+      continue
+    }
+    // Only cascade to jobs that are still active (pending/delayed)
+    if (job.status !== "pending" && job.status !== "delayed") {
+      continue
+    }
+
+    // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential cascade
+    await adapter.updateJobStatus(job.id, {
+      error: {
+        message: `Dependency job ${failedJobId} failed`,
+        name: "DependencyFailedError",
+      },
+      status: "failed",
+    })
+
+    // Recursive cascade: if this job also has dependents, cascade further
+    // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- recursive cascade
+    await cascadeDependencyFailure(job.id, adapter)
+  }
 }
