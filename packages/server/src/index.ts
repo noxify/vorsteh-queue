@@ -1,8 +1,8 @@
 /**
  * vorsteh-queue/server
  *
- * GraphQL server and optional web dashboard for monitoring and managing
- * vorsteh-queue jobs. Can run standalone or as Hono middleware.
+ * GraphQL API server for monitoring and managing vorsteh-queue jobs.
+ * Can run standalone or as Hono middleware.
  *
  * @example
  * ```typescript
@@ -49,11 +49,11 @@ export { PubSub } from "./api/pubsub"
 export type { PubSubEvents } from "./api/pubsub"
 
 /**
- * Create a Hono app configured as a queue management middleware.
+ * Create a Hono app configured as a queue management API middleware.
  * Can be mounted on an existing Hono app via `app.route()`.
  *
  * @param config - Server configuration
- * @returns Hono app instance with GraphQL and optional dashboard routes
+ * @returns Hono app instance with GraphQL API routes
  *
  * @example
  * ```typescript
@@ -95,15 +95,6 @@ export function createQueueMiddleware(config: ServerConfig): Hono {
   // Health check
   app.get("/health", (c) =>
     c.json({ queues: config.queues.map((q) => q.name), status: "ok" })
-  )
-
-  // Dashboard config endpoint (unauthenticated — consumed by the SPA)
-  app.get("/api/config", (c) =>
-    c.json({
-      authEnabled: config.auth !== false,
-      graphqlEndpoint: config.graphqlEndpoint ?? "/graphql",
-      queues: config.queues.map((q) => q.name),
-    })
   )
 
   return app
