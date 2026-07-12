@@ -216,6 +216,10 @@ export interface Job<TPayload = unknown, TResult = unknown> {
   readonly cancellationReason?: string
   /** Job dependency IDs */
   readonly dependsOn?: readonly string[]
+  /** Behavior when a dependency fails
+   * @default "fail"
+   */
+  readonly onDependencyFailure?: "fail" | "cancel"
   /** Step execution state */
   readonly steps?: readonly StepState[]
   /** Received signals for waitFor steps */
@@ -279,9 +283,9 @@ export interface JobOptions {
   /** Job IDs that must complete before this job is processed */
   readonly dependsOn?: readonly string[]
   /** Behavior when a dependency fails
-   * @default "cancel"
+   * @default "fail"
    */
-  readonly onDependencyFailure?: "cancel" | "fail" | "ignore"
+  readonly onDependencyFailure?: "fail" | "cancel"
 }
 
 // ─── Queue Configuration ─────────────────────────────────────────────────────

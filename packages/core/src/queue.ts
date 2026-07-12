@@ -140,15 +140,8 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
       }
     }
 
-    // Detect circular dependencies before adding
-    if (jobOptions.dependsOn && jobOptions.dependsOn.length > 0) {
-      const tempId = crypto.randomUUID()
-      await detectCircularDependencies(
-        tempId,
-        jobOptions.dependsOn,
-        this._adapter
-      )
-    }
+    // Validate and check dependencies
+    await this.validateDependencies(jobOptions)
 
     // Determine initial status and processAt
     let processAt: Date
@@ -174,6 +167,9 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
       groupKey: jobOptions.group,
       maxAttempts: jobOptions.maxAttempts ?? 3,
       name,
+      onDependencyFailure: jobOptions.dependsOn?.length
+        ? (jobOptions.onDependencyFailure ?? "fail")
+        : undefined,
       payload,
       priority: jobOptions.priority ?? 2,
       processAt,
@@ -207,15 +203,8 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     const jobOptions = { ...this._config.defaultJobOptions, ...options }
     const now = new Date()
 
-    // Detect circular dependencies before adding (same check as add())
-    if (jobOptions.dependsOn && jobOptions.dependsOn.length > 0) {
-      const tempId = crypto.randomUUID()
-      await detectCircularDependencies(
-        tempId,
-        jobOptions.dependsOn,
-        this._adapter
-      )
-    }
+    // Validate and check dependencies
+    await this.validateDependencies(jobOptions)
 
     const newJobs = payloads.map((payload) => ({
       attempts: 0,
@@ -223,6 +212,9 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
       groupKey: jobOptions.group,
       maxAttempts: jobOptions.maxAttempts ?? 3,
       name,
+      onDependencyFailure: jobOptions.dependsOn?.length
+        ? (jobOptions.onDependencyFailure ?? "fail")
+        : undefined,
       payload,
       priority: jobOptions.priority ?? 2,
       processAt: asUtc(now),
@@ -548,6 +540,31 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    */
   async deleteJob(jobId: string): Promise<boolean> {
     return this._adapter.deleteJob(jobId)
+  }
+
+  // ─── Dependency Validation ──────────────────────────────────
+
+  /**
+   * Validate dependency options and check for circular dependencies.
+   *
+   * @param options - Job options containing dependsOn and onDependencyFailure
+   * @throws {Error} If onDependencyFailure has an invalid value
+   * @throws {CircularDependencyError} If circular dependencies are detected
+   */
+  private async validateDependencies(options: JobOptions): Promise<void> {
+    if (!options.dependsOn || options.dependsOn.length === 0) {
+      return
+    }
+
+    const tempId = crypto.randomUUID()
+    await detectCircularDependencies(tempId, options.dependsOn, this._adapter)
+
+    const policy = options.onDependencyFailure ?? "fail"
+    if (policy !== "fail" && policy !== "cancel") {
+      throw new Error(
+        `Invalid onDependencyFailure value: "${policy as string}". Must be "fail" or "cancel".`
+      )
+    }
   }
 
   // ─── Flows ─────────────────────────────────────────────────

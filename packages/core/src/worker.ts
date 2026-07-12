@@ -899,7 +899,8 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
   /**
    * Filter a list of jobs by dependency status.
-   * Jobs with failed dependencies are cascaded. Jobs with unmet dependencies are delayed.
+   * Jobs with failed dependencies are cascaded based on their onDependencyFailure policy.
+   * Jobs with unmet dependencies are delayed.
    * Returns only jobs eligible for processing.
    */
   private async filterByDependencies(jobs: readonly Job[]): Promise<Job[]> {
@@ -913,16 +914,31 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential per job
       const failedDep = await getFailedDependency(job, this.adapter)
       if (failedDep) {
-        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- cascade
-        await this.adapter.updateJobStatus(job.id, {
-          error: {
-            message: `Dependency job ${failedDep.id} (${failedDep.name}) failed`,
-            name: "DependencyFailedError",
-          },
-          status: "failed",
-        })
-        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- cascade
-        await cascadeDependencyFailure(job.id, this.adapter)
+        const policy = job.onDependencyFailure ?? "fail"
+
+        // oxlint-disable-next-line unicorn/prefer-ternary -- different status update shapes
+        if (policy === "cancel") {
+          // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- immediate transition
+          await this.adapter.updateJobStatus(job.id, {
+            cancellationReason: `Dependency job ${failedDep.id} (${failedDep.name}) failed`,
+            status: "cancelled",
+          })
+        } else {
+          // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- immediate transition
+          await this.adapter.updateJobStatus(job.id, {
+            error: {
+              message: `Dependency job ${failedDep.id} (${failedDep.name}) failed`,
+              name: "DependencyFailedError",
+            },
+            status: "failed",
+          })
+        }
+
+        // Cascade further (only "fail" policy triggers recursive cascade)
+        if (policy === "fail") {
+          // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- cascade
+          await cascadeDependencyFailure(job.id, this.adapter)
+        }
         continue
       }
 

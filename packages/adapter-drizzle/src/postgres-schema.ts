@@ -40,6 +40,7 @@ export const queueJobs = pgTable(
       .default(sql`gen_random_uuid()`),
     maxAttempts: integer("max_attempts").notNull(),
     name: varchar("name", { length: 255 }).notNull(),
+    onDependencyFailure: varchar("on_dependency_failure", { length: 10 }),
     parentId: uuid("parent_id"),
     payload: jsonb("payload").notNull(),
     priority: integer("priority").notNull(),

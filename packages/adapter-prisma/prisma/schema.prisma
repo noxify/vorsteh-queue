@@ -34,6 +34,7 @@ model QueueJob {
   result              Json?     @db.JsonB
   steps               Json?     @db.JsonB
   signals             Json?     @db.JsonB
+  onDependencyFailure String?   @map("on_dependency_failure") @db.VarChar(10)
   parentId            String?   @map("parent_id")
   flowId              String?   @map("flow_id")
   childrenCount       Int       @default(0) @map("children_count")

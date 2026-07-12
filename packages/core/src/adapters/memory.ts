@@ -117,13 +117,25 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
         if (job.groupKey && options.activeGroups.includes(job.groupKey)) {
           return false
         }
-        // Skip jobs with unmet dependencies (they'll be checked by the worker too)
+        // Skip jobs whose dependencies are not yet resolved
+        // (let through jobs with failed/dead/cancelled deps so the worker can cascade)
         if (job.dependsOn && job.dependsOn.length > 0) {
           for (const depId of job.dependsOn) {
             const dep = this.jobs.get(depId)
-            if (!dep || dep.status !== "completed") {
+            if (!dep) {
               return false
             }
+            // Dep is still active (not completed, not terminally failed) — block picking
+            if (
+              dep.status !== "completed" &&
+              dep.status !== "dead" &&
+              dep.status !== "cancelled" &&
+              dep.status !== "failed"
+            ) {
+              return false
+            }
+            // If dep completed, this dependency is satisfied — continue checking others
+            // If dep is dead/cancelled/failed, let the worker handle the cascade
           }
         }
         return true

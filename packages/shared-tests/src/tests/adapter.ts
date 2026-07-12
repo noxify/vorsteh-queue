@@ -201,6 +201,28 @@ export function runTests<TDatabase = unknown>(
 
           expect(job.dependsOn).toBeUndefined()
         })
+
+        it("should persist and return onDependencyFailure", async () => {
+          const depIds = ["00000000-0000-0000-0000-000000000001"]
+          const job = await adapter.addJob({
+            attempts: 0,
+            dependsOn: depIds,
+            maxAttempts: 3,
+            name: "dep-fail-policy",
+            onDependencyFailure: "cancel",
+            payload: {},
+            priority: 2,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+            status: "pending",
+          })
+
+          expect(job.onDependencyFailure).toBe("cancel")
+
+          const retrieved = await adapter.getJobById(job.id)
+          expect(retrieved?.onDependencyFailure).toBe("cancel")
+        })
       })
 
       describe("getNextJob", () => {

@@ -42,6 +42,7 @@ model CustomQueueJob {
   groupKey             String?   @map("group_key") @db.VarChar(255)
   uniqueKey            String?   @map("unique_key") @db.VarChar(255)
   dependsOn            Json?     @map("depends_on") @db.JsonB
+  onDependencyFailure  String?   @map("on_dependency_failure") @db.VarChar(10)
   steps                Json?     @db.JsonB
   signals              Json?     @db.JsonB
   parentId             String?   @map("parent_id") @db.VarChar(255)

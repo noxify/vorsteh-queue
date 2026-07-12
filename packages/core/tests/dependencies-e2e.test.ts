@@ -253,4 +253,170 @@ describe("E2E: Job Dependencies", () => {
       ).rejects.toThrow(CircularDependencyError)
     })
   })
+
+  describe("onDependencyFailure Policy", () => {
+    it("should fail child with 'fail' policy when parent dies", async () => {
+      worker.register("fail-task", async () => {
+        throw new Error("intentional failure")
+      })
+      worker.register("success-task", async () => ({}))
+
+      const parent = await queue.add(
+        "fail-task",
+        { id: "parent" },
+        { maxAttempts: 1 }
+      )
+
+      const child = await queue.add(
+        "success-task",
+        { id: "child" },
+        { dependsOn: [parent.id], onDependencyFailure: "fail" }
+      )
+
+      worker.start()
+      await wait(150)
+
+      const childJob = await queue.getJob(child.id)
+      expect(childJob?.status).toBe("failed")
+      expect(childJob?.error?.name).toBe("DependencyFailedError")
+    })
+
+    it("should cancel child with 'cancel' policy when parent dies", async () => {
+      worker.register("fail-task", async () => {
+        throw new Error("intentional failure")
+      })
+      worker.register("success-task", async () => ({}))
+
+      const parent = await queue.add(
+        "fail-task",
+        { id: "parent" },
+        { maxAttempts: 1 }
+      )
+
+      const child = await queue.add(
+        "success-task",
+        { id: "child" },
+        { dependsOn: [parent.id], onDependencyFailure: "cancel" }
+      )
+
+      worker.start()
+      await wait(150)
+
+      const childJob = await queue.getJob(child.id)
+      expect(childJob?.status).toBe("cancelled")
+      expect(childJob?.cancellationReason).toContain("failed")
+    })
+
+    it("'cancel' policy should not trigger further cascade", async () => {
+      worker.register("fail-task", async () => {
+        throw new Error("intentional failure")
+      })
+      worker.register("success-task", async () => ({}))
+
+      const root = await queue.add(
+        "fail-task",
+        { id: "root" },
+        { maxAttempts: 1 }
+      )
+
+      // mid uses cancel → should NOT cascade further
+      const mid = await queue.add(
+        "success-task",
+        { id: "mid" },
+        { dependsOn: [root.id], onDependencyFailure: "cancel" }
+      )
+
+      // leaf depends on mid — since mid is cancelled (not failed/dead),
+      // leaf should remain pending/delayed (not cascaded)
+      const leaf = await queue.add(
+        "success-task",
+        { id: "leaf" },
+        { dependsOn: [mid.id], onDependencyFailure: "fail" }
+      )
+
+      worker.start()
+      await wait(200)
+
+      const midJob = await queue.getJob(mid.id)
+      const leafJob = await queue.getJob(leaf.id)
+
+      expect(midJob?.status).toBe("cancelled")
+      // Leaf should be affected by mid's cancellation via getFailedDependency
+      // (cancelled counts as a failed dependency)
+      expect(leafJob?.status).toBe("failed")
+    })
+
+    it("batch picking should respect onDependencyFailure policy", async () => {
+      const processed: string[] = []
+
+      worker.registerBatch(
+        "batch-task",
+        async (jobs) => {
+          for (const job of jobs) {
+            processed.push((job.payload as { id: string }).id)
+          }
+          return jobs.map(() => ({}))
+        },
+        { maxSize: 10, minSize: 1 }
+      )
+
+      worker.register("fail-task", async () => {
+        throw new Error("intentional failure")
+      })
+
+      const parent = await queue.add(
+        "fail-task",
+        { id: "parent" },
+        { maxAttempts: 1 }
+      )
+
+      await queue.add(
+        "batch-task",
+        { id: "batch-child" },
+        { dependsOn: [parent.id], onDependencyFailure: "cancel" }
+      )
+
+      worker.start()
+      await wait(200)
+
+      // Batch child should NOT have been processed
+      expect(processed).not.toContain("batch-child")
+    })
+
+    it("retry should not bypass dependency gating", async () => {
+      worker.register("fail-task", async () => {
+        throw new Error("intentional failure")
+      })
+      worker.register("success-task", async () => ({}))
+
+      const parent = await queue.add(
+        "fail-task",
+        { id: "parent" },
+        { maxAttempts: 1 }
+      )
+
+      const child = await queue.add(
+        "success-task",
+        { id: "child" },
+        { dependsOn: [parent.id], onDependencyFailure: "fail" }
+      )
+
+      worker.start()
+      await wait(150)
+
+      // Child is now failed due to cascade
+      const childBefore = await queue.getJob(child.id)
+      expect(childBefore?.status).toBe("failed")
+
+      // Retry the child — it goes back to pending
+      await queue.retry(child.id)
+
+      // Wait for another poll cycle
+      await wait(100)
+
+      // Parent is still dead, so child should be failed again
+      const childAfter = await queue.getJob(child.id)
+      expect(childAfter?.status).toBe("failed")
+    })
+  })
 })

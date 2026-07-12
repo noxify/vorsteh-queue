@@ -35,6 +35,7 @@ export interface QueueJobTableDefinition {
   result: unknown
   steps: unknown
   signals: unknown
+  on_dependency_failure: string | null
   parent_id: string | null
   flow_id: string | null
   children_count: Generated<number>

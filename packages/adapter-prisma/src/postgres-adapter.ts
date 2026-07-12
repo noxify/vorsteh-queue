@@ -72,6 +72,7 @@ interface RawQueueJob {
   repeat_limit: number | null
   repeat_count: number
   cancellation_reason: string | null
+  on_dependency_failure: string | null
   error: unknown
   result: unknown
   created_at: Date
@@ -135,6 +136,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
         groupKey: job.groupKey ?? null,
         maxAttempts: job.maxAttempts,
         name: job.name,
+        onDependencyFailure: job.onDependencyFailure ?? null,
         payload: JSON.stringify(job.payload),
         priority: job.priority,
         processAt: job.processAt,
@@ -736,6 +738,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       id: job.id,
       maxAttempts: job.maxAttempts,
       name: job.name,
+      onDependencyFailure:
+        (job.onDependencyFailure as "fail" | "cancel") ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,
@@ -771,6 +775,8 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       id: job.id,
       maxAttempts: job.max_attempts,
       name: job.name,
+      onDependencyFailure:
+        (job.on_dependency_failure as "fail" | "cancel") ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,

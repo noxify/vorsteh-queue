@@ -118,7 +118,11 @@ export async function getFailedDependency(
 
 /**
  * Handle dependency failure cascade.
- * When a job moves to dead/cancelled, all jobs that depend on it are failed.
+ * When a job moves to dead/cancelled, all jobs that depend on it are transitioned
+ * based on their `onDependencyFailure` policy:
+ * - `"fail"` (default): job moves to "failed" and triggers further cascade
+ * - `"cancel"`: job moves to "cancelled" and does NOT trigger further cascade
+ *
  * Uses iterative BFS to avoid stack overflow on deep dependency chains.
  *
  * @param failedJobId - ID of the job that failed
@@ -161,17 +165,27 @@ export async function cascadeDependencyFailure(
           continue
         }
 
-        // eslint-disable-next-line no-await-in-loop
-        await adapter.updateJobStatus(job.id, {
-          error: {
-            message: `Dependency job ${currentId} failed`,
-            name: "DependencyFailedError",
-          },
-          status: "failed",
-        })
+        const policy = job.onDependencyFailure ?? "fail"
 
-        // Queue this job for further cascade (its dependents need to be failed too)
-        pendingCascade.push(job.id)
+        if (policy === "cancel") {
+          // eslint-disable-next-line no-await-in-loop
+          await adapter.updateJobStatus(job.id, {
+            cancellationReason: `Dependency job ${currentId} failed`,
+            status: "cancelled",
+          })
+          // "cancel" does NOT trigger further cascade
+        } else {
+          // eslint-disable-next-line no-await-in-loop
+          await adapter.updateJobStatus(job.id, {
+            error: {
+              message: `Dependency job ${currentId} failed`,
+              name: "DependencyFailedError",
+            },
+            status: "failed",
+          })
+          // "fail" triggers further cascade to this job's dependents
+          pendingCascade.push(job.id)
+        }
       }
 
       offset += pageSize
