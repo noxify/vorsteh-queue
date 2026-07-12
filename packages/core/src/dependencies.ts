@@ -119,6 +119,7 @@ export async function getFailedDependency(
 /**
  * Handle dependency failure cascade.
  * When a job moves to dead/cancelled, all jobs that depend on it are failed.
+ * Uses iterative BFS to avoid stack overflow on deep dependency chains.
  *
  * @param failedJobId - ID of the job that failed
  * @param adapter - Queue adapter
@@ -127,29 +128,56 @@ export async function cascadeDependencyFailure(
   failedJobId: string,
   adapter: QueueAdapter
 ): Promise<void> {
-  // Find all jobs in the queue that have this job in their dependsOn list
-  const allJobs = await adapter.getJobs({ limit: 10_000 })
+  // BFS queue of job IDs whose dependents need to be cascaded
+  const pendingCascade: string[] = [failedJobId]
+  const processed = new Set<string>()
 
-  for (const job of allJobs) {
-    if (!job.dependsOn?.includes(failedJobId)) {
+  while (pendingCascade.length > 0) {
+    // oxlint-disable-next-line typescript/no-non-null-assertion
+    const currentId = pendingCascade.shift()!
+    if (processed.has(currentId)) {
       continue
     }
-    // Only cascade to jobs that are still active (pending/delayed)
-    if (job.status !== "pending" && job.status !== "delayed") {
-      continue
+    processed.add(currentId)
+
+    // Paginate through all jobs to find dependents
+    let offset = 0
+    const pageSize = 100
+
+    // oxlint-disable-next-line no-constant-condition -- paginated loop terminates via break
+    while (true) {
+      // eslint-disable-next-line no-await-in-loop
+      const page = await adapter.getJobs({ limit: pageSize, offset })
+      if (page.length === 0) {
+        break
+      }
+
+      for (const job of page) {
+        if (!job.dependsOn?.includes(currentId)) {
+          continue
+        }
+        // Only cascade to jobs that are still active (pending/delayed)
+        if (job.status !== "pending" && job.status !== "delayed") {
+          continue
+        }
+
+        // eslint-disable-next-line no-await-in-loop
+        await adapter.updateJobStatus(job.id, {
+          error: {
+            message: `Dependency job ${currentId} failed`,
+            name: "DependencyFailedError",
+          },
+          status: "failed",
+        })
+
+        // Queue this job for further cascade (its dependents need to be failed too)
+        pendingCascade.push(job.id)
+      }
+
+      offset += pageSize
+      if (page.length < pageSize) {
+        break
+      }
     }
-
-    // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential cascade
-    await adapter.updateJobStatus(job.id, {
-      error: {
-        message: `Dependency job ${failedJobId} failed`,
-        name: "DependencyFailedError",
-      },
-      status: "failed",
-    })
-
-    // Recursive cascade: if this job also has dependents, cascade further
-    // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- recursive cascade
-    await cascadeDependencyFailure(job.id, adapter)
   }
 }

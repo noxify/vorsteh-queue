@@ -138,6 +138,71 @@ export function runTests<TDatabase = unknown>(
         })
       })
 
+      describe("dependsOn persistence", () => {
+        it("should persist and return dependsOn via addJob", async () => {
+          const depIds = [
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002",
+          ]
+          const job = await adapter.addJob({
+            attempts: 0,
+            dependsOn: depIds,
+            maxAttempts: 3,
+            name: "dependent-job",
+            payload: { test: true },
+            priority: 2,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+            status: "pending",
+          })
+
+          expect(job.dependsOn).toStrictEqual(depIds)
+
+          const retrieved = await adapter.getJobById(job.id)
+          expect(retrieved?.dependsOn).toStrictEqual(depIds)
+        })
+
+        it("should persist and return dependsOn via addJobs", async () => {
+          const depIds = ["00000000-0000-0000-0000-000000000003"]
+          const jobs = await adapter.addJobs([
+            {
+              attempts: 0,
+              dependsOn: depIds,
+              maxAttempts: 3,
+              name: "batch-dep",
+              payload: {},
+              priority: 2,
+              processAt: new Date(),
+              progress: 0,
+              repeatCount: 0,
+              status: "pending",
+            },
+          ])
+
+          expect(jobs[0]?.dependsOn).toStrictEqual(depIds)
+
+          const retrieved = await adapter.getJobById(jobs[0]?.id ?? "")
+          expect(retrieved?.dependsOn).toStrictEqual(depIds)
+        })
+
+        it("should return undefined dependsOn when not set", async () => {
+          const job = await adapter.addJob({
+            attempts: 0,
+            maxAttempts: 3,
+            name: "no-deps",
+            payload: {},
+            priority: 2,
+            processAt: new Date(),
+            progress: 0,
+            repeatCount: 0,
+            status: "pending",
+          })
+
+          expect(job.dependsOn).toBeUndefined()
+        })
+      })
+
       describe("getNextJob", () => {
         it("should return highest priority job", async () => {
           await adapter.addJob({

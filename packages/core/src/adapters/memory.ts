@@ -168,6 +168,15 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
         if (job.groupKey && groupConstraints.includes(job.groupKey)) {
           return false
         }
+        // Skip jobs with unmet dependencies
+        if (job.dependsOn && job.dependsOn.length > 0) {
+          for (const depId of job.dependsOn) {
+            const dep = this.jobs.get(depId)
+            if (!dep || dep.status !== "completed") {
+              return false
+            }
+          }
+        }
         return true
       })
       .toSorted((a, b) => {

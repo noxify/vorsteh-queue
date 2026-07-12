@@ -29,6 +29,7 @@ model QueueJob {
   repeatLimit         Int?      @map("repeat_limit")
   repeatCount         Int       @default(0) @map("repeat_count")
   cancellationReason  String?   @map("cancellation_reason") @db.Text
+  dependsOn           Json?     @map("depends_on") @db.JsonB
   error               Json?     @db.JsonB
   result              Json?     @db.JsonB
   steps               Json?     @db.JsonB

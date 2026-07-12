@@ -67,6 +67,7 @@ interface RawQueueJob {
   group_key: string | null
   unique_key: string | null
   cron: string | null
+  depends_on: unknown
   repeat_every: number | null
   repeat_limit: number | null
   repeat_count: number
@@ -130,6 +131,7 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       data: {
         attempts: job.attempts,
         cron: job.cron ?? null,
+        dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
         groupKey: job.groupKey ?? null,
         maxAttempts: job.maxAttempts,
         name: job.name,
@@ -723,6 +725,11 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       completedAt: job.completedAt ?? undefined,
       createdAt: job.createdAt,
       cron: job.cron ?? undefined,
+      dependsOn: job.dependsOn
+        ? ((typeof job.dependsOn === "string"
+            ? JSON.parse(job.dependsOn)
+            : job.dependsOn) as string[])
+        : undefined,
       error: job.error as SerializedError | undefined,
       failedAt: job.failedAt ?? undefined,
       groupKey: job.groupKey ?? undefined,
@@ -753,6 +760,11 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       completedAt: job.completed_at ?? undefined,
       createdAt: job.created_at,
       cron: job.cron ?? undefined,
+      dependsOn: job.depends_on
+        ? ((typeof job.depends_on === "string"
+            ? JSON.parse(job.depends_on)
+            : job.depends_on) as string[])
+        : undefined,
       error: job.error as SerializedError | undefined,
       failedAt: job.failed_at ?? undefined,
       groupKey: job.group_key ?? undefined,

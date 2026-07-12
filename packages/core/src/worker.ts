@@ -274,9 +274,13 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         activeGroups
       )
 
+      // Filter out jobs with unmet dependencies
+      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- must resolve before processing
+      const eligibleJobs = await this.filterByDependencies(jobs)
+
       const minSize = options.minSize ?? 1
-      if (jobs.length >= minSize) {
-        void this.processBatch(name, jobs as Job[], handler, options)
+      if (eligibleJobs.length >= minSize) {
+        void this.processBatch(name, eligibleJobs, handler, options)
       }
     }
 
@@ -322,39 +326,14 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         continue
       }
 
-      // Check dependency-gating: skip jobs whose dependencies are not yet met
-      if (job.dependsOn && job.dependsOn.length > 0) {
-        // eslint-disable-next-line no-await-in-loop
-        const failedDep = await getFailedDependency(job, this.adapter)
-        if (failedDep) {
-          // Dependency permanently failed — cascade failure to this job
-          // eslint-disable-next-line no-await-in-loop
-          await this.adapter.updateJobStatus(job.id, {
-            error: {
-              message: `Dependency job ${failedDep.id} (${failedDep.name}) failed`,
-              name: "DependencyFailedError",
-            },
-            status: "failed",
-          })
-          // eslint-disable-next-line no-await-in-loop
-          await cascadeDependencyFailure(job.id, this.adapter)
-          continue
-        }
-
-        // eslint-disable-next-line no-await-in-loop
-        const met = await areDependenciesMet(job, this.adapter)
-        if (!met) {
-          // Dependencies not yet completed — move back to delayed
-          // eslint-disable-next-line no-await-in-loop
-          await this.adapter.updateJobStatus(job.id, {
-            processAt: new Date(Date.now() + this.config.pollInterval),
-            status: "delayed",
-          })
-          continue
-        }
+      // Check dependency-gating
+      // eslint-disable-next-line no-await-in-loop
+      const [eligible] = await this.filterByDependencies([job])
+      if (!eligible) {
+        continue
       }
 
-      void this.processJob(job, registered.handler)
+      void this.processJob(eligible, registered.handler)
     }
   }
 
@@ -916,6 +895,51 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     if (job.groupKey) {
       this.activeGroupKeys.delete(job.groupKey)
     }
+  }
+
+  /**
+   * Filter a list of jobs by dependency status.
+   * Jobs with failed dependencies are cascaded. Jobs with unmet dependencies are delayed.
+   * Returns only jobs eligible for processing.
+   */
+  private async filterByDependencies(jobs: readonly Job[]): Promise<Job[]> {
+    const eligible: Job[] = []
+    for (const job of jobs) {
+      if (!job.dependsOn || job.dependsOn.length === 0) {
+        eligible.push(job)
+        continue
+      }
+
+      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential per job
+      const failedDep = await getFailedDependency(job, this.adapter)
+      if (failedDep) {
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- cascade
+        await this.adapter.updateJobStatus(job.id, {
+          error: {
+            message: `Dependency job ${failedDep.id} (${failedDep.name}) failed`,
+            name: "DependencyFailedError",
+          },
+          status: "failed",
+        })
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- cascade
+        await cascadeDependencyFailure(job.id, this.adapter)
+        continue
+      }
+
+      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential check
+      const met = await areDependenciesMet(job, this.adapter)
+      if (!met) {
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- delay
+        await this.adapter.updateJobStatus(job.id, {
+          processAt: new Date(Date.now() + this.config.pollInterval),
+          status: "delayed",
+        })
+        continue
+      }
+
+      eligible.push(job)
+    }
+    return eligible
   }
 
   private canRunHandler(name: string): boolean {

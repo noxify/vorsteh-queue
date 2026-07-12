@@ -26,6 +26,7 @@ export interface QueueJobTableDefinition {
   group_key: string | null
   unique_key: string | null
   cron: string | null
+  depends_on: unknown
   repeat_every: number | null
   repeat_limit: number | null
   repeat_count: Generated<number>

@@ -83,6 +83,7 @@ export class PostgresQueueAdapter<
       .values({
         attempts: job.attempts,
         cron: job.cron ?? null,
+        dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
         groupKey: job.groupKey ?? null,
         maxAttempts: job.maxAttempts,
         name: job.name,
@@ -114,6 +115,7 @@ export class PostgresQueueAdapter<
     const values = jobs.map((job) => ({
       attempts: job.attempts,
       cron: job.cron ?? null,
+      dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
       groupKey: job.groupKey ?? null,
       maxAttempts: job.maxAttempts,
       name: job.name,
@@ -718,7 +720,8 @@ export class PostgresQueueAdapter<
     return jobs.map((j) => this.transformJob(j as schema.QueueJob))
   }
 
-  // eslint-disable-next-line class-methods-use-this
+  // eslint-disable-next-line class-methods-use-this -- property mapping, not logical complexity
+  // oxlint-disable-next-line complexity, class-methods-use-this
   private transformJob(job: schema.QueueJob): Job {
     return {
       attempts: job.attempts,
@@ -729,6 +732,9 @@ export class PostgresQueueAdapter<
       completedAt: job.completedAt ?? undefined,
       createdAt: job.createdAt,
       cron: job.cron ?? undefined,
+      dependsOn: job.dependsOn
+        ? (JSON.parse(job.dependsOn as string) as string[])
+        : undefined,
       error: job.error as SerializedError | undefined,
       failParentOnFailure: (job.failParentOnFailure ?? 0) > 0,
       failedAt: job.failedAt ?? undefined,

@@ -207,8 +207,19 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     const jobOptions = { ...this._config.defaultJobOptions, ...options }
     const now = new Date()
 
+    // Detect circular dependencies before adding (same check as add())
+    if (jobOptions.dependsOn && jobOptions.dependsOn.length > 0) {
+      const tempId = crypto.randomUUID()
+      await detectCircularDependencies(
+        tempId,
+        jobOptions.dependsOn,
+        this._adapter
+      )
+    }
+
     const newJobs = payloads.map((payload) => ({
       attempts: 0,
+      dependsOn: jobOptions.dependsOn,
       groupKey: jobOptions.group,
       maxAttempts: jobOptions.maxAttempts ?? 3,
       name,

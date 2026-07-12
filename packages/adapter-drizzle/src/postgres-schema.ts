@@ -29,6 +29,7 @@ export const queueJobs = pgTable(
       .notNull()
       .default(sql`timezone('utc', now())`),
     cron: varchar("cron", { length: 255 }),
+    dependsOn: jsonb("depends_on"),
     error: jsonb("error"),
     failParentOnFailure: integer("fail_parent_on_failure").default(0).notNull(),
     failedAt: timestamp("failed_at", { withTimezone: true, mode: "date" }),
