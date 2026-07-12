@@ -5,7 +5,10 @@ export async function up(db: Kysely<unknown>) {
   await db.schema
     .createTable("queue_jobs")
     .addColumn("id", "uuid", (col) =>
-      col.defaultTo(sql`gen_random_uuid()`).primaryKey().notNull()
+      col
+        .defaultTo(sql`gen_random_uuid()`)
+        .primaryKey()
+        .notNull()
     )
     .addColumn("queue_name", "varchar(255)", (col) => col.notNull())
     .addColumn("name", "varchar(255)", (col) => col.notNull())
