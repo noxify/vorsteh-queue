@@ -735,7 +735,9 @@ export class PostgresQueueAdapter<
       createdAt: job.createdAt,
       cron: job.cron ?? undefined,
       dependsOn: job.dependsOn
-        ? (JSON.parse(job.dependsOn as string) as string[])
+        ? ((typeof job.dependsOn === "string"
+            ? JSON.parse(job.dependsOn)
+            : job.dependsOn) as string[])
         : undefined,
       error: job.error as SerializedError | undefined,
       failParentOnFailure: (job.failParentOnFailure ?? 0) > 0,
