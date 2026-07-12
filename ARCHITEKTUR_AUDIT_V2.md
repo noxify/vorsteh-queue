@@ -58,43 +58,55 @@ Dieses Dokument priorisiert architekturrelevante Risiken nach Umsetzbarkeit und 
   - [packages/adapter-prisma/src/postgres-adapter.ts](packages/adapter-prisma/src/postgres-adapter.ts#L163)
   - [packages/adapter-prisma/src/postgres-adapter.ts](packages/adapter-prisma/src/postgres-adapter.ts#L193)
 
-## F2 – Optional deklarierte OpenTelemetry-Integration ist faktisch hart gekoppelt
+## F2 – OpenTelemetry-Integration ist optional entkoppelt
 
-- Status: Open
+- Status: Closed
 - Severity: High
 - Evidence-Level: Confirmed
-- Confidence-Level: 88
+- Confidence-Level: 93
+- Status-Hinweis:
+  - Telemetry ist auf DI plus Noop-Fallback umgestellt.
+  - Queue und Worker laufen ohne explizite Telemetry-Instanz und ohne installierte OTel-Runtime-Abhängigkeit.
+  - Die OTel-Kopplung ist auf den expliziten Factory-Aufruf `createOtelTelemetry` reduziert und dort zur Laufzeit guarded.
 - Kurzbefund:
-  - OTel ist als optionales Peer deklariert, wird aber im Core zur Laufzeit direkt importiert.
-  - Queue und Worker initialisieren Telemetry immer beim Erzeugen.
+  - OTel ist als optionales Peer deklariert und nicht mehr hart im Default-Pfad verdrahtet.
+  - Queue und Worker initialisieren standardmäßig `noopTelemetry` und akzeptieren optional injizierte Telemetry.
 - Security-Relevanz und Exploitability-Kontext:
   - Keine klassische Security-Lücke.
-  - Hoher Betriebs- und Distributionsimpact: Laufzeit- und Paketierungsrisiko in Umgebungen ohne OTel.
+  - Das frühere Laufzeit- und Paketierungsrisiko im Default-Pfad ist geschlossen.
+  - Verbleibend ist primär ein Verifikations-Thema: eine CI-Runtime-Matrix ohne OTel würde die Optionalität zusätzlich absichern.
 - Relevante Stellen:
-  - [packages/core/package.json](packages/core/package.json#L79)
-  - [packages/core/package.json](packages/core/package.json#L84)
-  - [packages/core/src/telemetry.ts](packages/core/src/telemetry.ts#L18)
-  - [packages/core/src/queue.ts](packages/core/src/queue.ts#L72)
-  - [packages/core/src/worker.ts](packages/core/src/worker.ts#L90)
+  - [packages/core/package.json](packages/core/package.json#L69)
+  - [packages/core/package.json](packages/core/package.json#L80)
+  - [packages/core/package.json](packages/core/package.json#L83)
+  - [packages/core/src/telemetry.ts](packages/core/src/telemetry.ts#L76)
+  - [packages/core/src/telemetry.ts](packages/core/src/telemetry.ts#L120)
+  - [packages/core/src/queue.ts](packages/core/src/queue.ts#L73)
+  - [packages/core/src/worker.ts](packages/core/src/worker.ts#L92)
 
 ## F3 – Dependency-Feature ist nur teilweise integriert
 
-- Status: Open
+- Status: Closed
 - Severity: High
 - Evidence-Level: Confirmed
-- Confidence-Level: 92
+- Confidence-Level: 91
+- Status-Hinweis:
+  - Dependency-Semantik ist für den Scope fail/cancel inzwischen durchgängig implementiert.
+  - onDependencyFailure wird in allen Adaptern konsistent über addJob und addJobs persistiert.
+  - Single- und Batch-Picking laufen durch policy-aware Dependency-Gating; die gezielten E2E-Tests sind grün.
 - Kurzbefund:
-  - Dependency-Felder sind im Jobmodell vorhanden und werden beim Enqueue gesetzt.
-  - Der Worker-Picking-Pfad nutzt keine durchgängige Dependency-Gating-Logik.
-  - Failure-Cascade ist als TODO markiert.
+  - Dependency-Felder sind im Jobmodell vorhanden, werden beim Enqueue validiert und mit explizitem Default fail gesetzt.
+  - Worker-Picking berücksichtigt Dependencies konsistent in Single- und Batch-Pfaden.
+  - Failure-Cascade ist BFS-basiert umgesetzt und respektiert fail/cancel semantisch konsistent.
 - Security-Relevanz und Exploitability-Kontext:
   - Kein Security-Issue.
-  - Hohes semantisches Risiko: Nutzer erwarten Abhängigkeitsgarantien, erhalten aber nur Teilverhalten.
+  - Das frühere semantische Risiko ist für den F3-Scope geschlossen; verbleibende Multi-Worker-Picking-Risiken sind angrenzende Laufzeit- und nicht mehr Dependency-Policy-Blocker.
 - Relevante Stellen:
-  - [packages/core/src/queue.ts](packages/core/src/queue.ts#L162)
-  - [packages/core/src/dependencies.ts](packages/core/src/dependencies.ts#L33)
-  - [packages/core/src/dependencies.ts](packages/core/src/dependencies.ts#L73)
-  - [packages/core/src/dependencies.ts](packages/core/src/dependencies.ts#L100)
+  - [packages/core/src/queue.ts](packages/core/src/queue.ts#L148)
+  - [packages/core/src/queue.ts](packages/core/src/queue.ts#L561)
+  - [packages/core/src/worker.ts](packages/core/src/worker.ts#L905)
+  - [packages/core/src/dependencies.ts](packages/core/src/dependencies.ts#L127)
+  - [packages/core/tests/dependencies-e2e.test.ts](packages/core/tests/dependencies-e2e.test.ts#L257)
 
 ## F4 – Worker-Picking kann verfügbare Jobs liegenlassen
 
@@ -293,8 +305,8 @@ Dieses Dokument priorisiert architekturrelevante Risiken nach Umsetzbarkeit und 
 
 ### Maßnahmen
 
-1. F2 OTel-Optionalität technisch sauber entkoppeln.
-2. F3 Dependency-Entscheidung und erste vollständige Umsetzung.
+1. F2 ist funktional abgeschlossen; verbleibend sind Runtime-Matrix- und Consumer-Verifikation.
+2. F3 ist funktional abgeschlossen; verbleibend sind nur Regression- und Monitoring-Aufgaben.
 3. F7 Subscription-Architektur verifizieren und ggf. publish wiring ergänzen.
 4. Transport-Parität Direct versus GraphQL als Contract-Testset ergänzen.
 
@@ -327,8 +339,8 @@ Dieses Dokument priorisiert architekturrelevante Risiken nach Umsetzbarkeit und 
 | --- | --- | --- | --- |
 | Prisma SQL härten | F1 | Adapter Maintainer | Keine unsicheren Raw SQL-Interpolationen, Security-Tests grün |
 | Worker-Picking korrigieren | F4 | Core Maintainer | Kein Starvation-Nachweis in Lasttests |
-| OTel entkoppeln | F2 | Core Maintainer | Core läuft in CI ohne OTel-Abhängigkeit |
-| Dependency-Semantik abschließen | F3 | Core + Adapter Maintainer | E2E-Vertragstests für Dependencies grün |
+| OTel-Optionalität absichern | F2 | Core Maintainer | Core läuft in CI ohne OTel-Abhängigkeit |
+| Dependency-Semantik stabil halten | F3 | Core + Adapter Maintainer | E2E-Vertragstests für Dependencies dauerhaft grün |
 | Server API-only konsolidieren | F5 | Server Maintainer | Keine Dashboard-Reste in API-Package-Doku/Surface |
 | Subscriptions vervollständigen | F7 | Server Maintainer | Subscription-E2E mit produktivem Publish grün |
 | Doku-Synchronisierung | F6 | Docs Maintainer | Root + Package + Docs konsistent zum Ist-Verhalten |
@@ -360,8 +372,8 @@ Dieses Dokument priorisiert architekturrelevante Risiken nach Umsetzbarkeit und 
 Aktueller Reifegrad für v1-Freeze: bedingt geeignet.  
 Empfehlung:
 
-- Keine finalen Release-Kandidaten, bevor F1 und F3 auf Confirmed-Fix-Status stehen.
-- F2 und F4 spätestens im 30-Tage-Fenster abschließen.
+- F1 und F3 stehen auf Confirmed-Fix-Status; verbleibende Release-Risiken liegen primär außerhalb der Dependency-Orchestrierung.
+- F4 spätestens im 30-Tage-Fenster abschließen; F2 ist funktional geschlossen und sollte noch mit Runtime-Matrix abgesichert werden.
 - Danach Governance-Phase mit ADR, Contract-Kit und SemVer-Gates starten.
 
 ## Verifikation und Transparenz

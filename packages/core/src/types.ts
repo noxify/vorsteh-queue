@@ -4,6 +4,8 @@
  * This module contains all shared types used across Queue, Worker, and Adapter layers.
  */
 
+import type { Telemetry } from "./telemetry"
+
 // ─── Job Status & State Machine ─────────────────────────────────────────────
 
 /** All possible job statuses */
@@ -298,6 +300,10 @@ export interface QueueConfig {
   readonly name: string
   /** Default job options applied to all jobs */
   readonly defaultJobOptions?: Partial<JobOptions>
+  /** Optional telemetry instance for observability
+   * @default noopTelemetry
+   */
+  readonly telemetry?: Telemetry
   /** Remove completed jobs: true = immediate, number = keep N
    * @default 100
    */
@@ -329,6 +335,10 @@ export interface WorkerConfig {
    * @default 100
    */
   readonly pollInterval?: number
+  /** Optional telemetry instance for observability
+   * @default noopTelemetry
+   */
+  readonly telemetry?: Telemetry
   /** Retry strategy configuration */
   readonly retryStrategy?: RetryStrategyConfig
   /** Remove completed jobs: true = immediate, number = keep N

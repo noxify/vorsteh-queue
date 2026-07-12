@@ -26,7 +26,7 @@ import {
 } from "./errors"
 import { TypedEventEmitter } from "./events"
 import type { Telemetry } from "./telemetry"
-import { createTelemetry } from "./telemetry"
+import { noopTelemetry } from "./telemetry"
 import type {
   ActiveStatus,
   FlowJobDefinition,
@@ -70,7 +70,7 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
       removeOnFail: 50,
       ...config,
     }
-    this._telemetry = createTelemetry({ queueName: this._config.name })
+    this._telemetry = config.telemetry ?? noopTelemetry
 
     this._adapter.setQueueName(this._config.name)
   }

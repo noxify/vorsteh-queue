@@ -57,11 +57,16 @@ describe("Telemetry (OpenTelemetry Integration)", () => {
     adapter = new MemoryQueueAdapter()
     await adapter.connect()
     adapter.setQueueName("test-queue")
-    queue = new Queue(adapter, { name: "test-queue" })
+
+    const { createOtelTelemetry } = await import("../src/telemetry")
+    const telemetry = createOtelTelemetry({ queueName: "test-queue" })
+
+    queue = new Queue(adapter, { name: "test-queue", telemetry })
     worker = new Worker(adapter, {
       concurrency: 2,
       name: "test-queue",
       pollInterval: 10,
+      telemetry,
     })
   })
 

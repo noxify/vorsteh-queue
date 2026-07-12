@@ -17,9 +17,6 @@
  * ```
  */
 
-import type { Span } from "@opentelemetry/api"
-import { context, trace } from "@opentelemetry/api"
-
 import {
   areDependenciesMet,
   cascadeDependencyFailure,
@@ -29,8 +26,8 @@ import { TypedEventEmitter } from "./events"
 import { RateLimiterRegistry } from "./rate-limiter"
 import { calculateRetryDelay, DEFAULT_RETRY_STRATEGY } from "./retry"
 import { createStepContext, SleepInterrupt, WaitForInterrupt } from "./steps"
-import type { Telemetry } from "./telemetry"
-import { createTelemetry } from "./telemetry"
+import type { Telemetry, TelemetrySpan } from "./telemetry"
+import { noopTelemetry } from "./telemetry"
 import type {
   BatchHandlerOptions,
   BatchJobHandler,
@@ -63,7 +60,7 @@ interface ActiveJob {
   readonly controller: AbortController
   readonly promise: Promise<void>
   readonly handlerName: string
-  readonly span: Span
+  readonly span: TelemetrySpan
 }
 
 export class Worker extends TypedEventEmitter<WorkerEvents> {
@@ -92,7 +89,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       pollInterval: 100,
       ...config,
     }
-    this.telemetry = createTelemetry({ queueName: this.config.name })
+    this.telemetry = config.telemetry ?? noopTelemetry
 
     this.adapter.setQueueName(this.config.name)
   }
@@ -347,7 +344,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
     // Start telemetry span for this job
     const span = this.telemetry.jobStarted(job)
-    const promise = context.with(trace.setSpan(context.active(), span), () =>
+    const promise = this.telemetry.withSpan(span, () =>
       this.executeJob(job, handler, controller, signal, span)
     )
 
@@ -366,7 +363,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     handler: JobHandler,
     controller: AbortController,
     signal: AbortSignal,
-    span: Span
+    span: TelemetrySpan
   ): Promise<void> {
     let timeoutTimer: ReturnType<typeof setTimeout> | undefined
     let runCompensations: (() => Promise<void>) | undefined
@@ -443,7 +440,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     err: unknown,
     signal: AbortSignal,
     runCompensations?: () => Promise<void>,
-    span?: Span
+    span?: TelemetrySpan
   ): Promise<void> {
     // Handle SleepInterrupt — job pauses and resumes later
     if (err instanceof SleepInterrupt) {
@@ -566,7 +563,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     const batchId = `batch-${Date.now()}`
 
     // Start telemetry spans for each job in the batch
-    const spans = new Map<string, Span>()
+    const spans = new Map<string, TelemetrySpan>()
     for (const job of jobs) {
       spans.set(job.id, this.telemetry.jobStarted(job))
     }
@@ -603,7 +600,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     controller: AbortController,
     signal: AbortSignal,
     _batchId: string,
-    spans: Map<string, Span>
+    spans: Map<string, TelemetrySpan>
   ): Promise<void> {
     try {
       // Mark all as processing (sequential to maintain order guarantees)

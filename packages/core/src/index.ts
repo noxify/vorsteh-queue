@@ -100,8 +100,12 @@ export {
 export { RateLimiter, RateLimiterRegistry } from "./rate-limiter"
 
 // Telemetry
-export { createTelemetry } from "./telemetry"
-export type { Telemetry, TelemetryConfig } from "./telemetry"
+export {
+  noopTelemetry,
+  createTelemetry,
+  createOtelTelemetry,
+} from "./telemetry"
+export type { Telemetry, TelemetryConfig, TelemetrySpan } from "./telemetry"
 
 // Constants
 export { STATE_TRANSITIONS } from "./types"
