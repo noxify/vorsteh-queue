@@ -17,7 +17,7 @@
 - **Progress tracking**: Real-time job progress updates
 - **Event system**: Listen to job lifecycle events
 - **Graceful shutdown**: Clean job processing termination
-- **Dashboard**: Built-in GraphQL server with web UI for monitoring
+- **GraphQL API**: Built-in GraphQL server for queue management and monitoring
 
 ## Packages
 
@@ -27,7 +27,7 @@
 | [`@vorsteh-queue/adapter-drizzle`](./packages/adapter-drizzle) | Drizzle ORM adapter (PostgreSQL) |
 | [`@vorsteh-queue/adapter-prisma`](./packages/adapter-prisma) | Prisma ORM adapter (PostgreSQL) |
 | [`@vorsteh-queue/adapter-kysely`](./packages/adapter-kysely) | Kysely adapter (PostgreSQL) |
-| [`@vorsteh-queue/server`](./packages/server) | GraphQL server and dashboard UI |
+| [`@vorsteh-queue/server`](./packages/server) | GraphQL API server for queue management |
 | [`create-vorsteh-queue`](./packages/create-vorsteh-queue) | CLI scaffolding tool |
 
 ## Quick Start

@@ -281,11 +281,21 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       return
     }
 
+    // Track which handlers are excluded (at capacity or rate-limited) during this pick cycle
+    const excludedHandlers = new Set<string>()
+
     while (this.activeJobs.size < this.config.concurrency) {
+      const eligibleHandlers = singleHandlerNames.filter(
+        (name) => !excludedHandlers.has(name)
+      )
+      if (eligibleHandlers.length === 0) {
+        break
+      }
+
       const currentActiveGroups = this.getActiveGroups()
       const getOptions: GetNextJobOptions = {
         activeGroups: currentActiveGroups,
-        handlerNames: singleHandlerNames,
+        handlerNames: eligibleHandlers,
       }
 
       // eslint-disable-next-line no-await-in-loop
@@ -296,11 +306,15 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
       const registered = this.handlers.get(job.name)
       if (!registered) {
-        break
+        // Handler unregistered mid-cycle — exclude and retry with remaining handlers
+        excludedHandlers.add(job.name)
+        continue
       }
 
       if (!this.canRunHandler(job.name)) {
-        break
+        // Handler at capacity or rate-limited — exclude and retry with remaining handlers
+        excludedHandlers.add(job.name)
+        continue
       }
 
       void this.processJob(job, registered.handler)

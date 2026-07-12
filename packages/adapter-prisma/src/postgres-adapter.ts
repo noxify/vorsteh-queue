@@ -16,6 +16,43 @@ import { BaseQueueAdapter } from "@vorsteh-queue/core"
 
 import type { PrismaClient, PrismaClientInternal } from "../types"
 
+/** Allowed pattern for SQL identifiers: letters, digits, underscores only. */
+const VALID_IDENTIFIER_PATTERN = /^[a-zA-Z0-9_]+$/
+
+/**
+ * Validate that a string is a safe SQL identifier.
+ *
+ * @param value - The identifier to validate
+ * @param label - Human-readable label for error messages
+ * @throws {Error} If the identifier contains characters outside [a-zA-Z0-9_]
+ */
+function assertValidIdentifier(value: string, label: string): void {
+  if (!VALID_IDENTIFIER_PATTERN.test(value)) {
+    throw new Error(
+      `Invalid ${label}: "${value}". Only alphanumeric characters and underscores are allowed.`
+    )
+  }
+}
+
+/**
+ * Generate positional parameter placeholders for an IN-list.
+ *
+ * @param values - Array of values to parameterize
+ * @param params - Accumulator array for query parameters (mutated in place)
+ * @returns SQL fragment like `$2, $3, $4`
+ */
+function buildInPlaceholders(
+  values: readonly unknown[],
+  params: unknown[]
+): string {
+  return values
+    .map((value) => {
+      params.push(value)
+      return `$${params.length}`
+    })
+    .join(", ")
+}
+
 interface RawQueueJob {
   id: string
   queue_name: string
@@ -59,21 +96,24 @@ interface RawQueueJob {
 export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   private db: PrismaClientInternal
   private modelName: string
-  private tableName: string
-  private schemaName?: string
+  private readonly fullTable: string
 
   constructor(prisma: PrismaClient, adapterConfig?: AdapterProps<"prisma">) {
     super()
     this.db = prisma as PrismaClientInternal
     this.modelName = adapterConfig?.modelName ?? "QueueJob"
-    this.tableName = adapterConfig?.tableName ?? "queue_jobs"
-    this.schemaName = adapterConfig?.schemaName
-  }
 
-  private get fullTable(): string {
-    return this.schemaName
-      ? `"${this.schemaName}"."${this.tableName}"`
-      : `"${this.tableName}"`
+    const tableName = adapterConfig?.tableName ?? "queue_jobs"
+    const schemaName = adapterConfig?.schemaName
+
+    assertValidIdentifier(tableName, "tableName")
+    if (schemaName !== undefined) {
+      assertValidIdentifier(schemaName, "schemaName")
+    }
+
+    this.fullTable = schemaName
+      ? `"${schemaName}"."${tableName}"`
+      : `"${tableName}"`
   }
 
   async connect(): Promise<void> {
@@ -134,16 +174,31 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
   }
 
   async getNextJob(options: GetNextJobOptions): Promise<Job | null> {
-    const handlerList = options.handlerNames.map((n) => `'${n}'`).join(", ")
+    // Guard: no handlers means no jobs can be picked
+    if (options.handlerNames.length === 0) {
+      return null
+    }
 
-    // Promote delayed jobs
+    // SECURITY NOTE:
+    // We intentionally use $queryRawUnsafe to support FOR UPDATE SKIP LOCKED.
+    // All identifiers are strictly validated in the constructor and
+    // all dynamic values are parameterized via positional placeholders.
+
+    // Build parameterized IN-list for handler names
+    const handlerParams: unknown[] = [this.queueName]
+    const handlerInClause = buildInPlaceholders(
+      options.handlerNames,
+      handlerParams
+    )
+
+    // Promote delayed jobs that are ready to process
     const delayed = await this.db.$queryRawUnsafe<RawQueueJob[]>(
       `SELECT * FROM ${this.fullTable}
        WHERE queue_name = $1 AND status = 'delayed' AND process_at <= NOW()
-         AND name IN (${handlerList})
+         AND name IN (${handlerInClause})
        ORDER BY priority ASC, created_at ASC
        LIMIT 1 FOR UPDATE SKIP LOCKED`,
-      this.queueName
+      ...handlerParams
     )
 
     if (delayed.length > 0) {
@@ -153,21 +208,33 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       )
     }
 
-    // Build group exclusion
-    let groupClause = ""
+    // Build parameterized query for pending jobs
+    const pendingParams: unknown[] = [this.queueName]
+    const pendingHandlerInClause = buildInPlaceholders(
+      options.handlerNames,
+      pendingParams
+    )
+
+    // Build group exclusion clause (structurally deterministic)
+    let groupExclusionClause: string
     if (options.activeGroups.length > 0) {
-      const groupList = options.activeGroups.map((g) => `'${g}'`).join(", ")
-      groupClause = `AND (group_key IS NULL OR group_key NOT IN (${groupList}))`
+      const groupInClause = buildInPlaceholders(
+        options.activeGroups,
+        pendingParams
+      )
+      groupExclusionClause = `AND (group_key IS NULL OR group_key NOT IN (${groupInClause}))`
+    } else {
+      groupExclusionClause = ""
     }
 
     const results = await this.db.$queryRawUnsafe<RawQueueJob[]>(
       `SELECT * FROM ${this.fullTable}
        WHERE queue_name = $1 AND status = 'pending'
-         AND name IN (${handlerList})
-         ${groupClause}
+         AND name IN (${pendingHandlerInClause})
+         ${groupExclusionClause}
        ORDER BY priority ASC, created_at ASC
        LIMIT 1 FOR UPDATE SKIP LOCKED`,
-      this.queueName
+      ...pendingParams
     )
 
     const [first] = results
@@ -179,20 +246,33 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     count: number,
     groupConstraints: readonly string[]
   ): Promise<readonly Job[]> {
-    let groupClause = ""
+    // SECURITY NOTE:
+    // We intentionally use $queryRawUnsafe to support FOR UPDATE SKIP LOCKED.
+    // All identifiers are strictly validated in the constructor and
+    // all dynamic values are parameterized via positional placeholders.
+
+    const params: unknown[] = [this.queueName, handlerName]
+
+    // Build group exclusion clause (structurally deterministic)
+    let groupExclusionClause: string
     if (groupConstraints.length > 0) {
-      const groupList = groupConstraints.map((g) => `'${g}'`).join(", ")
-      groupClause = `AND (group_key IS NULL OR group_key NOT IN (${groupList}))`
+      const groupInClause = buildInPlaceholders(groupConstraints, params)
+      groupExclusionClause = `AND (group_key IS NULL OR group_key NOT IN (${groupInClause}))`
+    } else {
+      groupExclusionClause = ""
     }
+
+    // LIMIT as parameterized binding (validated as integer)
+    params.push(Math.trunc(Math.max(0, count)))
+    const limitParam = `$${params.length}`
 
     const results = await this.db.$queryRawUnsafe<RawQueueJob[]>(
       `SELECT * FROM ${this.fullTable}
        WHERE queue_name = $1 AND status = 'pending' AND name = $2
-         ${groupClause}
+         ${groupExclusionClause}
        ORDER BY priority ASC, created_at ASC
-       LIMIT ${count} FOR UPDATE SKIP LOCKED`,
-      this.queueName,
-      handlerName
+       LIMIT ${limitParam} FOR UPDATE SKIP LOCKED`,
+      ...params
     )
 
     return results.map((row) => PostgresPrismaQueueAdapter.transformRawJob(row))
