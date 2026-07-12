@@ -1,17 +1,30 @@
 # @vorsteh-queue/adapter-prisma
 
-Prisma ORM adapter for Vorsteh Queue — provides PostgreSQL job storage using Prisma Client with SKIP LOCKED concurrency.
+The official Prisma adapter for Vorsteh Queue.
 
-## Installation
+Use Prisma-backed PostgreSQL storage for your queue in minutes.
+
+## Install
 
 ```bash
 pnpm add @vorsteh-queue/adapter-prisma @prisma/client
 ```
 
+## What you get
+
+- Prisma-based queue persistence
+- PostgreSQL locking and picking behavior for workers
+- Seamless integration with @vorsteh-queue/core
+
+## Requirements
+
+- Node.js >= 22
+- @prisma/client >= 7.0.0
+
 ## Documentation
 
-See the [Vorsteh Queue Documentation](https://vorsteh-queue.dev/docs) for detailed usage instructions.
+https://vorsteh-queue.dev/docs
 
 ## License
 
-[MIT](../../LICENSE)
+MIT ([LICENSE](../../LICENSE))

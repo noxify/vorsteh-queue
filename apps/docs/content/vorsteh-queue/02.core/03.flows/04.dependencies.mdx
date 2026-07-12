@@ -35,16 +35,15 @@ await queue.add(
   { version: "2.0" },
   {
     dependsOn: [buildJob.id, testJob.id],
-    onDependencyFailure: "cancel", // "fail" | "cancel"
+    onDependencyFailure: "fail", // "fail" | "cancel"
   }
 )
 ```
 
-| Action     | Behavior                                                     |
-| ---------- | ------------------------------------------------------------ |
-| `"cancel"` | Dependent job is cancelled when a dependency fails (default) |
-| `"fail"`   | Dependent job is marked as failed                            |
-| `"ignore"` | Dependent job proceeds regardless of dependency failure      |
+| Action     | Behavior                                           |
+| ---------- | -------------------------------------------------- |
+| `"fail"`   | Dependent job is marked as failed (default)        |
+| `"cancel"` | Dependent job is cancelled when a dependency fails |
 
 ## Circular Dependency Detection
 

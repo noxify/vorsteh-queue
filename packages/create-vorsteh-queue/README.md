@@ -1,17 +1,32 @@
 # create-vorsteh-queue
 
-CLI scaffolding tool for Vorsteh Queue — creates new queue applications from templates with interactive or automated setup.
+The official way to start a Vorsteh Queue project.
 
-## Usage
+Scaffold a production-ready, TypeScript-first setup in seconds.
+
+## Create a project
 
 ```bash
-npx create-vorsteh-queue
+pnpm create vorsteh-queue
 ```
+
+Follow the prompts. Start building.
+
+## What you get
+
+- Preconfigured TypeScript
+- Clean project structure
+- Core + server wired together
+- Production-ready defaults
+
+## Requirements
+
+- Node.js >= 22
 
 ## Documentation
 
-See the [Vorsteh Queue Documentation](https://vorsteh-queue.dev/docs) for detailed usage instructions.
+https://vorsteh-queue.dev/docs
 
 ## License
 
-[MIT](../../LICENSE)
+MIT ([LICENSE](../../LICENSE))

@@ -83,16 +83,12 @@ describe("commands-metadata", () => {
   })
 
   describe("serve command", () => {
-    it("should have --port and --no-dashboard options", () => {
+    it("should have --port option", () => {
       const config = getCommandConfig("serve")
 
       const portOpt = config.options.find((o) => o.long === "--port")
       expect(portOpt).toBeDefined()
       expect(portOpt?.short).toBe("-p")
-
-      expect(
-        config.options.find((o) => o.long === "--no-dashboard")
-      ).toBeDefined()
     })
   })
 

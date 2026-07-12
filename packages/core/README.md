@@ -1,17 +1,29 @@
 # @vorsteh-queue/core
 
-TypeScript-first, ORM-agnostic job queue engine for PostgreSQL — handles job processing, scheduling, retries, events, and progress tracking.
+The official core engine for Vorsteh Queue.
 
-## Installation
+Run production-ready background jobs on PostgreSQL with TypeScript.
+
+## Install
 
 ```bash
 pnpm add @vorsteh-queue/core
 ```
 
+## What you get
+
+- Queue and worker runtime
+- Scheduling, retries, events, and progress tracking
+- Optional OpenTelemetry integration
+
+## Requirements
+
+- Node.js >= 22
+
 ## Documentation
 
-See the [Vorsteh Queue Documentation](https://vorsteh-queue.dev/docs) for detailed usage instructions.
+https://vorsteh-queue.dev/docs
 
 ## License
 
-[MIT](../../LICENSE)
+MIT ([LICENSE](../../LICENSE))

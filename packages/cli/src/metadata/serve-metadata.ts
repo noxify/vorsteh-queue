@@ -9,7 +9,6 @@ import { Command, Option } from "@commander-js/extra-typings"
  */
 export function buildServeCommandStructure() {
   return new Command("serve")
-    .description("Start the queue server with dashboard")
+    .description("Start the queue server")
     .addOption(new Option("-p, --port <port>", "Port to listen on"))
-    .addOption(new Option("--no-dashboard", "Disable the web dashboard UI"))
 }

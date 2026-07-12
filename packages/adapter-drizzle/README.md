@@ -1,17 +1,30 @@
 # @vorsteh-queue/adapter-drizzle
 
-Drizzle ORM adapter for Vorsteh Queue — provides PostgreSQL job storage using Drizzle with support for node-postgres, postgres.js, and PGlite.
+The official Drizzle adapter for Vorsteh Queue.
 
-## Installation
+Use Drizzle-backed PostgreSQL storage for your queue in minutes.
+
+## Install
 
 ```bash
 pnpm add @vorsteh-queue/adapter-drizzle drizzle-orm
 ```
 
+## What you get
+
+- Drizzle-based queue persistence
+- PostgreSQL locking and picking behavior for workers
+- Seamless integration with @vorsteh-queue/core
+
+## Requirements
+
+- Node.js >= 22
+- drizzle-orm >= 0.45.2
+
 ## Documentation
 
-See the [Vorsteh Queue Documentation](https://vorsteh-queue.dev/docs) for detailed usage instructions.
+https://vorsteh-queue.dev/docs
 
 ## License
 
-[MIT](../../LICENSE)
+MIT ([LICENSE](../../LICENSE))
