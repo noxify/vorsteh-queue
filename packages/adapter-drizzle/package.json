@@ -54,7 +54,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown --log-level error",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "db:generate": "drizzle-kit generate",
