@@ -1,6 +1,9 @@
 import "server-only"
 import type { CommandOptionMeta } from "@vorsteh-queue/cli/commands-metadata"
-import { getCommandConfig } from "@vorsteh-queue/cli/commands-metadata"
+import {
+  getCommandConfig,
+  getGlobalOptions,
+} from "@vorsteh-queue/cli/commands-metadata"
 
 import {
   Table,
@@ -28,7 +31,9 @@ function formatDefault(opt: CommandOptionMeta): string | null {
 
 interface CliCommandDetailsProps {
   /** The command name, e.g. "pull", "list-tables" */
-  command: string
+  command?: string
+  /** Render scope. "command" renders command args/options, "global" renders only global options. */
+  scope?: "command" | "global"
 }
 
 /**
@@ -42,8 +47,21 @@ interface CliCommandDetailsProps {
  * <CliCommandDetails command="pull" />
  * ```
  */
-export function CliCommandDetails({ command }: CliCommandDetailsProps) {
-  const config = getCommandConfig(command)
+export function CliCommandDetails({
+  command,
+  scope = "command",
+}: CliCommandDetailsProps) {
+  const isGlobalScope = scope === "global"
+
+  if (!isGlobalScope && !command) {
+    throw new Error(
+      "CliCommandDetails requires a command when scope is 'command'."
+    )
+  }
+
+  const config = isGlobalScope
+    ? { arguments: [], options: getGlobalOptions() }
+    : getCommandConfig(command as string)
 
   return (
     <div className="my-6 space-y-8">
