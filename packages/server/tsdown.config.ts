@@ -4,8 +4,6 @@ export default defineConfig({
   deps: {
     skipNodeModulesBundle: true,
   },
-  dts: {
-    build: true,
-  },
+  dts: true,
   entry: ["src/index.ts"],
 })
