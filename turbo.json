@@ -28,9 +28,6 @@
     "clean": {
       "cache": false
     },
-    "//#clean": {
-      "cache": false
-    },
     "clean:cache": {
       "cache": false
     }

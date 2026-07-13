@@ -3,7 +3,7 @@
  */
 import { Command, Option } from "@commander-js/extra-typings"
 
-import { createJsonOption } from "../options"
+import { createJsonOption } from "./global-options"
 
 /**
  * Builds the redrive command structure (options/arguments) without action handlers.

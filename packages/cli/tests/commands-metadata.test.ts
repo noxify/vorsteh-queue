@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { availableCommands, getCommandConfig } from "../src/commands-metadata"
+import {
+  availableCommands,
+  getCommandConfig,
+  getGlobalOptions,
+} from "../src/commands-metadata"
 
 describe("commands-metadata", () => {
   it("should list all available commands", () => {
@@ -80,6 +84,25 @@ describe("commands-metadata", () => {
       expect(config.options.find((o) => o.long === "--all")).toBeDefined()
       expect(config.options.find((o) => o.long === "--json")).toBeDefined()
     })
+  })
+
+  it("should include global --url/--token/--queue options for all commands", () => {
+    for (const name of availableCommands) {
+      const config = getCommandConfig(name)
+
+      expect(config.options.find((o) => o.long === "--url")).toBeDefined()
+      expect(config.options.find((o) => o.long === "--token")).toBeDefined()
+      expect(config.options.find((o) => o.long === "--queue")).toBeDefined()
+    }
+  })
+
+  it("should expose global options metadata", () => {
+    const options = getGlobalOptions()
+
+    expect(options).toHaveLength(3)
+    expect(options.find((o) => o.long === "--url")).toBeDefined()
+    expect(options.find((o) => o.long === "--token")).toBeDefined()
+    expect(options.find((o) => o.long === "--queue")).toBeDefined()
   })
 
   describe("serve command", () => {

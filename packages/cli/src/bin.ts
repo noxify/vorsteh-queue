@@ -23,7 +23,7 @@ import {
   createQueueOption,
   createTokenOption,
   createUrlOption,
-} from "./options"
+} from "./metadata/global-options"
 
 const program = new Command()
 

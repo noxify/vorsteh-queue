@@ -3,7 +3,7 @@
  */
 import { Command } from "@commander-js/extra-typings"
 
-import { createJsonOption } from "../options"
+import { createJsonOption } from "./global-options"
 
 /**
  * Builds the flow command structure (options/arguments) without action handlers.

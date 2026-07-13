@@ -3,7 +3,10 @@ import consola from "consola"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { createDoctorCommand } from "../src/commands/doctor"
-import { createTokenOption, createUrlOption } from "../src/options"
+import {
+  createTokenOption,
+  createUrlOption,
+} from "../src/metadata/global-options"
 
 vi.mock("../src/transport/resolve", () => ({
   resolveTransport: vi.fn(),

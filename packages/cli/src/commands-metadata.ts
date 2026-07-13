@@ -13,6 +13,11 @@ import { buildClearCommandStructure } from "./metadata/clear-metadata"
 import { buildDeleteCommandStructure } from "./metadata/delete-metadata"
 import { buildDoctorCommandStructure } from "./metadata/doctor-metadata"
 import { buildFlowCommandStructure } from "./metadata/flow-metadata"
+import {
+  createQueueOption,
+  createTokenOption,
+  createUrlOption,
+} from "./metadata/global-options"
 import { buildInspectCommandStructure } from "./metadata/inspect-metadata"
 import { buildQueuesCommandStructure } from "./metadata/queues-metadata"
 import { buildRedriveCommandStructure } from "./metadata/redrive-metadata"
@@ -20,20 +25,6 @@ import { buildRetryCommandStructure } from "./metadata/retry-metadata"
 import { buildRunNowCommandStructure } from "./metadata/run-now-metadata"
 import { buildServeCommandStructure } from "./metadata/serve-metadata"
 import { buildStatusCommandStructure } from "./metadata/status-metadata"
-
-type AvailableCommand =
-  | "cancel"
-  | "clear"
-  | "delete"
-  | "doctor"
-  | "flow"
-  | "inspect"
-  | "queues"
-  | "redrive"
-  | "retry"
-  | "run-now"
-  | "serve"
-  | "status"
 
 export interface CommandArgumentMeta {
   name: string
@@ -108,7 +99,37 @@ function extractOptionMeta(option: Option): CommandOptionMeta {
   return meta
 }
 
-const commandFactories: Record<string, () => unknown> = {
+function getOptionKey(option: CommandOptionMeta): string {
+  return option.long ?? option.flags
+}
+
+function mergeOptions(
+  commandOptions: readonly CommandOptionMeta[],
+  globalOptions: readonly CommandOptionMeta[]
+): readonly CommandOptionMeta[] {
+  const seen = new Set(commandOptions.map((option) => getOptionKey(option)))
+  const merged = [...commandOptions]
+
+  for (const option of globalOptions) {
+    const key = getOptionKey(option)
+    if (seen.has(key)) {
+      continue
+    }
+    seen.add(key)
+    merged.push(option)
+  }
+
+  return merged
+}
+
+/** Global CLI options available to all commands. */
+export function getGlobalOptions(): readonly CommandOptionMeta[] {
+  return [createUrlOption(), createTokenOption(), createQueueOption()].map(
+    extractOptionMeta
+  )
+}
+
+const commandFactories = {
   cancel: buildCancelCommandStructure,
   clear: buildClearCommandStructure,
   delete: buildDeleteCommandStructure,
@@ -121,6 +142,14 @@ const commandFactories: Record<string, () => unknown> = {
   "run-now": buildRunNowCommandStructure,
   serve: buildServeCommandStructure,
   status: buildStatusCommandStructure,
+} as const satisfies Record<string, () => unknown>
+
+export type AvailableCommand = keyof typeof commandFactories
+
+function isAvailableCommand(
+  commandName: string
+): commandName is AvailableCommand {
+  return commandName in commandFactories
 }
 
 /**
@@ -137,24 +166,28 @@ const commandFactories: Record<string, () => unknown> = {
  * ```
  */
 export function getCommandConfig(commandName: string): CommandConfig {
-  const commandFn = commandFactories[commandName]
-
-  if (!commandFn) {
+  if (!isAvailableCommand(commandName)) {
     throw new Error(`No command named '${commandName}'`)
   }
+
+  const commandFn = commandFactories[commandName]
 
   const command = commandFn() as {
     name: () => string
     description: () => string
-    registeredArguments: Argument[]
-    options: Option[]
+    readonly registeredArguments: readonly Argument[]
+    readonly options: readonly Option[]
   }
+
+  const globalOptions = getGlobalOptions()
+
+  const commandOptions = command.options.map(extractOptionMeta)
 
   return {
     arguments: command.registeredArguments.map(extractArgumentMeta),
     description: command.description(),
     name: command.name(),
-    options: command.options.map(extractOptionMeta),
+    options: mergeOptions(commandOptions, globalOptions),
   }
 }
 
