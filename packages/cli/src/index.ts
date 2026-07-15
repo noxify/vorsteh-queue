@@ -36,6 +36,7 @@ export type { GlobalOptions } from "./transport/with-transport"
 export type { Transport } from "./transport/types"
 
 export { createStatusCommand } from "./commands/status"
+export { createDashboardCommand } from "./commands/dashboard"
 export { createInspectCommand } from "./commands/inspect"
 export { createCancelCommand } from "./commands/cancel"
 export { createRetryCommand } from "./commands/retry"

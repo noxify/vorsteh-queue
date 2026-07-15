@@ -15,6 +15,13 @@ export interface Transport {
   disconnect: () => Promise<void>
   getStats: () => Promise<QueueStats>
   getJob: (id: string) => Promise<Job | null>
+  getJobs: (options?: {
+    status?: JobStatus
+    name?: string
+    limit?: number
+    offset?: number
+  }) => Promise<readonly Job[]>
+  getQueues: () => Promise<readonly string[]>
   getDeadJobs: (options?: PaginationOptions) => Promise<readonly Job[]>
   cancelJob: (id: string, reason?: string) => Promise<boolean>
   retryJob: (id: string) => Promise<boolean>

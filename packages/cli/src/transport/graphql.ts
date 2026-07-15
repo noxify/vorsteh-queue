@@ -102,6 +102,27 @@ export function createGraphQLTransport(
       return result.job
     },
 
+    async getJobs(options) {
+      const result = await query<{ jobs: readonly Job[] }>(
+        `query($queue: String!, $status: JobStatus, $name: String, $limit: Int, $offset: Int) { jobs(queue: $queue, status: $status, name: $name, limit: $limit, offset: $offset) { id name status priority attempts maxAttempts progress createdAt processAt error { name message } } }`,
+        {
+          limit: options?.limit,
+          name: options?.name,
+          offset: options?.offset,
+          queue: queueName,
+          status: options?.status,
+        }
+      )
+      return result.jobs
+    },
+
+    async getQueues() {
+      const result = await query<{ queues: readonly { name: string }[] }>(
+        `query { queues { name } }`
+      )
+      return result.queues.map((q) => q.name)
+    },
+
     async getDeadJobs(options) {
       const result = await query<{ deadJobs: readonly Job[] }>(
         `query($queue: String!, $limit: Int, $offset: Int) { deadJobs(queue: $queue, limit: $limit, offset: $offset) { id name status createdAt } }`,

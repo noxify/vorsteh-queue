@@ -8,7 +8,7 @@ import {
 
 describe("commands-metadata", () => {
   it("should list all available commands", () => {
-    expect(availableCommands).toHaveLength(12)
+    expect(availableCommands).toHaveLength(13)
     expect(availableCommands).toStrictEqual(
       expect.arrayContaining([
         "status",

@@ -9,6 +9,7 @@ import consola from "consola"
 
 import { createCancelCommand } from "./commands/cancel"
 import { createClearCommand } from "./commands/clear"
+import { createDashboardCommand } from "./commands/dashboard"
 import { createDeleteCommand } from "./commands/delete"
 import { createDoctorCommand } from "./commands/doctor"
 import { createFlowCommand } from "./commands/flow"
@@ -44,6 +45,7 @@ program
   .addCommand(createRunNowCommand())
   .addCommand(createDeleteCommand())
   .addCommand(createClearCommand())
+  .addCommand(createDashboardCommand())
   .addCommand(createFlowCommand())
   .addCommand(createDoctorCommand())
   .addCommand(createQueuesCommand())

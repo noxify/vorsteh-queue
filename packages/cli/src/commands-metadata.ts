@@ -10,6 +10,7 @@ import type { Argument, Option } from "@commander-js/extra-typings"
 
 import { buildCancelCommandStructure } from "./metadata/cancel-metadata"
 import { buildClearCommandStructure } from "./metadata/clear-metadata"
+import { buildDashboardCommandStructure } from "./metadata/dashboard-metadata"
 import { buildDeleteCommandStructure } from "./metadata/delete-metadata"
 import { buildDoctorCommandStructure } from "./metadata/doctor-metadata"
 import { buildFlowCommandStructure } from "./metadata/flow-metadata"
@@ -132,6 +133,7 @@ export function getGlobalOptions(): readonly CommandOptionMeta[] {
 const commandFactories = {
   cancel: buildCancelCommandStructure,
   clear: buildClearCommandStructure,
+  dashboard: buildDashboardCommandStructure,
   delete: buildDeleteCommandStructure,
   doctor: buildDoctorCommandStructure,
   flow: buildFlowCommandStructure,

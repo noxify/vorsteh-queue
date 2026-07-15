@@ -28,6 +28,8 @@ function createMockTransport(
     getDeadJobs: vi.fn(),
     getFlowTree: vi.fn(),
     getJob: vi.fn(),
+    getJobs: vi.fn().mockResolvedValue([]),
+    getQueues: vi.fn().mockResolvedValue([]),
     getStats: vi.fn(),
     redriveAll: vi.fn(),
     redriveJob: vi.fn(),

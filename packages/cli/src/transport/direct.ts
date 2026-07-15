@@ -37,6 +37,17 @@ export function createDirectTransport(
     async getJob(id: string) {
       return adapter.getJobById(id)
     },
+    async getJobs(options) {
+      return adapter.getJobs({
+        limit: options?.limit,
+        name: options?.name,
+        offset: options?.offset,
+        status: options?.status,
+      })
+    },
+    async getQueues() {
+      return [queueName]
+    },
     async getStats() {
       return adapter.getQueueStats()
     },
