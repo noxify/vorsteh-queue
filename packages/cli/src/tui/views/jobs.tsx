@@ -80,12 +80,17 @@ export function JobsView({ refreshInterval, onSelectJob }: JobsViewProps) {
       )
       setCursor(0)
       setPage(0)
-    } else if (input === "n") {
+    } else if (key.ctrl && input === "d") {
       setPage((prev) => prev + 1)
       setCursor(0)
-    } else if (input === "p" && page > 0) {
+    } else if (key.ctrl && input === "u" && page > 0) {
       setPage((prev) => prev - 1)
       setCursor(0)
+    } else if (input === "g") {
+      setPage(0)
+      setCursor(0)
+    } else if (input === "G") {
+      setCursor(jobs.length - 1)
     } else if (key.return) {
       const selected = jobs[cursor]
       if (selected) {
@@ -147,7 +152,7 @@ export function JobsView({ refreshInterval, onSelectJob }: JobsViewProps) {
 
       <Box marginTop={1}>
         <Text color="gray">
-          Page {page + 1} | [n] Next [p] Prev | {jobs.length} jobs shown
+          Page {page + 1} | [C-d] Next [C-u] Prev | {jobs.length} jobs shown
         </Text>
       </Box>
     </Box>

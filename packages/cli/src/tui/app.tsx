@@ -89,7 +89,7 @@ function JobsPage() {
           />
         </Suspense>
       </Box>
-      <Footer hint="[↑↓] Navigate  [←→] Filter  [↵] Detail  [n/p] Page  [Esc] Back  [q] Quit" />
+      <Footer hint="[↑↓] Navigate  [←→] Filter  [↵] Detail  [C-d/C-u] Page  [Esc] Back  [q] Quit" />
     </>
   )
 }
