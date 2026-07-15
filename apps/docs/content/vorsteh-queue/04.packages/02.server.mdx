@@ -130,7 +130,12 @@ vorsteh-queue serve --port 4000
 
 ## Server Config
 
-<InterfaceReference file="server/src/config" name="ServerConfig" />
+| Property | Type | Default | Description |
+| --- | --- | --- | --- |
+| `queues` | `readonly Queue[]` | required | Queue instances to manage |
+| `workers?` | `readonly Worker[]` | `[]` | Workers to observe for subscription events |
+| `auth?` | `AuthConfig` | `false` | Authentication configuration |
+| `port?` | `number` | `3000` | Server port (standalone mode) |
 
 ### Authentication
 
