@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import type { NextRequest } from "next/server"
 
 import { AllDocumentation } from "@/collections"
+import { renderMdxToMarkdown } from "@/lib/raw-markdown"
 import {
   getRawRouteParams,
   normalizeRawSlugParts,
@@ -43,6 +44,7 @@ export async function GET(
     notFound()
   }
 
-  const md = await file.getText()
-  return textResponse(md)
+  const mdxText = await file.getText()
+  const markdown = await renderMdxToMarkdown(mdxText)
+  return textResponse(markdown)
 }
