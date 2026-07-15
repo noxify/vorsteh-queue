@@ -16,13 +16,16 @@ The Prisma adapter provides PostgreSQL support using Prisma ORM, offering genera
 
 ```typescript
 import { PrismaClient } from "@prisma/client"
-
-import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma/postgres-adapter"
-import { Queue } from "@vorsteh-queue/core"
+import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+import { Queue, Worker } from "@vorsteh-queue/core"
 
 const prisma = new PrismaClient()
 const adapter = new PostgresPrismaQueueAdapter(prisma)
+
 const queue = new Queue(adapter, { name: "my-queue" })
+const worker = new Worker(adapter, { name: "my-queue" })
+
+await queue.connect()
 ```
 
 <Note title="Tip">
@@ -32,37 +35,49 @@ const queue = new Queue(adapter, { name: "my-queue" })
 
 ## Database Schema
 
+Add this model to your `schema.prisma`:
+
 ```prisma
 model QueueJob {
-  id                 String    @id @default(uuid())
-  name               String
-  payload            Json
-  status             String    @default("pending")
-  priority           Int       @default(2)
-  attempts           Int       @default(0)
-  maxAttempts        Int       @default(3)
-  progress           Int       @default(0)
-  result             Json?
-  error              Json?
-  processAt          DateTime  @default(now())
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  completedAt        DateTime?
-  failedAt           DateTime?
-  cancelledAt        DateTime?
-  cancellationReason String?
-  timeout            Int?
-  cron               String?
-  cronTimezone       String?
-  repeatCount        Int       @default(0)
-  repeatLimit        Int?
-  repeatEvery        Int?
-  groupKey           String?
-  flowId             String?
-  parentJobId        String?
-  childJobIds        String[]  @default([])
-  uniqueKey          String?   @unique
+  id                  String    @id @default(uuid())
+  queueName           String    @map("queue_name") @db.VarChar(255)
+  name                String    @db.VarChar(255)
+  payload             Json      @db.JsonB
+  status              String    @db.VarChar(50)
+  priority            Int
+  attempts            Int       @default(0)
+  maxAttempts         Int       @map("max_attempts")
+  timeout             Int?
+  progress            Int       @default(0)
+  groupKey            String?   @map("group_key") @db.VarChar(255)
+  uniqueKey           String?   @map("unique_key") @db.VarChar(255)
+  cron                String?   @db.VarChar(255)
+  repeatEvery         Int?      @map("repeat_every")
+  repeatLimit         Int?      @map("repeat_limit")
+  repeatCount         Int       @default(0) @map("repeat_count")
+  cancellationReason  String?   @map("cancellation_reason") @db.Text
+  dependsOn           Json?     @map("depends_on") @db.JsonB
+  onDependencyFailure String?   @map("on_dependency_failure") @db.VarChar(10)
+  error               Json?     @db.JsonB
+  result              Json?     @db.JsonB
+  steps               Json?     @db.JsonB
+  signals             Json?     @db.JsonB
+  parentId            String?   @map("parent_id")
+  flowId              String?   @map("flow_id")
+  childrenCount       Int       @default(0) @map("children_count")
+  childrenCompleted   Int       @default(0) @map("children_completed")
+  failParentOnFailure Int       @default(0) @map("fail_parent_on_failure")
+  createdAt           DateTime  @default(dbgenerated("timezone('utc', now())")) @map("created_at") @db.Timestamptz(6)
+  processAt           DateTime  @map("process_at") @db.Timestamptz(6)
+  processedAt         DateTime? @map("processed_at") @db.Timestamptz(6)
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz(6)
+  failedAt            DateTime? @map("failed_at") @db.Timestamptz(6)
+  cancelledAt         DateTime? @map("cancelled_at") @db.Timestamptz(6)
 
+  @@index([queueName, status, priority, createdAt], map: "idx_queue_jobs_polling")
+  @@index([queueName, processAt], map: "idx_queue_jobs_delayed")
+  @@index([queueName, groupKey], map: "idx_queue_jobs_active_groups")
+  @@index([queueName, status], map: "idx_queue_jobs_stats")
   @@map("queue_jobs")
 }
 ```
@@ -71,9 +86,9 @@ model QueueJob {
 
 ```typescript
 const adapter = new PostgresPrismaQueueAdapter(prisma, {
-  modelName: "CustomQueueJobs",
-  schemaName: "custom_schema",
-  tableName: "custom_queue_jobs",
+  modelName: "CustomQueueJob", // model name in schema.prisma
+  tableName: "custom_queue_jobs", // @@map value
+  schemaName: "custom_schema", // PostgreSQL schema
 })
 ```
 

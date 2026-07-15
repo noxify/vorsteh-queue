@@ -12,6 +12,9 @@ The event system provides real-time notifications for job state changes and queu
 The `Queue` instance emits events when jobs are added or their state changes through the public API (e.g. cancellation).
 
 ```typescript
+import { Queue, MemoryQueueAdapter } from "@vorsteh-queue/core"
+
+const adapter = new MemoryQueueAdapter()
 const queue = new Queue(adapter, { name: "my-queue" })
 
 queue.on("job:added", (job) => {
@@ -28,6 +31,8 @@ queue.on("job:cancelled", (job) => {
 The `Worker` instance emits events during job processing — lifecycle transitions, errors, and batch operations.
 
 ```typescript
+import { Worker } from "@vorsteh-queue/core"
+
 const worker = new Worker(adapter, { name: "my-queue", concurrency: 5 })
 
 worker.on("job:completed", (job) => {
@@ -38,7 +43,13 @@ worker.on("job:failed", (job) => {
   console.error(`[${job.name}] failed:`, job.error.message)
 })
 
+worker.on("job:dead", (job) => {
+  // Job exhausted all retry attempts
+  console.error(`[${job.name}] moved to DLQ after ${job.attempts} attempts`)
+})
+
 worker.on("worker:error", (error) => {
+  // Unexpected error in polling loop
   console.error("Unexpected worker error:", error)
 })
 ```
@@ -53,20 +64,28 @@ worker.once("worker:started", () => {
 })
 ```
 
+### Removing Listeners
+
+```typescript
+const handler = (job) => console.log(job.id)
+worker.on("job:completed", handler)
+worker.off("job:completed", handler)
+```
+
 ## Available Events
 
-### Queue
+### Queue Events
 
 <InterfaceReference file="core/src/types" name="QueueEvents" />
 
-### Worker
+### Worker Events
 
 <InterfaceReference file="core/src/types" name="WorkerEvents" />
 
 ## Use Cases
 
 - Logging and audit trails
-- Metrics collection (Prometheus, Datadog)
-- Chaining dependent jobs
+- Custom metrics collection
+- Chaining dependent operations
 - Notifications on failures
-- Progress dashboards
+- Real-time dashboards (via the server subscription bridge)

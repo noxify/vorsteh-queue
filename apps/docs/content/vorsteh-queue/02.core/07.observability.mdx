@@ -1,19 +1,19 @@
 ---
 title: Observability
-description: Built-in OpenTelemetry metrics and distributed tracing for monitoring your queue in production.
+description: Optional OpenTelemetry metrics and distributed tracing for monitoring your queue in production.
 ---
 
-vorsteh-queue ships with native OpenTelemetry instrumentation. Metrics, traces, and job spans are emitted automatically — no wrapper code needed. If no OTel SDK is configured, all instrumentation is a no-op with zero overhead.
+vorsteh-queue supports OpenTelemetry instrumentation via an opt-in telemetry instance. By default, no OTel code is loaded — the core runs with zero observability overhead. To enable metrics and tracing, create a telemetry instance and pass it to your Queue and Worker.
 
 ## Setup
 
-Install the OpenTelemetry SDK alongside vorsteh-queue:
+Install the OpenTelemetry packages:
 
 <Command variant="install">
   {`@opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-metrics-otlp-http @opentelemetry/exporter-trace-otlp-http`}
 </Command>
 
-Configure the SDK in your application's entrypoint (e.g. `instrumentation.ts`):
+Configure your application:
 
 ```typescript
 import { NodeSDK } from "@opentelemetry/sdk-node"
@@ -21,21 +21,39 @@ import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http"
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
 
+// 1. Start the OTel SDK
 const sdk = new NodeSDK({
   traceExporter: new OTLPTraceExporter(),
   metricReader: new PeriodicExportingMetricReader({
     exporter: new OTLPMetricExporter(),
   }),
 })
-
 sdk.start()
+
+// 2. Create vorsteh-queue telemetry instance
+import { Queue, Worker } from "@vorsteh-queue/core"
+import { createOtelTelemetry } from "@vorsteh-queue/core"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+
+const telemetry = createOtelTelemetry({ queueName: "email-queue" })
+
+const adapter = new PostgresQueueAdapter(db)
+const queue = new Queue(adapter, { name: "email-queue", telemetry })
+const worker = new Worker(adapter, { name: "email-queue", telemetry })
 ```
 
-That's it. vorsteh-queue will automatically emit metrics and traces to your configured backend (Grafana, Datadog, Honeycomb, AWS CloudWatch, etc.).
+The `telemetry` parameter is optional on both Queue and Worker. When omitted, a no-op implementation is used with zero overhead.
+
+## How It Works
+
+- `createOtelTelemetry(config)` — creates a telemetry instance backed by the global OTel providers. Requires `@opentelemetry/api` to be installed.
+- `noopTelemetry` — the default. All methods are empty stubs. Used when no telemetry is passed.
+
+The core package never imports `@opentelemetry/api` at module load time. The import happens only inside `createOtelTelemetry` via a deferred require, so your bundle and startup are unaffected if you don't use OTel.
 
 ## Metrics
 
-All metrics use the `vorsteh_queue` namespace and include a `vorsteh_queue.queue` attribute with the queue name, plus `vorsteh_queue.job.name` where applicable.
+All metrics use the `vorsteh_queue` namespace and include queue name and job name attributes.
 
 ### Counters
 
@@ -63,7 +81,7 @@ All metrics use the `vorsteh_queue` namespace and include a `vorsteh_queue.queue
 
 ## Distributed Tracing
 
-Every job execution creates a span with the following attributes:
+Every job execution creates a span with these attributes:
 
 | Attribute                        | Description                 |
 | -------------------------------- | --------------------------- |
@@ -76,7 +94,7 @@ Every job execution creates a span with the following attributes:
 | `vorsteh_queue.job.attempt`      | Current attempt number      |
 | `vorsteh_queue.job.max_attempts` | Maximum attempts configured |
 
-Spans are created with `SpanKind.CONSUMER` and follow the [OTel Messaging Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/messaging/).
+Spans follow the [OTel Messaging Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/messaging/).
 
 ### Success and Failure
 
@@ -126,9 +144,6 @@ sdk.start()
 Combine OTel metrics with your alerting system to get notified on anomalies:
 
 ```typescript
-import { Queue, Worker } from "@vorsteh-queue/core"
-
-// OTel metrics are emitted automatically.
 // Set up alerts in your monitoring platform:
 //
 // - Alert when vorsteh_queue.jobs.dead > 0 (DLQ is filling up)
@@ -136,8 +151,14 @@ import { Queue, Worker } from "@vorsteh-queue/core"
 // - Alert when vorsteh_queue.jobs.active stays at max concurrency (backpressure)
 ```
 
-## No SDK? No Problem
+## Without OTel
 
-If `@opentelemetry/api` is installed but no SDK is configured (no `MeterProvider` or `TracerProvider` registered), all metric and tracing calls are no-ops. There is no performance penalty and no errors.
+If you don't pass a `telemetry` instance, the Queue and Worker use `noopTelemetry` — all operations are no-ops with zero performance penalty. You don't need `@opentelemetry/api` installed at all.
 
-This makes the telemetry truly opt-in: install the SDK when you want observability, remove it when you don't.
+```typescript
+import { Queue, Worker } from "@vorsteh-queue/core"
+
+// No telemetry parameter → noopTelemetry is used automatically
+const queue = new Queue(adapter, { name: "my-queue" })
+const worker = new Worker(adapter, { name: "my-queue" })
+```

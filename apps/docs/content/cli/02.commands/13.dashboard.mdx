@@ -1,0 +1,81 @@
+---
+title: "vorsteh-queue dashboard"
+navTitle: "dashboard"
+description: Interactive TUI dashboard for monitoring and managing jobs
+cliCommand: "dashboard"
+---
+
+Opens an interactive terminal dashboard for real-time queue monitoring and job management.
+
+## Usage
+
+```bash
+vorsteh-queue dashboard
+```
+
+```bash
+vorsteh-queue dashboard --url http://localhost:3000/graphql --token secret
+```
+
+```bash
+vorsteh-queue dashboard --refresh 5000
+```
+
+## Views
+
+The dashboard provides three views, navigable via keyboard:
+
+### Stats View
+
+Displays queue statistics with visual bar chart:
+
+- Pending, Delayed, Processing, Completed, Failed, Cancelled, Dead counts
+- Auto-refreshes at the configured interval
+
+### Jobs View
+
+Paginated job list with:
+
+- Status filter (all, pending, processing, completed, failed, dead, delayed, cancelled)
+- Priority and attempt count per job
+- Keyboard navigation and pagination
+
+### Detail View
+
+Full job inspection with:
+
+- All job metadata (ID, status, priority, timestamps, progress)
+- Payload and result display
+- Error details for failed jobs
+- Inline actions: Cancel, Retry, Run Now, Delete (with confirmation)
+
+## Keyboard Navigation
+
+| View   | Key           | Action                 |
+| ------ | ------------- | ---------------------- |
+| Stats  | `j` / `Enter` | Go to Jobs view        |
+| Jobs   | `↑` / `k`     | Move cursor up         |
+| Jobs   | `↓` / `j`     | Move cursor down       |
+| Jobs   | `←` / `h`     | Previous status filter |
+| Jobs   | `→` / `l`     | Next status filter     |
+| Jobs   | `Enter`       | Open job detail        |
+| Jobs   | `Ctrl+D`      | Next page              |
+| Jobs   | `Ctrl+U`      | Previous page          |
+| Jobs   | `g`           | Jump to first page     |
+| Jobs   | `G`           | Jump to last item      |
+| Detail | `c`           | Cancel job             |
+| Detail | `r`           | Retry job              |
+| Detail | `n`           | Run job now            |
+| Detail | `d`           | Delete job             |
+| Any    | `Esc`         | Go back                |
+| Any    | `q`           | Quit                   |
+
+## Transport
+
+The dashboard uses the same transport resolution as all other commands:
+
+1. `--url` flag → connects to remote GraphQL server
+2. `VORSTEH_QUEUE_URL` env var → remote mode
+3. `queue.config.ts` → direct adapter connection
+
+<CliCommandDetails command="dashboard" />
