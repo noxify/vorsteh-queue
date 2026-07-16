@@ -104,6 +104,9 @@ importers:
       '@vorsteh-queue/cli':
         specifier: workspace:*
         version: link:../../packages/cli
+      '@vorsteh-queue/server':
+        specifier: workspace:*
+        version: link:../../packages/server
       agentic-mermaid:
         specifier: 0.1.1
         version: 0.1.1
