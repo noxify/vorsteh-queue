@@ -93,6 +93,7 @@ export default function RootLayout({
         "json",
         "dockerfile",
         "prisma",
+        "graphql",
       ]}
       siteUrl={SITE_URL}
     >
