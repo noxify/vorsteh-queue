@@ -3,6 +3,8 @@ import { Box, Text, useInput } from "ink"
 import { useCallback, useEffect, useState } from "react"
 import { useParams } from "react-router"
 
+import { Badge } from "../components/ui/badge"
+import { Spinner } from "../components/ui/spinner"
 import { useTransportContext } from "../context"
 
 interface DetailViewProps {
@@ -11,7 +13,7 @@ interface DetailViewProps {
 
 /**
  * Job detail view with action support.
- * Reads jobId from the route params.
+ * Reads jobId from the route params. Uses termcn Badge for status display.
  */
 export function DetailView({ onBack }: DetailViewProps) {
   const { jobId } = useParams<{ jobId: string }>()
@@ -118,11 +120,7 @@ export function DetailView({ onBack }: DetailViewProps) {
   }
 
   if (!job) {
-    return (
-      <Box>
-        <Text color="gray">Loading...</Text>
-      </Box>
-    )
+    return <Spinner label="Loading job details..." />
   }
 
   return (
@@ -130,11 +128,14 @@ export function DetailView({ onBack }: DetailViewProps) {
       <Box flexDirection="column" gap={0}>
         <Field label="ID" value={job.id} />
         <Field label="Name" value={job.name} />
-        <Field
-          label="Status"
-          value={job.status}
-          color={getStatusColor(job.status)}
-        />
+        <Box>
+          <Box width={14}>
+            <Text color="gray">Status</Text>
+          </Box>
+          <Badge variant={getStatusVariant(job.status)} bordered={false} bold>
+            {job.status}
+          </Badge>
+        </Box>
         <Field label="Priority" value={String(job.priority)} />
         <Field
           label="Attempts"
@@ -214,31 +215,29 @@ function formatDate(date: Date): string {
   return date instanceof Date ? date.toISOString() : String(date)
 }
 
-function getStatusColor(status: string): string {
+function getStatusVariant(
+  status: string
+): "default" | "success" | "warning" | "error" | "info" | "secondary" {
   switch (status) {
-    case "pending": {
-      return "yellow"
+    case "completed": {
+      return "success"
+    }
+    case "failed":
+    case "dead": {
+      return "error"
+    }
+    case "pending":
+    case "delayed": {
+      return "warning"
     }
     case "processing": {
-      return "cyan"
-    }
-    case "completed": {
-      return "green"
-    }
-    case "failed": {
-      return "red"
-    }
-    case "dead": {
-      return "magenta"
-    }
-    case "delayed": {
-      return "blue"
+      return "info"
     }
     case "cancelled": {
-      return "gray"
+      return "secondary"
     }
     default: {
-      return "white"
+      return "default"
     }
   }
 }

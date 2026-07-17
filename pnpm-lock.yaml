@@ -848,6 +848,9 @@ importers:
       c12:
         specifier: 3.3.4
         version: 3.3.4(magicast@0.5.3)
+      cli-spinners:
+        specifier: ^3.4.0
+        version: 3.4.0
       commander:
         specifier: 15.0.0
         version: 15.0.0

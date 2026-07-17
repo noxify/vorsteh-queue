@@ -3,6 +3,8 @@ import { Suspense } from "react"
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router"
 
 import type { Transport } from "../transport/types"
+import { Spinner } from "./components/ui/spinner"
+import { ThemeProvider } from "./components/ui/theme-provider"
 import { TransportProvider, useTransportContext } from "./context"
 import { DetailView } from "./views/detail"
 import { JobsView } from "./views/jobs"
@@ -15,21 +17,27 @@ interface AppProps {
 
 /**
  * Root TUI application component.
- * Uses react-router MemoryRouter for view navigation.
+ * Uses react-router MemoryRouter for view navigation and termcn ThemeProvider
+ * for consistent terminal theming.
  */
 export function App({ transport, refreshInterval }: AppProps) {
   return (
-    <TransportProvider transport={transport} refreshInterval={refreshInterval}>
-      <MemoryRouter>
-        <Box flexDirection="column" padding={1}>
-          <Routes>
-            <Route path="/" element={<StatsPage />} />
-            <Route path="/jobs" element={<JobsPage />} />
-            <Route path="/jobs/:jobId" element={<DetailPage />} />
-          </Routes>
-        </Box>
-      </MemoryRouter>
-    </TransportProvider>
+    <ThemeProvider>
+      <TransportProvider
+        transport={transport}
+        refreshInterval={refreshInterval}
+      >
+        <MemoryRouter>
+          <Box flexDirection="column" padding={1}>
+            <Routes>
+              <Route path="/" element={<StatsPage />} />
+              <Route path="/jobs" element={<JobsPage />} />
+              <Route path="/jobs/:jobId" element={<DetailPage />} />
+            </Routes>
+          </Box>
+        </MemoryRouter>
+      </TransportProvider>
+    </ThemeProvider>
   )
 }
 
@@ -141,5 +149,5 @@ function Footer({ hint }: { readonly hint: string }) {
 }
 
 function Loading() {
-  return <Text color="gray">Loading...</Text>
+  return <Spinner label="Loading..." />
 }

@@ -53,6 +53,7 @@
     "@vorsteh-queue/core": "workspace:*",
     "@vorsteh-queue/server": "workspace:*",
     "c12": "3.3.4",
+    "cli-spinners": "^3.4.0",
     "commander": "15.0.0",
     "consola": "3.4.2",
     "ink": "^7.1.0",

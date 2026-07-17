@@ -2,6 +2,9 @@ import type { Job, JobStatus } from "@vorsteh-queue/core"
 import { Box, Text, useInput } from "ink"
 import { useEffect, useState } from "react"
 
+import { Badge } from "../components/ui/badge"
+import { Spinner } from "../components/ui/spinner"
+import { Table } from "../components/ui/table"
 import { useTransportContext } from "../context"
 
 interface JobsViewProps {
@@ -24,14 +27,15 @@ const PAGE_SIZE = 15
 
 /**
  * Paginated job list with status filter and keyboard navigation.
+ * Uses termcn Table component for rendering.
  */
 export function JobsView({ refreshInterval, onSelectJob }: JobsViewProps) {
   const { transport } = useTransportContext()
   const [jobs, setJobs] = useState<readonly Job[]>([])
-  const [cursor, setCursor] = useState(0)
   const [page, setPage] = useState(0)
   const [filterIndex, setFilterIndex] = useState(0)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const activeFilter = STATUS_FILTERS[filterIndex] ?? "all"
 
@@ -48,10 +52,12 @@ export function JobsView({ refreshInterval, onSelectJob }: JobsViewProps) {
         if (mounted) {
           setJobs(result)
           setErrorMsg(null)
+          setLoading(false)
         }
       } catch (error) {
         if (mounted) {
           setErrorMsg(error instanceof Error ? error.message : "Unknown error")
+          setLoading(false)
         }
       }
     }
@@ -66,36 +72,18 @@ export function JobsView({ refreshInterval, onSelectJob }: JobsViewProps) {
   }, [transport, refreshInterval, page, activeFilter])
 
   useInput((input, key) => {
-    if (key.downArrow || input === "j") {
-      setCursor((prev) => Math.min(prev + 1, jobs.length - 1))
-    } else if (key.upArrow || input === "k") {
-      setCursor((prev) => Math.max(prev - 1, 0))
-    } else if (key.rightArrow || input === "l") {
+    if (key.rightArrow || input === "l") {
       setFilterIndex((prev) => (prev + 1) % STATUS_FILTERS.length)
-      setCursor(0)
       setPage(0)
     } else if (key.leftArrow || input === "h") {
       setFilterIndex(
         (prev) => (prev - 1 + STATUS_FILTERS.length) % STATUS_FILTERS.length
       )
-      setCursor(0)
       setPage(0)
     } else if (key.ctrl && input === "d") {
       setPage((prev) => prev + 1)
-      setCursor(0)
     } else if (key.ctrl && input === "u" && page > 0) {
       setPage((prev) => prev - 1)
-      setCursor(0)
-    } else if (input === "g") {
-      setPage(0)
-      setCursor(0)
-    } else if (input === "G") {
-      setCursor(jobs.length - 1)
-    } else if (key.return) {
-      const selected = jobs[cursor]
-      if (selected) {
-        onSelectJob(selected.id)
-      }
     }
   })
 
@@ -107,47 +95,51 @@ export function JobsView({ refreshInterval, onSelectJob }: JobsViewProps) {
     )
   }
 
+  if (loading) {
+    return <Spinner label="Loading jobs..." />
+  }
+
+  const tableData = jobs.map((job) => ({
+    attempts: `${job.attempts}/${job.maxAttempts}`,
+    id: job.id,
+    name: job.name.slice(0, 24),
+    priority: String(job.priority),
+    status: job.status,
+  }))
+
   return (
     <Box flexDirection="column">
       <Box marginBottom={1}>
         <Text color="gray">Filter: </Text>
         {STATUS_FILTERS.map((f, i) => (
-          <Text
-            key={f}
-            color={i === filterIndex ? "cyan" : "gray"}
-            bold={i === filterIndex}
-          >
-            {i === filterIndex ? `[${f}]` : ` ${f} `}
-          </Text>
+          <Box key={f} marginRight={1}>
+            {i === filterIndex ? (
+              <Badge variant={getStatusVariant(f)} bordered={false} bold>
+                {f}
+              </Badge>
+            ) : (
+              <Text color="gray">{f}</Text>
+            )}
+          </Box>
         ))}
-        <Text color="gray"> (←/→)</Text>
+        <Text color="gray">(←/→)</Text>
       </Box>
 
       {jobs.length === 0 ? (
         <Text color="gray">No jobs found.</Text>
       ) : (
-        <Box flexDirection="column">
-          <Box>
-            <Box width={4}>
-              <Text color="gray">#</Text>
-            </Box>
-            <Box width={26}>
-              <Text color="gray">Name</Text>
-            </Box>
-            <Box width={14}>
-              <Text color="gray">Status</Text>
-            </Box>
-            <Box width={6}>
-              <Text color="gray">Pri</Text>
-            </Box>
-            <Box width={8}>
-              <Text color="gray">Attempt</Text>
-            </Box>
-          </Box>
-          {jobs.map((job, i) => (
-            <JobRow key={job.id} job={job} selected={i === cursor} index={i} />
-          ))}
-        </Box>
+        <Table
+          data={tableData}
+          columns={[
+            { header: "Name", key: "name", width: 24 },
+            { header: "Status", key: "status", width: 12 },
+            { align: "right", header: "Pri", key: "priority", width: 5 },
+            { header: "Attempts", key: "attempts", width: 8 },
+          ]}
+          selectable
+          onSelect={(row) => onSelectJob(row.id)}
+          maxRows={PAGE_SIZE}
+        />
       )}
 
       <Box marginTop={1}>
@@ -159,68 +151,29 @@ export function JobsView({ refreshInterval, onSelectJob }: JobsViewProps) {
   )
 }
 
-function JobRow({
-  job,
-  selected,
-  index,
-}: {
-  readonly job: Job
-  readonly selected: boolean
-  readonly index: number
-}) {
-  const statusColor = getStatusColor(job.status)
-  return (
-    <Box>
-      <Box width={4}>
-        <Text color={selected ? "cyan" : "gray"}>
-          {selected ? "›" : " "} {index + 1}
-        </Text>
-      </Box>
-      <Box width={26}>
-        <Text color={selected ? "white" : undefined} bold={selected}>
-          {job.name.slice(0, 24)}
-        </Text>
-      </Box>
-      <Box width={14}>
-        <Text color={statusColor}>{job.status}</Text>
-      </Box>
-      <Box width={6}>
-        <Text>{job.priority}</Text>
-      </Box>
-      <Box width={8}>
-        <Text>
-          {job.attempts}/{job.maxAttempts}
-        </Text>
-      </Box>
-    </Box>
-  )
-}
-
-function getStatusColor(status: JobStatus): string {
+function getStatusVariant(
+  status: JobStatus | "all"
+): "default" | "success" | "warning" | "error" | "info" | "secondary" {
   switch (status) {
-    case "pending": {
-      return "yellow"
+    case "completed": {
+      return "success"
+    }
+    case "failed":
+    case "dead": {
+      return "error"
+    }
+    case "pending":
+    case "delayed": {
+      return "warning"
     }
     case "processing": {
-      return "cyan"
-    }
-    case "completed": {
-      return "green"
-    }
-    case "failed": {
-      return "red"
-    }
-    case "dead": {
-      return "magenta"
-    }
-    case "delayed": {
-      return "blue"
+      return "info"
     }
     case "cancelled": {
-      return "gray"
+      return "secondary"
     }
     default: {
-      return "white"
+      return "default"
     }
   }
 }

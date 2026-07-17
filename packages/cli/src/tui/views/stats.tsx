@@ -2,6 +2,8 @@ import type { QueueStats } from "@vorsteh-queue/core"
 import { Box, Text } from "ink"
 import { useEffect, useState } from "react"
 
+import { BarChart } from "../components/ui/bar-chart"
+import { Spinner } from "../components/ui/spinner"
 import { useTransportContext } from "../context"
 
 interface StatsViewProps {
@@ -9,7 +11,7 @@ interface StatsViewProps {
 }
 
 /**
- * Queue statistics overview with auto-refresh.
+ * Queue statistics overview with auto-refresh using termcn BarChart.
  */
 export function StatsView({ refreshInterval }: StatsViewProps) {
   const { transport } = useTransportContext()
@@ -51,11 +53,7 @@ export function StatsView({ refreshInterval }: StatsViewProps) {
   }
 
   if (!stats) {
-    return (
-      <Box>
-        <Text color="gray">Loading...</Text>
-      </Box>
-    )
+    return <Spinner label="Loading stats..." />
   }
 
   const total =
@@ -67,43 +65,22 @@ export function StatsView({ refreshInterval }: StatsViewProps) {
     stats.cancelled +
     stats.dead
 
+  const chartData = [
+    { color: "yellow", label: "Pending", value: stats.pending },
+    { color: "blue", label: "Delayed", value: stats.delayed },
+    { color: "cyan", label: "Processing", value: stats.processing },
+    { color: "green", label: "Completed", value: stats.completed },
+    { color: "red", label: "Failed", value: stats.failed },
+    { color: "gray", label: "Cancelled", value: stats.cancelled },
+    { color: "magenta", label: "Dead", value: stats.dead },
+  ]
+
   return (
     <Box flexDirection="column">
-      <Box flexDirection="column" gap={0}>
-        <StatRow label="Pending" value={stats.pending} color="yellow" />
-        <StatRow label="Delayed" value={stats.delayed} color="blue" />
-        <StatRow label="Processing" value={stats.processing} color="cyan" />
-        <StatRow label="Completed" value={stats.completed} color="green" />
-        <StatRow label="Failed" value={stats.failed} color="red" />
-        <StatRow label="Cancelled" value={stats.cancelled} color="gray" />
-        <StatRow label="Dead" value={stats.dead} color="magenta" />
-      </Box>
+      <BarChart data={chartData} width={50} showValues title="Job Status" />
       <Box marginTop={1}>
         <Text color="gray">Total: {total}</Text>
       </Box>
-    </Box>
-  )
-}
-
-function StatRow({
-  label,
-  value,
-  color,
-}: {
-  readonly label: string
-  readonly value: number
-  readonly color: string
-}) {
-  const bar = value > 0 ? "█".repeat(Math.min(value, 40)) : ""
-  return (
-    <Box>
-      <Box width={12}>
-        <Text>{label}</Text>
-      </Box>
-      <Box width={6}>
-        <Text bold>{value}</Text>
-      </Box>
-      <Text color={color}>{bar}</Text>
     </Box>
   )
 }

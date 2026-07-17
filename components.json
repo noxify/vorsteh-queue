@@ -1,0 +1,22 @@
+{
+  "style": "default",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "",
+    "baseColor": "neutral",
+    "cssVariables": false,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "packages/cli/src/tui/components",
+    "utils": "packages/cli/src/tui/lib/utils",
+    "ui": "packages/cli/src/tui/components/ui",
+    "lib": "packages/cli/src/tui/lib",
+    "hooks": "packages/cli/src/tui/hooks"
+  },
+  "registries": {
+    "@termcn": "https://termcn.dev/r/{name}.json"
+  }
+}
