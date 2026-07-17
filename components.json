@@ -10,11 +10,11 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "packages/cli/src/tui/components",
-    "utils": "packages/cli/src/tui/lib/utils",
-    "ui": "packages/cli/src/tui/components/ui",
-    "lib": "packages/cli/src/tui/lib",
-    "hooks": "packages/cli/src/tui/hooks"
+    "components": "src/components",
+    "utils": "src/lib/utils",
+    "ui": "src/components/ui",
+    "lib": "src/lib",
+    "hooks": "src/hooks"
   },
   "registries": {
     "@termcn": "https://termcn.dev/r/{name}.json"

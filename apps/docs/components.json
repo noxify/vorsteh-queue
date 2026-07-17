@@ -22,7 +22,6 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@reui": "https://reui.io/r/{style}/{name}.json",
-    "@termcn": "https://termcn.dev/r/{name}.json"
+    "@reui": "https://reui.io/r/{style}/{name}.json"
   }
 }
