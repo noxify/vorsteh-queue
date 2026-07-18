@@ -69,7 +69,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@vorsteh-queue/core": "workspace:*"
+    "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/query-builder": "workspace:*"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.4",

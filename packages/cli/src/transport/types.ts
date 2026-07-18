@@ -9,6 +9,7 @@ import type {
   PaginationOptions,
   QueueStats,
 } from "@vorsteh-queue/core"
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
 
 export interface Transport {
   connect: () => Promise<void>
@@ -16,8 +17,7 @@ export interface Transport {
   getStats: () => Promise<QueueStats>
   getJob: (id: string) => Promise<Job | null>
   getJobs: (options?: {
-    status?: JobStatus
-    name?: string
+    where?: JobWhereInput
     limit?: number
     offset?: number
   }) => Promise<readonly Job[]>
@@ -30,6 +30,6 @@ export interface Transport {
   redriveJob: (id: string) => Promise<void>
   redriveAll: (filter?: { name?: string }) => Promise<number>
   clearJobs: (status?: JobStatus) => Promise<number>
-  size: () => Promise<number>
+  size: (where?: JobWhereInput) => Promise<number>
   getFlowTree: (flowId: string) => Promise<FlowNode | null>
 }

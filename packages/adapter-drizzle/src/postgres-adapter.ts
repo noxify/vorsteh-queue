@@ -13,6 +13,9 @@ import type {
   StepState,
 } from "@vorsteh-queue/core"
 import { BaseQueueAdapter } from "@vorsteh-queue/core"
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
+import { normalizeWhere } from "@vorsteh-queue/query-builder"
+import { buildWhere } from "@vorsteh-queue/query-builder/drizzle"
 import { and, asc, count, eq, inArray, lte, not, sql } from "drizzle-orm"
 import type { NodePgDatabase } from "drizzle-orm/node-postgres"
 import type { PgTable } from "drizzle-orm/pg-core"
@@ -434,34 +437,40 @@ export class PostgresQueueAdapter<
     return result
   }
 
-  async size(): Promise<number> {
+  async size(where?: JobWhereInput): Promise<number> {
+    const normalized = normalizeWhere(where)
+    const whereClause = buildWhere(normalized, this.model)
+    const hasFilter = Object.keys(normalized).length > 0
+
+    const conditions = [eq(this.model.queueName, this.queueName)]
+    if (hasFilter && whereClause) {
+      // When filter provided, count matching jobs
+      conditions.push(whereClause)
+    } else {
+      // Default behavior: count pending + delayed
+      conditions.push(inArray(this.model.status, ["pending", "delayed"]))
+    }
+
     const [result] = await this.db
       .select({ count: count() })
       .from(this.model)
-      .where(
-        and(
-          eq(this.model.queueName, this.queueName),
-          inArray(this.model.status, ["pending", "delayed"])
-        )
-      )
+      .where(and(...conditions))
     return Number(result?.count ?? 0)
   }
 
   async getJobs(options: {
-    status?: JobStatus
-    name?: string
+    where?: JobWhereInput
     limit?: number
     offset?: number
   }): Promise<readonly Job[]> {
     const limit = options.limit ?? 20
     const offset = options.offset ?? 0
-    const conditions = [eq(this.model.queueName, this.queueName)]
+    const normalized = normalizeWhere(options.where)
+    const whereClause = buildWhere(normalized, this.model)
 
-    if (options.status) {
-      conditions.push(eq(this.model.status, options.status))
-    }
-    if (options.name) {
-      conditions.push(eq(this.model.name, options.name))
+    const conditions = [eq(this.model.queueName, this.queueName)]
+    if (whereClause) {
+      conditions.push(whereClause)
     }
 
     const jobs = await this.db

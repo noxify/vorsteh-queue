@@ -4,6 +4,8 @@
  * This module contains all shared types used across Queue, Worker, and Adapter layers.
  */
 
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
+
 import type { Telemetry } from "./telemetry"
 
 // ─── Job Status & State Machine ─────────────────────────────────────────────
@@ -619,13 +621,12 @@ export interface QueueAdapter {
   /** Get job counts by status */
   getQueueStats: () => Promise<QueueStats>
 
-  /** Get total number of pending + delayed jobs */
-  size: () => Promise<number>
+  /** Get job count — returns all pending + delayed jobs when no filter provided, or count of jobs matching the where filter */
+  size: (where?: JobWhereInput) => Promise<number>
 
-  /** Get paginated job list with optional status/name filters */
+  /** Get paginated job list with optional where filter */
   getJobs: (options: {
-    status?: JobStatus
-    name?: string
+    where?: JobWhereInput
     limit?: number
     offset?: number
   }) => Promise<readonly Job[]>

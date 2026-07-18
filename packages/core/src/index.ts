@@ -79,6 +79,19 @@ export type {
   DrizzleAdapterProps,
 } from "./types"
 
+// Query Builder (filter types)
+export type {
+  DateTimeFilter,
+  IntFilter,
+  JobStatusFilter,
+  JobWhereInput,
+  NormalizedJobWhereInput,
+  NullFilter,
+  StringFilter,
+} from "@vorsteh-queue/query-builder"
+
+export { normalizeWhere, matchesWhere } from "@vorsteh-queue/query-builder"
+
 // Steps
 export {
   createStepContext,

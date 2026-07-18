@@ -13,6 +13,9 @@
  * ```
  */
 
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
+import { matchesWhere, normalizeWhere } from "@vorsteh-queue/query-builder"
+
 import type {
   CancelJobsFilter,
   FlowNode,
@@ -373,10 +376,19 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     return stats
   }
 
-  async size(): Promise<number> {
+  async size(where?: JobWhereInput): Promise<number> {
+    const normalized = normalizeWhere(where)
+    const hasFilter = Object.keys(normalized).length > 0
+
     let count = 0
     for (const job of this.jobs.values()) {
-      if (job.status === "pending" || job.status === "delayed") {
+      if (hasFilter) {
+        // When filter provided, count all matching jobs
+        if (matchesWhere(job, normalized)) {
+          count += 1
+        }
+      } else if (job.status === "pending" || job.status === "delayed") {
+        // Default behavior: count pending + delayed
         count += 1
       }
     }
@@ -384,21 +396,19 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
   }
 
   async getJobs(options: {
-    status?: JobStatus
-    name?: string
+    where?: JobWhereInput
     limit?: number
     offset?: number
   }): Promise<readonly Job[]> {
     const limit = options.limit ?? 20
     const offset = options.offset ?? 0
+    const normalized = normalizeWhere(options.where)
 
     let results = [...this.jobs.values()]
 
-    if (options.status) {
-      results = results.filter((job) => job.status === options.status)
-    }
-    if (options.name) {
-      results = results.filter((job) => job.name === options.name)
+    // Apply where filter if any conditions are specified
+    if (Object.keys(normalized).length > 0) {
+      results = results.filter((job) => matchesWhere(job, normalized))
     }
 
     return results

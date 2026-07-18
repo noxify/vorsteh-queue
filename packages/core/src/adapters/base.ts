@@ -15,6 +15,8 @@
  * ```
  */
 
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
+
 import type {
   CancelJobsFilter,
   FlowNode,
@@ -82,10 +84,9 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   // ─── Statistics & Queries ──────────────────────────────────
 
   abstract getQueueStats(): Promise<QueueStats>
-  abstract size(): Promise<number>
+  abstract size(where?: JobWhereInput): Promise<number>
   abstract getJobs(options: {
-    status?: JobStatus
-    name?: string
+    where?: JobWhereInput
     limit?: number
     offset?: number
   }): Promise<readonly Job[]>

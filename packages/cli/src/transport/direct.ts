@@ -40,9 +40,8 @@ export function createDirectTransport(
     async getJobs(options) {
       return adapter.getJobs({
         limit: options?.limit,
-        name: options?.name,
         offset: options?.offset,
-        status: options?.status,
+        where: options?.where,
       })
     },
     async getQueues() {
@@ -63,8 +62,8 @@ export function createDirectTransport(
     async runJobNow(id: string) {
       return adapter.runJobNow(id)
     },
-    async size() {
-      return adapter.size()
+    async size(where) {
+      return adapter.size(where)
     },
   }
 }

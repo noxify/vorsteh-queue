@@ -1,4 +1,5 @@
 import type { Job, JobStatus } from "@vorsteh-queue/core"
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
 import { Box, Text, useInput } from "ink"
 import { useEffect, useState } from "react"
 
@@ -67,14 +68,25 @@ export function JobsView({ isFocused }: JobsViewProps) {
 
     const refresh = async () => {
       try {
+        const where: JobWhereInput = {
+          ...(activeFilter !== "all" && { status: { eq: activeFilter } }),
+          ...(nameFilter && { name: { contains: nameFilter } }),
+          ...(activeTimeRange.ms > 0 && {
+            createdAt: {
+              gte: new Date(Date.now() - activeTimeRange.ms).toISOString(),
+            },
+          }),
+        }
+
+        const whereParam = Object.keys(where).length > 0 ? where : undefined
+
         const [result, total] = await Promise.all([
           transport.getJobs({
             limit: PAGE_SIZE,
-            name: nameFilter || undefined,
             offset: jobsPage * PAGE_SIZE,
-            status: activeFilter === "all" ? undefined : activeFilter,
+            where: whereParam,
           }),
-          transport.size(),
+          transport.size(whereParam),
         ])
         if (mounted) {
           setJobs(result)
@@ -105,24 +117,13 @@ export function JobsView({ isFocused }: JobsViewProps) {
     activeFilter,
     activeQueue,
     nameFilter,
+    activeTimeRange,
   ])
 
   const hasMorePages = !isLastPage
 
-  // Apply client-side time filter
-  const timeFiltered =
-    activeTimeRange.ms === 0
-      ? jobs
-      : jobs.filter((job) => {
-          const created =
-            job.createdAt instanceof Date
-              ? job.createdAt.getTime()
-              : new Date(job.createdAt).getTime()
-          return Date.now() - created <= activeTimeRange.ms
-        })
-
   // Apply client-side sort
-  const filteredJobs = [...timeFiltered].toSorted((a, b) => {
+  const filteredJobs = [...jobs].toSorted((a, b) => {
     const aVal = String(
       (a as unknown as Record<string, unknown>)[sortKey] ?? ""
     )

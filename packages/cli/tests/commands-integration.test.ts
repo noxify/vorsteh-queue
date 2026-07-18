@@ -72,7 +72,7 @@ describe("CLI Commands (Direct Transport)", () => {
         status: "completed",
       })
 
-      const jobs = await transport.getJobs({ status: "pending" })
+      const jobs = await transport.getJobs({ where: { status: "pending" } })
       expect(jobs).toHaveLength(1)
       expect(jobs[0]?.name).toBe("pending-job")
     })

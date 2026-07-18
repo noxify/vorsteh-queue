@@ -13,6 +13,7 @@
   "devDependencies": {
     "@testcontainers/postgresql": "12.0.4",
     "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/query-builder": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "postgres": "3.4.9",
     "testcontainers": "12.0.4",

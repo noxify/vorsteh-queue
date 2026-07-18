@@ -13,6 +13,9 @@ import type {
   StepState,
 } from "@vorsteh-queue/core"
 import { BaseQueueAdapter } from "@vorsteh-queue/core"
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
+import { normalizeWhere } from "@vorsteh-queue/query-builder"
+import { buildWhere } from "@vorsteh-queue/query-builder/kysely"
 import type { Kysely } from "kysely"
 import { sql } from "kysely"
 
@@ -405,36 +408,39 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
     return result
   }
 
-  async size(): Promise<number> {
-    const result = await this.customDbClient
+  async size(where?: JobWhereInput): Promise<number> {
+    const normalized = normalizeWhere(where)
+    const hasFilter = Object.keys(normalized).length > 0
+
+    let query = this.customDbClient
       .selectFrom(this.table)
       .select(({ fn }) => [fn.countAll<number>().as("count")])
       .where("queue_name", "=", this.queueName)
-      .where("status", "in", ["pending", "delayed"])
-      .executeTakeFirst()
 
+    query = hasFilter
+      ? (buildWhere(query, normalized) as typeof query)
+      : query.where("status", "in", ["pending", "delayed"])
+
+    const result = await query.executeTakeFirst()
     return Number(result?.count ?? 0)
   }
 
   async getJobs(options: {
-    status?: JobStatus
-    name?: string
+    where?: JobWhereInput
     limit?: number
     offset?: number
   }): Promise<readonly Job[]> {
     const limit = options.limit ?? 20
     const offset = options.offset ?? 0
+    const normalized = normalizeWhere(options.where)
 
     let query = this.customDbClient
       .selectFrom(this.table)
       .selectAll()
       .where("queue_name", "=", this.queueName)
 
-    if (options.status) {
-      query = query.where("status", "=", options.status)
-    }
-    if (options.name) {
-      query = query.where("name", "=", options.name)
+    if (Object.keys(normalized).length > 0) {
+      query = buildWhere(query, normalized) as typeof query
     }
 
     const rows = await query

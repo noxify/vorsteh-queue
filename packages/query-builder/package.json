@@ -1,26 +1,17 @@
 {
-  "name": "@vorsteh-queue/adapter-drizzle",
-  "version": "0.5.1",
-  "description": "Drizzle ORM adapter for Vorsteh Queue with PostgreSQL support",
+  "name": "@vorsteh-queue/query-builder",
+  "version": "0.1.0",
+  "description": "Query builder and filter utilities for Vorsteh Queue — normalizes, matches, and translates JobWhereInput for all supported ORMs",
   "keywords": [
-    "adapter",
-    "background-jobs",
-    "database",
     "drizzle",
-    "drizzle-orm",
+    "filter",
     "job-queue",
-    "node-postgres",
-    "orm",
-    "pg",
-    "pglite",
-    "postgres",
-    "postgres-js",
-    "postgresql",
-    "queue",
-    "sql",
-    "task-queue",
+    "kysely",
+    "prisma",
+    "query-builder",
     "typescript",
-    "worker"
+    "vorsteh-queue",
+    "where"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
@@ -28,7 +19,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/noxify/vorsteh-queue",
-    "directory": "packages/adapter-drizzle"
+    "directory": "packages/query-builder"
   },
   "files": [
     "dist"
@@ -40,55 +31,57 @@
     ".": {
       "types": "./dist/index.d.mts",
       "source": "./src/index.ts",
+      "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     },
-    "./postgres-adapter": {
-      "types": "./dist/postgres-adapter.d.mts",
-      "source": "./src/postgres-adapter.ts",
-      "default": "./dist/postgres-adapter.mjs"
+    "./drizzle": {
+      "types": "./dist/drizzle.d.mts",
+      "source": "./src/drizzle.ts",
+      "import": "./dist/drizzle.mjs",
+      "default": "./dist/drizzle.mjs"
     },
-    "./postgres-schema": {
-      "types": "./dist/postgres-schema.d.mts",
-      "source": "./src/postgres-schema.ts",
-      "default": "./dist/postgres-schema.mjs"
+    "./kysely": {
+      "types": "./dist/kysely.d.mts",
+      "source": "./src/kysely.ts",
+      "import": "./dist/kysely.mjs",
+      "default": "./dist/kysely.mjs"
+    },
+    "./prisma": {
+      "types": "./dist/prisma.d.mts",
+      "source": "./src/prisma.ts",
+      "import": "./dist/prisma.mjs",
+      "default": "./dist/prisma.mjs"
     }
   },
   "scripts": {
     "build": "tsdown --log-level error",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "db:generate": "drizzle-kit generate",
     "dev": "tsdown --watch",
     "test": "vitest",
-    "test:watch": "vitest --watch",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@vorsteh-queue/core": "workspace:*",
-    "@vorsteh-queue/query-builder": "workspace:*"
-  },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.4",
-    "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "drizzle-kit": "0.31.10",
     "drizzle-orm": "0.45.2",
-    "postgres": "3.4.9",
+    "kysely": "0.29.3",
     "tsdown": "0.22.9",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "drizzle-orm": ">=0.45.2"
+    "@prisma/client": ">=5",
+    "drizzle-orm": ">=0.45",
+    "kysely": ">=0.27"
   },
   "peerDependenciesMeta": {
-    "@types/pg": {
+    "drizzle-orm": {
       "optional": true
     },
-    "pg": {
+    "kysely": {
       "optional": true
     },
-    "postgres": {
+    "@prisma/client": {
       "optional": true
     }
   },

@@ -13,6 +13,9 @@ import type {
   StepState,
 } from "@vorsteh-queue/core"
 import { BaseQueueAdapter } from "@vorsteh-queue/core"
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
+import { normalizeWhere } from "@vorsteh-queue/query-builder"
+import { buildWhere } from "@vorsteh-queue/query-builder/prisma"
 
 import type { PrismaClient, PrismaClientInternal } from "../types"
 
@@ -468,31 +471,42 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     return result
   }
 
-  async size(): Promise<number> {
+  async size(where?: JobWhereInput): Promise<number> {
+    const normalized = normalizeWhere(where)
+    const prismaWhere = buildWhere(normalized)
+    const hasFilter = Object.keys(normalized).length > 0
+
+    const prismaWhereClause: Record<string, unknown> = {
+      queueName: this.queueName,
+    }
+
+    if (hasFilter) {
+      // When filter provided, count matching jobs
+      Object.assign(prismaWhereClause, prismaWhere)
+    } else {
+      // Default behavior: count pending + delayed
+      prismaWhereClause.status = { in: ["pending", "delayed"] }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return this.db[this.modelName]!.count({
-      where: {
-        queueName: this.queueName,
-        status: { in: ["pending", "delayed"] },
-      },
+      where: prismaWhereClause,
     })
   }
 
   async getJobs(options: {
-    status?: JobStatus
-    name?: string
+    where?: JobWhereInput
     limit?: number
     offset?: number
   }): Promise<readonly Job[]> {
     const limit = options.limit ?? 20
     const offset = options.offset ?? 0
-    const where: Record<string, unknown> = { queueName: this.queueName }
+    const normalized = normalizeWhere(options.where)
+    const prismaWhere = buildWhere(normalized)
 
-    if (options.status) {
-      where.status = options.status
-    }
-    if (options.name) {
-      where.name = options.name
+    const where: Record<string, unknown> = {
+      queueName: this.queueName,
+      ...prismaWhere,
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

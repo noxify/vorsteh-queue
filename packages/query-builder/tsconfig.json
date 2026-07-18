@@ -1,0 +1,11 @@
+{
+  "extends": "@vorsteh-queue/tsconfig/external-package.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "tests", "*.config.ts"],
+  "exclude": ["node_modules"]
+}

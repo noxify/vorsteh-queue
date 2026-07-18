@@ -11,6 +11,7 @@ import type {
   QueueStats,
   SerializedError,
 } from "@vorsteh-queue/core"
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
 import { createGraphQLError } from "graphql-yoga"
 
 import type { PubSub, JobLifecycleEvent } from "./pubsub"
@@ -54,6 +55,87 @@ const JobStatusEnum = builder.enumType("JobStatus", {
     processing: { value: "processing" },
     waiting_children: { value: "waiting-children" },
   },
+})
+
+// ─── Filter Input Types ──────────────────────────────────────────────────────
+
+const StringFilterInput = builder.inputType("StringFilter", {
+  fields: (t) => ({
+    eq: t.string({ required: false }),
+    neq: t.string({ required: false }),
+    contains: t.string({ required: false }),
+    startsWith: t.string({ required: false }),
+    like: t.string({ required: false }),
+    in: t.stringList({ required: false }),
+    isNull: t.boolean({ required: false }),
+  }),
+})
+
+const IntFilterInput = builder.inputType("IntFilter", {
+  fields: (t) => ({
+    eq: t.int({ required: false }),
+    neq: t.int({ required: false }),
+    lt: t.int({ required: false }),
+    lte: t.int({ required: false }),
+    gt: t.int({ required: false }),
+    gte: t.int({ required: false }),
+    isNull: t.boolean({ required: false }),
+  }),
+})
+
+const DateTimeFilterInput = builder.inputType("DateTimeFilter", {
+  fields: (t) => ({
+    lt: t.string({ required: false }),
+    lte: t.string({ required: false }),
+    gt: t.string({ required: false }),
+    gte: t.string({ required: false }),
+    isNull: t.boolean({ required: false }),
+  }),
+})
+
+const JobStatusFilterInput = builder.inputType("JobStatusFilter", {
+  fields: (t) => ({
+    eq: t.field({ type: JobStatusEnum, required: false }),
+    neq: t.field({ type: JobStatusEnum, required: false }),
+    in: t.field({ type: [JobStatusEnum], required: false }),
+  }),
+})
+
+const NullFilterInput = builder.inputType("NullFilter", {
+  fields: (t) => ({
+    isNull: t.boolean({ required: false }),
+  }),
+})
+
+// ─── Job Where Input (self-referencing via inputRef) ─────────────────────────
+
+const JobWhereInputRef =
+  builder.inputRef<Record<string, unknown>>("JobWhereInput")
+
+JobWhereInputRef.implement({
+  fields: (t) => ({
+    AND: t.field({ type: [JobWhereInputRef], required: false }),
+    OR: t.field({ type: [JobWhereInputRef], required: false }),
+    id: t.field({ type: StringFilterInput, required: false }),
+    name: t.field({ type: StringFilterInput, required: false }),
+    uniqueKey: t.field({ type: StringFilterInput, required: false }),
+    groupKey: t.field({ type: StringFilterInput, required: false }),
+    status: t.field({ type: JobStatusFilterInput, required: false }),
+    priority: t.field({ type: IntFilterInput, required: false }),
+    attempts: t.field({ type: IntFilterInput, required: false }),
+    progress: t.field({ type: IntFilterInput, required: false }),
+    createdAt: t.field({ type: DateTimeFilterInput, required: false }),
+    processAt: t.field({ type: DateTimeFilterInput, required: false }),
+    processedAt: t.field({ type: DateTimeFilterInput, required: false }),
+    completedAt: t.field({ type: DateTimeFilterInput, required: false }),
+    failedAt: t.field({ type: DateTimeFilterInput, required: false }),
+    cancelledAt: t.field({ type: DateTimeFilterInput, required: false }),
+    cron: t.field({ type: NullFilterInput, required: false }),
+    repeatCount: t.field({ type: IntFilterInput, required: false }),
+    timeout: t.field({ type: NullFilterInput, required: false }),
+    flowId: t.field({ type: StringFilterInput, required: false }),
+    parentId: t.field({ type: StringFilterInput, required: false }),
+  }),
 })
 
 // ─── Object Types ────────────────────────────────────────────────────────────
@@ -235,16 +317,14 @@ builder.queryType({
       type: [JobType],
       args: {
         queue: t.arg.string({ required: true }),
-        status: t.arg({ type: JobStatusEnum, required: false }),
-        name: t.arg.string({ required: false }),
+        where: t.arg({ type: JobWhereInputRef, required: false }),
         limit: t.arg.int({ required: false }),
         offset: t.arg.int({ required: false }),
       },
       resolve: async (_parent, args, ctx) => {
         const queue = getQueue(args.queue, ctx.queues)
         return queue.adapter.getJobs({
-          status: args.status as JobStatus | undefined,
-          name: args.name ?? undefined,
+          where: args.where as JobWhereInput | undefined,
           limit: args.limit ?? 20,
           offset: args.offset ?? 0,
         })
@@ -261,10 +341,13 @@ builder.queryType({
     }),
 
     size: t.int({
-      args: { queue: t.arg.string({ required: true }) },
+      args: {
+        queue: t.arg.string({ required: true }),
+        where: t.arg({ type: JobWhereInputRef, required: false }),
+      },
       resolve: async (_parent, args, ctx) => {
         const queue = getQueue(args.queue, ctx.queues)
-        return queue.adapter.size()
+        return queue.adapter.size(args.where as JobWhereInput | undefined)
       },
     }),
 

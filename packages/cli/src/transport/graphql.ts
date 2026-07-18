@@ -104,13 +104,12 @@ export function createGraphQLTransport(
 
     async getJobs(options) {
       const result = await query<{ jobs: readonly Job[] }>(
-        `query($queue: String!, $status: JobStatus, $name: String, $limit: Int, $offset: Int) { jobs(queue: $queue, status: $status, name: $name, limit: $limit, offset: $offset) { id name status priority attempts maxAttempts progress createdAt processAt error { name message } cron groupKey } }`,
+        `query($queue: String!, $where: JobWhereInput, $limit: Int, $offset: Int) { jobs(queue: $queue, where: $where, limit: $limit, offset: $offset) { id name status priority attempts maxAttempts progress createdAt processAt error { name message } cron groupKey } }`,
         {
           limit: options?.limit,
-          name: options?.name,
           offset: options?.offset,
           queue: queueName,
-          status: options?.status,
+          where: options?.where,
         }
       )
       return result.jobs
@@ -186,10 +185,10 @@ export function createGraphQLTransport(
       return result.clearJobs
     },
 
-    async size() {
+    async size(where) {
       const result = await query<{ size: number }>(
-        "query($queue: String!) { size(queue: $queue) }",
-        { queue: queueName }
+        "query($queue: String!, $where: JobWhereInput) { size(queue: $queue, where: $where) }",
+        { queue: queueName, where }
       )
       return result.size
     },

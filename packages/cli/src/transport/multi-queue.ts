@@ -53,7 +53,7 @@ export function createMultiQueueTransport(
     redriveJob: (id) => inner.redriveJob(id),
     redriveAll: (filter) => inner.redriveAll(filter),
     clearJobs: (status) => inner.clearJobs(status),
-    size: () => inner.size(),
+    size: (where) => inner.size(where),
     getFlowTree: (flowId) => inner.getFlowTree(flowId),
   }
 }
