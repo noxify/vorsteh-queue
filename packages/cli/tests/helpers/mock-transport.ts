@@ -1,6 +1,7 @@
 import type { Job, QueueStats } from "@vorsteh-queue/core"
 import { vi } from "vitest"
 
+import type { MultiQueueTransport } from "../../src/transport/multi-queue"
 import type { Transport } from "../../src/transport/types"
 
 const DEFAULT_STATS: QueueStats = {
@@ -54,6 +55,30 @@ export function createMockTransport(overrides?: {
     retryJob: vi.fn().mockResolvedValue(true),
     runJobNow: vi.fn().mockResolvedValue(true),
     size: vi.fn().mockResolvedValue(10),
+  }
+}
+
+/**
+ * Create a mock MultiQueueTransport for dashboard tests.
+ */
+export function createMockMultiQueueTransport(overrides?: {
+  stats?: QueueStats
+  jobs?: readonly Job[]
+  job?: Job | null
+  queues?: readonly string[]
+  initialQueue?: string
+}): MultiQueueTransport {
+  const base = createMockTransport(overrides)
+  let currentQueue = overrides?.initialQueue ?? "test-queue"
+
+  return {
+    ...base,
+    get activeQueue() {
+      return currentQueue
+    },
+    switchQueue: vi.fn((q: string) => {
+      currentQueue = q
+    }),
   }
 }
 

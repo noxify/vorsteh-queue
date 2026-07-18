@@ -24,14 +24,14 @@ const pad = (str: string, length: number): string => {
   if (str.length >= length) {
     return str.slice(0, length)
   }
-  return `${str} `.repeat(length - str.length)
+  return str + " ".repeat(length - str.length)
 }
 
 const padStart = (str: string, length: number): string => {
   if (str.length >= length) {
     return str.slice(0, length)
   }
-  return "".repeat(length - str.length) + str
+  return " ".repeat(length - str.length) + str
 }
 
 export const BarChart = ({
@@ -96,7 +96,7 @@ export const BarChart = ({
     const threshold = (row / (height - 1)) * maxValue
     const cells = data.map((item) => {
       const filled = item.value >= threshold
-      return filled ? BAR_CHAR.repeat(barW) : "".repeat(barW)
+      return filled ? BAR_CHAR.repeat(barW) : " ".repeat(barW)
     })
     rows.push(cells)
   }

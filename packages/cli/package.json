@@ -56,18 +56,16 @@
     "cli-spinners": "^3.4.0",
     "commander": "15.0.0",
     "consola": "3.4.2",
-    "ink": "^7.1.0",
-    "ink-select-input": "^6.2.0",
-    "ink-spinner": "^5.0.0",
-    "react": "19.2.7",
-    "react-router": "^8.2.0"
+    "ink": "^7.1.1",
+    "mnemonist": "^0.40.4",
+    "react": "19.2.7"
   },
   "devDependencies": {
     "@types/react": "19.2.17",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "fast-check": "^4.9.0",
     "ink-testing-library": "^4.0.0",
-    "tsdown": "0.22.4",
+    "tsdown": "0.22.9",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },

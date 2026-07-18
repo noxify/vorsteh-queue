@@ -42,20 +42,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hono/node-server": "2.0.8",
+    "@hono/node-server": "2.0.10",
     "@pothos/core": "4.13.1",
     "@vorsteh-queue/core": "workspace:*",
     "c12": "3.3.4",
     "graphql": "16.14.2",
     "graphql-yoga": "5.21.2",
-    "hono": "4.12.29"
+    "hono": "4.12.30"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "tsdown": "0.22.4",
+    "tsdown": "0.22.9",
     "typescript": "6.0.3",
     "vitest": "4.1.10",
     "zod": "4.4.3"

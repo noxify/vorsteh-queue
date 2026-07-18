@@ -2,9 +2,9 @@ import type { Job } from "@vorsteh-queue/core"
 import { render } from "ink-testing-library"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { TransportProvider } from "../../src/tui/context"
+import { DashboardProvider } from "../../src/tui/context"
 import { JobsView } from "../../src/tui/views/jobs"
-import { createMockTransport } from "../helpers/mock-transport"
+import { createMockMultiQueueTransport } from "../helpers/mock-transport"
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -61,12 +61,16 @@ describe("TUI: JobsView", () => {
   })
 
   it("should display job list after loading", async () => {
-    const transport = createMockTransport({ jobs: mockJobs })
+    const transport = createMockMultiQueueTransport({ jobs: mockJobs })
 
     const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <JobsView refreshInterval={5000} onSelectJob={() => {}} />
-      </TransportProvider>
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <JobsView isFocused={false} />
+      </DashboardProvider>
     )
     cleanup = unmount
 
@@ -82,29 +86,37 @@ describe("TUI: JobsView", () => {
   })
 
   it("should show filter bar", async () => {
-    const transport = createMockTransport({ jobs: mockJobs })
+    const transport = createMockMultiQueueTransport({ jobs: mockJobs })
 
     const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <JobsView refreshInterval={5000} onSelectJob={() => {}} />
-      </TransportProvider>
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <JobsView isFocused={false} />
+      </DashboardProvider>
     )
     cleanup = unmount
 
     await wait(50)
 
     const frame = lastFrame()
-    expect(frame).toContain("Filter")
+    expect(frame).toContain("Status")
     expect(frame).toContain("all")
   })
 
   it("should show empty state when no jobs", async () => {
-    const transport = createMockTransport({ jobs: [] })
+    const transport = createMockMultiQueueTransport({ jobs: [] })
 
     const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <JobsView refreshInterval={5000} onSelectJob={() => {}} />
-      </TransportProvider>
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <JobsView isFocused={false} />
+      </DashboardProvider>
     )
     cleanup = unmount
 
@@ -114,19 +126,23 @@ describe("TUI: JobsView", () => {
   })
 
   it("should display pagination info", async () => {
-    const transport = createMockTransport({ jobs: mockJobs })
+    const transport = createMockMultiQueueTransport({ jobs: mockJobs })
 
     const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <JobsView refreshInterval={5000} onSelectJob={() => {}} />
-      </TransportProvider>
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <JobsView isFocused={false} />
+      </DashboardProvider>
     )
     cleanup = unmount
 
     await wait(50)
 
     const frame = lastFrame()
-    expect(frame).toContain("Page 1")
-    expect(frame).toContain("3 jobs shown")
+    expect(frame).toContain("3 of")
+    expect(frame).toContain("Status")
   })
 })

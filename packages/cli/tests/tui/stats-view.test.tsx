@@ -1,14 +1,17 @@
 import { render } from "ink-testing-library"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { TransportProvider } from "../../src/tui/context"
-import { StatsView } from "../../src/tui/views/stats"
-import { createMockTransport, DEFAULT_STATS } from "../helpers/mock-transport"
+import { DashboardProvider } from "../../src/tui/context"
+import { OverviewView } from "../../src/tui/views/overview"
+import {
+  createMockMultiQueueTransport,
+  DEFAULT_STATS,
+} from "../helpers/mock-transport"
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms))
 
-describe("TUI: StatsView", () => {
+describe("TUI: OverviewView", () => {
   let cleanup: (() => void) | undefined
 
   afterEach(() => {
@@ -17,16 +20,19 @@ describe("TUI: StatsView", () => {
   })
 
   it("should display queue stats after loading", async () => {
-    const transport = createMockTransport()
+    const transport = createMockMultiQueueTransport()
 
     const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <StatsView refreshInterval={5000} />
-      </TransportProvider>
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <OverviewView isFocused={false} />
+      </DashboardProvider>
     )
     cleanup = unmount
 
-    // Wait for async load
     await wait(50)
 
     const frame = lastFrame()
@@ -41,14 +47,17 @@ describe("TUI: StatsView", () => {
   })
 
   it("should show loading initially", () => {
-    const transport = createMockTransport()
-    // Make getStats hang
+    const transport = createMockMultiQueueTransport()
     transport.getStats = () => new Promise(() => {})
 
     const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <StatsView refreshInterval={5000} />
-      </TransportProvider>
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <OverviewView isFocused={false} />
+      </DashboardProvider>
     )
     cleanup = unmount
 
@@ -56,15 +65,19 @@ describe("TUI: StatsView", () => {
   })
 
   it("should show error on transport failure", async () => {
-    const transport = createMockTransport()
+    const transport = createMockMultiQueueTransport()
     transport.getStats = async () => {
       throw new Error("Connection refused")
     }
 
     const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <StatsView refreshInterval={5000} />
-      </TransportProvider>
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <OverviewView isFocused={false} />
+      </DashboardProvider>
     )
     cleanup = unmount
 

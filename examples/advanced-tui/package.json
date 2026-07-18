@@ -1,0 +1,28 @@
+{
+  "name": "advanced-tui-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "In-memory PGlite example for testing the TUI dashboard with diverse job types",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "dashboard": "vorsteh-queue dashboard --url http://localhost:4000/graphql --token dev-token",
+    "dashboard:email": "vorsteh-queue dashboard --url http://localhost:4000/graphql --token dev-token --queue email",
+    "dashboard:data": "vorsteh-queue dashboard --url http://localhost:4000/graphql --token dev-token --queue data-processing",
+    "dashboard:notifications": "vorsteh-queue dashboard --url http://localhost:4000/graphql --token dev-token --queue notifications"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.4",
+    "@vorsteh-queue/adapter-drizzle": "workspace:*",
+    "@vorsteh-queue/cli": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/server": "workspace:*",
+    "drizzle-orm": "0.45.2"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "drizzle-kit": "0.31.10",
+    "tsx": "4.23.1",
+    "typescript": "6.0.3"
+  }
+}

@@ -16,4 +16,7 @@ export function buildDashboardCommandStructure() {
         "Auto-refresh interval in milliseconds"
       ).default("2000")
     )
+    .addOption(
+      new Option("--no-sidebar", "Hide the sidebar (use Ctrl+K to navigate)")
+    )
 }

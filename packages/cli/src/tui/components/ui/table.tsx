@@ -18,6 +18,7 @@ export interface TableProps<
   columns: Column<T>[]
   sortable?: boolean
   selectable?: boolean
+  isActive?: boolean
   onSelect?: (row: T) => void
   maxRows?: number
   borderColor?: string
@@ -42,13 +43,13 @@ const pad = (
   }
   const diff = width - s.length
   if (align === "right") {
-    return "".repeat(diff) + s
+    return " ".repeat(diff) + s
   }
   if (align === "center") {
     const l = Math.floor(diff / 2)
-    return "".repeat(l) + s + "".repeat(diff - l)
+    return " ".repeat(l) + s + " ".repeat(diff - l)
   }
-  return s + "".repeat(diff)
+  return s + " ".repeat(diff)
 }
 
 const intersperse = <T,>(items: T[], separator: (index: number) => T): T[] => {
@@ -141,6 +142,7 @@ export const Table = <
   columns,
   sortable = false,
   selectable = false,
+  isActive = true,
   onSelect,
   maxRows = 20,
   borderColor,
@@ -166,6 +168,10 @@ export const Table = <
   const visible = sorted.slice(0, maxRows)
 
   useInput((input, key) => {
+    if (!isActive) {
+      return
+    }
+
     if (key.upArrow) {
       setActiveRow((r) => Math.max(0, r - 1))
     } else if (key.downArrow) {
@@ -204,7 +210,7 @@ export const Table = <
   }))
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" flexGrow={1}>
       <SkeletonRow
         widths={colWidths}
         skeleton={BORDER.top}
@@ -224,7 +230,7 @@ export const Table = <
         color={resolvedBorderColor}
       />
       {visible.map((row, rowIdx) => {
-        const isActive = rowIdx === activeRow && selectable
+        const isRowActive = rowIdx === activeRow && selectable
         const rowCells = columns.map((col) => ({
           align: col.align ?? ("left" as const),
           text: String(row[col.key] ?? ""),
@@ -237,11 +243,11 @@ export const Table = <
             skeleton={BORDER.data}
             borderColor={resolvedBorderColor}
             textColor={
-              isActive
+              isRowActive
                 ? theme.colors.selectionForeground
                 : theme.colors.foreground
             }
-            inverse={isActive}
+            inverse={isRowActive}
           />
         )
       })}

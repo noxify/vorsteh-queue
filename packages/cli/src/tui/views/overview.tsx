@@ -1,20 +1,21 @@
 import type { QueueStats } from "@vorsteh-queue/core"
-import { Box, Text } from "ink"
+import { Box, Text, useInput } from "ink"
 import { useEffect, useState } from "react"
 
 import { BarChart } from "../components/ui/bar-chart"
 import { Spinner } from "../components/ui/spinner"
-import { useTransportContext } from "../context"
+import { useDashboard } from "../context"
 
-interface StatsViewProps {
-  readonly refreshInterval: number
+interface OverviewViewProps {
+  readonly isFocused: boolean
 }
 
 /**
- * Queue statistics overview with auto-refresh using termcn BarChart.
+ * Queue overview — stats bar chart with auto-refresh.
  */
-export function StatsView({ refreshInterval }: StatsViewProps) {
-  const { transport } = useTransportContext()
+export function OverviewView({ isFocused }: OverviewViewProps) {
+  const { transport, refreshInterval, setActiveView, activeQueue } =
+    useDashboard()
   const [stats, setStats] = useState<QueueStats | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -42,7 +43,16 @@ export function StatsView({ refreshInterval }: StatsViewProps) {
       mounted = false
       clearInterval(timer)
     }
-  }, [transport, refreshInterval])
+  }, [transport, refreshInterval, activeQueue])
+
+  useInput((input, key) => {
+    if (!isFocused) {
+      return
+    }
+    if (input === "j" || key.return) {
+      setActiveView("jobs")
+    }
+  })
 
   if (errorMsg) {
     return (
@@ -80,6 +90,7 @@ export function StatsView({ refreshInterval }: StatsViewProps) {
       <BarChart data={chartData} width={50} showValues title="Job Status" />
       <Box marginTop={1}>
         <Text color="gray">Total: {total}</Text>
+        {isFocused && <Text color="gray"> [j/↵] View jobs</Text>}
       </Box>
     </Box>
   )

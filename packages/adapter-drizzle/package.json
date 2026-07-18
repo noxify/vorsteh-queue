@@ -73,7 +73,7 @@
     "drizzle-kit": "0.31.10",
     "drizzle-orm": "0.45.2",
     "postgres": "3.4.9",
-    "tsdown": "0.22.4",
+    "tsdown": "0.22.9",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },

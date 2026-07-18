@@ -1,45 +1,157 @@
-import { createContext, useContext, useMemo } from "react"
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react"
 
-import type { Transport } from "../transport/types"
+import type { MultiQueueTransport } from "../transport/multi-queue"
 
-interface TransportContextValue {
-  readonly transport: Transport
+/** Views available in the main content pane */
+export type DashboardView = "overview" | "jobs" | "dead"
+
+/** Which pane currently has keyboard focus */
+export type FocusPane = "sidebar" | "content"
+
+interface DashboardContextValue {
+  readonly transport: MultiQueueTransport
   readonly refreshInterval: number
+  readonly activeQueue: string
+  readonly activeView: DashboardView
+  readonly focusPane: FocusPane
+  readonly selectedJobId: string | null
+  readonly queues: readonly string[]
+  readonly jobsFilterIndex: number
+  readonly jobsPage: number
+  readonly showSidebar: boolean
+  readonly setActiveQueue: (queue: string) => void
+  readonly setActiveView: (view: DashboardView) => void
+  readonly setFocusPane: (pane: FocusPane) => void
+  readonly selectJob: (jobId: string) => void
+  readonly goBack: () => void
+  readonly setQueues: (queues: readonly string[]) => void
+  readonly setJobsFilterIndex: (index: number) => void
+  readonly setJobsPage: (page: number) => void
 }
 
-const TransportContext = createContext<TransportContextValue | null>(null)
+const DashboardContext = createContext<DashboardContextValue | null>(null)
 
-interface TransportProviderProps {
-  readonly transport: Transport
+interface DashboardProviderProps {
+  readonly transport: MultiQueueTransport
   readonly refreshInterval: number
+  readonly initialQueue?: string
+  readonly showSidebar?: boolean
   readonly children: React.ReactNode
 }
 
 /**
- * Provides transport and refresh configuration to all TUI views.
+ * Provides dashboard state (active queue, view, focus) and transport to all
+ * TUI components.
  */
-export function TransportProvider({
+export function DashboardProvider({
   transport,
   refreshInterval,
+  initialQueue,
+  showSidebar = true,
   children,
-}: TransportProviderProps) {
-  const value = useMemo(
-    () => ({ refreshInterval, transport }),
-    [refreshInterval, transport]
+}: DashboardProviderProps) {
+  const [queues, setQueues] = useState<readonly string[]>(
+    initialQueue ? [initialQueue] : []
+  )
+  // oxlint-disable-next-line react/hook-use-state -- wrapped by setActiveQueue callback
+  const [activeQueue, _setActiveQueue] = useState(initialQueue ?? "")
+  const [activeView, setActiveView] = useState<DashboardView>("overview")
+  const [focusPane, setFocusPane] = useState<FocusPane>("sidebar")
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
+  const [jobsFilterIndex, setJobsFilterIndex] = useState(0)
+  const [jobsPage, setJobsPage] = useState(0)
+
+  const setActiveQueue = useCallback(
+    (queue: string) => {
+      _setActiveQueue(queue)
+      transport.switchQueue(queue)
+      setActiveView("overview")
+      setSelectedJobId(null)
+      setJobsFilterIndex(0)
+      setJobsPage(0)
+    },
+    [transport]
   )
 
-  return <TransportContext value={value}>{children}</TransportContext>
+  const selectJob = useCallback((jobId: string) => {
+    setSelectedJobId(jobId)
+  }, [])
+
+  const goBack = useCallback(() => {
+    if (selectedJobId) {
+      setSelectedJobId(null)
+    } else if (activeView === "jobs" || activeView === "dead") {
+      setActiveView("overview")
+    }
+  }, [selectedJobId, activeView])
+
+  const value = useMemo(
+    () => ({
+      activeQueue,
+      activeView,
+      focusPane,
+      goBack,
+      jobsFilterIndex,
+      jobsPage,
+      queues,
+      refreshInterval,
+      selectJob,
+      selectedJobId,
+      setActiveQueue,
+      setActiveView,
+      setFocusPane,
+      setJobsFilterIndex,
+      setJobsPage,
+      setQueues,
+      showSidebar,
+      transport,
+    }),
+    [
+      activeQueue,
+      activeView,
+      focusPane,
+      goBack,
+      jobsFilterIndex,
+      jobsPage,
+      queues,
+      refreshInterval,
+      selectJob,
+      selectedJobId,
+      setActiveQueue,
+      showSidebar,
+      transport,
+    ]
+  )
+
+  return <DashboardContext value={value}>{children}</DashboardContext>
 }
 
 /**
- * Access the transport and refresh interval from any TUI component.
+ * Access the dashboard state from any TUI component.
  *
- * @throws {Error} If used outside TransportProvider
+ * @throws {Error} If used outside DashboardProvider
  */
-export function useTransportContext(): TransportContextValue {
-  const ctx = useContext(TransportContext)
+export function useDashboard(): DashboardContextValue {
+  const ctx = useContext(DashboardContext)
   if (!ctx) {
-    throw new Error("useTransportContext must be used within TransportProvider")
+    throw new Error("useDashboard must be used within DashboardProvider")
   }
   return ctx
+}
+
+/**
+ * Convenience hook — access transport and refresh interval (backward compat).
+ */
+export function useTransportContext(): {
+  transport: MultiQueueTransport
+  refreshInterval: number
+} {
+  const { transport, refreshInterval } = useDashboard()
+  return { refreshInterval, transport }
 }

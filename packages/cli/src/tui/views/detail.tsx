@@ -1,42 +1,48 @@
 import type { Job } from "@vorsteh-queue/core"
 import { Box, Text, useInput } from "ink"
 import { useCallback, useEffect, useState } from "react"
-import { useParams } from "react-router"
 
 import { Badge } from "../components/ui/badge"
+import { Dialog } from "../components/ui/dialog"
+import { JSONView } from "../components/ui/json"
 import { Spinner } from "../components/ui/spinner"
-import { useTransportContext } from "../context"
+import { useDashboard } from "../context"
+import { useClipboard } from "../hooks/use-clipboard"
 
-interface DetailViewProps {
-  readonly onBack: () => void
+interface JobDetailDrawerProps {
+  readonly isFocused: boolean
 }
 
 /**
- * Job detail view with action support.
- * Reads jobId from the route params. Uses termcn Badge for status display.
+ * Job detail drawer — slides in from the right when a job is selected.
+ * Provides actions (cancel, retry, run now, delete) and clipboard support.
  */
-export function DetailView({ onBack }: DetailViewProps) {
-  const { jobId } = useParams<{ jobId: string }>()
-  const { transport } = useTransportContext()
+// oxlint-disable-next-line complexity -- many optional job fields to display
+export function JobDetailDrawer({ isFocused }: JobDetailDrawerProps) {
+  const { transport, selectedJobId, goBack } = useDashboard()
+  const { write: copyToClipboard } = useClipboard()
   const [job, setJob] = useState<Job | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const [confirm, setConfirm] = useState<string | null>(null)
+  const [confirmAction, setConfirmAction] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
-    if (!jobId) {
+    if (!selectedJobId) {
       return
     }
     try {
-      const result = await transport.getJob(jobId)
+      const result = await transport.getJob(selectedJobId)
       setJob(result)
       setErrorMsg(null)
     } catch (error) {
       setErrorMsg(error instanceof Error ? error.message : "Unknown error")
     }
-  }, [transport, jobId])
+  }, [transport, selectedJobId])
 
   useEffect(() => {
+    setJob(null)
+    setMessage(null)
+    setConfirmAction(null)
     void refresh()
   }, [refresh])
 
@@ -65,7 +71,7 @@ export function DetailView({ onBack }: DetailViewProps) {
           case "delete": {
             await transport.deleteJob(job.id)
             setMessage("Job deleted")
-            setTimeout(() => onBack(), 1000)
+            setTimeout(() => goBack(), 1000)
             break
           }
           default: {
@@ -75,118 +81,194 @@ export function DetailView({ onBack }: DetailViewProps) {
         await refresh()
       } catch (error) {
         setMessage(
-          `Action failed: ${error instanceof Error ? error.message : "Unknown error"}`
+          `Failed: ${error instanceof Error ? error.message : "Unknown error"}`
         )
       }
     },
-    [job, transport, refresh, onBack]
+    [job, transport, refresh, goBack]
   )
 
   useInput((input, key) => {
+    if (!isFocused || confirmAction) {
+      return
+    }
+
     if (key.escape) {
-      if (confirm) {
-        setConfirm(null)
-      } else {
-        onBack()
-      }
+      goBack()
       return
     }
 
-    if (confirm) {
-      if (input === "y") {
-        void executeAction(confirm)
-      }
-      setConfirm(null)
-      return
-    }
-
+    // Actions
     if (input === "c") {
-      setConfirm("cancel")
+      setConfirmAction("cancel")
     } else if (input === "r") {
-      setConfirm("retry")
+      setConfirmAction("retry")
     } else if (input === "n") {
-      setConfirm("run-now")
-    } else if (input === "d") {
-      setConfirm("delete")
+      setConfirmAction("run-now")
+    } else if (input === "x") {
+      setConfirmAction("delete")
+    }
+
+    // Clipboard shortcuts
+    if (input === "y" && job) {
+      copyToClipboard(job.id)
+      setMessage("Job ID copied")
+      setTimeout(() => setMessage(null), 2000)
+    } else if (input === "p" && job) {
+      copyToClipboard(JSON.stringify(job.payload, null, 2))
+      setMessage("Payload copied")
+      setTimeout(() => setMessage(null), 2000)
     }
   })
 
-  if (errorMsg) {
-    return (
-      <Box>
-        <Text color="red">Error: {errorMsg}</Text>
-      </Box>
-    )
-  }
-
-  if (!job) {
-    return <Spinner label="Loading job details..." />
-  }
+  const borderColor = isFocused ? "#f97316" : "gray"
 
   return (
-    <Box flexDirection="column">
-      <Box flexDirection="column" gap={0}>
-        <Field label="ID" value={job.id} />
-        <Field label="Name" value={job.name} />
+    <Box
+      flexDirection="column"
+      width={48}
+      borderStyle="single"
+      borderColor={borderColor}
+      paddingX={1}
+      paddingY={0}
+    >
+      <Box justifyContent="space-between">
+        <Text bold color="#f97316">
+          Job Detail
+        </Text>
+        <Text color="gray" dimColor>
+          Esc close
+        </Text>
+      </Box>
+
+      {errorMsg && (
         <Box>
-          <Box width={14}>
-            <Text color="gray">Status</Text>
+          <Text color="red">Error: {errorMsg}</Text>
+        </Box>
+      )}
+
+      {!job && !errorMsg && <Spinner label="Loading..." />}
+
+      {job && (
+        <Box flexDirection="column">
+          <Field label="ID" value={job.id} />
+          <Field label="Name" value={job.name} />
+          <Box flexDirection="column" marginBottom={0}>
+            <Text color="gray" dimColor>
+              Status
+            </Text>
+            <Badge variant={getStatusVariant(job.status)} bordered={false} bold>
+              {job.status}
+            </Badge>
           </Box>
-          <Badge variant={getStatusVariant(job.status)} bordered={false} bold>
-            {job.status}
-          </Badge>
-        </Box>
-        <Field label="Priority" value={String(job.priority)} />
-        <Field
-          label="Attempts"
-          value={`${job.attempts} / ${job.maxAttempts}`}
-        />
-        <Field label="Progress" value={`${job.progress}%`} />
-        <Field label="Created" value={formatDate(job.createdAt)} />
-        <Field label="Process At" value={formatDate(job.processAt)} />
-        {job.processedAt && (
-          <Field label="Processed" value={formatDate(job.processedAt)} />
-        )}
-        {job.completedAt && (
-          <Field label="Completed" value={formatDate(job.completedAt)} />
-        )}
-        {job.failedAt && (
-          <Field label="Failed At" value={formatDate(job.failedAt)} />
-        )}
-        {job.error && (
+          <Field label="Priority" value={String(job.priority)} />
           <Field
-            label="Error"
-            value={`${job.error.name}: ${job.error.message}`}
-            color="red"
+            label="Attempts"
+            value={`${job.attempts}/${job.maxAttempts}`}
           />
-        )}
-        {job.groupKey && <Field label="Group" value={job.groupKey} />}
-        {job.uniqueKey && <Field label="Unique Key" value={job.uniqueKey} />}
-        {job.cron && <Field label="Cron" value={job.cron} />}
-      </Box>
+          <Field label="Progress" value={`${job.progress}%`} />
 
-      <Box marginTop={1} flexDirection="column">
-        <Text bold>Payload:</Text>
-        <Text color="gray">{JSON.stringify(job.payload, null, 2)}</Text>
-      </Box>
+          {/* Timestamps */}
+          <Field label="Created" value={formatDate(job.createdAt)} />
+          <Field label="Process At" value={formatDate(job.processAt)} />
+          {job.processedAt && (
+            <Field label="Started" value={formatDate(job.processedAt)} />
+          )}
+          {job.completedAt && (
+            <Field label="Completed" value={formatDate(job.completedAt)} />
+          )}
+          {job.failedAt && (
+            <Field label="Failed At" value={formatDate(job.failedAt)} />
+          )}
+          {job.cancelledAt && (
+            <Field label="Cancelled At" value={formatDate(job.cancelledAt)} />
+          )}
 
-      {job.result !== undefined && (
-        <Box marginTop={1} flexDirection="column">
-          <Text bold>Result:</Text>
-          <Text color="gray">{JSON.stringify(job.result, null, 2)}</Text>
+          {/* Error */}
+          {job.error && (
+            <Field
+              label="Error"
+              value={`${job.error.name}: ${job.error.message}`}
+              color="red"
+            />
+          )}
+          {job.cancellationReason && (
+            <Field label="Cancel Reason" value={job.cancellationReason} />
+          )}
+
+          {/* Scheduling */}
+          {job.cron && <Field label="Cron" value={job.cron} />}
+          {job.repeatEvery && (
+            <Field label="Repeat Every" value={`${job.repeatEvery}ms`} />
+          )}
+          {job.repeatLimit && (
+            <Field label="Repeat Limit" value={String(job.repeatLimit)} />
+          )}
+          {job.repeatCount > 0 && (
+            <Field label="Repeat Count" value={String(job.repeatCount)} />
+          )}
+          {job.timeout !== undefined && (
+            <Field
+              label="Timeout"
+              value={job.timeout === false ? "disabled" : `${job.timeout}ms`}
+            />
+          )}
+
+          {/* Grouping & Deduplication */}
+          {job.groupKey && <Field label="Group" value={job.groupKey} />}
+          {job.uniqueKey && <Field label="Unique Key" value={job.uniqueKey} />}
+
+          {/* Dependencies & Flows */}
+          {job.dependsOn && job.dependsOn.length > 0 && (
+            <Field label="Depends On" value={job.dependsOn.join(", ")} />
+          )}
+          {job.onDependencyFailure && job.onDependencyFailure !== "fail" && (
+            <Field label="On Dep Failure" value={job.onDependencyFailure} />
+          )}
+          {job.parentId && <Field label="Parent ID" value={job.parentId} />}
+          {job.flowId && <Field label="Flow ID" value={job.flowId} />}
+          {job.childrenCount !== undefined && job.childrenCount > 0 && (
+            <Field
+              label="Children"
+              value={`${job.childrenCompleted ?? 0}/${job.childrenCount} completed`}
+            />
+          )}
+
+          {/* Payload & Result */}
+          <Box marginTop={1}>
+            <JSONView data={job.payload} label="Payload" collapsed />
+          </Box>
+
+          {job.result !== undefined && (
+            <Box marginTop={1}>
+              <JSONView data={job.result} label="Result" collapsed />
+            </Box>
+          )}
+
+          {message && (
+            <Box marginTop={1}>
+              <Text color="green">{message}</Text>
+            </Box>
+          )}
         </Box>
       )}
 
-      {confirm && (
-        <Box marginTop={1}>
-          <Text color="yellow">Confirm {confirm} on this job? [y/n]</Text>
-        </Box>
-      )}
-
-      {message && !confirm && (
-        <Box marginTop={1}>
-          <Text color="green">{message}</Text>
-        </Box>
+      {/* Confirm Dialog */}
+      {confirmAction && (
+        <Dialog
+          isOpen
+          title={`${confirmAction} job?`}
+          variant={confirmAction === "delete" ? "danger" : "default"}
+          confirmLabel="Yes"
+          cancelLabel="No"
+          onConfirm={() => {
+            void executeAction(confirmAction)
+            setConfirmAction(null)
+          }}
+          onCancel={() => setConfirmAction(null)}
+        >
+          <Text>Are you sure you want to {confirmAction} this job?</Text>
+        </Dialog>
       )}
     </Box>
   )
@@ -202,17 +284,20 @@ function Field({
   readonly color?: string
 }) {
   return (
-    <Box>
-      <Box width={14}>
-        <Text color="gray">{label}</Text>
-      </Box>
+    <Box flexDirection="column" marginBottom={0}>
+      <Text color="gray" dimColor>
+        {label}
+      </Text>
       <Text color={color}>{value}</Text>
     </Box>
   )
 }
 
 function formatDate(date: Date): string {
-  return date instanceof Date ? date.toISOString() : String(date)
+  if (!(date instanceof Date)) {
+    return String(date)
+  }
+  return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
 }
 
 function getStatusVariant(

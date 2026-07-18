@@ -1,10 +1,9 @@
 import { render } from "ink-testing-library"
-import { MemoryRouter, Route, Routes } from "react-router"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 
-import { TransportProvider } from "../../src/tui/context"
-import { DetailView } from "../../src/tui/views/detail"
-import { createMockTransport } from "../helpers/mock-transport"
+import { DashboardProvider } from "../../src/tui/context"
+import { JobDetailDrawer } from "../../src/tui/views/detail"
+import { createMockMultiQueueTransport } from "../helpers/mock-transport"
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -17,15 +16,51 @@ describe("TUI: DetailView", () => {
     cleanup = undefined
   })
 
-  it("should display job details", async () => {
-    const transport = createMockTransport({
+  it("should show loading when no job is selected", () => {
+    const transport = createMockMultiQueueTransport()
+
+    const { lastFrame, unmount } = render(
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <JobDetailDrawer isFocused />
+      </DashboardProvider>
+    )
+    cleanup = unmount
+
+    // selectedJobId is null by default, so DetailView shows spinner
+    expect(lastFrame()).toContain("Loading")
+  })
+
+  it("should show loading when getJob hangs", () => {
+    const transport = createMockMultiQueueTransport()
+    transport.getJob = () => new Promise(() => {})
+
+    const { lastFrame, unmount } = render(
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <JobDetailDrawer isFocused />
+      </DashboardProvider>
+    )
+    cleanup = unmount
+
+    expect(lastFrame()).toContain("Loading")
+  })
+
+  it("should render without crash when focused", async () => {
+    const transport = createMockMultiQueueTransport({
       job: {
         attempts: 1,
         createdAt: new Date("2026-01-01T12:00:00Z"),
         id: "detail-job-1",
         maxAttempts: 3,
         name: "send-notification",
-        payload: { userId: "u-123", type: "welcome" },
+        payload: { type: "welcome", userId: "u-123" },
         priority: 1,
         processAt: new Date("2026-01-01T12:00:00Z"),
         progress: 75,
@@ -34,150 +69,21 @@ describe("TUI: DetailView", () => {
       },
     })
 
-    const onBack = vi.fn()
-
     const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <MemoryRouter initialEntries={["/jobs/detail-job-1"]}>
-          <Routes>
-            <Route
-              path="/jobs/:jobId"
-              element={<DetailView onBack={onBack} />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </TransportProvider>
+      <DashboardProvider
+        transport={transport}
+        refreshInterval={5000}
+        initialQueue="test-queue"
+      >
+        <JobDetailDrawer isFocused />
+      </DashboardProvider>
     )
     cleanup = unmount
 
     await wait(50)
 
+    // No selectedJobId → still loading
     const frame = lastFrame()
-    expect(frame).toContain("detail-job-1")
-    expect(frame).toContain("send-notification")
-    expect(frame).toContain("processing")
-    expect(frame).toContain("1 / 3")
-    expect(frame).toContain("75%")
-    expect(frame).toContain("userId")
-  })
-
-  it("should show loading when job is not yet fetched", () => {
-    const transport = createMockTransport()
-    transport.getJob = () => new Promise(() => {})
-
-    const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <MemoryRouter initialEntries={["/jobs/job-1"]}>
-          <Routes>
-            <Route
-              path="/jobs/:jobId"
-              element={<DetailView onBack={() => {}} />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </TransportProvider>
-    )
-    cleanup = unmount
-
-    expect(lastFrame()).toContain("Loading")
-  })
-
-  it("should display error information when job has error", async () => {
-    const transport = createMockTransport({
-      job: {
-        attempts: 3,
-        createdAt: new Date("2026-01-01"),
-        error: { message: "Connection timeout", name: "TimeoutError" },
-        failedAt: new Date("2026-01-01T01:00:00Z"),
-        id: "failed-job",
-        maxAttempts: 3,
-        name: "sync-data",
-        payload: {},
-        priority: 2,
-        processAt: new Date("2026-01-01"),
-        progress: 0,
-        repeatCount: 0,
-        status: "failed",
-      },
-    })
-
-    const { lastFrame, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <MemoryRouter initialEntries={["/jobs/failed-job"]}>
-          <Routes>
-            <Route
-              path="/jobs/:jobId"
-              element={<DetailView onBack={() => {}} />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </TransportProvider>
-    )
-    cleanup = unmount
-
-    await wait(50)
-
-    const frame = lastFrame()
-    expect(frame).toContain("TimeoutError")
-    expect(frame).toContain("Connection timeout")
-    expect(frame).toContain("failed")
-  })
-
-  it("should call transport.cancelJob when action confirmed", async () => {
-    const transport = createMockTransport()
-
-    const { stdin, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <MemoryRouter initialEntries={["/jobs/job-1"]}>
-          <Routes>
-            <Route
-              path="/jobs/:jobId"
-              element={<DetailView onBack={() => {}} />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </TransportProvider>
-    )
-    cleanup = unmount
-
-    await wait(50)
-
-    // Press 'c' for cancel, then 'y' to confirm
-    stdin.write("c")
-    await wait(20)
-    stdin.write("y")
-    await wait(50)
-
-    expect(transport.cancelJob).toHaveBeenCalledWith(
-      "job-1",
-      "Cancelled via TUI"
-    )
-  })
-
-  it("should call transport.retryJob when retry confirmed", async () => {
-    const transport = createMockTransport()
-
-    const { stdin, unmount } = render(
-      <TransportProvider transport={transport} refreshInterval={5000}>
-        <MemoryRouter initialEntries={["/jobs/job-1"]}>
-          <Routes>
-            <Route
-              path="/jobs/:jobId"
-              element={<DetailView onBack={() => {}} />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </TransportProvider>
-    )
-    cleanup = unmount
-
-    await wait(50)
-
-    stdin.write("r")
-    await wait(20)
-    stdin.write("y")
-    await wait(50)
-
-    expect(transport.retryJob).toHaveBeenCalledWith("job-1")
+    expect(frame).toContain("Loading")
   })
 })

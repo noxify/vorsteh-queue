@@ -96,7 +96,7 @@ export function createGraphQLTransport(
 
     async getJob(id: string) {
       const result = await query<{ job: Job | null }>(
-        `query($id: ID!, $queue: String) { job(id: $id, queue: $queue) { id name status priority attempts maxAttempts progress payload createdAt processAt } }`,
+        `query($id: ID!, $queue: String) { job(id: $id, queue: $queue) { id name status priority attempts maxAttempts progress payload result createdAt processAt processedAt completedAt failedAt cancelledAt error { name message } cron repeatEvery repeatLimit repeatCount timeout groupKey uniqueKey cancellationReason dependsOn onDependencyFailure parentId flowId childrenCount childrenCompleted } }`,
         { id, queue: queueName }
       )
       return result.job
@@ -104,7 +104,7 @@ export function createGraphQLTransport(
 
     async getJobs(options) {
       const result = await query<{ jobs: readonly Job[] }>(
-        `query($queue: String!, $status: JobStatus, $name: String, $limit: Int, $offset: Int) { jobs(queue: $queue, status: $status, name: $name, limit: $limit, offset: $offset) { id name status priority attempts maxAttempts progress createdAt processAt error { name message } } }`,
+        `query($queue: String!, $status: JobStatus, $name: String, $limit: Int, $offset: Int) { jobs(queue: $queue, status: $status, name: $name, limit: $limit, offset: $offset) { id name status priority attempts maxAttempts progress createdAt processAt error { name message } cron groupKey } }`,
         {
           limit: options?.limit,
           name: options?.name,

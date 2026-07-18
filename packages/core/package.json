@@ -72,7 +72,7 @@
     "@types/node": "24.13.3",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "fast-check": "^4.9.0",
-    "tsdown": "0.22.4",
+    "tsdown": "0.22.9",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },

@@ -37,21 +37,21 @@
     "ci:version": "pnpm changeset version && pnpm install --no-frozen-lockfile && git add ."
   },
   "devDependencies": {
-    "@changesets/cli": "2.31.0",
+    "@changesets/cli": "2.31.1",
     "@vitest/coverage-v8": "4.1.10",
     "@vitest/ui": "4.1.10",
-    "oxfmt": "0.58.0",
-    "oxlint": "1.73.0",
-    "oxlint-plugin-react-doctor": "0.7.4",
-    "react-doctor": "^0.7.4",
+    "oxfmt": "0.59.0",
+    "oxlint": "1.74.0",
+    "oxlint-plugin-react-doctor": "0.7.8",
+    "react-doctor": "^0.7.8",
     "sherif": "1.13.0",
-    "turbo": "2.10.4",
+    "turbo": "2.10.5",
     "typescript": "6.0.3",
-    "ultracite": "7.9.3",
+    "ultracite": "7.9.4",
     "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@11.11.0"
+  "packageManager": "pnpm@11.13.1"
 }
