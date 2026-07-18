@@ -5,36 +5,35 @@ import { createRequire } from "node:module"
 import { runTests } from "@vorsteh-queue/shared-tests/tests/adapter"
 import { runWhereFilterTests } from "@vorsteh-queue/shared-tests/tests/where-filter"
 import type { DatabaseConnectionProps } from "@vorsteh-queue/shared-tests/types"
+import type { AnyRelations } from "drizzle-orm"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 
 import { PostgresQueueAdapter } from "../src"
+import { testRelations } from "../src/postgres-test-relations"
 import * as schema from "../src/postgres-test-schema"
 
 global.require = createRequire(import.meta.url)
 
 const { generateDrizzleJson, generateMigration } =
-  await import("drizzle-kit/api")
+  await import("drizzle-kit/api-postgres")
 
-runTests<PostgresJsDatabase<typeof schema>>({
+runTests<PostgresJsDatabase<AnyRelations>>({
   initAdapter: (db, adapterConfig) =>
     new PostgresQueueAdapter(db, adapterConfig),
   initDbClient: (
     props: DatabaseConnectionProps
-  ): PostgresJsDatabase<typeof schema> => {
+  ): PostgresJsDatabase<AnyRelations> => {
     const client = postgres(props.container.getConnectionUri(), {
       max: 10, // Connection pool size
     })
-    return drizzle(client, { schema })
+    return drizzle({ client, relations: testRelations })
   },
   migrate: async (db) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const [previous, current] = await Promise.all(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        [{}, schema].map((schemaObject) => generateDrizzleJson(schemaObject))
-      )
+      const previous = await generateDrizzleJson({})
+      const current = await generateDrizzleJson(schema)
 
       const statements = await generateMigration(previous, current)
       const migration = statements.join("\n")
@@ -58,24 +57,21 @@ runTests<PostgresJsDatabase<typeof schema>>({
   ],
 })
 
-runWhereFilterTests<PostgresJsDatabase<typeof schema>>({
+runWhereFilterTests<PostgresJsDatabase<AnyRelations>>({
   initAdapter: (db, adapterConfig) =>
     new PostgresQueueAdapter(db, adapterConfig),
   initDbClient: (
     props: DatabaseConnectionProps
-  ): PostgresJsDatabase<typeof schema> => {
+  ): PostgresJsDatabase<AnyRelations> => {
     const client = postgres(props.container.getConnectionUri(), {
       max: 10,
     })
-    return drizzle(client, { schema })
+    return drizzle({ client, relations: testRelations })
   },
   migrate: async (db) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const [previous, current] = await Promise.all(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        [{}, schema].map((schemaObject) => generateDrizzleJson(schemaObject))
-      )
+      const previous = await generateDrizzleJson({})
+      const current = await generateDrizzleJson(schema)
 
       const statements = await generateMigration(previous, current)
       const migration = statements.join("\n")

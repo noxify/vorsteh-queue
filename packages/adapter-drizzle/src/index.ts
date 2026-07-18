@@ -9,3 +9,5 @@ export * as postgresSchema from "./postgres-schema"
 export type { QueueJob as PostgresQueueJob } from "./postgres-schema"
 
 export { createQueueJobsTable } from "./helpers"
+
+export { relations } from "./relations"

@@ -16,7 +16,8 @@ import { BaseQueueAdapter } from "@vorsteh-queue/core"
 import type { JobWhereInput } from "@vorsteh-queue/query-builder"
 import { normalizeWhere } from "@vorsteh-queue/query-builder"
 import { buildWhere } from "@vorsteh-queue/query-builder/drizzle"
-import { and, asc, count, eq, inArray, lte, not, sql } from "drizzle-orm"
+import type { AnyRelations } from "drizzle-orm"
+import { and, asc, count, eq, inArray, lte, sql } from "drizzle-orm"
 import type { NodePgDatabase } from "drizzle-orm/node-postgres"
 import type { PgTable } from "drizzle-orm/pg-core"
 import type { PgliteDatabase } from "drizzle-orm/pglite"
@@ -27,25 +28,22 @@ import type * as schema from "./postgres-schema"
 type FullSchema = typeof schema
 
 type DrizzleDatabase =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | NodePgDatabase<any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | PostgresJsDatabase<any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | PgliteDatabase<any>
+  | NodePgDatabase<AnyRelations>
+  | PostgresJsDatabase<AnyRelations>
+  | PgliteDatabase<AnyRelations>
 
 function getModelByModelName<
   TModel extends Record<string, PgTable>,
   TDb extends DrizzleDatabase,
 >(db: TDb, modelName: keyof TModel) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-  const model = (db as any)._.fullSchema[modelName]
-  if (!model) {
+  const tableConfig = (db as any)._.relations[modelName]
+  if (!tableConfig?.table) {
     throw new Error(
-      `Model with name ${String(modelName)} not found in database schema`
+      `Model with name ${String(modelName)} not found in database relations`
     )
   }
-  return model as FullSchema["queueJobs"]
+  return tableConfig.table as FullSchema["queueJobs"]
 }
 
 /**
@@ -65,14 +63,19 @@ export class PostgresQueueAdapter<
 > extends BaseQueueAdapter {
   private db: TDb
   private model: ReturnType<typeof getModelByModelName>
+  private modelName: string
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private get queryTable(): any {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    return (this.db.query as any)[this.modelName]
+  }
 
   constructor(db: TDb, adapterConfig?: AdapterProps<"drizzle">) {
     super()
     this.db = db
-    this.model = getModelByModelName(
-      db,
-      adapterConfig?.modelName ?? "queueJobs"
-    )
+    this.modelName = adapterConfig?.modelName ?? "queueJobs"
+    this.model = getModelByModelName(db, this.modelName)
   }
 
   // eslint-disable-next-line class-methods-use-this, no-empty-function
@@ -142,14 +145,9 @@ export class PostgresQueueAdapter<
   }
 
   async getJobById(id: string): Promise<Job | null> {
-    const [job] = await this.db
-      .select()
-      .from(this.model)
-      .where(
-        and(eq(this.model.id, id), eq(this.model.queueName, this.queueName))
-      )
-      .limit(1)
-
+    const job = await this.queryTable.findFirst({
+      where: { id: { eq: id }, queueName: { eq: this.queueName } },
+    })
     return job ? this.transformJob(job as schema.QueueJob) : null
   }
 
@@ -351,20 +349,16 @@ export class PostgresQueueAdapter<
     const limit = options?.limit ?? 50
     const offset = options?.offset ?? 0
 
-    const jobs = await this.db
-      .select()
-      .from(this.model)
-      .where(
-        and(
-          eq(this.model.queueName, this.queueName),
-          eq(this.model.status, "dead")
-        )
-      )
-      .orderBy(sql`${this.model.createdAt} DESC`)
-      .limit(limit)
-      .offset(offset)
+    const jobs = await this.queryTable.findMany({
+      where: { queueName: { eq: this.queueName }, status: { eq: "dead" } },
+      orderBy: { createdAt: "desc" },
+      limit,
+      offset,
+    })
 
-    return jobs.map((row) => this.transformJob(row as schema.QueueJob))
+    return (jobs as schema.QueueJob[]).map((row: schema.QueueJob) =>
+      this.transformJob(row)
+    )
   }
 
   async redriveJob(id: string): Promise<void> {
@@ -439,23 +433,20 @@ export class PostgresQueueAdapter<
 
   async size(where?: JobWhereInput): Promise<number> {
     const normalized = normalizeWhere(where)
-    const whereClause = buildWhere(normalized, this.model)
     const hasFilter = Object.keys(normalized).length > 0
+    const whereObj = hasFilter
+      ? { ...buildWhere(normalized), queueName: { eq: this.queueName } }
+      : {
+          queueName: { eq: this.queueName },
+          status: { in: ["pending", "delayed"] },
+        }
 
-    const conditions = [eq(this.model.queueName, this.queueName)]
-    if (hasFilter && whereClause) {
-      // When filter provided, count matching jobs
-      conditions.push(whereClause)
-    } else {
-      // Default behavior: count pending + delayed
-      conditions.push(inArray(this.model.status, ["pending", "delayed"]))
-    }
+    const jobs = await this.queryTable.findMany({
+      where: whereObj,
+      columns: { id: true },
+    })
 
-    const [result] = await this.db
-      .select({ count: count() })
-      .from(this.model)
-      .where(and(...conditions))
-    return Number(result?.count ?? 0)
+    return (jobs as unknown[]).length
   }
 
   async getJobs(options: {
@@ -466,22 +457,18 @@ export class PostgresQueueAdapter<
     const limit = options.limit ?? 20
     const offset = options.offset ?? 0
     const normalized = normalizeWhere(options.where)
-    const whereClause = buildWhere(normalized, this.model)
+    const whereObj = buildWhere(normalized)
 
-    const conditions = [eq(this.model.queueName, this.queueName)]
-    if (whereClause) {
-      conditions.push(whereClause)
-    }
+    const jobs = await this.queryTable.findMany({
+      where: { ...whereObj, queueName: { eq: this.queueName } },
+      orderBy: { createdAt: "desc" },
+      limit,
+      offset,
+    })
 
-    const jobs = await this.db
-      .select()
-      .from(this.model)
-      .where(and(...conditions))
-      .orderBy(sql`${this.model.createdAt} DESC`)
-      .limit(limit)
-      .offset(offset)
-
-    return jobs.map((row) => this.transformJob(row as schema.QueueJob))
+    return (jobs as schema.QueueJob[]).map((row: schema.QueueJob) =>
+      this.transformJob(row)
+    )
   }
 
   async getFlows(
@@ -490,22 +477,19 @@ export class PostgresQueueAdapter<
     const limit = options?.limit ?? 20
     const offset = options?.offset ?? 0
 
-    const jobs = await this.db
-      .select()
-      .from(this.model)
-      .where(
-        and(
-          eq(this.model.queueName, this.queueName),
-          sql`${this.model.flowId} IS NOT NULL`,
-          sql`${this.model.parentId} IS NULL`
-        )
-      )
-      .orderBy(sql`${this.model.createdAt} DESC`)
-      .limit(limit)
-      .offset(offset)
+    const jobs = await this.queryTable.findMany({
+      where: {
+        queueName: { eq: this.queueName },
+        flowId: { isNotNull: true },
+        parentId: { isNull: true },
+      },
+      orderBy: { createdAt: "desc" },
+      limit,
+      offset,
+    })
 
-    return jobs.map((row) => {
-      const job = this.transformJob(row as schema.QueueJob)
+    return (jobs as schema.QueueJob[]).map((row: schema.QueueJob) => {
+      const job = this.transformJob(row)
       // oxlint-disable-next-line typescript/no-non-null-assertion
       return { flowId: job.flowId!, rootJob: job }
     })
@@ -559,17 +543,13 @@ export class PostgresQueueAdapter<
   async findJobByUniqueKey(uniqueKey: string): Promise<Job | null> {
     const terminalStatuses = ["completed", "cancelled", "dead"]
 
-    const [job] = await this.db
-      .select()
-      .from(this.model)
-      .where(
-        and(
-          eq(this.model.queueName, this.queueName),
-          eq(this.model.uniqueKey, uniqueKey),
-          not(inArray(this.model.status, terminalStatuses))
-        )
-      )
-      .limit(1)
+    const job = await this.queryTable.findFirst({
+      where: {
+        queueName: { eq: this.queueName },
+        uniqueKey: { eq: uniqueKey },
+        status: { notIn: terminalStatuses },
+      },
+    })
 
     return job ? this.transformJob(job as schema.QueueJob) : null
   }
@@ -673,20 +653,16 @@ export class PostgresQueueAdapter<
   }
 
   async getFlowTree(flowId: string): Promise<FlowNode | null> {
-    const jobs = await this.db
-      .select()
-      .from(this.model)
-      .where(
-        and(
-          eq(this.model.queueName, this.queueName),
-          eq(this.model.flowId, flowId)
-        )
-      )
-    if (jobs.length === 0) {
+    const jobs = await this.queryTable.findMany({
+      where: { queueName: { eq: this.queueName }, flowId: { eq: flowId } },
+    })
+    if ((jobs as schema.QueueJob[]).length === 0) {
       return null
     }
 
-    const allJobs = jobs.map((j) => this.transformJob(j as schema.QueueJob))
+    const allJobs = (jobs as schema.QueueJob[]).map((j: schema.QueueJob) =>
+      this.transformJob(j)
+    )
     const root = allJobs.find((j) => !j.parentId)
     if (!root) {
       return null
@@ -719,16 +695,12 @@ export class PostgresQueueAdapter<
   }
 
   async getChildrenJobs(parentId: string): Promise<readonly Job[]> {
-    const jobs = await this.db
-      .select()
-      .from(this.model)
-      .where(
-        and(
-          eq(this.model.queueName, this.queueName),
-          eq(this.model.parentId, parentId)
-        )
-      )
-    return jobs.map((j) => this.transformJob(j as schema.QueueJob))
+    const jobs = await this.queryTable.findMany({
+      where: { queueName: { eq: this.queueName }, parentId: { eq: parentId } },
+    })
+    return (jobs as schema.QueueJob[]).map((j: schema.QueueJob) =>
+      this.transformJob(j)
+    )
   }
 
   // eslint-disable-next-line class-methods-use-this -- property mapping, not logical complexity

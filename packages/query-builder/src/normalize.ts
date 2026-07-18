@@ -91,7 +91,7 @@ function copyTimestampFields(
  * ```
  */
 export function normalizeWhere(
-  where: JobWhereInput | undefined
+  where?: JobWhereInput | undefined
 ): NormalizedJobWhereInput {
   if (!where) {
     return {}

@@ -6,7 +6,7 @@ import type { JobWhereInput } from "~/types"
 describe("normalizeWhere", () => {
   describe("empty / undefined input", () => {
     it("returns empty object for undefined input", () => {
-      expect(normalizeWhere(undefined)).toEqual({})
+      expect(normalizeWhere()).toEqual({})
     })
 
     it("returns empty object for empty object input", () => {

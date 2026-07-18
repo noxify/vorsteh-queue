@@ -15,12 +15,14 @@
 Replaced flat `status`/`name` filter parameters with a composable `where` input supporting multiple filter conditions with comparison operators.
 
 **Before:**
+
 ```typescript
 adapter.getJobs({ status: "failed", name: "send-email", limit: 10 })
 adapter.size()
 ```
 
 **After:**
+
 ```typescript
 adapter.getJobs({ where: { status: "failed", name: "send-email" }, limit: 10 })
 adapter.size({ status: "failed" })
