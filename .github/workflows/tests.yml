@@ -99,6 +99,26 @@ jobs:
           # Ensure Docker is available for Testcontainers
           TESTCONTAINERS_RYUK_DISABLED: true
 
+      - name: Test ZenStack
+        run: pnpm test:zenstack
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: true
+
+      - name: Test TypeORM
+        run: pnpm test:typeorm
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: true
+
+      - name: Test MikroORM
+        run: pnpm test:mikroorm
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: true
+
+      - name: Test Sequelize
+        run: pnpm test:sequelize
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: true
+
   postgres-drizzle:
     needs: [detect-package-changes]
     if: |
@@ -203,5 +223,141 @@ jobs:
         run: pnpm test:kysely
         env:
           # Ensure Docker is available for Testcontainers
+          TESTCONTAINERS_RYUK_DISABLED: true
+          PG_VERSION: ${{ matrix.pg-version }}
+
+  postgres-zenstack:
+    needs: [detect-package-changes]
+    if: |
+      always() &&
+      (needs.detect-package-changes.result == 'skipped' || needs.detect-package-changes.outputs.packages_changed == 'true')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pg-version: [12, 13, 14, 15, 16, 17]
+    name: Test ZenStack Adapter (Postgres ${{ matrix.pg-version }})
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup
+        uses: ./.github/setup
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - shell: bash
+        run: pnpm install
+
+      - name: Build package
+        run: |
+          pnpm --filter "./packages/*" build
+
+      - name: Test PostgreSQL (Postgres ${{ matrix.pg-version }})
+        run: pnpm test:zenstack
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: true
+          PG_VERSION: ${{ matrix.pg-version }}
+
+  postgres-typeorm:
+    needs: [detect-package-changes]
+    if: |
+      always() &&
+      (needs.detect-package-changes.result == 'skipped' || needs.detect-package-changes.outputs.packages_changed == 'true')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pg-version: [12, 13, 14, 15, 16, 17]
+    name: Test TypeORM Adapter (Postgres ${{ matrix.pg-version }})
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup
+        uses: ./.github/setup
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - shell: bash
+        run: pnpm install
+
+      - name: Build package
+        run: |
+          pnpm --filter "./packages/*" build
+
+      - name: Test PostgreSQL (Postgres ${{ matrix.pg-version }})
+        run: pnpm test:typeorm
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: true
+          PG_VERSION: ${{ matrix.pg-version }}
+
+  postgres-mikroorm:
+    needs: [detect-package-changes]
+    if: |
+      always() &&
+      (needs.detect-package-changes.result == 'skipped' || needs.detect-package-changes.outputs.packages_changed == 'true')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pg-version: [12, 13, 14, 15, 16, 17]
+    name: Test MikroORM Adapter (Postgres ${{ matrix.pg-version }})
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup
+        uses: ./.github/setup
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - shell: bash
+        run: pnpm install
+
+      - name: Build package
+        run: |
+          pnpm --filter "./packages/*" build
+
+      - name: Test PostgreSQL (Postgres ${{ matrix.pg-version }})
+        run: pnpm test:mikroorm
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: true
+          PG_VERSION: ${{ matrix.pg-version }}
+
+  postgres-sequelize:
+    needs: [detect-package-changes]
+    if: |
+      always() &&
+      (needs.detect-package-changes.result == 'skipped' || needs.detect-package-changes.outputs.packages_changed == 'true')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pg-version: [12, 13, 14, 15, 16, 17]
+    name: Test Sequelize Adapter (Postgres ${{ matrix.pg-version }})
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup
+        uses: ./.github/setup
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - shell: bash
+        run: pnpm install
+
+      - name: Build package
+        run: |
+          pnpm --filter "./packages/*" build
+
+      - name: Test PostgreSQL (Postgres ${{ matrix.pg-version }})
+        run: pnpm test:sequelize
+        env:
           TESTCONTAINERS_RYUK_DISABLED: true
           PG_VERSION: ${{ matrix.pg-version }}
