@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./assets/logo-color.svg" alt="Vorsteh Queue" height="200" />
   <h1>Vorsteh Queue</h1>
-  <p>A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle background jobs, scheduled tasks, and recurring processes with ease.</p>
+  <p>A type-safe PostgreSQL job queue for Node.js with durable execution, flow orchestration, and first-class ORM adapters.</p>
 </div>
 
 ## Features

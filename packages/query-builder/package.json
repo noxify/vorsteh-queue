@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "drizzle-orm": "1.0.0-rc.1",
+    "drizzle-orm": "1.0.0-rc.4",
     "fast-check": "^4.9.0",
     "kysely": "0.29.3",
     "tsdown": "0.22.9",
