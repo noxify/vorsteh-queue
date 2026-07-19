@@ -78,6 +78,7 @@ export type {
   KyselyAdapterProps,
   DrizzleAdapterProps,
   ZenstackAdapterProps,
+  TypeormAdapterProps,
 } from "./types"
 
 // Query Builder (filter types)

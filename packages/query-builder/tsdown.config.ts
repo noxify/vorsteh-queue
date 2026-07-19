@@ -11,5 +11,6 @@ export default defineConfig({
     "src/kysely.ts",
     "src/prisma.ts",
     "src/zenstack.ts",
+    "src/typeorm.ts",
   ],
 })

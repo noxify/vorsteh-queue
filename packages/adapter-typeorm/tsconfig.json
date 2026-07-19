@@ -1,0 +1,13 @@
+{
+  "extends": "@vorsteh-queue/tsconfig/base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  },
+  "include": ["*.ts", "src", "tests"],
+  "exclude": ["node_modules"]
+}

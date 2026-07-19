@@ -1,0 +1,40 @@
+---
+title: TypeORM PostgreSQL
+description: Example using TypeORM with PostgreSQL.
+tags: ["typeorm", "postgresql"]
+---
+
+An example using TypeORM with PostgreSQL and the `pg` driver.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=typeorm-postgres
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+The `QueueJobEntity` with `synchronize: true` will automatically create the table on first run.
+
+## What it demonstrates
+
+- TypeORM adapter with PostgreSQL
+- DataSource initialization with entity registration
+- Queue setup and job processing
+
+## Related documentation
+
+- [Quickstart](/docs/vorsteh-queue/getting-started/quickstart)
+- [TypeORM Adapter](/docs/vorsteh-queue/adapters/typeorm)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/typeorm-postgres)

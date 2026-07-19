@@ -9,6 +9,7 @@
     "kysely",
     "prisma",
     "query-builder",
+    "typeorm",
     "typescript",
     "vorsteh-queue",
     "where",
@@ -58,6 +59,12 @@
       "source": "./src/zenstack.ts",
       "import": "./dist/zenstack.mjs",
       "default": "./dist/zenstack.mjs"
+    },
+    "./typeorm": {
+      "types": "./dist/typeorm.d.mts",
+      "source": "./src/typeorm.ts",
+      "import": "./dist/typeorm.mjs",
+      "default": "./dist/typeorm.mjs"
     }
   },
   "scripts": {
@@ -81,7 +88,8 @@
     "@prisma/client": ">=5",
     "@zenstackhq/orm": ">=3",
     "drizzle-orm": ">=1.0.0-rc",
-    "kysely": ">=0.27"
+    "kysely": ">=0.27",
+    "typeorm": ">=0.3"
   },
   "peerDependenciesMeta": {
     "drizzle-orm": {
@@ -94,6 +102,9 @@
       "optional": true
     },
     "@zenstackhq/orm": {
+      "optional": true
+    },
+    "typeorm": {
       "optional": true
     }
   },

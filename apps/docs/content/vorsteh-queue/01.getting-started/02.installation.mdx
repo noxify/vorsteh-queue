@@ -37,6 +37,12 @@ See the [create-vorsteh-queue docs](/docs/vorsteh-queue/packages/create-vorsteh-
   @vorsteh-queue/core @vorsteh-queue/adapter-zenstack @zenstackhq/orm
 </Command>
 
+### TypeORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-typeorm typeorm pg
+</Command>
+
 ## Database Setup
 
 Each adapter provides schema definitions and migration tooling:
@@ -45,6 +51,7 @@ Each adapter provides schema definitions and migration tooling:
 - **Prisma** — add the model to `schema.prisma` and run `prisma migrate`
 - **Kysely** — use the provided migration and run via `kysely-ctl`
 - **ZenStack** — add the model to `schema.zmodel` and run `zen db push`
+- **TypeORM** — use the included `QueueJobEntity` with `synchronize: true` or generate migrations
 
 Refer to the specific adapter documentation for detailed instructions.
 

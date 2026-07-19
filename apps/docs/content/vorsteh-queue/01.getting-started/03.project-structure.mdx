@@ -116,6 +116,31 @@ my-app/
     ```
 
   </AdapterTabs.ZenStack>
+  <AdapterTabs.TypeORM>
+    ```typescript
+    // src/queues.ts
+    import { DataSource } from "typeorm"
+
+    import {
+      PostgresTypeormQueueAdapter,
+      QueueJobEntity,
+    } from "@vorsteh-queue/adapter-typeorm"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const dataSource = new DataSource({
+      type: "postgres",
+      url: process.env.DATABASE_URL,
+      entities: [QueueJobEntity],
+      synchronize: true,
+    })
+
+    export const adapter = new PostgresTypeormQueueAdapter(dataSource)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTabs.TypeORM>
 </AdapterTabs>
 
 ## CLI and server configuration
@@ -245,6 +270,29 @@ For projects with a single queue, the pattern is the same — just simpler:
     ```
 
   </AdapterTabs.ZenStack>
+  <AdapterTabs.TypeORM>
+    ```typescript
+    // src/queues.ts
+    import { DataSource } from "typeorm"
+
+    import {
+      PostgresTypeormQueueAdapter,
+      QueueJobEntity,
+    } from "@vorsteh-queue/adapter-typeorm"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const dataSource = new DataSource({
+      type: "postgres",
+      url: process.env.DATABASE_URL,
+      entities: [QueueJobEntity],
+      synchronize: true,
+    })
+
+    export const adapter = new PostgresTypeormQueueAdapter(dataSource)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTabs.TypeORM>
 </AdapterTabs>
 
 ```typescript

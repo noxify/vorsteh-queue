@@ -744,8 +744,25 @@ export interface ZenstackAdapterProps {
   schemaName?: string
 }
 
+/** TypeORM adapter configuration */
+export interface TypeormAdapterProps {
+  /** Table name in the database
+   * @default "queue_jobs"
+   */
+  tableName?: string
+  /** Schema name in the database
+   * @default undefined (uses default schema `public`)
+   */
+  schemaName?: string
+}
+
 /** Adapter kind discriminator */
-export type AdapterKind = "prisma" | "drizzle" | "kysely" | "zenstack"
+export type AdapterKind =
+  | "prisma"
+  | "drizzle"
+  | "kysely"
+  | "zenstack"
+  | "typeorm"
 
 /** Adapter props by kind */
 export type AdapterProps<T extends AdapterKind> = T extends "prisma"
@@ -756,4 +773,6 @@ export type AdapterProps<T extends AdapterKind> = T extends "prisma"
       ? DrizzleAdapterProps
       : T extends "zenstack"
         ? ZenstackAdapterProps
-        : never
+        : T extends "typeorm"
+          ? TypeormAdapterProps
+          : never
