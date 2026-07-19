@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 
-import * as schema from "./schema"
+import { relations } from "./schema"
 
 // Shared database connection
 const pool = new Pool({
@@ -11,5 +11,5 @@ const pool = new Pool({
   max: 10, // Connection pool size
 })
 
-export const db = drizzle(pool, { schema })
+export const db = drizzle({ client: pool, relations })
 export { pool }
