@@ -11,7 +11,8 @@
     "query-builder",
     "typescript",
     "vorsteh-queue",
-    "where"
+    "where",
+    "zenstack"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
@@ -51,6 +52,12 @@
       "source": "./src/prisma.ts",
       "import": "./dist/prisma.mjs",
       "default": "./dist/prisma.mjs"
+    },
+    "./zenstack": {
+      "types": "./dist/zenstack.d.mts",
+      "source": "./src/zenstack.ts",
+      "import": "./dist/zenstack.mjs",
+      "default": "./dist/zenstack.mjs"
     }
   },
   "scripts": {
@@ -65,13 +72,14 @@
     "@vorsteh-queue/tsconfig": "workspace:*",
     "drizzle-orm": "1.0.0-rc.4",
     "fast-check": "^4.9.0",
-    "kysely": "0.29.3",
+    "kysely": "^0.29.4",
     "tsdown": "0.22.9",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
   "peerDependencies": {
     "@prisma/client": ">=5",
+    "@zenstackhq/orm": ">=3",
     "drizzle-orm": ">=1.0.0-rc",
     "kysely": ">=0.27"
   },
@@ -83,6 +91,9 @@
       "optional": true
     },
     "@prisma/client": {
+      "optional": true
+    },
+    "@zenstackhq/orm": {
       "optional": true
     }
   },

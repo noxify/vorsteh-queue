@@ -91,6 +91,31 @@ my-app/
     ```
 
   </AdapterTabs.Kysely>
+  <AdapterTabs.ZenStack>
+    ```typescript
+    // src/queues.ts
+    import { ZenStackClient } from "@zenstackhq/orm"
+    import { PostgresDialect } from "@zenstackhq/orm/dialects/postgres"
+    import { Pool } from "pg"
+
+    import { PostgresZenstackQueueAdapter } from "@vorsteh-queue/adapter-zenstack"
+    import { Queue } from "@vorsteh-queue/core"
+
+    import { schema } from "../zenstack/schema"
+
+    const db = new ZenStackClient(schema, {
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+
+    export const adapter = new PostgresZenstackQueueAdapter(db)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTabs.ZenStack>
 </AdapterTabs>
 
 ## CLI and server configuration
@@ -197,6 +222,29 @@ For projects with a single queue, the pattern is the same — just simpler:
     ```
 
   </AdapterTabs.Kysely>
+  <AdapterTabs.ZenStack>
+    ```typescript
+    // src/queues.ts
+    import { ZenStackClient } from "@zenstackhq/orm"
+    import { PostgresDialect } from "@zenstackhq/orm/dialects/postgres"
+    import { Pool } from "pg"
+
+    import { PostgresZenstackQueueAdapter } from "@vorsteh-queue/adapter-zenstack"
+    import { Queue } from "@vorsteh-queue/core"
+
+    import { schema } from "../zenstack/schema"
+
+    const db = new ZenStackClient(schema, {
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+
+    export const adapter = new PostgresZenstackQueueAdapter(db)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTabs.ZenStack>
 </AdapterTabs>
 
 ```typescript

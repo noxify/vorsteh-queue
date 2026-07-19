@@ -728,8 +728,24 @@ export interface DrizzleAdapterProps {
   modelName?: string
 }
 
+/** ZenStack adapter configuration */
+export interface ZenstackAdapterProps {
+  /** Model name used in the ZenStack client (camelCase accessor)
+   * @default "queueJob"
+   */
+  modelName?: string
+  /** Table name in the database
+   * @default "queue_jobs"
+   */
+  tableName?: string
+  /** Schema name in the database
+   * @default undefined (uses default schema `public`)
+   */
+  schemaName?: string
+}
+
 /** Adapter kind discriminator */
-export type AdapterKind = "prisma" | "drizzle" | "kysely"
+export type AdapterKind = "prisma" | "drizzle" | "kysely" | "zenstack"
 
 /** Adapter props by kind */
 export type AdapterProps<T extends AdapterKind> = T extends "prisma"
@@ -738,4 +754,6 @@ export type AdapterProps<T extends AdapterKind> = T extends "prisma"
     ? KyselyAdapterProps
     : T extends "drizzle"
       ? DrizzleAdapterProps
-      : never
+      : T extends "zenstack"
+        ? ZenstackAdapterProps
+        : never

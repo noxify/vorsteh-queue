@@ -77,6 +77,7 @@ export type {
   PrismaAdapterProps,
   KyselyAdapterProps,
   DrizzleAdapterProps,
+  ZenstackAdapterProps,
 } from "./types"
 
 // Query Builder (filter types)

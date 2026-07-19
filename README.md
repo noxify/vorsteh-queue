@@ -7,7 +7,7 @@
 ## Features
 
 - **Type-safe**: Full TypeScript support with generic job payloads
-- **Multiple adapters**: Drizzle ORM, Prisma ORM, Kysely (all PostgreSQL)
+- **Multiple adapters**: Drizzle ORM, Prisma ORM, Kysely, ZenStack (all PostgreSQL)
 - **Priority queues**: Numeric priority system (lower = higher priority)
 - **Delayed jobs**: Schedule jobs for future execution
 - **Recurring jobs**: Cron expressions and interval-based repetition
@@ -27,6 +27,7 @@
 | [`@vorsteh-queue/adapter-drizzle`](./packages/adapter-drizzle) | Drizzle ORM adapter (PostgreSQL) |
 | [`@vorsteh-queue/adapter-prisma`](./packages/adapter-prisma) | Prisma ORM adapter (PostgreSQL) |
 | [`@vorsteh-queue/adapter-kysely`](./packages/adapter-kysely) | Kysely adapter (PostgreSQL) |
+| [`@vorsteh-queue/adapter-zenstack`](./packages/adapter-zenstack) | ZenStack ORM adapter (PostgreSQL) |
 | [`@vorsteh-queue/server`](./packages/server) | GraphQL API server for queue management |
 | [`create-vorsteh-queue`](./packages/create-vorsteh-queue) | CLI scaffolding tool |
 

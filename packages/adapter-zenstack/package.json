@@ -1,26 +1,19 @@
 {
-  "name": "@vorsteh-queue/adapter-kysely",
-  "version": "0.3.1",
-  "description": "Kysely adapter for Vorsteh Queue with PostgreSQL support",
+  "name": "@vorsteh-queue/adapter-zenstack",
+  "version": "0.1.0",
+  "description": "ZenStack ORM adapter for Vorsteh Queue with PostgreSQL support",
   "keywords": [
     "adapter",
     "background-jobs",
     "database",
-    "drizzle",
-    "drizzle-orm",
     "job-queue",
-    "node-postgres",
     "orm",
-    "pg",
-    "pglite",
-    "postgres",
-    "postgres-js",
     "postgresql",
     "queue",
-    "sql",
     "task-queue",
     "typescript",
-    "worker"
+    "worker",
+    "zenstack"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
@@ -28,10 +21,11 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/noxify/vorsteh-queue",
-    "directory": "packages/adapter-kysely"
+    "directory": "packages/adapter-zenstack"
   },
   "files": [
-    "dist"
+    "dist",
+    "types"
   ],
   "type": "module",
   "main": "./dist/index.mjs",
@@ -42,30 +36,18 @@
       "source": "./src/index.ts",
       "default": "./dist/index.mjs"
     },
-    "./migrations": {
-      "types": "./dist/migrations/queue-table.d.mts",
-      "source": "./src/migrations/queue-table.ts",
-      "default": "./dist/migrations/queue-table.mjs"
-    },
     "./postgres-adapter": {
       "types": "./dist/postgres-adapter.d.mts",
       "source": "./src/postgres-adapter.ts",
       "default": "./dist/postgres-adapter.mjs"
-    },
-    "./types": {
-      "types": "./dist/types.d.mts",
-      "source": "./src/types.ts",
-      "default": "./dist/types.mjs"
     }
   },
   "scripts": {
     "build": "tsdown --log-level error",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "db:generate": "drizzle-kit generate",
     "dev": "tsdown --watch",
     "test": "vitest",
-    "test:watch": "vitest --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -73,30 +55,18 @@
     "@vorsteh-queue/query-builder": "workspace:*"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.4",
+    "@types/node": "24.13.3",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "kysely": "^0.29.4",
-    "kysely-ctl": "0.21.0",
-    "kysely-postgres-js": "3.0.0",
-    "postgres": "3.4.9",
+    "@zenstackhq/orm": "^3.0.0",
+    "postgres": "^3.4.7",
+    "testcontainers": "12.0.4",
     "tsdown": "0.22.9",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "kysely": ">=0.28.0"
-  },
-  "peerDependenciesMeta": {
-    "@types/pg": {
-      "optional": true
-    },
-    "pg": {
-      "optional": true
-    },
-    "postgres": {
-      "optional": true
-    }
+    "@zenstackhq/orm": ">=3.0.0"
   },
   "engines": {
     "node": ">=22"

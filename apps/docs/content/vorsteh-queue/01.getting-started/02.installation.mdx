@@ -31,6 +31,12 @@ See the [create-vorsteh-queue docs](/docs/vorsteh-queue/packages/create-vorsteh-
   @vorsteh-queue/core @vorsteh-queue/adapter-kysely
 </Command>
 
+### ZenStack ORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-zenstack @zenstackhq/orm
+</Command>
+
 ## Database Setup
 
 Each adapter provides schema definitions and migration tooling:
@@ -38,6 +44,7 @@ Each adapter provides schema definitions and migration tooling:
 - **Drizzle** — use the included schema and run `drizzle-kit` migrations
 - **Prisma** — add the model to `schema.prisma` and run `prisma migrate`
 - **Kysely** — use the provided migration and run via `kysely-ctl`
+- **ZenStack** — add the model to `schema.zmodel` and run `zen db push`
 
 Refer to the specific adapter documentation for detailed instructions.
 

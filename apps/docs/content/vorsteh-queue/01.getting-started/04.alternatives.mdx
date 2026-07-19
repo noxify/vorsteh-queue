@@ -36,7 +36,7 @@ The goal is to bring those patterns together into one cohesive package — Postg
 
 - You want a **PostgreSQL-only stack** (no Redis) for queueing
 - You want **enqueue + app data writes in the same PostgreSQL transaction**
-- You want **first-class ORM adapters** (Drizzle, Prisma, Kysely) and typed DX around your schema
+- You want **first-class ORM adapters** (Drizzle, Prisma, Kysely, ZenStack) and typed DX around your schema
 
 ## pg-boss
 
@@ -208,7 +208,7 @@ The goal is to bring those patterns together into one cohesive package — Postg
 
 - You need **Node.js** compatibility (not Bun-only)
 - You want **PostgreSQL** for multi-instance / HA worker setups
-- You want **ORM adapters** (Drizzle, Prisma, Kysely) in a Postgres-first design
+- You want **ORM adapters** (Drizzle, Prisma, Kysely, ZenStack) in a Postgres-first design
 
 ## Comparison
 
@@ -222,7 +222,7 @@ The goal is to bring those patterns together into one cohesive package — Postg
 
 | Library | Backend | TypeScript | ORM Integration |
 | --- | --- | --- | --- |
-| Vorsteh Queue | PostgreSQL | First-class | Drizzle, Prisma, Kysely |
+| Vorsteh Queue | PostgreSQL | First-class | Drizzle, Prisma, Kysely, ZenStack |
 | BullMQ | Redis | First-class | — |
 | pg-boss | PostgreSQL | First-class | Tx adapters (Drizzle, Prisma, Kysely, Knex) |
 | Graphile Worker | PostgreSQL | Types avail. | — |

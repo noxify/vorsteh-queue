@@ -1,0 +1,39 @@
+---
+title: ZenStack PostgreSQL
+description: Example using ZenStack ORM with PostgreSQL.
+tags: ["zenstack", "postgresql"]
+---
+
+An example using ZenStack ORM v3 with PostgreSQL and the `pg` driver.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=zenstack-postgres
+</Command>
+
+Then install dependencies, generate the ZenStack schema and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm zen:generate
+pnpm dev
+```
+
+## What it demonstrates
+
+- ZenStack adapter with PostgreSQL
+- ZenStackClient initialization with PostgresDialect
+- Queue setup and job processing
+
+## Related documentation
+
+- [Quickstart](/docs/vorsteh-queue/getting-started/quickstart)
+- [ZenStack Adapter](/docs/vorsteh-queue/adapters/zenstack)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/zenstack-postgres)

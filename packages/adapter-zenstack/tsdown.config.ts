@@ -5,11 +5,5 @@ export default defineConfig({
     skipNodeModulesBundle: true,
   },
   dts: true,
-  entry: [
-    "src/index.ts",
-    "src/drizzle.ts",
-    "src/kysely.ts",
-    "src/prisma.ts",
-    "src/zenstack.ts",
-  ],
+  entry: ["src/index.ts", "src/postgres-adapter.ts"],
 })
