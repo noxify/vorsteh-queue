@@ -5,58 +5,43 @@ import { Space_Grotesk } from "next/font/google"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
-import { GradientGridBackground } from "@/components/grid-background"
 import { VorstehQueueLogo } from "@/components/logo"
 
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] })
 
 function OGImage() {
   return (
-    <GradientGridBackground
-      className="h-full w-full"
-      gridSize={48}
-      gridColor="rgba(107,114,128,0.3)"
-      gradientFrom="#f5f7fa"
-      gradientVia="#d8dee8"
-      gradientTo="#c3cfe2"
-      fadeStartPercent={20}
-      fadeMidPercent={84}
-      midOpacity={0.35}
-      edgeOpacity={0}
-      fadeRadiusXPercent={100}
-      fadeRadiusYPercent={80}
-    >
-      <div className="absolute inset-0 h-full" />
-      <div className="relative flex h-full w-full items-center px-30">
-        <div className="w-full">
-          <div className="relative flex justify-center">
-            <div className="flex items-center gap-6">
-              <div
-                className="flex size-37.5 shrink-0 items-center justify-center rounded-[28px] bg-white shadow-[0_18px_40px_rgba(2,73,118,0.18)]"
-                style={{
-                  transform: "translateZ(0)",
-                }}
-              >
-                <VorstehQueueLogo className="size-28" />
-              </div>
-              <div
-                className="text-[98px] leading-none font-medium text-slate-700"
-                style={{ fontFamily: spaceGrotesk.style.fontFamily }}
-              >
-                LakeQL
-              </div>
-            </div>
-          </div>
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#181411]">
+      {/* Dot grid pattern */}
+      <div
+        className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, #f97316 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      />
+      {/* Orange gradient accent - top */}
+      <div
+        className="absolute -top-32 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full opacity-25 blur-[80px]"
+        style={{ background: "linear-gradient(90deg, #f97316, #ea580c)" }}
+      />
 
-          <div className="mt-20 flex flex-row">
-            <div className="text-[34px] leading-tight text-slate-600">
-              Build predictable, secure GraphQL APIs on top of Trino metadata
-              with LakeQL’s type-safe runtime and schema generation CLI.
-            </div>
-          </div>
+      {/* Content */}
+      <div className="relative flex w-full flex-col items-center text-center">
+        <VorstehQueueLogo className="size-32" />
+        <div
+          className="mt-8 text-[80px] leading-none font-semibold text-[#f1eae3]"
+          style={{ fontFamily: spaceGrotesk.style.fontFamily }}
+        >
+          Vorsteh-Queue
+        </div>
+        <div className="mt-6 max-w-4xl text-[30px] leading-relaxed text-[#f1eae3]/60">
+          A type-safe PostgreSQL job queue for Node.js with durable execution,
+          flow orchestration, and first-class ORM adapters.
         </div>
       </div>
-    </GradientGridBackground>
+    </div>
   )
 }
 
@@ -75,7 +60,6 @@ export default function OGImagePage() {
       }
 
       try {
-        // Load the browser-only package only on the client after mount.
         const blob = await screenshot.blob(renderRef.current, {
           format: "jpeg",
           quality: 0.92,
@@ -111,6 +95,7 @@ export default function OGImagePage() {
 
   return (
     <div className="space-y-6 p-8">
+      <h1 className="text-3xl font-bold">OG Image Preview</h1>
       <div
         ref={renderRef}
         className="h-157.5 w-300 overflow-hidden rounded-2xl"

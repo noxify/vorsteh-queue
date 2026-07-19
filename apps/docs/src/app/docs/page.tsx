@@ -62,7 +62,7 @@ export default async function DocsIndexPage() {
               className="text-foreground mb-3 text-4xl font-semibold tracking-tight sm:text-5xl"
               style={{ fontFamily: spaceGrotesk.style.fontFamily }}
             >
-              LakeQL Docs Overview
+              Vorsteh-Queue Docs Overview
             </h1>
             <p className="text-muted-foreground max-w-3xl text-lg text-pretty">
               Start with a collection below, or jump into machine-readable docs

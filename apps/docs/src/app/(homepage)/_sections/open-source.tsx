@@ -27,7 +27,7 @@ export function OpenSourceSection() {
           Free &amp; Open Source
         </h2>
 
-        <p className="text-muted-foreground mx-auto mt-4 max-w-xl text-lg">
+        <p className="text-muted-foreground mx-auto mt-4 max-w-4xl text-lg">
           Vorsteh Queue is completely free and open source. Built by developers,
           for developers.
         </p>
@@ -58,7 +58,7 @@ export function OpenSourceSection() {
             href="https://github.com/vorsteh/vorsteh-queue/blob/main/CONTRIBUTING.md"
             target="_blank"
             rel="noopener noreferrer"
-            className={buttonVariants({ size: "lg", variant: "outline" })}
+            className={buttonVariants({ size: "lg", variant: "ghost" })}
           >
             <GitFork className="size-4" />
             Contribute

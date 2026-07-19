@@ -28,7 +28,7 @@ export function MobileDocsHeader() {
               className="text-sm font-semibold"
               style={{ fontFamily: spaceGrotesk.style.fontFamily }}
             >
-              LakeQL
+              Vorsteh-Queue
             </span>
           </Link>
         </div>

@@ -25,21 +25,73 @@ my-app/
 
 `src/queues.ts` is the single source of truth for your adapter and queue instances:
 
-```typescript
-// src/queues.ts
-import { Queue } from "@vorsteh-queue/core"
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle/postgres-adapter"
-import { drizzle } from "drizzle-orm/node-postgres"
-import { Pool } from "pg"
+<AdapterTabs>
+  <AdapterTabs.Drizzle>
+    ```typescript
+    // src/queues.ts
+    import { defineRelations } from "drizzle-orm"
+    import { drizzle } from "drizzle-orm/node-postgres"
+    import { Pool } from "pg"
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-const db = drizzle(pool)
+    import {
+      PostgresQueueAdapter,
+      postgresSchema,
+    } from "@vorsteh-queue/adapter-drizzle"
+    import { Queue } from "@vorsteh-queue/core"
 
-export const adapter = new PostgresQueueAdapter(db)
+    const { queueJobs } = postgresSchema
+    const relations = defineRelations({ queueJobs })
 
-export const emailQueue = new Queue(adapter, { name: "email-queue" })
-export const reportQueue = new Queue(adapter, { name: "report-queue" })
-```
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const db = drizzle({ client: pool, relations })
+
+    export const adapter = new PostgresQueueAdapter(db)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTabs.Drizzle>
+  <AdapterTabs.Prisma>
+    ```typescript
+    // src/queues.ts
+    import { PrismaClient } from "@prisma/client"
+
+    import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const prisma = new PrismaClient()
+
+    export const adapter = new PostgresPrismaQueueAdapter(prisma)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTabs.Prisma>
+  <AdapterTabs.Kysely>
+    ```typescript
+    // src/queues.ts
+    import { Kysely, PostgresDialect } from "kysely"
+    import { Pool } from "pg"
+
+    import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const db = new Kysely({
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+
+    export const adapter = new PostgresQueueAdapter(db)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTabs.Kysely>
+</AdapterTabs>
 
 ## CLI and server configuration
 
@@ -85,19 +137,67 @@ await emailQueue.add("send-email", { to: "user@example.com", subject: "Hello" })
 
 For projects with a single queue, the pattern is the same — just simpler:
 
-```typescript
-// src/queues.ts
-import { Queue } from "@vorsteh-queue/core"
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle/postgres-adapter"
-import { drizzle } from "drizzle-orm/node-postgres"
-import { Pool } from "pg"
+<AdapterTabs>
+  <AdapterTabs.Drizzle>
+    ```typescript
+    // src/queues.ts
+    import { defineRelations } from "drizzle-orm"
+    import { drizzle } from "drizzle-orm/node-postgres"
+    import { Pool } from "pg"
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-const db = drizzle(pool)
+    import {
+      PostgresQueueAdapter,
+      postgresSchema,
+    } from "@vorsteh-queue/adapter-drizzle"
+    import { Queue } from "@vorsteh-queue/core"
 
-export const adapter = new PostgresQueueAdapter(db)
-export const queue = new Queue(adapter, { name: "my-queue" })
-```
+    const { queueJobs } = postgresSchema
+    const relations = defineRelations({ queueJobs })
+
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const db = drizzle({ client: pool, relations })
+
+    export const adapter = new PostgresQueueAdapter(db)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTabs.Drizzle>
+  <AdapterTabs.Prisma>
+    ```typescript
+    // src/queues.ts
+    import { PrismaClient } from "@prisma/client"
+
+    import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const prisma = new PrismaClient()
+
+    export const adapter = new PostgresPrismaQueueAdapter(prisma)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTabs.Prisma>
+  <AdapterTabs.Kysely>
+    ```typescript
+    // src/queues.ts
+    import { Kysely, PostgresDialect } from "kysely"
+    import { Pool } from "pg"
+
+    import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const db = new Kysely({
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+
+    export const adapter = new PostgresQueueAdapter(db)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTabs.Kysely>
+</AdapterTabs>
 
 ```typescript
 // queue.config.ts

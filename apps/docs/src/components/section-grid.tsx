@@ -7,7 +7,6 @@ import {
   isHidden,
   resolveDocEntry,
 } from "@/collection-helpers"
-import { GradientGridBackground } from "@/components/grid-background"
 import { cn } from "@/lib/utils"
 
 interface SectionGridItem {
@@ -140,31 +139,34 @@ export default async function SectionGrid(props: SectionGridProps) {
           key={index} // oxlint-disable-line react-doctor/no-array-index-as-key -- static list, order won't change
           className="not-prose group block h-full"
         >
-          <div className="hover:border-brand/50 hover:dark:border-brand/30 relative h-full overflow-hidden rounded-2xl border border-black/10 shadow transition-transform duration-200 dark:border-white/10">
-            <div className="bg-sidebar pointer-events-none absolute inset-0" />
+          <div className="hover:border-brand/50 hover:dark:border-brand/30 bg-sidebar relative h-full overflow-hidden rounded-2xl border border-black/10 shadow transition-transform duration-200 dark:border-white/10">
+            {/* Dot pattern background */}
+            <div
+              className="pointer-events-none absolute inset-0 opacity-[0.2]"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle, currentColor 1px, transparent 1px)",
+                backgroundSize: "24px 24px",
+              }}
+            />
+            {/* Radial fade mask */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, transparent 30%, var(--sidebar) 80%)",
+              }}
+            />
 
-            <GradientGridBackground
-              className="relative h-full px-4 py-8"
-              gridSize={48}
-              gridColor="rgba(107,114,128,0.20)"
-              transparentBackground
-              fadeStartPercent={20}
-              fadeMidPercent={86}
-              midOpacity={0.44}
-              edgeOpacity={0}
-              fadeRadiusXPercent={100}
-              fadeRadiusYPercent={80}
-            >
-              <div className="justify-top relative flex h-full flex-col items-start text-left align-top">
-                <h2 className="text-foreground/70 group-hover:text-foreground relative z-50 mt-0 mb-1 text-xl font-bold">
-                  {ele.title}
-                </h2>
+            <div className="relative px-4 py-8">
+              <h2 className="text-foreground/70 group-hover:text-foreground mt-0 mb-1 text-xl font-bold">
+                {ele.title}
+              </h2>
 
-                <p className="text-muted-foreground relative z-50 text-base font-normal">
-                  {ele.description}
-                </p>
-              </div>
-            </GradientGridBackground>
+              <p className="text-muted-foreground text-base font-normal">
+                {ele.description}
+              </p>
+            </div>
           </div>
         </Link>
       ))}

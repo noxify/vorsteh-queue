@@ -83,7 +83,7 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-24">
+    <section className="bg-muted/30 py-24">
       <PageContainer>
         <div className="mb-12 text-center">
           <span className="text-primary mb-3 block text-sm font-semibold tracking-wider uppercase">

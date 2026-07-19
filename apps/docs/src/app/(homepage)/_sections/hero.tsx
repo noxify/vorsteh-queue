@@ -43,21 +43,38 @@ const features = [
 export function HeroSection() {
   return (
     <section className="relative -mt-14 overflow-hidden pt-28 pb-16">
+      {/* Dot pattern background — fades to transparent at bottom */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.2]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, currentColor 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+          maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 0%, transparent 100%)",
+        }}
+      />
+      {/* Orange gradient glow - top center */}
+      <div
+        className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[800px] -translate-x-1/2 rounded-full opacity-[0.09] blur-[80px]"
+        style={{ background: "linear-gradient(90deg, #f97316, #ea580c)" }}
+      />
+
       <PageContainer>
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Left column - text content */}
           <div className="flex flex-col gap-6">
             <h1
-              className="text-foreground text-4xl leading-tight font-bold tracking-tight sm:text-5xl lg:text-[56px] lg:leading-[1.1]"
+              className="text-foreground text-4xl leading-tight font-bold tracking-tight sm:text-4xl lg:leading-[1.1] xl:text-5xl"
               style={{ fontFamily: spaceGrotesk.style.fontFamily }}
             >
               Reliable Job Queue for Modern Applications
             </h1>
 
             <p className="text-muted-foreground max-w-lg text-lg leading-relaxed">
-              A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle
-              background jobs, scheduled tasks, and recurring processes with
-              ease.
+              A type-safe PostgreSQL job queue for Node.js with durable
+              execution, flow orchestration, and first-class ORM adapters.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -73,7 +90,7 @@ export function HeroSection() {
                 href="https://github.com/noxify/vorsteh-queue"
                 target="_blank"
                 rel="noopener noreferrer"
-                className={buttonVariants({ size: "lg", variant: "outline" })}
+                className={buttonVariants({ size: "lg", variant: "ghost" })}
               >
                 View on GitHub
               </a>

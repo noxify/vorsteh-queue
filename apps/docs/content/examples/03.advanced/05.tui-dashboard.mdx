@@ -1,0 +1,61 @@
+---
+title: TUI Dashboard
+description: Interactive terminal dashboard with in-memory PGlite for exploring multi-queue monitoring.
+tags: ["tui", "dashboard", "cli", "pglite", "monitoring"]
+---
+
+A zero-setup example that spins up multiple queues with diverse job types using PGlite (in-memory PostgreSQL), then launches the interactive TUI dashboard for real-time monitoring.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=advanced-tui
+</Command>
+
+Then install dependencies and start:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+In a second terminal, launch the dashboard:
+
+```bash
+pnpm dashboard
+```
+
+## What it demonstrates
+
+- In-memory PGlite database (no external PostgreSQL needed)
+- Multiple queues: email, data-processing, notifications
+- Diverse job types with different priorities, delays, and failure rates
+- GraphQL server for CLI/dashboard communication
+- Real-time TUI dashboard with queue switching, job filtering, and keyboard navigation
+
+## Dashboard commands
+
+The example provides per-queue dashboard shortcuts:
+
+```bash
+# Monitor all queues (default)
+pnpm dashboard
+
+# Monitor a specific queue
+pnpm dashboard:email
+pnpm dashboard:data
+pnpm dashboard:notifications
+```
+
+## Related documentation
+
+- [CLI Overview](/docs/cli/overview/installation)
+- [Queue](/docs/vorsteh-queue/core/queue)
+- [Drizzle Adapter](/docs/vorsteh-queue/adapters/drizzle)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/advanced-tui)

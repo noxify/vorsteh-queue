@@ -1,4 +1,4 @@
-import { Activity, BarChart3, GitBranch, Terminal } from "lucide-react"
+import { Activity, BarChart3, GitBranch } from "lucide-react"
 import { Space_Grotesk } from "next/font/google"
 import Link from "next/link"
 
@@ -14,12 +14,11 @@ const bulletPoints = [
     icon: BarChart3,
     label: "Export to Prometheus, Grafana, Datadog, and more",
   },
-  { icon: Terminal, label: "CLI for queue stats, job inspection, and retry" },
 ]
 
 export function ObservabilitySection() {
   return (
-    <section className="bg-muted/30 py-24">
+    <section className="py-24">
       <PageContainer>
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Left column - text */}
@@ -58,13 +57,6 @@ export function ObservabilitySection() {
                 className={buttonVariants({ size: "lg" })}
               >
                 Observability Guide
-              </Link>
-              <Link
-                href="/docs"
-                prefetch={false}
-                className={buttonVariants({ size: "lg", variant: "outline" })}
-              >
-                View Docs
               </Link>
             </div>
           </div>

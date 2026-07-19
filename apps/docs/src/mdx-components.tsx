@@ -5,6 +5,7 @@ import { CodeBlock, Toolbar } from "renoun/components"
 import type { MDXComponents } from "renoun/mdx"
 import { createSlug } from "renoun/mdx"
 
+import { AdapterTabs } from "@/components/mdx/adapter-tabs"
 import { CliCommandDetails } from "@/components/mdx/cli-command-details"
 import { CommandWrapper as Command } from "@/components/mdx/command"
 import { Heading } from "@/components/mdx/heading"
@@ -316,6 +317,7 @@ export function useMDXComponents() {
       )
     },
 
+    AdapterTabs,
     Command,
     CliCommandDetails,
     InlineReference,

@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: "Vorsteh Queue",
   },
   description:
-    "A powerful, ORM-agnostic queue engine for PostgreSQL 12+. Handle background jobs, scheduled tasks, and recurring processes with ease.",
+    "A type-safe PostgreSQL job queue for Node.js with durable execution, flow orchestration, and first-class ORM adapters.",
   icons: {
     apple: [
       { sizes: "180x180", type: "image/png", url: "/apple-touch-icon.png" },

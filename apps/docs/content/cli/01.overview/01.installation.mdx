@@ -40,26 +40,88 @@ vorsteh-queue status
 
 For direct mode, create a `queue.config.ts` in your project root:
 
-```typescript
-// queue.config.ts
-import { Queue } from "@vorsteh-queue/core"
-import { drizzle } from "drizzle-orm/node-postgres"
-import { Pool } from "pg"
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle/postgres-adapter"
+<AdapterTabs>
+  <AdapterTabs.Drizzle>
+    ```typescript
+    // queue.config.ts
+    import { defineRelations } from "drizzle-orm"
+    import { drizzle } from "drizzle-orm/node-postgres"
+    import { Pool } from "pg"
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-const db = drizzle(pool)
-const adapter = new PostgresQueueAdapter(db)
+    import {
+      PostgresQueueAdapter,
+      postgresSchema,
+    } from "@vorsteh-queue/adapter-drizzle"
+    import { Queue } from "@vorsteh-queue/core"
 
-const emailQueue = new Queue(adapter, { name: "email-queue" })
-const reportQueue = new Queue(adapter, { name: "report-queue" })
+    const { queueJobs } = postgresSchema
+    const relations = defineRelations({ queueJobs })
 
-export default {
-  adapter,
-  queues: [emailQueue, reportQueue],
-  defaultQueue: "email-queue",
-}
-```
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const db = drizzle({ client: pool, relations })
+    const adapter = new PostgresQueueAdapter(db)
+
+    const emailQueue = new Queue(adapter, { name: "email-queue" })
+    const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+    export default {
+      adapter,
+      queues: [emailQueue, reportQueue],
+      defaultQueue: "email-queue",
+    }
+    ```
+
+  </AdapterTabs.Drizzle>
+  <AdapterTabs.Prisma>
+    ```typescript
+    // queue.config.ts
+    import { PrismaClient } from "@prisma/client"
+
+    import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const prisma = new PrismaClient()
+    const adapter = new PostgresPrismaQueueAdapter(prisma)
+
+    const emailQueue = new Queue(adapter, { name: "email-queue" })
+    const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+    export default {
+      adapter,
+      queues: [emailQueue, reportQueue],
+      defaultQueue: "email-queue",
+    }
+    ```
+
+  </AdapterTabs.Prisma>
+  <AdapterTabs.Kysely>
+    ```typescript
+    // queue.config.ts
+    import { Kysely, PostgresDialect } from "kysely"
+    import { Pool } from "pg"
+
+    import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const db = new Kysely({
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+    const adapter = new PostgresQueueAdapter(db)
+
+    const emailQueue = new Queue(adapter, { name: "email-queue" })
+    const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+    export default {
+      adapter,
+      queues: [emailQueue, reportQueue],
+      defaultQueue: "email-queue",
+    }
+    ```
+
+  </AdapterTabs.Kysely>
+</AdapterTabs>
 
 The `adapter` and `queues` fields are required for direct mode. If either is missing, the CLI will exit with an error. When multiple queues are configured, `defaultQueue` is also required.
 
