@@ -1,0 +1,79 @@
+{
+  "name": "@vorsteh-queue/adapter-sequelize",
+  "version": "0.1.0",
+  "description": "Sequelize adapter for Vorsteh Queue with PostgreSQL support",
+  "keywords": [
+    "adapter",
+    "background-jobs",
+    "database",
+    "job-queue",
+    "orm",
+    "postgresql",
+    "queue",
+    "sequelize",
+    "task-queue",
+    "typescript",
+    "worker"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/adapter-sequelize"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./postgres-adapter": {
+      "types": "./dist/postgres-adapter.d.mts",
+      "source": "./src/postgres-adapter.ts",
+      "default": "./dist/postgres-adapter.mjs"
+    },
+    "./model": {
+      "types": "./dist/model.d.mts",
+      "source": "./src/model.ts",
+      "default": "./dist/model.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown --log-level error",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/query-builder": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "@vorsteh-queue/shared-tests": "workspace:*",
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "pg": "^8.13.0",
+    "postgres": "^3.4.7",
+    "sequelize": "^6.37.0",
+    "testcontainers": "12.0.4",
+    "tsdown": "0.22.9",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  },
+  "peerDependencies": {
+    "sequelize": ">=6.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

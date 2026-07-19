@@ -1,0 +1,86 @@
+---
+title: Sequelize Adapter
+navTitle: Sequelize
+description: Sequelize adapter for PostgreSQL with model-based schema and battle-tested ORM.
+---
+
+The Sequelize adapter provides PostgreSQL support using Sequelize, one of the most established Node.js ORMs with model-based schema definitions, migrations, and broad database support.
+
+## Installation
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-sequelize sequelize pg
+</Command>
+
+## Quick Start
+
+```typescript
+import { Sequelize } from "sequelize"
+import {
+  PostgresSequelizeQueueAdapter,
+  initQueueJobModel,
+} from "@vorsteh-queue/adapter-sequelize"
+import { Queue, Worker } from "@vorsteh-queue/core"
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: "postgres",
+  logging: false,
+})
+
+initQueueJobModel(sequelize)
+
+const adapter = new PostgresSequelizeQueueAdapter(sequelize)
+
+const queue = new Queue(adapter, { name: "my-queue" })
+const worker = new Worker(adapter, { name: "my-queue" })
+
+await queue.connect()
+```
+
+<Note title="Tip">
+  For real projects, extract this setup into a shared `src/queues.ts` file. See
+  [Project Structure](/docs/vorsteh-queue/getting-started/project-structure).
+</Note>
+
+## Database Schema
+
+The adapter ships with a pre-built model that can be synced with:
+
+```typescript
+await sequelize.sync()
+```
+
+Or use Sequelize migrations for production.
+
+## Custom Table and Schema Names
+
+```typescript
+const adapter = new PostgresSequelizeQueueAdapter(sequelize, {
+  tableName: "custom_queue_jobs",
+  schemaName: "custom_schema",
+})
+```
+
+## Migrations
+
+Use the [Sequelize CLI](https://sequelize.org/docs/v6/other-topics/migrations/) for migrations:
+
+```bash
+npx sequelize-cli migration:generate --name add-queue-table
+npx sequelize-cli db:migrate
+```
+
+## Why Sequelize?
+
+Sequelize is one of the most battle-tested ORMs for Node.js:
+
+- **Broad database support** — PostgreSQL, MySQL, MariaDB, SQLite, MSSQL
+- **Model-based schemas** — define schemas with familiar `Model.init()` pattern
+- **Mature migration system** — CLI-driven migration workflow
+- **Transaction support** — managed and unmanaged transactions
+- **Hooks and validators** — lifecycle hooks and built-in validation
+- **Large community** — extensive ecosystem and documentation
+
+## Adapter Properties
+
+<InterfaceReference file="core/src/types" name="SequelizeAdapterProps" />

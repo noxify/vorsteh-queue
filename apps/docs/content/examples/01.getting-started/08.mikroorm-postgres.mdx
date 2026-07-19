@@ -1,0 +1,38 @@
+---
+title: MikroORM PostgreSQL
+description: Example using MikroORM with PostgreSQL.
+tags: ["mikroorm", "postgresql"]
+---
+
+An example using MikroORM v6 with PostgreSQL.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=mikroorm-postgres
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- MikroORM adapter with PostgreSQL
+- MikroORM initialization with EntitySchema
+- Queue setup and job processing
+
+## Related documentation
+
+- [Quickstart](/docs/vorsteh-queue/getting-started/quickstart)
+- [MikroORM Adapter](/docs/vorsteh-queue/adapters/mikroorm)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/mikroorm-postgres)

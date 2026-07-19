@@ -26,7 +26,7 @@ my-app/
 `src/queues.ts` is the single source of truth for your adapter and queue instances:
 
 <AdapterTabs>
-  <AdapterTabs.Drizzle>
+  <AdapterTab adapter="drizzle">
     ```typescript
     // src/queues.ts
     import { defineRelations } from "drizzle-orm"
@@ -51,8 +51,8 @@ my-app/
     export const reportQueue = new Queue(adapter, { name: "report-queue" })
     ```
 
-  </AdapterTabs.Drizzle>
-  <AdapterTabs.Prisma>
+  </AdapterTab>
+  <AdapterTab adapter="prisma">
     ```typescript
     // src/queues.ts
     import { PrismaClient } from "@prisma/client"
@@ -68,8 +68,8 @@ my-app/
     export const reportQueue = new Queue(adapter, { name: "report-queue" })
     ```
 
-  </AdapterTabs.Prisma>
-  <AdapterTabs.Kysely>
+  </AdapterTab>
+  <AdapterTab adapter="kysely">
     ```typescript
     // src/queues.ts
     import { Kysely, PostgresDialect } from "kysely"
@@ -90,8 +90,8 @@ my-app/
     export const reportQueue = new Queue(adapter, { name: "report-queue" })
     ```
 
-  </AdapterTabs.Kysely>
-  <AdapterTabs.ZenStack>
+  </AdapterTab>
+  <AdapterTab adapter="zenstack">
     ```typescript
     // src/queues.ts
     import { ZenStackClient } from "@zenstackhq/orm"
@@ -115,8 +115,8 @@ my-app/
     export const reportQueue = new Queue(adapter, { name: "report-queue" })
     ```
 
-  </AdapterTabs.ZenStack>
-  <AdapterTabs.TypeORM>
+  </AdapterTab>
+  <AdapterTab adapter="typeorm">
     ```typescript
     // src/queues.ts
     import { DataSource } from "typeorm"
@@ -140,7 +140,54 @@ my-app/
     export const reportQueue = new Queue(adapter, { name: "report-queue" })
     ```
 
-  </AdapterTabs.TypeORM>
+  </AdapterTab>
+  <AdapterTab adapter="mikroorm">
+    ```typescript
+    // src/queues.ts
+    import { MikroORM } from "@mikro-orm/postgresql"
+
+    import {
+      PostgresMikroormQueueAdapter,
+      QueueJobSchema,
+    } from "@vorsteh-queue/adapter-mikroorm"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const orm = await MikroORM.init({
+      entities: [QueueJobSchema],
+      clientUrl: process.env.DATABASE_URL,
+    })
+
+    export const adapter = new PostgresMikroormQueueAdapter(orm)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="sequelize">
+    ```typescript
+    // src/queues.ts
+    import { Sequelize } from "sequelize"
+
+    import {
+      PostgresSequelizeQueueAdapter,
+      initQueueJobModel,
+    } from "@vorsteh-queue/adapter-sequelize"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const sequelize = new Sequelize(process.env.DATABASE_URL, {
+      dialect: "postgres",
+      logging: false,
+    })
+    initQueueJobModel(sequelize)
+
+    export const adapter = new PostgresSequelizeQueueAdapter(sequelize)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTab>
 </AdapterTabs>
 
 ## CLI and server configuration
@@ -188,7 +235,7 @@ await emailQueue.add("send-email", { to: "user@example.com", subject: "Hello" })
 For projects with a single queue, the pattern is the same — just simpler:
 
 <AdapterTabs>
-  <AdapterTabs.Drizzle>
+  <AdapterTab adapter="drizzle">
     ```typescript
     // src/queues.ts
     import { defineRelations } from "drizzle-orm"
@@ -211,8 +258,8 @@ For projects with a single queue, the pattern is the same — just simpler:
     export const queue = new Queue(adapter, { name: "my-queue" })
     ```
 
-  </AdapterTabs.Drizzle>
-  <AdapterTabs.Prisma>
+  </AdapterTab>
+  <AdapterTab adapter="prisma">
     ```typescript
     // src/queues.ts
     import { PrismaClient } from "@prisma/client"
@@ -226,8 +273,8 @@ For projects with a single queue, the pattern is the same — just simpler:
     export const queue = new Queue(adapter, { name: "my-queue" })
     ```
 
-  </AdapterTabs.Prisma>
-  <AdapterTabs.Kysely>
+  </AdapterTab>
+  <AdapterTab adapter="kysely">
     ```typescript
     // src/queues.ts
     import { Kysely, PostgresDialect } from "kysely"
@@ -246,8 +293,8 @@ For projects with a single queue, the pattern is the same — just simpler:
     export const queue = new Queue(adapter, { name: "my-queue" })
     ```
 
-  </AdapterTabs.Kysely>
-  <AdapterTabs.ZenStack>
+  </AdapterTab>
+  <AdapterTab adapter="zenstack">
     ```typescript
     // src/queues.ts
     import { ZenStackClient } from "@zenstackhq/orm"
@@ -269,8 +316,8 @@ For projects with a single queue, the pattern is the same — just simpler:
     export const queue = new Queue(adapter, { name: "my-queue" })
     ```
 
-  </AdapterTabs.ZenStack>
-  <AdapterTabs.TypeORM>
+  </AdapterTab>
+  <AdapterTab adapter="typeorm">
     ```typescript
     // src/queues.ts
     import { DataSource } from "typeorm"
@@ -292,7 +339,50 @@ For projects with a single queue, the pattern is the same — just simpler:
     export const queue = new Queue(adapter, { name: "my-queue" })
     ```
 
-  </AdapterTabs.TypeORM>
+  </AdapterTab>
+  <AdapterTab adapter="mikroorm">
+    ```typescript
+    // src/queues.ts
+    import { MikroORM } from "@mikro-orm/postgresql"
+
+    import {
+      PostgresMikroormQueueAdapter,
+      QueueJobSchema,
+    } from "@vorsteh-queue/adapter-mikroorm"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const orm = await MikroORM.init({
+      entities: [QueueJobSchema],
+      clientUrl: process.env.DATABASE_URL,
+    })
+
+    export const adapter = new PostgresMikroormQueueAdapter(orm)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="sequelize">
+    ```typescript
+    // src/queues.ts
+    import { Sequelize } from "sequelize"
+
+    import {
+      PostgresSequelizeQueueAdapter,
+      initQueueJobModel,
+    } from "@vorsteh-queue/adapter-sequelize"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const sequelize = new Sequelize(process.env.DATABASE_URL, {
+      dialect: "postgres",
+      logging: false,
+    })
+    initQueueJobModel(sequelize)
+
+    export const adapter = new PostgresSequelizeQueueAdapter(sequelize)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTab>
 </AdapterTabs>
 
 ```typescript

@@ -43,6 +43,19 @@ See the [create-vorsteh-queue docs](/docs/vorsteh-queue/packages/create-vorsteh-
   @vorsteh-queue/core @vorsteh-queue/adapter-typeorm typeorm pg
 </Command>
 
+### MikroORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-mikroorm @mikro-orm/core
+  @mikro-orm/postgresql
+</Command>
+
+### Sequelize (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-sequelize sequelize pg
+</Command>
+
 ## Database Setup
 
 Each adapter provides schema definitions and migration tooling:
@@ -52,6 +65,8 @@ Each adapter provides schema definitions and migration tooling:
 - **Kysely** — use the provided migration and run via `kysely-ctl`
 - **ZenStack** — add the model to `schema.zmodel` and run `zen db push`
 - **TypeORM** — use the included `QueueJobEntity` with `synchronize: true` or generate migrations
+- **MikroORM** — use the included EntitySchema and run `mikro-orm migration:create`
+- **Sequelize** — use the included model with `sequelize.sync()` or CLI migrations
 
 Refer to the specific adapter documentation for detailed instructions.
 

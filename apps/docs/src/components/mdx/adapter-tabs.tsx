@@ -5,31 +5,49 @@ import type { Adapter } from "./adapter-tabs-client"
 import { AdapterTabsClient } from "./adapter-tabs-client"
 
 interface AdapterTabProps {
+  adapter: Adapter
   children: ReactNode
 }
 
-function Drizzle({ children }: AdapterTabProps) {
+/**
+ * A single adapter tab panel. Use inside `<AdapterTabs>`.
+ *
+ * @example
+ * ```mdx
+ * <AdapterTabs>
+ *   <AdapterTab adapter="drizzle">
+ *     ```typescript
+ *     // Drizzle code
+ *     ```
+ *   </AdapterTab>
+ *   <AdapterTab adapter="prisma">
+ *     ```typescript
+ *     // Prisma code
+ *     ```
+ *   </AdapterTab>
+ * </AdapterTabs>
+ * ```
+ */
+function AdapterTab({ children }: AdapterTabProps) {
   return children
 }
-
-function Prisma({ children }: AdapterTabProps) {
-  return children
-}
-
-function Kysely({ children }: AdapterTabProps) {
-  return children
-}
-
-const ADAPTER_MAP = new Map<unknown, Adapter>([
-  [Drizzle, "drizzle"],
-  [Prisma, "prisma"],
-  [Kysely, "kysely"],
-])
 
 interface AdapterTabsProps {
   children: ReactNode
 }
 
+/**
+ * Tabbed container for adapter-specific code examples.
+ *
+ * @example
+ * ```mdx
+ * <AdapterTabs>
+ *   <AdapterTab adapter="drizzle">...</AdapterTab>
+ *   <AdapterTab adapter="prisma">...</AdapterTab>
+ *   <AdapterTab adapter="typeorm">...</AdapterTab>
+ * </AdapterTabs>
+ * ```
+ */
 function AdapterTabs({ children }: AdapterTabsProps) {
   const tabs: { adapter: Adapter; content: ReactNode }[] = []
 
@@ -39,13 +57,11 @@ function AdapterTabs({ children }: AdapterTabsProps) {
       continue
     }
 
-    const adapter = ADAPTER_MAP.get(
-      (child as ReactElement<AdapterTabProps>).type
-    )
-    if (adapter) {
+    const element = child as ReactElement<AdapterTabProps>
+    if (element.type === AdapterTab) {
       tabs.push({
-        adapter,
-        content: (child as ReactElement<AdapterTabProps>).props.children,
+        adapter: element.props.adapter,
+        content: element.props.children,
       })
     }
   }
@@ -53,8 +69,4 @@ function AdapterTabs({ children }: AdapterTabsProps) {
   return <AdapterTabsClient tabs={tabs} />
 }
 
-AdapterTabs.Drizzle = Drizzle
-AdapterTabs.Prisma = Prisma
-AdapterTabs.Kysely = Kysely
-
-export { AdapterTabs }
+export { AdapterTab, AdapterTabs }

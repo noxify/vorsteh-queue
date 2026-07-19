@@ -7,8 +7,10 @@
     "filter",
     "job-queue",
     "kysely",
+    "mikroorm",
     "prisma",
     "query-builder",
+    "sequelize",
     "typeorm",
     "typescript",
     "vorsteh-queue",
@@ -65,6 +67,18 @@
       "source": "./src/typeorm.ts",
       "import": "./dist/typeorm.mjs",
       "default": "./dist/typeorm.mjs"
+    },
+    "./mikroorm": {
+      "types": "./dist/mikroorm.d.mts",
+      "source": "./src/mikroorm.ts",
+      "import": "./dist/mikroorm.mjs",
+      "default": "./dist/mikroorm.mjs"
+    },
+    "./sequelize": {
+      "types": "./dist/sequelize.d.mts",
+      "source": "./src/sequelize.ts",
+      "import": "./dist/sequelize.mjs",
+      "default": "./dist/sequelize.mjs"
     }
   },
   "scripts": {
@@ -85,10 +99,12 @@
     "vitest": "4.1.10"
   },
   "peerDependencies": {
+    "@mikro-orm/core": ">=6",
     "@prisma/client": ">=5",
     "@zenstackhq/orm": ">=3",
     "drizzle-orm": ">=1.0.0-rc",
     "kysely": ">=0.27",
+    "sequelize": ">=6",
     "typeorm": ">=0.3"
   },
   "peerDependenciesMeta": {
@@ -105,6 +121,12 @@
       "optional": true
     },
     "typeorm": {
+      "optional": true
+    },
+    "@mikro-orm/core": {
+      "optional": true
+    },
+    "sequelize": {
       "optional": true
     }
   },

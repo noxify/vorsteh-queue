@@ -5,7 +5,14 @@ import { useEffect, useState } from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 
-export type Adapter = "drizzle" | "prisma" | "kysely"
+export type Adapter =
+  | "drizzle"
+  | "prisma"
+  | "kysely"
+  | "zenstack"
+  | "typeorm"
+  | "mikroorm"
+  | "sequelize"
 
 declare global {
   interface Window {
@@ -13,12 +20,26 @@ declare global {
   }
 }
 
-const ADAPTERS = new Set<Adapter>(["drizzle", "prisma", "kysely"])
+const ADAPTERS = new Set<Adapter>([
+  "drizzle",
+  "prisma",
+  "kysely",
+  "zenstack",
+  "typeorm",
+  "mikroorm",
+  "sequelize",
+])
+
 const ADAPTER_LABELS: Record<Adapter, string> = {
   drizzle: "Drizzle",
-  prisma: "Prisma",
   kysely: "Kysely",
+  mikroorm: "MikroORM",
+  prisma: "Prisma",
+  sequelize: "Sequelize",
+  typeorm: "TypeORM",
+  zenstack: "ZenStack",
 }
+
 const STORAGE_KEY = "vorsteh-queue:selected-adapter"
 const SYNC_EVENT = "vorsteh-queue:adapter-change"
 
@@ -58,11 +79,17 @@ function persistAdapter(value: Adapter) {
 
 function resolveAdapter(
   adapter: Adapter | null,
-  defaultAdapter: Adapter
+  defaultAdapter: Adapter,
+  available: Adapter[]
 ): Adapter {
   const stored = getStoredAdapter()
   const candidate = adapter ?? stored
-  return candidate && isAdapter(candidate) ? candidate : defaultAdapter
+  if (candidate && isAdapter(candidate) && available.includes(candidate)) {
+    return candidate
+  }
+  return available.includes(defaultAdapter)
+    ? defaultAdapter
+    : (available[0] ?? defaultAdapter)
 }
 
 function onValueChange(value: string) {
@@ -84,7 +111,11 @@ export function AdapterTabsClient({
   // oxlint-disable-next-line react-doctor/no-cascading-set-state -- batched by React 18+
   useEffect(() => {
     const setAdapter = (adapter: Adapter | null) => {
-      const resolved = resolveAdapter(adapter, defaultAdapter)
+      const resolved = resolveAdapter(
+        adapter,
+        defaultAdapter,
+        availableAdapters
+      )
       persistAdapter(resolved)
       setSelected(resolved)
       window.dispatchEvent(
@@ -120,6 +151,7 @@ export function AdapterTabsClient({
       window.removeEventListener("storage", onStorage)
       window.removeEventListener(SYNC_EVENT, onSync)
     }
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- availableAdapters derived from stable tabs prop
   }, [defaultAdapter])
 
   return (

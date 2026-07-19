@@ -41,7 +41,7 @@ vorsteh-queue status
 For direct mode, create a `queue.config.ts` in your project root:
 
 <AdapterTabs>
-  <AdapterTabs.Drizzle>
+  <AdapterTab adapter="drizzle">
     ```typescript
     // queue.config.ts
     import { defineRelations } from "drizzle-orm"
@@ -71,8 +71,8 @@ For direct mode, create a `queue.config.ts` in your project root:
     }
     ```
 
-  </AdapterTabs.Drizzle>
-  <AdapterTabs.Prisma>
+  </AdapterTab>
+  <AdapterTab adapter="prisma">
     ```typescript
     // queue.config.ts
     import { PrismaClient } from "@prisma/client"
@@ -93,8 +93,8 @@ For direct mode, create a `queue.config.ts` in your project root:
     }
     ```
 
-  </AdapterTabs.Prisma>
-  <AdapterTabs.Kysely>
+  </AdapterTab>
+  <AdapterTab adapter="kysely">
     ```typescript
     // queue.config.ts
     import { Kysely, PostgresDialect } from "kysely"
@@ -120,7 +120,7 @@ For direct mode, create a `queue.config.ts` in your project root:
     }
     ```
 
-  </AdapterTabs.Kysely>
+  </AdapterTab>
 </AdapterTabs>
 
 The `adapter` and `queues` fields are required for direct mode. If either is missing, the CLI will exit with an error. When multiple queues are configured, `defaultQueue` is also required.

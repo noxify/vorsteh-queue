@@ -1,0 +1,38 @@
+---
+title: Sequelize PostgreSQL
+description: Example using Sequelize with PostgreSQL.
+tags: ["sequelize", "postgresql"]
+---
+
+An example using Sequelize v6 with PostgreSQL.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=sequelize-postgres
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- Sequelize adapter with PostgreSQL
+- Sequelize initialization with model registration
+- Queue setup and job processing
+
+## Related documentation
+
+- [Quickstart](/docs/vorsteh-queue/getting-started/quickstart)
+- [Sequelize Adapter](/docs/vorsteh-queue/adapters/sequelize)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/sequelize-postgres)

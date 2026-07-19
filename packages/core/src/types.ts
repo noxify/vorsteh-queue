@@ -756,6 +756,30 @@ export interface TypeormAdapterProps {
   schemaName?: string
 }
 
+/** MikroORM adapter configuration */
+export interface MikroormAdapterProps {
+  /** Table name in the database
+   * @default "queue_jobs"
+   */
+  tableName?: string
+  /** Schema name in the database
+   * @default undefined (uses default schema `public`)
+   */
+  schemaName?: string
+}
+
+/** Sequelize adapter configuration */
+export interface SequelizeAdapterProps {
+  /** Table name in the database
+   * @default "queue_jobs"
+   */
+  tableName?: string
+  /** Schema name in the database
+   * @default undefined (uses default schema `public`)
+   */
+  schemaName?: string
+}
+
 /** Adapter kind discriminator */
 export type AdapterKind =
   | "prisma"
@@ -763,6 +787,8 @@ export type AdapterKind =
   | "kysely"
   | "zenstack"
   | "typeorm"
+  | "mikroorm"
+  | "sequelize"
 
 /** Adapter props by kind */
 export type AdapterProps<T extends AdapterKind> = T extends "prisma"
@@ -775,4 +801,8 @@ export type AdapterProps<T extends AdapterKind> = T extends "prisma"
         ? ZenstackAdapterProps
         : T extends "typeorm"
           ? TypeormAdapterProps
-          : never
+          : T extends "mikroorm"
+            ? MikroormAdapterProps
+            : T extends "sequelize"
+              ? SequelizeAdapterProps
+              : never

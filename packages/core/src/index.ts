@@ -79,6 +79,8 @@ export type {
   DrizzleAdapterProps,
   ZenstackAdapterProps,
   TypeormAdapterProps,
+  MikroormAdapterProps,
+  SequelizeAdapterProps,
 } from "./types"
 
 // Query Builder (filter types)

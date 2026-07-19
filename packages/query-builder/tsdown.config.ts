@@ -12,5 +12,7 @@ export default defineConfig({
     "src/prisma.ts",
     "src/zenstack.ts",
     "src/typeorm.ts",
+    "src/mikroorm.ts",
+    "src/sequelize.ts",
   ],
 })
