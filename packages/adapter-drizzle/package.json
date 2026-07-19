@@ -71,15 +71,15 @@
     "@electric-sql/pglite": "0.5.4",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "drizzle-kit": "1.0.0-rc.1",
-    "drizzle-orm": "1.0.0-rc.1",
+    "drizzle-kit": "1.0.0-rc.4",
+    "drizzle-orm": "1.0.0-rc.4",
     "postgres": "3.4.9",
     "tsdown": "0.22.9",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "drizzle-orm": ">=1.0.0-rc"
+    "drizzle-orm": ">=1.0.0-rc.4"
   },
   "peerDependenciesMeta": {
     "@types/pg": {
