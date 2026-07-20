@@ -1,4 +1,9 @@
-import { dataQueue, emailQueue, notificationQueue } from "./queues"
+import {
+  dataQueue,
+  deploymentQueue,
+  emailQueue,
+  notificationQueue,
+} from "./queues"
 
 /**
  * Seeds the queues with diverse job types for TUI dashboard testing.
@@ -176,5 +181,61 @@ export async function seedJobs(): Promise<void> {
     ],
     name: "send-digest",
     payload: { to: "newuser@example.com", type: "onboarding-complete" },
+  })
+
+  // ─── Flow: Deployment Pipeline (multi-step with children) ────────────────
+
+  await deploymentQueue.addFlow({
+    children: [
+      {
+        children: [
+          {
+            name: "build",
+            payload: { target: "linux-amd64" },
+            failParentOnFailure: true,
+          },
+          {
+            name: "build",
+            payload: { target: "linux-arm64" },
+            failParentOnFailure: true,
+          },
+        ],
+        failParentOnFailure: true,
+        name: "run-integration-tests",
+        payload: { suite: "full", coverage: true },
+      },
+      {
+        children: [
+          {
+            name: "notify-deploy",
+            payload: { channel: "#infra", message: "Provisioning staging..." },
+          },
+        ],
+        name: "provision-infra",
+        payload: { environment: "staging", region: "eu-west-1" },
+      },
+    ],
+    name: "deploy",
+    options: { timeout: 120_000 },
+    payload: { environment: "production", version: "2.5.0" },
+  })
+
+  // Second flow: hotfix deploy (simpler tree)
+  await deploymentQueue.addFlow({
+    children: [
+      {
+        name: "build",
+        payload: { target: "linux-amd64" },
+        failParentOnFailure: true,
+      },
+      {
+        name: "run-integration-tests",
+        payload: { suite: "smoke", coverage: false },
+        failParentOnFailure: true,
+      },
+    ],
+    name: "deploy",
+    options: { priority: 0 },
+    payload: { environment: "production", version: "2.4.2-hotfix.1" },
   })
 }

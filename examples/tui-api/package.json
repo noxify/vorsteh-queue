@@ -1,8 +1,8 @@
 {
-  "name": "advanced-tui-example",
+  "name": "tui-api-example",
   "version": "1.0.0",
   "private": true,
-  "description": "In-memory PGlite example for testing the TUI dashboard with diverse job types",
+  "description": "PGlite example demonstrating the TUI dashboard via GraphQL API with diverse job types and flows",
   "type": "module",
   "scripts": {
     "dev": "tsx src/index.ts",

@@ -1,16 +1,26 @@
-// Import pushSchema from drizzle-kit/api (ESM-compatible require)
+// Import pushSchema from drizzle-kit/api-postgres (ESM-compatible require)
 import { createRequire } from "node:module"
 
 import { createQueueServer } from "@vorsteh-queue/server"
 
 import { client, db } from "./database"
-import { dataQueue, emailQueue, notificationQueue } from "./queues"
+import {
+  dataQueue,
+  deploymentQueue,
+  emailQueue,
+  notificationQueue,
+} from "./queues"
 import * as schema from "./schema"
 import { seedJobs } from "./seed"
-import { dataWorker, emailWorker, notificationWorker } from "./workers"
+import {
+  dataWorker,
+  deployWorker,
+  emailWorker,
+  notificationWorker,
+} from "./workers"
 
 const esmRequire = createRequire(import.meta.url)
-const { pushSchema } = esmRequire("drizzle-kit/api") as {
+const { pushSchema } = esmRequire("drizzle-kit/api-postgres") as {
   pushSchema: (
     schema: Record<string, unknown>,
     db: unknown
@@ -43,6 +53,7 @@ async function main() {
   await emailQueue.connect()
   await dataQueue.connect()
   await notificationQueue.connect()
+  await deploymentQueue.connect()
 
   // Seed diverse job data
   console.log("Seeding jobs...")
@@ -53,14 +64,17 @@ async function main() {
   emailWorker.start()
   dataWorker.start()
   notificationWorker.start()
-  console.log("Workers started (email: 2, data: 1, notifications: 3)\n")
+  deployWorker.start()
+  console.log(
+    "Workers started (email: 2, data: 1, notifications: 3, deploy: 1)\n"
+  )
 
   // Start GraphQL server
   const server = createQueueServer({
     auth: { tokens: [TOKEN] },
     port: PORT,
-    queues: [emailQueue, dataQueue, notificationQueue],
-    workers: [emailWorker, dataWorker, notificationWorker],
+    queues: [emailQueue, dataQueue, notificationQueue, deploymentQueue],
+    workers: [emailWorker, dataWorker, notificationWorker, deployWorker],
   })
 
   await server.start()
@@ -87,6 +101,7 @@ async function main() {
     "    • data-processing — reports, CSV imports, cleanup (cron, deps)"
   )
   console.log("    • notifications  — push, slack, webhooks (burst, cron)")
+  console.log("    • deployments    — multi-step flows (steps, sleep, waitFor)")
   console.log("")
   console.log("  Features demonstrated:")
   console.log("    • PGlite embedded PostgreSQL (zero-config, in-memory)")
@@ -94,7 +109,8 @@ async function main() {
   console.log("    • Recurring jobs (cron expressions)")
   console.log("    • Delayed jobs")
   console.log("    • Job dependencies (pipeline)")
-  console.log("    • Flow trees (onboarding pipeline)")
+  console.log("    • Flow trees (onboarding pipeline, deploy pipeline)")
+  console.log("    • Multi-step workflows (step.run, step.sleep, step.waitFor)")
   console.log("    • Job groups (FIFO per customer)")
   console.log("    • Unique/deduplicated jobs")
   console.log("    • Progress updates")
@@ -136,6 +152,7 @@ async function main() {
     await emailWorker.stop()
     await dataWorker.stop()
     await notificationWorker.stop()
+    await deployWorker.stop()
     await server.stop()
     await client.close()
     console.log("Shutdown complete")
