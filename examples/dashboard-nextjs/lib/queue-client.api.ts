@@ -1,13 +1,16 @@
 import "server-only"
+import { env } from "./env"
 import type { QueueClient } from "./queue-client"
 
 /**
  * Create a queue client that connects to a remote GraphQL API.
  *
  * Requires QUEUE_API_URL (and optionally QUEUE_API_TOKEN) to be set.
+ *
+ * @param _queueName - Queue name (passed as variable to GraphQL queries that support it)
  */
-export function createApiClient(): QueueClient {
-  const url = process.env.QUEUE_API_URL
+export function createApiClient(_queueName?: string): QueueClient {
+  const url = env.QUEUE_API_URL
   if (!url) {
     throw new Error(
       "QUEUE_API_URL is required when QUEUE_MODE=api. " +
@@ -15,7 +18,8 @@ export function createApiClient(): QueueClient {
     )
   }
 
-  const token = process.env.QUEUE_API_TOKEN
+  const token = env.QUEUE_API_TOKEN
+  const endpoint: string = url
 
   async function gql<T>(
     query: string,
@@ -24,9 +28,11 @@ export function createApiClient(): QueueClient {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     }
-    if (token) headers.Authorization = `Bearer ${token}`
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
 
-    const res = await fetch(url!, {
+    const res = await fetch(endpoint, {
       method: "POST",
       headers,
       body: JSON.stringify({ query, variables }),
@@ -42,7 +48,7 @@ export function createApiClient(): QueueClient {
       errors?: { message: string }[]
     }
     if (json.errors?.length) {
-      throw new Error(`GraphQL error: ${json.errors[0]!.message}`)
+      throw new Error(`GraphQL error: ${json.errors[0]?.message}`)
     }
 
     return json.data
@@ -51,9 +57,7 @@ export function createApiClient(): QueueClient {
   return {
     async getStats() {
       const data = await gql<{
-        stats: ReturnType<QueueClient["getStats"]> extends Promise<infer R>
-          ? R
-          : never
+        stats: Awaited<ReturnType<QueueClient["getStats"]>>
       }>(`
         query { stats { pending delayed processing completed failed cancelled dead } }
       `)
@@ -173,6 +177,15 @@ export function createApiClient(): QueueClient {
 
     async deleteJob(id) {
       await gql(`mutation DeleteJob($id: ID!) { deleteJob(id: $id) }`, { id })
+    },
+
+    async getQueueNames() {
+      const data = await gql<{ queueNames: string[] }>(`query { queueNames }`)
+      return data.queueNames
+    },
+
+    async getDefaultQueueName() {
+      return _queueName ?? "default"
     },
   }
 }

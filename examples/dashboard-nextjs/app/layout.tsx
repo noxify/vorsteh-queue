@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 
 import { AppSidebar } from "@/components/app-sidebar"
+import { Providers } from "@/components/providers"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
 import "./globals.css"
 
@@ -15,12 +17,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className="flex h-screen overflow-hidden">
-        <AppSidebar />
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-7xl p-6">{children}</div>
-        </main>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <Providers>
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+              <div className="p-6">{children}</div>
+            </SidebarInset>
+          </SidebarProvider>
+        </Providers>
       </body>
     </html>
   )

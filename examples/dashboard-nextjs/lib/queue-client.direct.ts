@@ -1,18 +1,24 @@
 import "server-only"
-import type { QueueAdapter } from "@vorsteh-queue/core"
+import type { Queue, QueueAdapter } from "@vorsteh-queue/core"
 import { loadConfig } from "c12"
 
 import type { QueueClient } from "./queue-client"
 
 interface QueueConfigFile {
   adapter: QueueAdapter
+  queues: readonly Queue[]
+  defaultQueue?: string
 }
 
-/**
- * Create a queue client that talks directly to the adapter
- * loaded from queue.config.ts via c12.
- */
-export async function createDirectClient(): Promise<QueueClient> {
+const globalForConfig = globalThis as unknown as {
+  __queueConfig?: QueueConfigFile
+}
+
+async function getConfig(): Promise<QueueConfigFile> {
+  if (globalForConfig.__queueConfig) {
+    return globalForConfig.__queueConfig
+  }
+
   const { config } = await loadConfig<QueueConfigFile>({
     name: "queue",
     cwd: process.cwd(),
@@ -25,7 +31,41 @@ export async function createDirectClient(): Promise<QueueClient> {
     )
   }
 
-  const adapter = config.adapter
+  if (!config.queues || config.queues.length === 0) {
+    throw new Error(
+      "No queues configured in queue.config.ts. " +
+        "Add a queues array with at least one Queue instance."
+    )
+  }
+
+  globalForConfig.__queueConfig = config as QueueConfigFile
+  return globalForConfig.__queueConfig
+}
+
+/**
+ * Create a queue client that talks directly to the adapter
+ * loaded from queue.config.ts via c12.
+ *
+ * @param queueName - Queue to operate on (uses defaultQueue from config if not specified)
+ */
+export async function createDirectClient(
+  queueName?: string
+): Promise<QueueClient> {
+  const config = await getConfig()
+
+  const selectedName =
+    queueName ?? config.defaultQueue ?? config.queues[0]?.name
+  const queue = config.queues.find((q) => q.name === selectedName)
+
+  if (!queue) {
+    throw new Error(
+      `Queue "${selectedName}" not found in queue.config.ts. ` +
+        `Available: ${config.queues.map((q) => q.name).join(", ")}`
+    )
+  }
+
+  const { adapter } = config
+  adapter.setQueueName(queue.name)
 
   return {
     async getStats() {
@@ -34,8 +74,12 @@ export async function createDirectClient(): Promise<QueueClient> {
 
     async getJobs(options) {
       const where: Record<string, unknown> = {}
-      if (options?.status) where.status = { equals: options.status }
-      if (options?.name) where.name = { contains: options.name }
+      if (options?.status) {
+        where.status = { equals: options.status }
+      }
+      if (options?.name) {
+        where.name = { contains: options.name }
+      }
 
       return adapter.getJobs({
         where: Object.keys(where).length > 0 ? where : undefined,
@@ -88,6 +132,14 @@ export async function createDirectClient(): Promise<QueueClient> {
 
     async deleteJob(id) {
       await adapter.deleteJob(id)
+    },
+
+    async getQueueNames() {
+      return config.queues.map((q) => q.name)
+    },
+
+    async getDefaultQueueName() {
+      return config.defaultQueue ?? config.queues[0]?.name ?? ""
     },
   }
 }

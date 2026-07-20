@@ -2,46 +2,66 @@
 
 Interactive TUI dashboard example using the direct adapter transport (no GraphQL server needed).
 
-## Quick Start (PGlite Demo)
+## Quick Start (All-in-One)
 
-This example uses PGlite (in-memory PostgreSQL) for zero-setup. Since PGlite doesn't support multi-process access, workers and dashboard run in a **single process**:
+This mode runs workers and the TUI dashboard in a single process using in-memory PGlite:
 
 ```bash
 pnpm install
 pnpm dev    # Starts workers + seeds + dashboard (all-in-one)
 ```
 
-> **Note:** The `ink` and `react` dependencies are only needed for this PGlite demo where the dashboard is embedded in the same process. They are not required in a production setup.
+> **Note:** The `ink` and `react` dependencies are only needed for this all-in-one demo where the dashboard is embedded in the same process.
 
-## Production Setup (Real Database)
+## Multi-Process Setup (PGlite Socket Server)
 
-With a real PostgreSQL database, workers and dashboard run as **separate processes** since they can both connect to the same database independently.
+For a more realistic setup, workers and the dashboard run as separate processes. A PGlite socket server provides multi-process access to the same database.
 
-**Terminal 1 — Workers:**
+**Terminal 1 — Workers + Socket Server:**
 
 ```bash
-tsx src/index-prod.ts
+pnpm dev:prod    # Starts PGlite socket server (port 5488) + workers + seed
 ```
 
 **Terminal 2 — Dashboard:**
 
 ```bash
-vorsteh-queue dashboard                  # Uses queue.config.ts
-vorsteh-queue dashboard --queue email    # Specific queue
+pnpm dashboard                  # Default queue (email)
+pnpm dashboard:email            # Email queue
+pnpm dashboard:data             # Data-processing queue
+pnpm dashboard:notifications    # Notifications queue
+pnpm dashboard:deployments      # Deployments queue
 ```
 
-In this setup you don't need `ink` or `react` as dependencies — the `vorsteh-queue` CLI provides them.
+The dashboard reads `queue.config.ts` which connects to the PGlite socket server via `node-postgres`.
+
+### Architecture
+
+```
+┌─────────────┐     PostgreSQL      ┌─────────────────────────┐
+│  Dashboard  │     Protocol        │  Worker Process         │
+│  (TUI CLI)  │ ◀──────────────────▶│  (PGlite Socket Server) │
+└─────────────┘     port 5488       │  + Seed + Workers       │
+                                    └─────────────────────────┘
+```
 
 ### queue.config.ts
 
-The dashboard reads `queue.config.ts` from the project root to connect directly to the adapter:
+The dashboard CLI uses `queue.config.ts` to connect to the PGlite socket server:
 
 ```typescript
-import { createAdapter, emailQueue, dataQueue } from "./src/queues"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { drizzle } from "drizzle-orm/node-postgres"
+
+const db = drizzle({
+  connection: "postgresql://postgres:postgres@127.0.0.1:5488/postgres",
+})
+
+const adapter = new PostgresQueueAdapter(db)
 
 export default {
-  adapter: createAdapter(),
-  queues: [emailQueue, dataQueue],
+  adapter,
+  queues: [emailQueue, dataQueue, notificationQueue, deploymentQueue],
   defaultQueue: "email",
 }
 ```
@@ -50,9 +70,19 @@ export default {
 
 | File                | Purpose                                                |
 | ------------------- | ------------------------------------------------------ |
-| `src/index.ts`      | PGlite demo (all-in-one process)                       |
-| `src/index-prod.ts` | Production template (workers only, dashboard separate) |
-| `queue.config.ts`   | CLI config for separate dashboard process              |
+| `src/index.ts`      | All-in-one demo (PGlite in-memory, single process)     |
+| `src/index-prod.ts` | Socket server + workers (multi-process setup)          |
+| `src/database.ts`   | PGlite instance + socket server setup                  |
+| `src/queues.ts`     | Queue definitions (email, data, notifications, deploy) |
+| `src/workers.ts`    | Worker handlers with diverse job types                 |
+| `src/seed.ts`       | Seed data (flows, cron, delayed, grouped jobs)         |
+| `queue.config.ts`   | CLI config connecting via node-postgres                |
+
+## Environment Variables
+
+| Variable      | Default | Description                       |
+| ------------- | ------- | --------------------------------- |
+| `PGLITE_PORT` | `5488`  | Port for the PGlite socket server |
 
 ## Documentation
 

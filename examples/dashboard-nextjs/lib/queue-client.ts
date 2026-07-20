@@ -1,6 +1,8 @@
 import "server-only"
 import type { FlowNode, Job, JobStatus, QueueStats } from "@vorsteh-queue/core"
 
+import { env } from "./env"
+
 /**
  * Abstract queue client interface used by pages and Server Actions.
  *
@@ -12,50 +14,48 @@ import type { FlowNode, Job, JobStatus, QueueStats } from "@vorsteh-queue/core"
  */
 export interface QueueClient {
   // ─── Queries ────────────────────────────────────────────────
-  getStats(): Promise<QueueStats>
-  getJobs(options?: {
+  getStats: () => Promise<QueueStats>
+  getJobs: (options?: {
     status?: JobStatus
     name?: string
     limit?: number
     offset?: number
-  }): Promise<readonly Job[]>
-  getJobById(id: string): Promise<Job | null>
-  getDeadJobs(options?: {
+  }) => Promise<readonly Job[]>
+  getJobById: (id: string) => Promise<Job | null>
+  getDeadJobs: (options?: {
     limit?: number
     offset?: number
-  }): Promise<readonly Job[]>
-  getFlows(options?: {
+  }) => Promise<readonly Job[]>
+  getFlows: (options?: {
     limit?: number
     offset?: number
-  }): Promise<readonly { flowId: string; rootJob: Job }[]>
-  getFlowTree(flowId: string): Promise<FlowNode | null>
+  }) => Promise<readonly { flowId: string; rootJob: Job }[]>
+  getFlowTree: (flowId: string) => Promise<FlowNode | null>
 
   // ─── Mutations ──────────────────────────────────────────────
-  cancelJob(id: string, reason?: string): Promise<void>
-  retryJob(id: string): Promise<void>
-  redriveJob(id: string): Promise<void>
-  redriveAllDeadJobs(): Promise<void>
-  runJobNow(id: string): Promise<void>
-  deleteJob(id: string): Promise<void>
+  cancelJob: (id: string, reason?: string) => Promise<void>
+  retryJob: (id: string) => Promise<void>
+  redriveJob: (id: string) => Promise<void>
+  redriveAllDeadJobs: () => Promise<void>
+  runJobNow: (id: string) => Promise<void>
+  deleteJob: (id: string) => Promise<void>
+
+  // ─── Meta ───────────────────────────────────────────────────
+  getQueueNames: () => Promise<readonly string[]>
+  getDefaultQueueName: () => Promise<string>
 }
 
-let _client: QueueClient | undefined
-
 /**
- * Get the queue client singleton (lazily initialized based on QUEUE_MODE).
+ * Get a queue client for the specified queue name.
+ *
+ * @param queueName - Queue to operate on (uses defaultQueue from config if not specified)
  */
-export async function getQueueClient(): Promise<QueueClient> {
-  if (_client) return _client
-
-  const mode = process.env.QUEUE_MODE ?? "direct"
-
-  if (mode === "api") {
+export async function getQueueClient(queueName?: string): Promise<QueueClient> {
+  if (env.QUEUE_MODE === "api") {
     const { createApiClient } = await import("./queue-client.api")
-    _client = createApiClient()
-  } else {
-    const { createDirectClient } = await import("./queue-client.direct")
-    _client = await createDirectClient()
+    return createApiClient(queueName)
   }
 
-  return _client
+  const { createDirectClient } = await import("./queue-client.direct")
+  return createDirectClient(queueName)
 }

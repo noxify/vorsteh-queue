@@ -16,11 +16,13 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.4",
+    "@electric-sql/pglite-socket": "^0.0.7",
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
     "@vorsteh-queue/cli": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
     "drizzle-orm": "1.0.0-rc.4",
     "ink": "^7.1.1",
+    "pg": "^8.22.0",
     "react": "19.2.7"
   },
   "devDependencies": {

@@ -215,7 +215,7 @@ export async function seedJobs(): Promise<void> {
         payload: { environment: "staging", region: "eu-west-1" },
       },
     ],
-    name: "deploy",
+    name: "deploy-nested",
     options: { timeout: 120_000 },
     payload: { environment: "production", version: "2.5.0" },
   })
@@ -234,7 +234,7 @@ export async function seedJobs(): Promise<void> {
         failParentOnFailure: true,
       },
     ],
-    name: "deploy",
+    name: "deploy-simple",
     options: { priority: 0 },
     payload: { environment: "production", version: "2.4.2-hotfix.1" },
   })

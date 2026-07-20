@@ -1,24 +1,46 @@
 /**
- * Queue configuration for the dashboard example (direct mode).
+ * Queue configuration for the dashboard (direct mode).
  *
  * Loaded by c12 when QUEUE_MODE=direct (default).
- * Uses the Drizzle adapter with a PostgreSQL connection.
+ * Connects to the PGlite socket server started by `pnpm dev:queue`.
  *
- * For a zero-setup demo, swap the db connection for PGlite:
- *   import { PGlite } from "@electric-sql/pglite"
- *   import { drizzle } from "drizzle-orm/pglite"
- *   const db = drizzle({ client: new PGlite() })
+ * Uses the same config format as the CLI:
+ * { adapter, queues, defaultQueue }
+ *
+ * Note: We use process.env directly here because this file is loaded by c12
+ * outside the Next.js runtime (t3-env is not available in this context).
  */
 
-import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import {
+  postgresSchema,
+  PostgresQueueAdapter,
+} from "@vorsteh-queue/adapter-drizzle"
+import { Queue } from "@vorsteh-queue/core"
+import { defineRelations } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 
-const db = drizzle(
-  process.env.DATABASE_URL ?? "postgresql://localhost:5432/vorsteh-queue"
-)
+const { queueJobs } = postgresSchema
+const relations = defineRelations({ queueJobs })
+
+const db = drizzle({
+  connection: {
+    connectionString:
+      process.env.DATABASE_URL ??
+      "postgresql://postgres:postgres@127.0.0.1:5488/postgres",
+    max: 1,
+  },
+  relations,
+})
 
 const adapter = new PostgresQueueAdapter(db)
 
+const emailQueue = new Queue(adapter, { name: "email" })
+const dataQueue = new Queue(adapter, { name: "data-processing" })
+const notificationQueue = new Queue(adapter, { name: "notifications" })
+const deploymentQueue = new Queue(adapter, { name: "deployments" })
+
 export default {
   adapter,
+  queues: [emailQueue, dataQueue, notificationQueue, deploymentQueue],
+  defaultQueue: "email",
 }

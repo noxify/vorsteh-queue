@@ -1,5 +1,6 @@
 import type { JobStatus } from "@vorsteh-queue/core"
 
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 const statusStyles: Record<JobStatus, string> = {
@@ -24,15 +25,5 @@ export function StatusBadge({
   status: JobStatus
   className?: string
 }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-md border border-transparent px-2.5 py-0.5 text-xs font-semibold",
-        statusStyles[status],
-        className
-      )}
-    >
-      {status}
-    </span>
-  )
+  return <Badge className={cn(statusStyles[status], className)}>{status}</Badge>
 }

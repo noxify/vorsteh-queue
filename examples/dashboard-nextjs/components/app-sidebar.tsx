@@ -6,53 +6,101 @@ import {
   GitBranchIcon,
   LayoutDashboardIcon,
   ListIcon,
+  PieChartIcon,
 } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 
-import { cn } from "@/lib/utils"
+import { QueueSelector } from "@/components/queue-selector"
+import { ThemeToggle } from "@/components/theme-toggle"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from "@/components/ui/sidebar"
 
-const navItems = [
-  { href: "/", label: "Overview", icon: LayoutDashboardIcon },
-  { href: "/jobs", label: "Jobs", icon: ListIcon },
-  { href: "/dlq", label: "Dead Letter Queue", icon: AlertTriangleIcon },
-  { href: "/flows", label: "Flows", icon: GitBranchIcon },
+const queueNavItems = [
+  { path: "", label: "Overview", icon: PieChartIcon },
+  { path: "/jobs", label: "Jobs", icon: ListIcon },
+  { path: "/dlq", label: "Dead Letter Queue", icon: AlertTriangleIcon },
+  { path: "/flows", label: "Flows", icon: GitBranchIcon },
 ] as const
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const params = useParams()
+  const currentQueue = params.queue as string | undefined
 
   return (
-    <aside className="border-sidebar-border bg-sidebar text-sidebar-foreground flex h-screen w-64 flex-col border-r">
-      <div className="border-sidebar-border flex h-14 items-center gap-2 border-b px-4">
-        <ActivityIcon className="text-primary h-5 w-5" />
-        <span className="text-sm font-semibold">Vorsteh Queue</span>
-      </div>
+    <Sidebar>
+      <SidebarHeader>
+        <div className="flex items-center gap-2 px-2 py-1">
+          <ActivityIcon className="text-primary h-5 w-5" />
+          <span className="text-sm font-semibold">Vorsteh Queue</span>
+        </div>
+        <div className="px-2 pb-1">
+          <QueueSelector />
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={<Link href="/" />}
+                  isActive={pathname === "/"}
+                >
+                  <LayoutDashboardIcon />
+                  <span>Dashboard</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-      <nav className="flex-1 space-y-1 p-3">
-        {navItems.map((item) => {
-          const isActive =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href)
+        <SidebarSeparator />
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          )
-        })}
-      </nav>
-    </aside>
+        {currentQueue && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Queue Details</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {queueNavItems.map((item) => {
+                  const href = `/${currentQueue}${item.path}`
+                  const isActive =
+                    item.path === ""
+                      ? pathname === `/${currentQueue}`
+                      : pathname.startsWith(href)
+
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        render={<Link href={href} />}
+                        isActive={isActive}
+                      >
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+      </SidebarContent>
+      <SidebarFooter>
+        <ThemeToggle />
+      </SidebarFooter>
+    </Sidebar>
   )
 }

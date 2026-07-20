@@ -11,13 +11,16 @@ import {
   retryJob,
   runJobNow,
 } from "@/app/actions/mutations"
+import { Button } from "@/components/ui/button"
 
 export function JobActions({
   jobId,
   status,
+  queue,
 }: {
   jobId: string
   status: JobStatus
+  queue: string
 }) {
   const [isPending, startTransition] = useTransition()
 
@@ -29,66 +32,66 @@ export function JobActions({
   const canDelete =
     status === "completed" || status === "cancelled" || status === "dead"
 
-  function action(fn: (id: string) => Promise<void>) {
-    startTransition(() => fn(jobId))
+  function action(fn: (id: string, q?: string) => Promise<void>) {
+    startTransition(() => fn(jobId, queue))
   }
 
   return (
     <div className="flex items-center gap-1">
       {canCancel && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => action(cancelJob)}
           disabled={isPending}
           title="Cancel job"
-          className="hover:bg-accent rounded-md p-1.5 disabled:opacity-50"
         >
           <XCircleIcon className="h-4 w-4" />
-        </button>
+        </Button>
       )}
       {canRetry && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => action(retryJob)}
           disabled={isPending}
           title="Retry job"
-          className="hover:bg-accent rounded-md p-1.5 disabled:opacity-50"
         >
           <RefreshCwIcon className="h-4 w-4" />
-        </button>
+        </Button>
       )}
       {canRedrive && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => action(redriveJob)}
           disabled={isPending}
           title="Redrive job"
-          className="hover:bg-accent rounded-md p-1.5 disabled:opacity-50"
         >
           <RefreshCwIcon className="h-4 w-4" />
-        </button>
+        </Button>
       )}
       {canRunNow && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => action(runJobNow)}
           disabled={isPending}
           title="Run now"
-          className="hover:bg-accent rounded-md p-1.5 disabled:opacity-50"
         >
           <PlayIcon className="h-4 w-4" />
-        </button>
+        </Button>
       )}
       {canDelete && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => action(deleteJob)}
           disabled={isPending}
           title="Delete job"
-          className="hover:bg-accent rounded-md p-1.5 disabled:opacity-50"
         >
           <TrashIcon className="text-destructive h-4 w-4" />
-        </button>
+        </Button>
       )}
     </div>
   )

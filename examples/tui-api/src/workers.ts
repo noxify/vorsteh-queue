@@ -112,7 +112,7 @@ export const deployWorker = new Worker(createAdapter(), {
   pollInterval: 500,
 })
 
-deployWorker.register("deploy", async (job, { step }) => {
+deployWorker.register("deploy-nested", async (job, { step }) => {
   const payload = job.payload as { version: string; environment: string }
 
   const buildResult = await step.run("build-artifacts", async () => {
@@ -148,6 +148,31 @@ deployWorker.register("deploy", async (job, { step }) => {
       artifact: buildResult.artifact,
       host: `prod-${payload.environment}.example.com`,
     }
+  })
+
+  return {
+    deployed: true,
+    environment: payload.environment,
+    version: payload.version,
+  }
+})
+
+deployWorker.register("deploy-simple", async (job, { step }) => {
+  const payload = job.payload as { version: string; environment: string }
+
+  await step.run("build-artifacts", async () => {
+    await delay(randomBetween(1500, 3000))
+    return { artifact: `build-${payload.version}.tar.gz`, size: "42MB" }
+  })
+
+  await step.run("run-tests", async () => {
+    await delay(randomBetween(2000, 4000))
+    return { passed: 47, failed: 0, skipped: 2 }
+  })
+
+  await step.run("deploy-to-production", async () => {
+    await delay(randomBetween(2000, 5000))
+    return { host: `prod-${payload.environment}.example.com` }
   })
 
   return {
