@@ -457,7 +457,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
   async cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
     const jobsToDelete = [...this.jobs.values()]
-      .filter((job) => job.status === status)
+      .filter((job) => job.status === status && !job.flowId)
       .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(keepCount)
 

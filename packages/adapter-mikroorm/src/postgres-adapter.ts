@@ -76,6 +76,11 @@ interface RawQueueJob {
   repeat_count: number
   cancellation_reason: string | null
   on_dependency_failure: string | null
+  flow_id: string | null
+  parent_id: string | null
+  children_count: number
+  children_completed: number
+  fail_parent_on_failure: number
   error: unknown
   result: unknown
   created_at: Date
@@ -941,11 +946,14 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
 
   // ─── Transform helpers ───────────────────────────────────────────────────────
 
+  // oxlint-disable-next-line complexity
   private static transformEntity(entity: QueueJobEntity): Job {
     return {
       attempts: entity.attempts,
       cancellationReason: entity.cancellationReason ?? undefined,
       cancelledAt: entity.cancelledAt ?? undefined,
+      childrenCompleted: entity.childrenCompleted ?? 0,
+      childrenCount: entity.childrenCount ?? 0,
       completedAt: entity.completedAt ?? undefined,
       // oxlint-disable-next-line typescript/no-non-null-assertion
       createdAt: entity.createdAt!,
@@ -956,7 +964,9 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
             : entity.dependsOn) as string[])
         : undefined,
       error: entity.error as SerializedError | undefined,
+      failParentOnFailure: entity.failParentOnFailure === 1 || undefined,
       failedAt: entity.failedAt ?? undefined,
+      flowId: entity.flowId ?? undefined,
       groupKey: entity.groupKey ?? undefined,
       // oxlint-disable-next-line typescript/no-non-null-assertion
       id: entity.id!,
@@ -964,6 +974,7 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
       name: entity.name,
       onDependencyFailure:
         (entity.onDependencyFailure as "fail" | "cancel") ?? undefined,
+      parentId: entity.parentId ?? undefined,
       payload:
         typeof entity.payload === "string"
           ? JSON.parse(entity.payload)
@@ -982,11 +993,14 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
     }
   }
 
+  // oxlint-disable-next-line complexity
   private static transformRawJob(job: RawQueueJob): Job {
     return {
       attempts: job.attempts,
       cancellationReason: job.cancellation_reason ?? undefined,
       cancelledAt: job.cancelled_at ?? undefined,
+      childrenCompleted: job.children_completed ?? 0,
+      childrenCount: job.children_count ?? 0,
       completedAt: job.completed_at ?? undefined,
       createdAt: job.created_at,
       cron: job.cron ?? undefined,
@@ -996,13 +1010,16 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
             : job.depends_on) as string[])
         : undefined,
       error: job.error as SerializedError | undefined,
+      failParentOnFailure: job.fail_parent_on_failure === 1 || undefined,
       failedAt: job.failed_at ?? undefined,
+      flowId: job.flow_id ?? undefined,
       groupKey: job.group_key ?? undefined,
       id: job.id,
       maxAttempts: job.max_attempts,
       name: job.name,
       onDependencyFailure:
         (job.on_dependency_failure as "fail" | "cancel") ?? undefined,
+      parentId: job.parent_id ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,

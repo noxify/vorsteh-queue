@@ -77,6 +77,11 @@ interface RawQueueJob {
   repeat_count: number
   cancellation_reason: string | null
   on_dependency_failure: string | null
+  flow_id: string | null
+  parent_id: string | null
+  children_count: number
+  children_completed: number
+  fail_parent_on_failure: number
   error: unknown
   result: unknown
   created_at: Date
@@ -898,11 +903,14 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
 
   // ─── Transform helpers ───────────────────────────────────────────────────────
 
+  // oxlint-disable-next-line complexity
   private static transformModel(model: QueueJobModel): Job {
     return {
       attempts: model.attempts,
       cancellationReason: model.cancellationReason ?? undefined,
       cancelledAt: model.cancelledAt ?? undefined,
+      childrenCompleted: model.childrenCompleted ?? 0,
+      childrenCount: model.childrenCount ?? 0,
       completedAt: model.completedAt ?? undefined,
       createdAt: model.createdAt,
       cron: model.cron ?? undefined,
@@ -912,13 +920,16 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
             : model.dependsOn) as string[])
         : undefined,
       error: model.error as SerializedError | undefined,
+      failParentOnFailure: model.failParentOnFailure === 1 || undefined,
       failedAt: model.failedAt ?? undefined,
+      flowId: model.flowId ?? undefined,
       groupKey: model.groupKey ?? undefined,
       id: model.id,
       maxAttempts: model.maxAttempts,
       name: model.name,
       onDependencyFailure:
         (model.onDependencyFailure as "fail" | "cancel") ?? undefined,
+      parentId: model.parentId ?? undefined,
       payload:
         typeof model.payload === "string"
           ? JSON.parse(model.payload)
@@ -937,11 +948,14 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
     }
   }
 
+  // oxlint-disable-next-line complexity
   private static transformRawJob(job: RawQueueJob): Job {
     return {
       attempts: job.attempts,
       cancellationReason: job.cancellation_reason ?? undefined,
       cancelledAt: job.cancelled_at ?? undefined,
+      childrenCompleted: job.children_completed ?? 0,
+      childrenCount: job.children_count ?? 0,
       completedAt: job.completed_at ?? undefined,
       createdAt: job.created_at,
       cron: job.cron ?? undefined,
@@ -951,13 +965,16 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
             : job.depends_on) as string[])
         : undefined,
       error: job.error as SerializedError | undefined,
+      failParentOnFailure: job.fail_parent_on_failure === 1 || undefined,
       failedAt: job.failed_at ?? undefined,
+      flowId: job.flow_id ?? undefined,
       groupKey: job.group_key ?? undefined,
       id: job.id,
       maxAttempts: job.max_attempts,
       name: job.name,
       onDependencyFailure:
         (job.on_dependency_failure as "fail" | "cancel") ?? undefined,
+      parentId: job.parent_id ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,

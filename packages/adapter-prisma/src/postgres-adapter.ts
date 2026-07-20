@@ -76,6 +76,11 @@ interface RawQueueJob {
   repeat_count: number
   cancellation_reason: string | null
   on_dependency_failure: string | null
+  flow_id: string | null
+  parent_id: string | null
+  children_count: number
+  children_completed: number
+  fail_parent_on_failure: number
   error: unknown
   result: unknown
   created_at: Date
@@ -746,12 +751,14 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line complexity, typescript/no-explicit-any
   private static transformPrismaJob(job: any): Job {
     return {
       attempts: job.attempts,
       cancellationReason: job.cancellationReason ?? undefined,
       cancelledAt: job.cancelledAt ?? undefined,
+      childrenCompleted: job.childrenCompleted ?? 0,
+      childrenCount: job.childrenCount ?? 0,
       completedAt: job.completedAt ?? undefined,
       createdAt: job.createdAt,
       cron: job.cron ?? undefined,
@@ -761,13 +768,16 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
             : job.dependsOn) as string[])
         : undefined,
       error: job.error as SerializedError | undefined,
+      failParentOnFailure: job.failParentOnFailure === 1 || undefined,
       failedAt: job.failedAt ?? undefined,
+      flowId: job.flowId ?? undefined,
       groupKey: job.groupKey ?? undefined,
       id: job.id,
       maxAttempts: job.maxAttempts,
       name: job.name,
       onDependencyFailure:
         (job.onDependencyFailure as "fail" | "cancel") ?? undefined,
+      parentId: job.parentId ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,
@@ -784,11 +794,14 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     }
   }
 
+  // oxlint-disable-next-line complexity
   private static transformRawJob(job: RawQueueJob): Job {
     return {
       attempts: job.attempts,
       cancellationReason: job.cancellation_reason ?? undefined,
       cancelledAt: job.cancelled_at ?? undefined,
+      childrenCompleted: job.children_completed ?? 0,
+      childrenCount: job.children_count ?? 0,
       completedAt: job.completed_at ?? undefined,
       createdAt: job.created_at,
       cron: job.cron ?? undefined,
@@ -798,13 +811,16 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
             : job.depends_on) as string[])
         : undefined,
       error: job.error as SerializedError | undefined,
+      failParentOnFailure: job.fail_parent_on_failure === 1 || undefined,
       failedAt: job.failed_at ?? undefined,
+      flowId: job.flow_id ?? undefined,
       groupKey: job.group_key ?? undefined,
       id: job.id,
       maxAttempts: job.max_attempts,
       name: job.name,
       onDependencyFailure:
         (job.on_dependency_failure as "fail" | "cancel") ?? undefined,
+      parentId: job.parent_id ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,

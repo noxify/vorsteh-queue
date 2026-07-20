@@ -135,6 +135,15 @@ describe("Flow Producer", () => {
     it("should process children first, then parent", async () => {
       const order: string[] = []
 
+      // Use removeOnComplete: false to prevent flow cleanup before assertions
+      await worker.stop()
+      worker = new Worker(adapter, {
+        concurrency: 5,
+        name: "flow-queue",
+        pollInterval: 10,
+        removeOnComplete: false,
+      })
+
       worker.register(
         "parent-job",
         async (job: JobWithProgress, ctx: JobContext) => {
@@ -172,6 +181,15 @@ describe("Flow Producer", () => {
 
     it("should handle nested flow (leaf → mid → root)", async () => {
       const order: string[] = []
+
+      // Use removeOnComplete: false to prevent flow cleanup before assertions
+      await worker.stop()
+      worker = new Worker(adapter, {
+        concurrency: 5,
+        name: "flow-queue",
+        pollInterval: 10,
+        removeOnComplete: false,
+      })
 
       worker.register("root", async () => {
         order.push("root")
