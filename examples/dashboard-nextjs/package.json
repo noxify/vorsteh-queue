@@ -1,0 +1,36 @@
+{
+  "name": "dashboard-nextjs-example",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Vorsteh Queue dashboard example using Next.js with direct adapter access",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@vorsteh-queue/adapter-drizzle": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "c12": "3.0.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "1.0.0-rc.4",
+    "lucide-react": "^0.511.0",
+    "next": "^15.3.0",
+    "pg": "8.22.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^3.0.0",
+    "tailwindcss": "^4.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "8.20.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "6.0.3"
+  }
+}

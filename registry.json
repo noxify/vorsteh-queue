@@ -1,0 +1,6 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "vorsteh-queue",
+  "homepage": "https://vorsteh-queue.dev",
+  "include": ["packages/ui/registry.json"]
+}
