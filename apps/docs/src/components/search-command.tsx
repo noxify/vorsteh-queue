@@ -1,12 +1,12 @@
 "use client"
 
 import { Autocomplete } from "@base-ui/react/autocomplete"
-import { search as oramaSearch } from "@orama/orama"
-import { restore } from "@orama/plugin-data-persistence"
+import { restore } from "@zbsearch/plugin-data-persistence"
 import { FileIcon, HashIcon, Search, TextIcon } from "lucide-react"
 import { addBasePath } from "next/dist/client/add-base-path"
 import { useRouter } from "next/navigation"
 import * as React from "react"
+import { search as oramaSearch } from "zbsearch"
 
 import { normalizeInternalHref } from "@/lib/normalize-internal-href"
 
@@ -60,7 +60,7 @@ interface SearchCommandContextValue {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-interface OramaSearchDocument {
+interface ZBSearchDocument {
   id: string
   page_id: string
   type: "page" | "heading" | "text"
@@ -72,12 +72,12 @@ interface OramaSearchDocument {
   breadcrumb: string
 }
 
-interface OramaSearchHit {
+interface ZBSearchHit {
   score?: number
-  document?: Partial<OramaSearchDocument>
+  document?: Partial<ZBSearchDocument>
 }
 
-interface OramaSearchResult {
+interface ZBSearchResult {
   hits?: unknown
 }
 
@@ -276,9 +276,7 @@ function filterItemsByCollection(
   return items.filter((item) => matchesCollection(item, selectedCollection))
 }
 
-function formatHint(
-  document: Partial<OramaSearchDocument>
-): string | undefined {
+function formatHint(document: Partial<ZBSearchDocument>): string | undefined {
   const parentBreadcrumb =
     typeof document.breadcrumb === "string"
       ? document.breadcrumb.split(" > ").slice(0, -1).join(" > ")
@@ -339,8 +337,8 @@ function filterCommandItems(
   })
 }
 
-function orderHitsByScore(hits: OramaSearchHit[]): OramaSearchHit[] {
-  const ordered: OramaSearchHit[] = []
+function orderHitsByScore(hits: ZBSearchHit[]): ZBSearchHit[] {
+  const ordered: ZBSearchHit[] = []
 
   for (const hit of hits) {
     const score = hit.score ?? 0
@@ -501,7 +499,7 @@ export function SearchCommandProvider({
               eq: "page",
             },
           },
-        }) as Promise<OramaSearchResult>,
+        }) as Promise<ZBSearchResult>,
         oramaSearch(index, {
           distinctOn: "url",
           limit: 10,
@@ -512,7 +510,7 @@ export function SearchCommandProvider({
               eq: "heading",
             },
           },
-        }) as Promise<OramaSearchResult>,
+        }) as Promise<ZBSearchResult>,
         oramaSearch(index, {
           distinctOn: "url",
           limit: 10,
@@ -523,18 +521,18 @@ export function SearchCommandProvider({
               eq: "text",
             },
           },
-        }) as Promise<OramaSearchResult>,
+        }) as Promise<ZBSearchResult>,
       ])
 
       const hits = orderHitsByScore([
         ...(Array.isArray(pageResult.hits)
-          ? (pageResult.hits as OramaSearchHit[])
+          ? (pageResult.hits as ZBSearchHit[])
           : []),
         ...(Array.isArray(headingResult.hits)
-          ? (headingResult.hits as OramaSearchHit[])
+          ? (headingResult.hits as ZBSearchHit[])
           : []),
         ...(Array.isArray(textResult.hits)
-          ? (textResult.hits as OramaSearchHit[])
+          ? (textResult.hits as ZBSearchHit[])
           : []),
       ])
 

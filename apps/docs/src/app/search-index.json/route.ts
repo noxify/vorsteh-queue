@@ -2,11 +2,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { cwd, env } from "node:process"
 
-import { create, insertMultiple } from "@orama/orama"
-import { persist } from "@orama/plugin-data-persistence"
+import { persist } from "@zbsearch/plugin-data-persistence"
 import type { NextRequest } from "next/server"
+import { create, insertMultiple } from "zbsearch"
 
-import { buildSearchDocuments, getAllSearchableEntries } from "@/orama/builder"
+import {
+  buildSearchDocuments,
+  getAllSearchableEntries,
+} from "@/zbsearch/builder"
 
 export const dynamic = "force-static"
 export const runtime = "nodejs"

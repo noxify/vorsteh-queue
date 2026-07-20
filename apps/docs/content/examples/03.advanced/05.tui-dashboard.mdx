@@ -1,15 +1,15 @@
 ---
 title: TUI Dashboard
-description: Interactive terminal dashboard with in-memory PGlite for exploring multi-queue monitoring.
+description: Interactive terminal dashboard with PGlite for exploring multi-queue monitoring.
 tags: ["tui", "dashboard", "cli", "pglite", "monitoring"]
 ---
 
-A zero-setup example that spins up multiple queues with diverse job types using PGlite (in-memory PostgreSQL), then launches the interactive TUI dashboard for real-time monitoring.
+A zero-setup example that spins up multiple queues with diverse job types using PGlite (embedded PostgreSQL), then launches the interactive TUI dashboard for real-time monitoring.
 
 Two variants are available:
 
 - **tui-api** — Dashboard connects via GraphQL API (remote mode)
-- **tui-direct** — Dashboard connects directly to the adapter (no server needed)
+- **tui-direct** — Dashboard connects directly to the adapter via PGlite socket server
 
 ## API Mode (tui-api)
 
@@ -42,11 +42,11 @@ pnpm dashboard    # Connects via http://localhost:4000/graphql
 
 ## Direct Mode (tui-direct)
 
-The direct variant skips the GraphQL server entirely. The dashboard connects directly to the adapter/database via `queue.config.ts`.
+The direct variant uses a PGlite socket server for multi-process access. No GraphQL server needed.
 
-### Quick Start (PGlite Demo)
+### Quick Start (All-in-One)
 
-Since PGlite doesn't support multi-process access, the demo runs workers and dashboard in a single process:
+For a quick demo, workers and dashboard run in a single process with in-memory PGlite:
 
 <Command variant="exec">
   create-vorsteh-queue my-app --template=tui-direct
@@ -55,53 +55,53 @@ Since PGlite doesn't support multi-process access, the demo runs workers and das
 ```bash
 cd my-app
 pnpm install
-pnpm dev          # Workers + seeds + dashboard (all-in-one)
+pnpm dev          # Workers + seeds + dashboard (all-in-one, in-memory)
 ```
 
-### Production Setup (Real Database)
+### Multi-Process Setup (PGlite Socket Server)
 
-With a real PostgreSQL database, workers and dashboard run as separate processes:
+For a more realistic setup, workers and dashboard run as separate processes. A PGlite socket server provides shared database access:
 
 ```bash
-pnpm dev:prod     # Workers only
+# Terminal 1: Workers + PGlite socket server
+pnpm dev:prod
+
+# Terminal 2: Dashboard (connects via queue.config.ts)
+pnpm dashboard
 ```
 
-In a second terminal:
-
-```bash
-pnpm dashboard    # Reads queue.config.ts, connects to adapter directly
-```
-
-### Architecture (Production)
+### Architecture (Multi-Process)
 
 ```
-┌─────────────┐     Direct      ┌─────────────────┐
-│  Dashboard  │ ──────────────▶ │  PostgreSQL     │
-│  (TUI CLI)  │                 └─────────────────┘
-└─────────────┘                         ▲
-                                        │
-┌─────────────┐                         │
-│  Workers    │ ────────────────────────┘
-└─────────────┘
+┌─────────────┐     PostgreSQL      ┌─────────────────────────┐
+│  Dashboard  │     Protocol        │  Worker Process         │
+│  (TUI CLI)  │ ◀──────────────────▶│  (PGlite Socket Server) │
+└─────────────┘     port 5488       │  + Seed + Workers       │
+                                    └─────────────────────────┘
 ```
 
 ### queue.config.ts
 
-The direct mode requires a `queue.config.ts` in the project root:
+The direct mode uses `queue.config.ts` to connect to the PGlite socket server via standard `node-postgres`:
 
 ```typescript
-import { createAdapter, emailQueue, dataQueue } from "./src/queues"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { drizzle } from "drizzle-orm/node-postgres"
+
+const db = drizzle({
+  connection: "postgresql://postgres:postgres@127.0.0.1:5488/postgres",
+})
 
 export default {
-  adapter: createAdapter(),
-  queues: [emailQueue, dataQueue],
+  adapter: new PostgresQueueAdapter(db),
+  queues: [emailQueue, dataQueue, notificationQueue, deploymentQueue],
   defaultQueue: "email",
 }
 ```
 
 ## What both examples demonstrate
 
-- In-memory PGlite database (no external PostgreSQL needed)
+- PGlite embedded PostgreSQL (zero external dependencies)
 - Multiple queues: email, data-processing, notifications, deployments
 - Diverse job types with different priorities, delays, and failure rates
 - Flow trees with parent-child job relationships
@@ -127,30 +127,17 @@ pnpm dashboard:deployments   # Deployments queue (flows + steps)
 - [Queue](/docs/vorsteh-queue/core/queue)
 - [Flow Trees](/docs/vorsteh-queue/core/flows/flow-trees)
 - [Drizzle Adapter](/docs/vorsteh-queue/adapters/drizzle)
+- [Next.js Dashboard](/docs/examples/advanced/dashboard-nextjs)
 
 ## Troubleshooting
 
-### Direct mode: "relation queue_jobs does not exist"
+### Direct mode: "Connection refused" on port 5488
 
-In direct mode, the dashboard and the worker process must share the same database. With PGlite in-memory mode, each process gets its own isolated database — the dashboard cannot see the worker's data.
-
-**Solution:** Use file-backed PGlite so both processes share the same storage:
-
-```typescript
-// src/database.ts
-import { PGlite } from "@electric-sql/pglite"
-
-// File-backed — shared between worker and dashboard processes
-const client = new PGlite(".vorsteh-queue/data")
-```
-
-Make sure to start the worker process (`pnpm dev`) first so the schema gets created, then open the dashboard in a second terminal.
-
-To reset the database: `rm -rf .vorsteh-queue` (or `pnpm clean` in the example).
+Make sure the worker process is running first (`pnpm dev:prod`). It starts the PGlite socket server that the dashboard connects to.
 
 ### Direct mode: "No adapter configured"
 
-The dashboard command looks for `queue.config.ts` in the current working directory. Make sure you run `pnpm dashboard` from the project root where `queue.config.ts` lives.
+The dashboard command looks for `queue.config.ts` in the current working directory. Make sure you run `pnpm dashboard` from the project root.
 
 ### API mode: "Connection refused" or "Unauthorized"
 

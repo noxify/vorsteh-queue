@@ -44,7 +44,7 @@ export async function getAllSearchableEntries() {
 
 export type DocumentType = "page" | "heading" | "text"
 
-export interface OramaDocument {
+export interface ZBDocument {
   id: string
   page_id: string
   type: DocumentType
@@ -177,7 +177,7 @@ export async function buildSearchDocuments(
   spinner?: Ora
 ) {
   let processed = 0
-  const allDocs: OramaDocument[] = []
+  const allDocs: ZBDocument[] = []
 
   await pMap(
     entries,

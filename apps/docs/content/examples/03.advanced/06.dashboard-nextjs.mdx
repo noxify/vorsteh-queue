@@ -1,0 +1,186 @@
+---
+title: Next.js Dashboard
+description: Full-featured web dashboard for queue monitoring built with Next.js and shadcn/ui.
+tags: ["dashboard", "nextjs", "react", "monitoring", "shadcn"]
+---
+
+A production-ready web dashboard for monitoring and managing your job queues. Built with Next.js App Router, TanStack Query, and shadcn/ui components.
+
+Supports two connection modes:
+
+- **Direct** — Reads `queue.config.ts` and talks to the adapter directly (no separate server needed)
+- **API** — Connects to a remote GraphQL server
+
+## Quick Start
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=dashboard-nextjs
+</Command>
+
+```bash
+cd my-app
+pnpm install
+
+# Terminal 1: Start PGlite socket server + workers
+pnpm dev:queue
+
+# Terminal 2: Start the Next.js dashboard
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Architecture
+
+```
+┌─────────────────┐     PostgreSQL      ┌─────────────────────────┐
+│  Next.js        │     Protocol        │  Worker Process         │
+│  (Dashboard UI) │ ◀──────────────────▶│  (PGlite Socket Server) │
+│  localhost:3000  │     port 5488       │  + Seed + Workers       │
+└─────────────────┘                     └─────────────────────────┘
+```
+
+The worker process starts a PGlite instance with a socket server. Next.js connects via standard `node-postgres` — the same connection that works with any real PostgreSQL database.
+
+## Connection Modes
+
+### Direct Mode (default)
+
+The dashboard reads `queue.config.ts` via c12 and instantiates the adapter directly within the Next.js server process. No separate API server needed.
+
+```env
+QUEUE_MODE=direct
+DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5488/postgres
+```
+
+```typescript
+// queue.config.ts
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { drizzle } from "drizzle-orm/node-postgres"
+
+const db = drizzle({ connection: process.env.DATABASE_URL })
+
+export default {
+  adapter: new PostgresQueueAdapter(db),
+}
+```
+
+### API Mode
+
+The dashboard connects to a running `@vorsteh-queue/server` GraphQL endpoint. Use this when the dashboard and workers run on different machines.
+
+```env
+QUEUE_MODE=api
+QUEUE_API_URL=http://localhost:4000/graphql
+QUEUE_API_TOKEN=your-token-here
+```
+
+No `queue.config.ts` needed in API mode.
+
+## Key Features
+
+### Server-Side Prefetching
+
+Pages render with data on the server (no loading spinners). TanStack Query picks up the initial data on the client and starts polling:
+
+```typescript
+// app/page.tsx (Server Component)
+export default async function OverviewPage() {
+  const client = await getQueueClient()
+  const stats = await client.getStats()
+  return <StatsCards initialData={stats} />
+}
+
+// app/_components/stats-cards.tsx (Client Component)
+export function StatsCards({ initialData }) {
+  const { data } = useStats(initialData) // polls every 5s
+  return <div>...</div>
+}
+```
+
+### Type-Safe URL State
+
+Filters and pagination are managed via URL search params with nuqs:
+
+```typescript
+// lib/search-params.ts
+export const jobsSearchParams = {
+  status: parseAsStringLiteral(jobStatuses),
+  name: parseAsString,
+  page: parseAsInteger.withDefault(1),
+}
+```
+
+Works on both server (for prefetching) and client (for navigation).
+
+### Type-Safe Environment
+
+All environment variables are validated at startup via t3-env:
+
+```typescript
+// lib/env.ts
+export const env = createEnv({
+  server: {
+    QUEUE_MODE: z.enum(["direct", "api"]).default("direct"),
+    DATABASE_URL: z.string().url().optional(),
+    QUEUE_API_URL: z.string().url().optional(),
+    QUEUE_API_TOKEN: z.string().optional(),
+  },
+})
+```
+
+### Queue Client Abstraction
+
+A single interface switches between direct and API mode at runtime:
+
+```typescript
+// lib/queue-client.ts
+export async function getQueueClient(): Promise<QueueClient> {
+  if (env.QUEUE_MODE === "api") {
+    return createApiClient() // GraphQL fetch
+  }
+  return createDirectClient() // c12 + adapter
+}
+```
+
+## Pages
+
+| Route         | Refresh | Description                         |
+| ------------- | ------- | ----------------------------------- |
+| `/`           | 5s      | Overview with stat cards            |
+| `/jobs`       | 10s     | Filterable, paginated job table     |
+| `/jobs/[id]`  | 5s      | Job detail (payload, error, result) |
+| `/dlq`        | 10s     | Dead letter queue with redrive      |
+| `/flows`      | 10s     | Flow card grid                      |
+| `/flows/[id]` | 5s      | Flow tree visualization             |
+
+## Stack
+
+- Next.js 16 (App Router, Server Components, Server Actions)
+- TanStack Query (server prefetch + client polling)
+- nuqs (type-safe URL search params)
+- t3-env (type-safe environment variables)
+- shadcn/ui (base-nova style)
+- PGlite + pglite-socket (zero-setup PostgreSQL)
+- Drizzle ORM
+- c12 (config file loading)
+
+## Using as a Starting Point
+
+This example is designed to be forked and adapted:
+
+1. **Auth** — Add your preferred auth solution (NextAuth, Clerk, custom middleware)
+2. **Database** — Replace PGlite with your production PostgreSQL URL
+3. **Styling** — Customize the shadcn/ui theme in `globals.css`
+4. **Features** — Add queue-specific views, charts, or alerting
+
+## Related Documentation
+
+- [TUI Dashboard](/docs/examples/advanced/tui-dashboard)
+- [GraphQL Server](/docs/examples/advanced/graphql-server)
+- [Queue](/docs/vorsteh-queue/core/queue)
+- [Drizzle Adapter](/docs/vorsteh-queue/adapters/drizzle)
+
+## Source
+
+- [dashboard-nextjs on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/dashboard-nextjs)

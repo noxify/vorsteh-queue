@@ -1,14 +1,14 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 
-import { create, insertMultiple } from "@orama/orama"
-import { persist } from "@orama/plugin-data-persistence"
+import { persist } from "@zbsearch/plugin-data-persistence"
 import ora from "ora"
+import { create, insertMultiple } from "zbsearch"
 
 import { buildSearchDocuments, getAllSearchableEntries } from "./builder"
 
 async function generateAndPersistSearchIndex() {
-  const spinner = ora("Building Orama search index...").start()
+  const spinner = ora("Building zbsearch search index...").start()
 
   try {
     const entries = await getAllSearchableEntries()
@@ -28,7 +28,7 @@ async function generateAndPersistSearchIndex() {
       },
     })
 
-    spinner.text = `Indexing ${searchDocuments.length} documents in Orama...`
+    spinner.text = `Indexing ${searchDocuments.length} documents in zbsearch...`
     await insertMultiple(db, searchDocuments)
 
     const outputFile = path.resolve(process.cwd(), "public/search-index.json")
