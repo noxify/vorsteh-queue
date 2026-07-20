@@ -8,6 +8,7 @@ import { ThemeProvider } from "./components/ui/theme-provider"
 import { DashboardProvider, useDashboard } from "./context"
 import { ContentPane } from "./layout/content-pane"
 import { DashboardCommandPalette } from "./layout/dashboard-command-palette"
+import { FlowTreeOverlay } from "./layout/flow-tree-overlay"
 import { HelpOverlay } from "./layout/help-overlay"
 import { QueueSidebar } from "./layout/queue-sidebar"
 
@@ -46,7 +47,10 @@ function DashboardShell() {
   const { exit } = useApp()
   const {
     activeQueue,
+    closeFlowTree,
+    flowOverlayId,
     focusPane,
+    inputActive,
     queues,
     selectedJobId,
     setActiveQueue,
@@ -131,14 +135,24 @@ function DashboardShell() {
   }, [queues, activeQueue, transport])
 
   // Global key bindings
+  // oxlint-disable-next-line complexity -- keyboard handler with inherent branching
   useInput((input, key) => {
-    if (paletteOpen || helpOpen) {
+    // Ctrl+C always quits
+    if (key.ctrl && input === "c") {
+      exit()
       return
     }
 
-    if (input === "q" || (key.ctrl && input === "c")) {
+    // q quits unless text input is active
+    if (input === "q" && !inputActive) {
       exit()
+      return
     }
+
+    if (paletteOpen || helpOpen || flowOverlayId || inputActive) {
+      return
+    }
+
     if (input === "?") {
       setHelpOpen(true)
       return
@@ -197,13 +211,19 @@ function DashboardShell() {
           <QueueSidebar
             queues={queues}
             badges={queueBadges}
-            isFocused={!paletteOpen && !helpOpen && focusPane === "sidebar"}
+            isFocused={
+              !paletteOpen &&
+              !helpOpen &&
+              !flowOverlayId &&
+              focusPane === "sidebar"
+            }
           />
         )}
         <ContentPane
           isFocused={
             !paletteOpen &&
             !helpOpen &&
+            !flowOverlayId &&
             (!showSidebar || focusPane === "content")
           }
         />
@@ -213,6 +233,13 @@ function DashboardShell() {
       )}
       {helpOpen && (
         <HelpOverlay isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+      )}
+      {flowOverlayId && (
+        <FlowTreeOverlay
+          flowId={flowOverlayId}
+          isOpen={!!flowOverlayId}
+          onClose={closeFlowTree}
+        />
       )}
       <Footer />
     </Box>
@@ -252,6 +279,7 @@ function Footer() {
       "r retry",
       "n run now",
       "x delete",
+      "f flow tree",
       "y copy ID",
       "p copy payload",
       "Esc close"

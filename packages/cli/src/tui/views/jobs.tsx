@@ -48,6 +48,7 @@ export function JobsView({ isFocused }: JobsViewProps) {
     jobsPage,
     setJobsFilterIndex,
     setJobsPage,
+    setInputActive,
   } = useDashboard()
   const [jobs, setJobs] = useState<readonly Job[]>([])
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -144,8 +145,10 @@ export function JobsView({ isFocused }: JobsViewProps) {
     if (nameInputActive) {
       if (key.escape) {
         setNameInputActive(false)
+        setInputActive(false)
       } else if (key.return) {
         setNameInputActive(false)
+        setInputActive(false)
         setJobsPage(0)
       } else if (key.backspace || key.delete) {
         setNameFilter((f) => f.slice(0, -1))
@@ -158,6 +161,7 @@ export function JobsView({ isFocused }: JobsViewProps) {
     // Normal mode
     if (input === "/") {
       setNameInputActive(true)
+      setInputActive(true)
       return
     }
 

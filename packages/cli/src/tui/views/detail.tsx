@@ -19,7 +19,7 @@ interface JobDetailDrawerProps {
  */
 // oxlint-disable-next-line complexity -- many optional job fields to display
 export function JobDetailDrawer({ isFocused }: JobDetailDrawerProps) {
-  const { transport, selectedJobId, goBack } = useDashboard()
+  const { transport, selectedJobId, goBack, openFlowTree } = useDashboard()
   const { write: copyToClipboard } = useClipboard()
   const [job, setJob] = useState<Job | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -107,6 +107,13 @@ export function JobDetailDrawer({ isFocused }: JobDetailDrawerProps) {
       setConfirmAction("run-now")
     } else if (input === "x") {
       setConfirmAction("delete")
+    } else if (input === "f") {
+      if (job?.flowId) {
+        openFlowTree(job.flowId)
+      } else if (job) {
+        setMessage("Job is not part of a flow")
+        setTimeout(() => setMessage(null), 2000)
+      }
     }
 
     // Clipboard shortcuts

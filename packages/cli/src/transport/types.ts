@@ -32,4 +32,8 @@ export interface Transport {
   clearJobs: (status?: JobStatus) => Promise<number>
   size: (where?: JobWhereInput) => Promise<number>
   getFlowTree: (flowId: string) => Promise<FlowNode | null>
+  getFlows: (options?: {
+    limit?: number
+    offset?: number
+  }) => Promise<readonly { flowId: string; rootJob: Job }[]>
 }

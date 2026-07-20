@@ -141,12 +141,17 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
     const entity = await QueueJobModel.create({
       attempts: job.attempts,
       cancellationReason: null,
+      childrenCompleted: job.childrenCompleted ?? 0,
+      childrenCount: job.childrenCount ?? 0,
       cron: job.cron ?? null,
       dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
+      failParentOnFailure: job.failParentOnFailure ? 1 : 0,
+      flowId: job.flowId ?? null,
       groupKey: job.groupKey ?? null,
       maxAttempts: job.maxAttempts,
       name: job.name,
       onDependencyFailure: job.onDependencyFailure ?? null,
+      parentId: job.parentId ?? null,
       payload: JSON.stringify(job.payload),
       priority: job.priority,
       processAt: job.processAt,
@@ -676,6 +681,14 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
       return { children: children.map((c) => buildNode(c)), job }
     }
     return buildNode(root)
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    const result = await this.sequelize.query(
+      `DELETE FROM ${this.fullTable} WHERE queue_name = $1 AND flow_id = $2 RETURNING id`,
+      { bind: [this.queueName, flowId], type: QueryTypes.SELECT }
+    )
+    return result.length
   }
 
   async incrementChildrenCompleted(

@@ -131,6 +131,7 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
   // ─── Flows ─────────────────────────────────────────────────
 
   abstract getFlowTree(flowId: string): Promise<FlowNode | null>
+  abstract deleteFlow(flowId: string): Promise<number>
   abstract incrementChildrenCompleted(
     parentId: string
   ): Promise<{ completed: number; total: number }>

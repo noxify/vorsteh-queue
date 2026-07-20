@@ -1,6 +1,10 @@
+import { loadCliConfig } from "../config"
 import { CLIError } from "../errors"
 import { buildDashboardCommandStructure } from "../metadata/dashboard-metadata"
-import { createMultiQueueTransport } from "../transport/multi-queue"
+import {
+  createDirectMultiQueueTransport,
+  createMultiQueueTransport,
+} from "../transport/multi-queue"
 import type { GlobalOptions } from "../transport/with-transport"
 
 export function createDashboardCommand() {
@@ -13,28 +17,36 @@ export function createDashboardCommand() {
     const effectiveUrl =
       globalOpts.url ?? process.env.VORSTEH_QUEUE_URL ?? undefined
 
-    if (!effectiveUrl) {
-      throw new CLIError(
-        "The --url flag or VORSTEH_QUEUE_URL environment variable is required for the dashboard."
+    let transport
+
+    if (effectiveUrl) {
+      // Remote mode via GraphQL
+      if (
+        !effectiveUrl.startsWith("http://") &&
+        !effectiveUrl.startsWith("https://")
+      ) {
+        throw new CLIError("Invalid URL: must start with http:// or https://")
+      }
+
+      const effectiveToken =
+        globalOpts.token ?? process.env.VORSTEH_QUEUE_TOKEN ?? undefined
+
+      transport = createMultiQueueTransport(
+        effectiveUrl,
+        effectiveToken,
+        globalOpts.queue
+      )
+    } else {
+      // Direct mode via queue.config.ts
+      const config = await loadCliConfig()
+      const queueNames = config.queues.map((q) => q.name)
+
+      transport = createDirectMultiQueueTransport(
+        config.adapter,
+        queueNames,
+        globalOpts.queue ?? config.defaultQueue
       )
     }
-
-    if (
-      !effectiveUrl.startsWith("http://") &&
-      !effectiveUrl.startsWith("https://")
-    ) {
-      throw new CLIError("Invalid URL: must start with http:// or https://")
-    }
-
-    const effectiveToken =
-      globalOpts.token ?? process.env.VORSTEH_QUEUE_TOKEN ?? undefined
-
-    // Create multi-queue transport — queue is optional (auto-selects first)
-    const transport = createMultiQueueTransport(
-      effectiveUrl,
-      effectiveToken,
-      globalOpts.queue
-    )
 
     await transport.connect()
 

@@ -140,15 +140,17 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
     const entity = em.create(QueueJobEntity, {
       attempts: job.attempts,
       cancellationReason: null,
-      childrenCompleted: 0,
-      childrenCount: 0,
+      childrenCompleted: job.childrenCompleted ?? 0,
+      childrenCount: job.childrenCount ?? 0,
       cron: job.cron ?? null,
       dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
-      failParentOnFailure: 0,
+      failParentOnFailure: job.failParentOnFailure ? 1 : 0,
+      flowId: job.flowId ?? null,
       groupKey: job.groupKey ?? null,
       maxAttempts: job.maxAttempts,
       name: job.name,
       onDependencyFailure: job.onDependencyFailure ?? null,
+      parentId: job.parentId ?? null,
       payload: JSON.stringify(job.payload),
       priority: job.priority,
       processAt: job.processAt,
@@ -716,6 +718,15 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
       return { children: children.map((c) => buildNode(c)), job }
     }
     return buildNode(root)
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    const connection = this.orm.em.getConnection()
+    const result = await connection.execute<{ id: string }[]>(
+      `DELETE FROM ${this.fullTable} WHERE queue_name = ? AND flow_id = ? RETURNING id`,
+      [this.queueName, flowId]
+    )
+    return result.length
   }
 
   async incrementChildrenCompleted(

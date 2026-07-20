@@ -29,10 +29,17 @@ export type { QueueConfigFile } from "./config"
 
 export { createDirectTransport } from "./transport/direct"
 export { createGraphQLTransport } from "./transport/graphql"
+export {
+  createDirectMultiQueueTransport,
+  createMultiQueueTransport,
+} from "./transport/multi-queue"
+export type { MultiQueueTransport } from "./transport/multi-queue"
 export { resolveTransport } from "./transport/resolve"
 export type { ResolveTransportOptions } from "./transport/resolve"
 export { withTransport } from "./transport/with-transport"
 export type { GlobalOptions } from "./transport/with-transport"
+
+export { App } from "./tui/app"
 export type { Transport } from "./transport/types"
 
 export { createStatusCommand } from "./commands/status"

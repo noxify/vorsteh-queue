@@ -29,6 +29,7 @@ import {
   count,
   eq,
   inArray,
+  isNull,
   lte,
   relationsFilterToSQL,
   sql,
@@ -113,13 +114,18 @@ export class PostgresQueueAdapter<
       .insert(this.model)
       .values({
         attempts: job.attempts,
+        childrenCompleted: job.childrenCompleted ?? 0,
+        childrenCount: job.childrenCount ?? 0,
         cron: job.cron ?? null,
         dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
+        failParentOnFailure: job.failParentOnFailure ? 1 : 0,
+        flowId: job.flowId ?? null,
         groupKey: job.groupKey ?? null,
         maxAttempts: job.maxAttempts,
         name: job.name,
         onDependencyFailure: job.onDependencyFailure ?? null,
         payload: job.payload,
+        parentId: job.parentId ?? null,
         priority: job.priority,
         processAt: sql`${job.processAt.toISOString()}::timestamptz`,
         progress: job.progress ?? 0,
@@ -146,13 +152,18 @@ export class PostgresQueueAdapter<
 
     const values = jobs.map((job) => ({
       attempts: job.attempts,
+      childrenCompleted: job.childrenCompleted ?? 0,
+      childrenCount: job.childrenCount ?? 0,
       cron: job.cron ?? null,
       dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
+      failParentOnFailure: job.failParentOnFailure ? 1 : 0,
+      flowId: job.flowId ?? null,
       groupKey: job.groupKey ?? null,
       maxAttempts: job.maxAttempts,
       name: job.name,
       onDependencyFailure: job.onDependencyFailure ?? null,
       payload: job.payload,
+      parentId: job.parentId ?? null,
       priority: job.priority,
       processAt: sql`${job.processAt.toISOString()}::timestamptz`,
       progress: job.progress ?? 0,
@@ -544,7 +555,8 @@ export class PostgresQueueAdapter<
       .where(
         and(
           eq(this.model.queueName, this.queueName),
-          eq(this.model.status, status)
+          eq(this.model.status, status),
+          isNull(this.model.flowId)
         )
       )
       .orderBy(sql`${this.model.createdAt} DESC`)
@@ -696,6 +708,19 @@ export class PostgresQueueAdapter<
       return { children: children.map((c) => buildNode(c)), job }
     }
     return buildNode(root)
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    const deleted = await this.db
+      .delete(this.model)
+      .where(
+        and(
+          eq(this.model.queueName, this.queueName),
+          eq(this.model.flowId, flowId)
+        )
+      )
+      .returning()
+    return deleted.length
   }
 
   async incrementChildrenCompleted(

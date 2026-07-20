@@ -64,12 +64,17 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       .insertInto(this.table)
       .values({
         attempts: job.attempts,
+        children_completed: job.childrenCompleted ?? 0,
+        children_count: job.childrenCount ?? 0,
         cron: job.cron ?? null,
         depends_on: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
+        fail_parent_on_failure: job.failParentOnFailure ? 1 : 0,
+        flow_id: job.flowId ?? null,
         group_key: job.groupKey ?? null,
         max_attempts: job.maxAttempts,
         name: job.name,
         on_dependency_failure: job.onDependencyFailure ?? null,
+        parent_id: job.parentId ?? null,
         payload: job.payload,
         priority: job.priority,
         process_at: sql`${job.processAt.toISOString()}::timestamptz`,
@@ -98,12 +103,17 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
 
     const values: InsertQueueJobValue[] = jobs.map((job) => ({
       attempts: job.attempts,
+      children_completed: job.childrenCompleted ?? 0,
+      children_count: job.childrenCount ?? 0,
       cron: job.cron ?? null,
       depends_on: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
+      fail_parent_on_failure: job.failParentOnFailure ? 1 : 0,
+      flow_id: job.flowId ?? null,
       group_key: job.groupKey ?? null,
       max_attempts: job.maxAttempts,
       name: job.name,
       on_dependency_failure: job.onDependencyFailure ?? null,
+      parent_id: job.parentId ?? null,
       payload: job.payload,
       priority: job.priority,
       process_at: sql`${job.processAt.toISOString()}::timestamptz`,
@@ -645,6 +655,15 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       return { children: children.map((c) => buildNode(c)), job }
     }
     return buildNode(root)
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    const result = await this.customDbClient
+      .deleteFrom(this.table)
+      .where("queue_name", "=", this.queueName)
+      .where("flow_id", "=", flowId)
+      .executeTakeFirst()
+    return Number(result.numDeletedRows)
   }
 
   async incrementChildrenCompleted(

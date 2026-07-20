@@ -27,6 +27,7 @@ function createMockTransport(
     disconnect: vi.fn(async () => {}),
     getDeadJobs: vi.fn(),
     getFlowTree: vi.fn(),
+    getFlows: vi.fn().mockResolvedValue([]),
     getJob: vi.fn(),
     getJobs: vi.fn().mockResolvedValue([]),
     getQueues: vi.fn().mockResolvedValue([]),

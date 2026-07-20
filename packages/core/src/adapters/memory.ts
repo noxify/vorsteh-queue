@@ -583,6 +583,17 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     return buildNode(root)
   }
 
+  async deleteFlow(flowId: string): Promise<number> {
+    let count = 0
+    for (const [id, job] of this.jobs) {
+      if (job.flowId === flowId) {
+        this.jobs.delete(id)
+        count += 1
+      }
+    }
+    return count
+  }
+
   async incrementChildrenCompleted(
     parentId: string
   ): Promise<{ completed: number; total: number }> {

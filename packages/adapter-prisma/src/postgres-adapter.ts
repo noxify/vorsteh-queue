@@ -134,12 +134,17 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
     const result = await this.db[this.modelName]!.create({
       data: {
         attempts: job.attempts,
+        childrenCompleted: job.childrenCompleted ?? 0,
+        childrenCount: job.childrenCount ?? 0,
         cron: job.cron ?? null,
         dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
+        failParentOnFailure: job.failParentOnFailure ? 1 : 0,
+        flowId: job.flowId ?? null,
         groupKey: job.groupKey ?? null,
         maxAttempts: job.maxAttempts,
         name: job.name,
         onDependencyFailure: job.onDependencyFailure ?? null,
+        parentId: job.parentId ?? null,
         payload: JSON.stringify(job.payload),
         priority: job.priority,
         processAt: job.processAt,
@@ -706,6 +711,15 @@ export class PostgresPrismaQueueAdapter extends BaseQueueAdapter {
       return { children: children.map((c: Job) => buildNode(c)), job }
     }
     return buildNode(root)
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    const result = await this.db.$queryRawUnsafe<{ id: string }[]>(
+      `DELETE FROM ${this.fullTable} WHERE queue_name = $1 AND flow_id = $2 RETURNING id`,
+      this.queueName,
+      flowId
+    )
+    return result.length
   }
 
   async incrementChildrenCompleted(

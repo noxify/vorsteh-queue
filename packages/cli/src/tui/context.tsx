@@ -21,6 +21,8 @@ interface DashboardContextValue {
   readonly activeView: DashboardView
   readonly focusPane: FocusPane
   readonly selectedJobId: string | null
+  readonly flowOverlayId: string | null
+  readonly inputActive: boolean
   readonly queues: readonly string[]
   readonly jobsFilterIndex: number
   readonly jobsPage: number
@@ -29,6 +31,9 @@ interface DashboardContextValue {
   readonly setActiveView: (view: DashboardView) => void
   readonly setFocusPane: (pane: FocusPane) => void
   readonly selectJob: (jobId: string) => void
+  readonly openFlowTree: (flowId: string) => void
+  readonly closeFlowTree: () => void
+  readonly setInputActive: (active: boolean) => void
   readonly goBack: () => void
   readonly setQueues: (queues: readonly string[]) => void
   readonly setJobsFilterIndex: (index: number) => void
@@ -64,6 +69,8 @@ export function DashboardProvider({
   const [activeView, setActiveView] = useState<DashboardView>("overview")
   const [focusPane, setFocusPane] = useState<FocusPane>("sidebar")
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
+  const [flowOverlayId, setFlowOverlayId] = useState<string | null>(null)
+  const [inputActive, setInputActive] = useState(false)
   const [jobsFilterIndex, setJobsFilterIndex] = useState(0)
   const [jobsPage, setJobsPage] = useState(0)
 
@@ -83,6 +90,14 @@ export function DashboardProvider({
     setSelectedJobId(jobId)
   }, [])
 
+  const openFlowTree = useCallback((flowId: string) => {
+    setFlowOverlayId(flowId)
+  }, [])
+
+  const closeFlowTree = useCallback(() => {
+    setFlowOverlayId(null)
+  }, [])
+
   const goBack = useCallback(() => {
     if (selectedJobId) {
       setSelectedJobId(null)
@@ -95,10 +110,14 @@ export function DashboardProvider({
     () => ({
       activeQueue,
       activeView,
+      closeFlowTree,
+      flowOverlayId,
       focusPane,
       goBack,
+      inputActive,
       jobsFilterIndex,
       jobsPage,
+      openFlowTree,
       queues,
       refreshInterval,
       selectJob,
@@ -106,6 +125,7 @@ export function DashboardProvider({
       setActiveQueue,
       setActiveView,
       setFocusPane,
+      setInputActive,
       setJobsFilterIndex,
       setJobsPage,
       setQueues,
@@ -115,10 +135,14 @@ export function DashboardProvider({
     [
       activeQueue,
       activeView,
+      closeFlowTree,
+      flowOverlayId,
       focusPane,
       goBack,
+      inputActive,
       jobsFilterIndex,
       jobsPage,
+      openFlowTree,
       queues,
       refreshInterval,
       selectJob,

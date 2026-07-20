@@ -681,6 +681,9 @@ export interface QueueAdapter {
   /** Get all jobs in a flow as a tree */
   getFlowTree: (flowId: string) => Promise<FlowNode | null>
 
+  /** Delete all jobs belonging to a flow */
+  deleteFlow: (flowId: string) => Promise<number>
+
   /** Increment children_completed on a parent job. Returns updated counts. */
   incrementChildrenCompleted: (
     parentId: string

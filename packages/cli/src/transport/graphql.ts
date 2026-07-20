@@ -104,7 +104,7 @@ export function createGraphQLTransport(
 
     async getJobs(options) {
       const result = await query<{ jobs: readonly Job[] }>(
-        `query($queue: String!, $where: JobWhereInput, $limit: Int, $offset: Int) { jobs(queue: $queue, where: $where, limit: $limit, offset: $offset) { id name status priority attempts maxAttempts progress createdAt processAt error { name message } cron groupKey } }`,
+        `query($queue: String!, $where: JobWhereInput, $limit: Int, $offset: Int) { jobs(queue: $queue, where: $where, limit: $limit, offset: $offset) { id name status priority attempts maxAttempts progress createdAt processAt error { name message } cron groupKey flowId parentId childrenCount childrenCompleted } }`,
         {
           limit: options?.limit,
           offset: options?.offset,
@@ -194,11 +194,24 @@ export function createGraphQLTransport(
     },
 
     async getFlowTree(flowId: string) {
+      const jobFields =
+        "id name status priority attempts maxAttempts progress flowId parentId childrenCount childrenCompleted"
+      const nodeFields = `job { ${jobFields} } children { job { ${jobFields} } children { job { ${jobFields} } children { job { ${jobFields} } children { job { ${jobFields} } } } } }`
       const result = await query<{ flowTree: FlowNode | null }>(
-        `query($queue: String!, $flowId: String!) { flowTree(queue: $queue, flowId: $flowId) }`,
+        `query($queue: String!, $flowId: String!) { flowTree(queue: $queue, flowId: $flowId) { ${nodeFields} } }`,
         { flowId, queue: queueName }
       )
       return result.flowTree
+    },
+
+    async getFlows(options) {
+      const result = await query<{
+        flows: readonly { flowId: string; rootJob: Job }[]
+      }>(
+        `query($queue: String!, $limit: Int, $offset: Int) { flows(queue: $queue, limit: $limit, offset: $offset) { flowId rootJob { id name status priority attempts maxAttempts progress createdAt processAt flowId parentId childrenCount childrenCompleted } } }`,
+        { limit: options?.limit, offset: options?.offset, queue: queueName }
+      )
+      return result.flows
     },
   }
 }

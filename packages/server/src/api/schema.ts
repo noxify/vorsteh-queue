@@ -229,6 +229,47 @@ const JobType = builder.objectRef<Job>("Job").implement({
       nullable: true,
       resolve: (parent) => parent.uniqueKey ?? null,
     }),
+    repeatEvery: t.int({
+      nullable: true,
+      resolve: (parent) => parent.repeatEvery ?? null,
+    }),
+    repeatLimit: t.int({
+      nullable: true,
+      resolve: (parent) => parent.repeatLimit ?? null,
+    }),
+    repeatCount: t.exposeInt("repeatCount"),
+    timeout: t.int({
+      nullable: true,
+      resolve: (parent) =>
+        typeof parent.timeout === "number" ? parent.timeout : null,
+    }),
+    dependsOn: t.stringList({
+      nullable: true,
+      resolve: (parent) =>
+        parent.dependsOn && parent.dependsOn.length > 0
+          ? [...parent.dependsOn]
+          : null,
+    }),
+    onDependencyFailure: t.string({
+      nullable: true,
+      resolve: (parent) => parent.onDependencyFailure ?? null,
+    }),
+    parentId: t.string({
+      nullable: true,
+      resolve: (parent) => parent.parentId ?? null,
+    }),
+    flowId: t.string({
+      nullable: true,
+      resolve: (parent) => parent.flowId ?? null,
+    }),
+    childrenCount: t.int({
+      nullable: true,
+      resolve: (parent) => parent.childrenCount ?? null,
+    }),
+    childrenCompleted: t.int({
+      nullable: true,
+      resolve: (parent) => parent.childrenCompleted ?? null,
+    }),
   }),
 })
 

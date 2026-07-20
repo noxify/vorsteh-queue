@@ -40,6 +40,7 @@ const SECTIONS = [
       r: "Retry job",
       n: "Run job now",
       x: "Delete job",
+      f: "Show flow tree (if job is part of a flow)",
       y: "Copy job ID to clipboard",
       p: "Copy payload to clipboard",
       Esc: "Close detail drawer",

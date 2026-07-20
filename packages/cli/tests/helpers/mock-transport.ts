@@ -46,6 +46,7 @@ export function createMockTransport(overrides?: {
     disconnect: vi.fn<() => Promise<void>>().mockResolvedValue(),
     getDeadJobs: vi.fn().mockResolvedValue([]),
     getFlowTree: vi.fn().mockResolvedValue(null),
+    getFlows: vi.fn().mockResolvedValue([]),
     getJob: vi.fn().mockResolvedValue(overrides?.job ?? DEFAULT_JOB),
     getJobs: vi.fn().mockResolvedValue(overrides?.jobs ?? [DEFAULT_JOB]),
     getQueues: vi.fn().mockResolvedValue(overrides?.queues ?? ["test-queue"]),

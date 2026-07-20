@@ -97,6 +97,21 @@ if (tree) {
 }
 ```
 
+## Lifecycle & Cleanup
+
+Flow jobs follow a different cleanup lifecycle than standalone jobs:
+
+- **While the flow is active:** All jobs in the flow (including completed children) are preserved. The normal `removeOnComplete` rotation does not delete flow jobs. This ensures the flow tree remains inspectable throughout its execution.
+- **When the root job completes:** The entire flow tree is deleted atomically. All children, grandchildren, and the root itself are removed in a single operation.
+- **`removeOnComplete: false`:** If cleanup is explicitly disabled on the Worker, completed flow trees are kept indefinitely (same as regular jobs).
+
+This means you can safely call `queue.getFlowTree(flowId)` at any point during execution and get the complete tree with all nodes and their current statuses.
+
+```typescript
+// Manually delete a flow (e.g., for cancelled flows)
+await adapter.deleteFlow(flowId)
+```
+
 ## Flow Definition
 
 <InterfaceReference file="core/src/types" name="FlowJobDefinition" />

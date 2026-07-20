@@ -34,6 +34,9 @@ export function createDirectTransport(
     async getFlowTree(flowId: string) {
       return adapter.getFlowTree(flowId)
     },
+    async getFlows(options) {
+      return adapter.getFlows(options)
+    },
     async getJob(id: string) {
       return adapter.getJobById(id)
     },

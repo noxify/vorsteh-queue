@@ -427,7 +427,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       await this.scheduleNextRun(processingJob)
 
       // Cleanup old completed jobs
-      await this.cleanupAfterCompletion()
+      await this.cleanupAfterCompletion(completedJob)
       /* oxlint-enable react-doctor/async-parallel */
     } catch (error) {
       await this.handleJobFailure(job, error, signal, runCompensations, span)
@@ -803,7 +803,16 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
   // ─── Job Cleanup ───────────────────────────────────────────
 
-  private async cleanupAfterCompletion(): Promise<void> {
+  private async cleanupAfterCompletion(job: Job): Promise<void> {
+    // Flow-level cleanup: if this is a flow root completing, delete the entire flow
+    if (job.flowId && !job.parentId) {
+      const { removeOnComplete } = this.config
+      if (removeOnComplete !== false) {
+        await this.adapter.deleteFlow(job.flowId)
+        return
+      }
+    }
+
     const { removeOnComplete } = this.config
     if (removeOnComplete === undefined) {
       // Default: keep 100
