@@ -213,6 +213,7 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
       `SELECT * FROM ${this.fullTable}
        WHERE queue_name = ? AND status = 'delayed' AND process_at <= NOW()
          AND name IN (${handlerInClause})
+         AND attempts < max_attempts
        ORDER BY priority ASC, created_at ASC
        LIMIT 1 FOR UPDATE SKIP LOCKED`,
       handlerParams
@@ -224,6 +225,14 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
         [delayed[0]?.id]
       )
     }
+
+    // Move exhausted delayed jobs to dead (safety net)
+    await connection.execute(
+      `UPDATE ${this.fullTable} SET status = 'dead'
+       WHERE queue_name = ? AND status = 'delayed' AND process_at <= NOW()
+         AND attempts >= max_attempts`,
+      [this.queueName]
+    )
 
     // Pick pending jobs
     const pendingParams: unknown[] = [this.queueName]

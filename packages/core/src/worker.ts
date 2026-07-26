@@ -376,10 +376,22 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     try {
       // Mark as processing
       await this.adapter.updateJobStatus(job.id, { status: "processing" })
-      await this.adapter.incrementJobAttempts(job.id)
+
+      // Only increment attempts for genuine new executions, not step resumptions.
+      // A job resuming from step.sleep()/step.waitFor() already has steps in progress.
+      const isStepResumption =
+        job.steps !== undefined &&
+        job.steps.length > 0 &&
+        job.steps.some(
+          (s) => s.status === "completed" || s.status === "running"
+        )
+      if (!isStepResumption) {
+        await this.adapter.incrementJobAttempts(job.id)
+      }
+
       const processingJob: Job = {
         ...job,
-        attempts: job.attempts + 1,
+        attempts: isStepResumption ? job.attempts : job.attempts + 1,
         status: "processing",
       }
       this.emit("job:processing", processingJob)

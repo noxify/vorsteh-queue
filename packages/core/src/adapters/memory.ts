@@ -103,8 +103,13 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
         job.processAt <= now &&
         options.handlerNames.includes(job.name) // oxlint-disable-line react-doctor/js-set-map-lookups -- handlerNames is small and from config
       ) {
-        const updated: Job = { ...job, status: "pending" }
-        this.jobs.set(job.id, updated)
+        if (job.attempts >= job.maxAttempts) {
+          // Exhausted retries — move to dead instead of pending
+          this.jobs.set(job.id, { ...job, status: "dead" })
+        } else {
+          const updated: Job = { ...job, status: "pending" }
+          this.jobs.set(job.id, updated)
+        }
       }
     }
 
@@ -167,8 +172,12 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
         job.processAt <= now &&
         job.name === handlerName
       ) {
-        const updated: Job = { ...job, status: "pending" }
-        this.jobs.set(job.id, updated)
+        if (job.attempts >= job.maxAttempts) {
+          this.jobs.set(job.id, { ...job, status: "dead" })
+        } else {
+          const updated: Job = { ...job, status: "pending" }
+          this.jobs.set(job.id, updated)
+        }
       }
     }
 

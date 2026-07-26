@@ -202,7 +202,8 @@ export class PostgresQueueAdapter<
           eq(this.model.queueName, this.queueName),
           eq(this.model.status, "delayed"),
           lte(this.model.processAt, now),
-          inArray(this.model.name, [...options.handlerNames])
+          inArray(this.model.name, [...options.handlerNames]),
+          sql`${this.model.attempts} < ${this.model.maxAttempts}`
         )
       )
       .orderBy(asc(this.model.priority), asc(this.model.createdAt))
@@ -217,6 +218,19 @@ export class PostgresQueueAdapter<
 
       // Continue to pick from pending
     }
+
+    // Move exhausted delayed jobs to dead (safety net)
+    await this.db
+      .update(this.model)
+      .set({ status: "dead" })
+      .where(
+        and(
+          eq(this.model.queueName, this.queueName),
+          eq(this.model.status, "delayed"),
+          lte(this.model.processAt, now),
+          sql`${this.model.attempts} >= ${this.model.maxAttempts}`
+        )
+      )
 
     // Build conditions
     const conditions = [
@@ -789,7 +803,9 @@ export class PostgresQueueAdapter<
       repeatEvery: job.repeatEvery ?? undefined,
       repeatLimit: job.repeatLimit ?? undefined,
       result: job.result ?? undefined,
+      signals: job.signals as Readonly<Record<string, unknown>> | undefined,
       status: job.status as JobStatus,
+      steps: job.steps as StepState[] | undefined,
       timeout: job.timeout ?? undefined,
       uniqueKey: job.uniqueKey ?? undefined,
     }

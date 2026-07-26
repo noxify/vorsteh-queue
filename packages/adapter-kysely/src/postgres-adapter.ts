@@ -158,6 +158,7 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
       .where("status", "=", "delayed")
       .where("process_at", "<=", now)
       .where("name", "in", [...options.handlerNames])
+      .where(({ eb }) => eb(eb.ref("attempts"), "<", eb.ref("max_attempts")))
       .orderBy("priority", "asc")
       .orderBy("created_at", "asc")
       .limit(1)
@@ -172,6 +173,16 @@ export class PostgresQueueAdapter extends BaseQueueAdapter {
         .where("id", "=", delayed.id)
         .execute()
     }
+
+    // Move exhausted delayed jobs to dead (safety net)
+    await this.customDbClient
+      .updateTable(this.table)
+      .set({ status: "dead" })
+      .where("queue_name", "=", this.queueName)
+      .where("status", "=", "delayed")
+      .where("process_at", "<=", now)
+      .where(({ eb }) => eb(eb.ref("attempts"), ">=", eb.ref("max_attempts")))
+      .execute()
 
     // Pick next pending job
     let query = this.customDbClient
