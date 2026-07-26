@@ -1,6 +1,6 @@
 "use client"
 
-import type { FlowNode } from "@vorsteh-queue/core"
+import type { FlowTree } from "@vorsteh-queue/core"
 import { ArrowLeftIcon } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -15,7 +15,7 @@ export function FlowDetailView({
   queue,
 }: {
   flowId: string
-  initialData: FlowNode
+  initialData: FlowTree
   queue: string
 }) {
   const router = useRouter()
@@ -34,7 +34,9 @@ export function FlowDetailView({
           <ArrowLeftIcon className="h-4 w-4" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{tree.job.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {tree.node.name}
+          </h1>
           <p className="text-muted-foreground mt-1 font-mono text-sm">
             {flowId}
           </p>
@@ -48,7 +50,9 @@ export function FlowDetailView({
         <CardContent>
           <FlowGraph
             tree={tree}
-            onNodeClick={(jobId) => router.push(`/${queue}/jobs/${jobId}`)}
+            onNodeClick={(nodeId) =>
+              router.push(`/${queue}/flows/${flowId}#${nodeId}`)
+            }
           />
         </CardContent>
       </Card>

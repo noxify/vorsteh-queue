@@ -12,6 +12,7 @@ Defining your adapter and queue instances in a single shared file keeps your pro
 ```
 my-app/
 ├── src/
+│   ├── schema.ts          # Database schema (Drizzle tables + relations)
 │   ├── queues.ts          # Queue definitions (adapter + Queue instances)
 │   ├── handlers/
 │   │   ├── email.ts       # Job handlers
@@ -35,12 +36,12 @@ my-app/
 
     import {
       PostgresQueueAdapter,
-      postgresSchema,
+      queueFlows,
+      queueJobs,
     } from "@vorsteh-queue/adapter-drizzle"
     import { Queue } from "@vorsteh-queue/core"
 
-    const { queueJobs } = postgresSchema
-    const relations = defineRelations({ queueJobs })
+    const relations = defineRelations({ queueFlows, queueJobs })
 
     const pool = new Pool({ connectionString: process.env.DATABASE_URL })
     const db = drizzle({ client: pool, relations })
@@ -123,6 +124,7 @@ my-app/
 
     import {
       PostgresTypeormQueueAdapter,
+      QueueFlowEntity,
       QueueJobEntity,
     } from "@vorsteh-queue/adapter-typeorm"
     import { Queue } from "@vorsteh-queue/core"
@@ -130,7 +132,7 @@ my-app/
     const dataSource = new DataSource({
       type: "postgres",
       url: process.env.DATABASE_URL,
-      entities: [QueueJobEntity],
+      entities: [QueueJobEntity, QueueFlowEntity],
       synchronize: true,
     })
 
@@ -148,12 +150,13 @@ my-app/
 
     import {
       PostgresMikroormQueueAdapter,
+      QueueFlowSchema,
       QueueJobSchema,
     } from "@vorsteh-queue/adapter-mikroorm"
     import { Queue } from "@vorsteh-queue/core"
 
     const orm = await MikroORM.init({
-      entities: [QueueJobSchema],
+      entities: [QueueJobSchema, QueueFlowSchema],
       clientUrl: process.env.DATABASE_URL,
     })
 
@@ -171,6 +174,7 @@ my-app/
 
     import {
       PostgresSequelizeQueueAdapter,
+      initQueueFlowModel,
       initQueueJobModel,
     } from "@vorsteh-queue/adapter-sequelize"
     import { Queue } from "@vorsteh-queue/core"
@@ -180,6 +184,7 @@ my-app/
       logging: false,
     })
     initQueueJobModel(sequelize)
+    initQueueFlowModel(sequelize)
 
     export const adapter = new PostgresSequelizeQueueAdapter(sequelize)
 
@@ -207,22 +212,26 @@ export default {
 
 ## Worker setup
 
-Workers import the queue they process:
+Workers import the adapter and use the `Worker` class:
 
 ```typescript
 // src/worker.ts
-import { emailQueue } from "./queues"
+import { Worker } from "@vorsteh-queue/core"
 
-emailQueue.register("send-email", async (job) => {
+import { adapter } from "./queues"
+
+const worker = new Worker(adapter, { name: "email-queue", concurrency: 5 })
+
+worker.register("send-email", async (job) => {
   // handle job
 })
 
-emailQueue.start()
+worker.start()
 ```
 
 ## Adding jobs from your app
 
-Application code imports the same queue instance to add jobs:
+Application code imports the queue instance to add jobs:
 
 ```typescript
 import { emailQueue } from "./queues"
@@ -244,12 +253,12 @@ For projects with a single queue, the pattern is the same — just simpler:
 
     import {
       PostgresQueueAdapter,
-      postgresSchema,
+      queueFlows,
+      queueJobs,
     } from "@vorsteh-queue/adapter-drizzle"
     import { Queue } from "@vorsteh-queue/core"
 
-    const { queueJobs } = postgresSchema
-    const relations = defineRelations({ queueJobs })
+    const relations = defineRelations({ queueFlows, queueJobs })
 
     const pool = new Pool({ connectionString: process.env.DATABASE_URL })
     const db = drizzle({ client: pool, relations })
@@ -324,6 +333,7 @@ For projects with a single queue, the pattern is the same — just simpler:
 
     import {
       PostgresTypeormQueueAdapter,
+      QueueFlowEntity,
       QueueJobEntity,
     } from "@vorsteh-queue/adapter-typeorm"
     import { Queue } from "@vorsteh-queue/core"
@@ -331,7 +341,7 @@ For projects with a single queue, the pattern is the same — just simpler:
     const dataSource = new DataSource({
       type: "postgres",
       url: process.env.DATABASE_URL,
-      entities: [QueueJobEntity],
+      entities: [QueueJobEntity, QueueFlowEntity],
       synchronize: true,
     })
 
@@ -347,12 +357,13 @@ For projects with a single queue, the pattern is the same — just simpler:
 
     import {
       PostgresMikroormQueueAdapter,
+      QueueFlowSchema,
       QueueJobSchema,
     } from "@vorsteh-queue/adapter-mikroorm"
     import { Queue } from "@vorsteh-queue/core"
 
     const orm = await MikroORM.init({
-      entities: [QueueJobSchema],
+      entities: [QueueJobSchema, QueueFlowSchema],
       clientUrl: process.env.DATABASE_URL,
     })
 
@@ -368,6 +379,7 @@ For projects with a single queue, the pattern is the same — just simpler:
 
     import {
       PostgresSequelizeQueueAdapter,
+      initQueueFlowModel,
       initQueueJobModel,
     } from "@vorsteh-queue/adapter-sequelize"
     import { Queue } from "@vorsteh-queue/core"
@@ -377,6 +389,7 @@ For projects with a single queue, the pattern is the same — just simpler:
       logging: false,
     })
     initQueueJobModel(sequelize)
+    initQueueFlowModel(sequelize)
 
     export const adapter = new PostgresSequelizeQueueAdapter(sequelize)
     export const queue = new Queue(adapter, { name: "my-queue" })

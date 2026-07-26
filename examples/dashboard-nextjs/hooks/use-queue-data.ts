@@ -1,7 +1,13 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import type { FlowNode, Job, JobStatus, QueueStats } from "@vorsteh-queue/core"
+import type {
+  FlowSummary,
+  FlowTree,
+  Job,
+  JobStatus,
+  QueueStats,
+} from "@vorsteh-queue/core"
 
 function buildParams(
   extra?: Record<string, string | number | null | undefined>
@@ -84,9 +90,9 @@ export function useDeadJobs(
 export function useFlows(
   queue: string,
   options?: { limit?: number; offset?: number },
-  initialData?: readonly { flowId: string; rootJob: Job }[]
+  initialData?: readonly FlowSummary[]
 ) {
-  return useQuery<readonly { flowId: string; rootJob: Job }[]>({
+  return useQuery<readonly FlowSummary[]>({
     queryKey: ["flows", queue, options],
     queryFn: () =>
       fetch(
@@ -100,9 +106,9 @@ export function useFlows(
 export function useFlowTree(
   queue: string,
   flowId: string,
-  initialData?: FlowNode
+  initialData?: FlowTree
 ) {
-  return useQuery<FlowNode>({
+  return useQuery<FlowTree>({
     queryKey: ["flow-tree", queue, flowId],
     queryFn: () =>
       fetch(`/api/flows/${flowId}${buildParams({ queue })}`).then((r) =>

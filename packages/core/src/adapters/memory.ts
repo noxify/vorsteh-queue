@@ -17,8 +17,16 @@ import type { JobWhereInput } from "@vorsteh-queue/query-builder"
 import { matchesWhere, normalizeWhere } from "@vorsteh-queue/query-builder"
 
 import type {
-  CancelJobsFilter,
+  FlowAdapter,
+  FlowListOptions,
   FlowNode,
+  FlowNodeUpdate,
+  FlowSummary,
+  FlowTree,
+  NewFlowNode,
+} from "../flow-types"
+import type {
+  CancelJobsFilter,
   GetNextJobOptions,
   Job,
   JobStatus,
@@ -38,8 +46,12 @@ const CANCELLABLE_STATUSES = new Set<JobStatus>([
   "failed",
 ])
 
-export class MemoryQueueAdapter extends BaseQueueAdapter {
+export class MemoryQueueAdapter
+  extends BaseQueueAdapter
+  implements FlowAdapter
+{
   private jobs = new Map<string, Job>()
+  private readonly flowNodes = new Map<string, FlowNode>()
   private connected = false
 
   async connect(): Promise<void> {
@@ -49,6 +61,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
   async disconnect(): Promise<void> {
     this.connected = false
     this.jobs.clear()
+    this.flowNodes.clear()
   }
 
   // ─── Job CRUD ──────────────────────────────────────────────
@@ -113,7 +126,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       }
     }
 
-    // Then: find the next pending job respecting handler names, group constraints, and dependencies
+    // Then: find the next pending job respecting handler names and group constraints
     const candidates = [...this.jobs.values()]
       .filter((job) => {
         if (job.status !== "pending") {
@@ -124,27 +137,6 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
         }
         if (job.groupKey && options.activeGroups.includes(job.groupKey)) {
           return false
-        }
-        // Skip jobs whose dependencies are not yet resolved
-        // (let through jobs with failed/dead/cancelled deps so the worker can cascade)
-        if (job.dependsOn && job.dependsOn.length > 0) {
-          for (const depId of job.dependsOn) {
-            const dep = this.jobs.get(depId)
-            if (!dep) {
-              return false
-            }
-            // Dep is still active (not completed, not terminally failed) — block picking
-            if (
-              dep.status !== "completed" &&
-              dep.status !== "dead" &&
-              dep.status !== "cancelled" &&
-              dep.status !== "failed"
-            ) {
-              return false
-            }
-            // If dep completed, this dependency is satisfied — continue checking others
-            // If dep is dead/cancelled/failed, let the worker handle the cascade
-          }
         }
         return true
       })
@@ -191,15 +183,6 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
         }
         if (job.groupKey && groupConstraints.includes(job.groupKey)) {
           return false
-        }
-        // Skip jobs with unmet dependencies
-        if (job.dependsOn && job.dependsOn.length > 0) {
-          for (const depId of job.dependsOn) {
-            const dep = this.jobs.get(depId)
-            if (!dep || dep.status !== "completed") {
-              return false
-            }
-          }
         }
         return true
       })
@@ -373,7 +356,6 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       failed: 0,
       pending: 0,
       processing: 0,
-      "waiting-children": 0,
     }
 
     for (const job of this.jobs.values()) {
@@ -425,25 +407,6 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
       .slice(offset, offset + limit)
   }
 
-  async getFlows(
-    options?: PaginationOptions
-  ): Promise<readonly { flowId: string; rootJob: Job }[]> {
-    const limit = options?.limit ?? 20
-    const offset = options?.offset ?? 0
-
-    const flowMap = new Map<string, Job>()
-    for (const job of this.jobs.values()) {
-      if (job.flowId && !job.parentId) {
-        flowMap.set(job.flowId, job)
-      }
-    }
-
-    return [...flowMap.entries()]
-      .toSorted(([, a], [, b]) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(offset, offset + limit)
-      .map(([flowId, job]) => ({ flowId, rootJob: job }))
-  }
-
   // ─── Cleanup ───────────────────────────────────────────────
 
   async clearJobs(status?: JobStatus): Promise<number> {
@@ -466,7 +429,7 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
 
   async cleanupJobs(status: JobStatus, keepCount: number): Promise<number> {
     const jobsToDelete = [...this.jobs.values()]
-      .filter((job) => job.status === status && !job.flowId)
+      .filter((job) => job.status === status)
       .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(keepCount)
 
@@ -567,57 +530,244 @@ export class MemoryQueueAdapter extends BaseQueueAdapter {
     return true
   }
 
-  // ─── Flows ─────────────────────────────────────────────────
+  // ─── Flow Adapter ──────────────────────────────────────────
 
-  async getFlowTree(flowId: string): Promise<FlowNode | null> {
-    const flowJobs = [...this.jobs.values()].filter((j) => j.flowId === flowId)
-    if (flowJobs.length === 0) {
-      return null
+  async createFlow(
+    nodes: readonly NewFlowNode[],
+    leafJobs: readonly NewJob[]
+  ): Promise<readonly FlowNode[]> {
+    const createdNodes: FlowNode[] = []
+    const now = new Date()
+
+    for (const node of nodes) {
+      const flowNode: FlowNode = {
+        ...node,
+        createdAt: now,
+      }
+      this.flowNodes.set(node.id, flowNode)
+      createdNodes.push(flowNode)
     }
 
-    // Find root (no parentId)
-    const root = flowJobs.find((j) => !j.parentId)
-    if (!root) {
-      return null
+    // Create leaf jobs (they have flowNodeId set)
+    for (const job of leafJobs) {
+      await this.addJob(job)
     }
 
-    const buildNode = (job: Job): FlowNode => {
-      const children = flowJobs.filter((j) => j.parentId === job.id)
-      return {
-        children: children.map((child) => buildNode(child)),
-        job,
+    // Correlate: for leaf nodes that are "ready", find their job by flowNodeId
+    for (let i = 0; i < createdNodes.length; i++) {
+      const node = createdNodes[i]
+      if (!node || node.status !== "ready") {
+        continue
+      }
+
+      const matchingJob = [...this.jobs.values()].find(
+        (j) => j.flowNodeId === node.id
+      )
+      if (matchingJob) {
+        const updated: FlowNode = { ...node, jobId: matchingJob.id }
+        this.flowNodes.set(node.id, updated)
+        createdNodes[i] = updated
       }
     }
 
-    return buildNode(root)
+    return createdNodes
   }
 
-  async deleteFlow(flowId: string): Promise<number> {
-    let count = 0
-    for (const [id, job] of this.jobs) {
-      if (job.flowId === flowId) {
-        this.jobs.delete(id)
-        count += 1
-      }
+  async getFlowNode(nodeId: string): Promise<FlowNode | null> {
+    return this.flowNodes.get(nodeId) ?? null
+  }
+
+  async getFlowTree(flowId: string): Promise<FlowTree | null> {
+    const allNodes = [...this.flowNodes.values()].filter(
+      (n) => n.flowId === flowId
+    )
+    if (allNodes.length === 0) {
+      return null
     }
-    return count
+
+    const rootNode = allNodes.find((n) => !n.parentNodeId)
+    if (!rootNode) {
+      return null
+    }
+
+    const buildTree = (node: FlowNode): FlowTree => {
+      const children = allNodes
+        .filter((n) => n.parentNodeId === node.id)
+        .map(buildTree)
+      return { node, children }
+    }
+
+    return buildTree(rootNode)
   }
 
-  async incrementChildrenCompleted(
-    parentId: string
+  async getFlows(options?: FlowListOptions): Promise<readonly FlowSummary[]> {
+    // Group by flowId, find root nodes
+    const flowIds = new Set<string>()
+    for (const node of this.flowNodes.values()) {
+      flowIds.add(node.flowId)
+    }
+
+    let summaries: FlowSummary[] = []
+    for (const flowId of flowIds) {
+      const rootNode = [...this.flowNodes.values()].find(
+        (n) => n.flowId === flowId && !n.parentNodeId
+      )
+      if (!rootNode) {
+        continue
+      }
+
+      if (options?.status && rootNode.status !== options.status) {
+        continue
+      }
+
+      summaries.push({
+        completedAt: rootNode.completedAt,
+        createdAt: rootNode.createdAt,
+        flowId,
+        rootNode,
+        status: rootNode.status,
+      })
+    }
+
+    // Sort by createdAt descending
+    summaries = summaries.toSorted(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    )
+
+    // Apply pagination
+    const offset = options?.offset ?? 0
+    const limit = options?.limit ?? 50
+    return summaries.slice(offset, offset + limit)
+  }
+
+  async updateFlowNode(nodeId: string, update: FlowNodeUpdate): Promise<void> {
+    const existing = this.flowNodes.get(nodeId)
+    if (!existing) {
+      return
+    }
+
+    const updated: FlowNode = {
+      ...existing,
+      ...(update.status !== undefined && { status: update.status }),
+      ...(update.jobId !== undefined && { jobId: update.jobId }),
+      ...(update.result !== undefined && { result: update.result }),
+      ...(update.error !== undefined && { error: update.error }),
+      ...(update.completedAt !== undefined && {
+        completedAt: update.completedAt,
+      }),
+    }
+    this.flowNodes.set(nodeId, updated)
+  }
+
+  async incrementNodeChildrenCompleted(
+    nodeId: string
   ): Promise<{ completed: number; total: number }> {
-    const job = this.jobs.get(parentId)
-    if (!job) {
+    const node = this.flowNodes.get(nodeId)
+    if (!node) {
       return { completed: 0, total: 0 }
     }
 
-    const completed = (job.childrenCompleted ?? 0) + 1
-    this.jobs.set(parentId, { ...job, childrenCompleted: completed })
-
-    return { completed, total: job.childrenCount ?? 0 }
+    const updated: FlowNode = {
+      ...node,
+      childrenCompleted: node.childrenCompleted + 1,
+    }
+    this.flowNodes.set(nodeId, updated)
+    return {
+      completed: updated.childrenCompleted,
+      total: updated.childrenCount,
+    }
   }
 
-  async getChildrenJobs(parentId: string): Promise<readonly Job[]> {
-    return [...this.jobs.values()].filter((j) => j.parentId === parentId)
+  async getNodeChildren(nodeId: string): Promise<readonly FlowNode[]> {
+    return [...this.flowNodes.values()].filter((n) => n.parentNodeId === nodeId)
+  }
+
+  async getChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    const children = await this.getNodeChildren(nodeId)
+    const results = new Map<string, unknown>()
+    for (const child of children) {
+      if (child.status === "completed" && child.result !== undefined) {
+        results.set(child.id, child.result)
+      }
+    }
+    return results
+  }
+
+  async getFailedChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    const children = await this.getNodeChildren(nodeId)
+    const results = new Map<string, unknown>()
+    for (const child of children) {
+      if (child.status === "failed" && child.error !== undefined) {
+        results.set(child.id, child.error)
+      }
+    }
+    return results
+  }
+
+  async cancelUnprocessedChildren(nodeId: string): Promise<number> {
+    let cancelled = 0
+    const children = await this.getNodeChildren(nodeId)
+
+    for (const child of children) {
+      if (child.jobId) {
+        const job = this.jobs.get(child.jobId)
+        if (job && (job.status === "pending" || job.status === "delayed")) {
+          await this.cancelJob(
+            child.jobId,
+            "Cancelled by removeUnprocessedChildren"
+          )
+          await this.updateFlowNode(child.id, {
+            completedAt: new Date(),
+            status: "cancelled",
+          })
+          cancelled++
+          cancelled += await this.cancelUnprocessedChildren(child.id)
+        }
+      } else if (child.status === "waiting") {
+        await this.updateFlowNode(child.id, {
+          completedAt: new Date(),
+          status: "cancelled",
+        })
+        cancelled++
+        cancelled += await this.cancelUnprocessedChildren(child.id)
+      }
+    }
+
+    return cancelled
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    let deleted = 0
+    for (const [id, node] of this.flowNodes) {
+      if (node.flowId === flowId) {
+        this.flowNodes.delete(id)
+        deleted++
+      }
+    }
+    return deleted
+  }
+
+  async cleanupFlows(keepCount: number): Promise<number> {
+    const completedRoots = [...this.flowNodes.values()]
+      .filter((n) => !n.parentNodeId && n.status === "completed")
+      .toSorted(
+        (a, b) =>
+          (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0)
+      )
+
+    if (completedRoots.length <= keepCount) {
+      return 0
+    }
+
+    const toDelete = completedRoots.slice(keepCount)
+    let totalDeleted = 0
+    for (const root of toDelete) {
+      totalDeleted += await this.deleteFlow(root.flowId)
+    }
+    return totalDeleted
   }
 }

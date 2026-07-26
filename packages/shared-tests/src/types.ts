@@ -1,4 +1,4 @@
-import type { QueueAdapter } from "@vorsteh-queue/core"
+import type { FlowAdapter, QueueAdapter } from "@vorsteh-queue/core"
 
 import type { initDatabase } from "./database"
 
@@ -30,6 +30,22 @@ export interface SharedTestContext<TDatabase = unknown> {
       schemaName?: string
     }
   ) => Promise<QueueAdapter> | QueueAdapter
+  migrate: (db: TDatabase) => Promise<void>
+  testCases: TestCaseProps[]
+}
+
+export interface FlowAdapterTestContext<TDatabase = unknown> {
+  initDbClient: (props: DatabaseConnectionProps) => TDatabase
+  initAdapter: (
+    db: TDatabase,
+    adapterConfig?: {
+      modelName?: string
+      tableName?: string
+      schemaName?: string
+      flowModelName?: string
+      flowTableName?: string
+    }
+  ) => Promise<FlowAdapter & QueueAdapter> | (FlowAdapter & QueueAdapter)
   migrate: (db: TDatabase) => Promise<void>
   testCases: TestCaseProps[]
 }

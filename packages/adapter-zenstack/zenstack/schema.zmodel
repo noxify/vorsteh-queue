@@ -3,44 +3,63 @@ datasource db {
 }
 
 model QueueJob {
-  id                  String    @id @default(uuid())
-  queueName           String    @map("queue_name") @db.VarChar(255)
-  name                String    @db.VarChar(255)
-  payload             Json      @db.JsonB
-  status              String    @db.VarChar(50)
-  priority            Int
-  attempts            Int       @default(0)
-  maxAttempts         Int       @map("max_attempts")
-  timeout             Int?
-  progress            Int       @default(0)
-  groupKey            String?   @map("group_key") @db.VarChar(255)
-  uniqueKey           String?   @map("unique_key") @db.VarChar(255)
-  cron                String?   @db.VarChar(255)
-  repeatEvery         Int?      @map("repeat_every")
-  repeatLimit         Int?      @map("repeat_limit")
-  repeatCount         Int       @default(0) @map("repeat_count")
-  cancellationReason  String?   @map("cancellation_reason") @db.Text
-  dependsOn           Json?     @map("depends_on") @db.JsonB
-  error               Json?     @db.JsonB
-  result              Json?     @db.JsonB
-  steps               Json?     @db.JsonB
-  signals             Json?     @db.JsonB
-  onDependencyFailure String?   @map("on_dependency_failure") @db.VarChar(10)
-  parentId            String?   @map("parent_id")
-  flowId              String?   @map("flow_id")
-  childrenCount       Int       @default(0) @map("children_count")
-  childrenCompleted   Int       @default(0) @map("children_completed")
-  failParentOnFailure Int       @default(0) @map("fail_parent_on_failure")
-  createdAt           DateTime  @default(dbgenerated("timezone('utc', now())")) @map("created_at") @db.Timestamptz(6)
-  processAt           DateTime  @map("process_at") @db.Timestamptz(6)
-  processedAt         DateTime? @map("processed_at") @db.Timestamptz(6)
-  completedAt         DateTime? @map("completed_at") @db.Timestamptz(6)
-  failedAt            DateTime? @map("failed_at") @db.Timestamptz(6)
-  cancelledAt         DateTime? @map("cancelled_at") @db.Timestamptz(6)
+  id                 String    @id @default(uuid())
+  queueName          String    @map("queue_name") @db.VarChar(255)
+  name               String    @db.VarChar(255)
+  payload            Json      @db.JsonB
+  status             String    @db.VarChar(50)
+  priority           Int
+  attempts           Int       @default(0)
+  maxAttempts        Int       @map("max_attempts")
+  timeout            Int?
+  progress           Int       @default(0)
+  groupKey           String?   @map("group_key") @db.VarChar(255)
+  uniqueKey          String?   @map("unique_key") @db.VarChar(255)
+  cron               String?   @db.VarChar(255)
+  repeatEvery        Int?      @map("repeat_every")
+  repeatLimit        Int?      @map("repeat_limit")
+  repeatCount        Int       @default(0) @map("repeat_count")
+  cancellationReason String?   @map("cancellation_reason") @db.Text
+  error              Json?     @db.JsonB
+  result             Json?     @db.JsonB
+  steps              Json?     @db.JsonB
+  signals            Json?     @db.JsonB
+  flowNodeId         String?   @map("flow_node_id")
+  createdAt          DateTime  @default(dbgenerated("timezone('utc', now())")) @map("created_at") @db.Timestamptz(6)
+  processAt          DateTime  @map("process_at") @db.Timestamptz(6)
+  processedAt        DateTime? @map("processed_at") @db.Timestamptz(6)
+  completedAt        DateTime? @map("completed_at") @db.Timestamptz(6)
+  failedAt           DateTime? @map("failed_at") @db.Timestamptz(6)
+  cancelledAt        DateTime? @map("cancelled_at") @db.Timestamptz(6)
 
   @@index([queueName, status, priority, createdAt], map: "idx_queue_jobs_polling")
   @@index([queueName, processAt], map: "idx_queue_jobs_delayed")
   @@index([queueName, groupKey], map: "idx_queue_jobs_active_groups")
   @@index([queueName, status], map: "idx_queue_jobs_stats")
   @@map("queue_jobs")
+}
+
+model QueueFlow {
+  id                String    @id @default(uuid())
+  flowId            String    @map("flow_id")
+  parentNodeId      String?   @map("parent_node_id")
+  jobId             String?   @map("job_id")
+  queueName         String    @map("queue_name") @db.VarChar(255)
+  name              String    @db.VarChar(255)
+  payload           Json      @db.JsonB
+  options           Json?     @db.JsonB
+  status            String    @db.VarChar(50)
+  failureStrategy   String    @default("default") @map("failure_strategy") @db.VarChar(20)
+  childrenCount     Int       @default(0) @map("children_count")
+  childrenCompleted Int       @default(0) @map("children_completed")
+  result            Json?     @db.JsonB
+  error             Json?     @db.JsonB
+  createdAt         DateTime  @default(dbgenerated("timezone('utc', now())")) @map("created_at") @db.Timestamptz(6)
+  completedAt       DateTime? @map("completed_at") @db.Timestamptz(6)
+
+  @@index([flowId], map: "idx_queue_flows_flow_id")
+  @@index([parentNodeId], map: "idx_queue_flows_parent_node_id")
+  @@index([jobId], map: "idx_queue_flows_job_id")
+  @@index([flowId, status], map: "idx_queue_flows_status")
+  @@map("queue_flows")
 }

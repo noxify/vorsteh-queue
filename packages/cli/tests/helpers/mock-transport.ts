@@ -12,7 +12,6 @@ const DEFAULT_STATS: QueueStats = {
   failed: 3,
   pending: 10,
   processing: 2,
-  "waiting-children": 0,
 }
 
 const DEFAULT_JOB: Job = {

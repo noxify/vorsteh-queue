@@ -3,7 +3,8 @@
  */
 
 import type {
-  FlowNode,
+  FlowSummary,
+  FlowTree,
   Job,
   JobStatus,
   PaginationOptions,
@@ -31,9 +32,10 @@ export interface Transport {
   redriveAll: (filter?: { name?: string }) => Promise<number>
   clearJobs: (status?: JobStatus) => Promise<number>
   size: (where?: JobWhereInput) => Promise<number>
-  getFlowTree: (flowId: string) => Promise<FlowNode | null>
+  getFlowTree: (flowId: string) => Promise<FlowTree | null>
   getFlows: (options?: {
     limit?: number
     offset?: number
-  }) => Promise<readonly { flowId: string; rootJob: Job }[]>
+    status?: string
+  }) => Promise<readonly FlowSummary[]>
 }

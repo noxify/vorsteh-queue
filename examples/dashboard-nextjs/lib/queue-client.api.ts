@@ -126,7 +126,7 @@ export function createApiClient(_queueName?: string): QueueClient {
         `
         query Flows($limit: Int, $offset: Int) {
           flows(limit: $limit, offset: $offset) {
-            flowId rootJob { id name status createdAt }
+            flowId status createdAt completedAt rootNode { id name status }
           }
         }
       `,
@@ -142,8 +142,8 @@ export function createApiClient(_queueName?: string): QueueClient {
         `
         query FlowTree($flowId: String!) {
           flowTree(flowId: $flowId) {
-            job { id name status }
-            children { job { id name status } children { job { id name status } children { job { id name status } } } }
+            node { id name status flowId }
+            children { node { id name status flowId } children { node { id name status flowId } children { node { id name status flowId } } } }
           }
         }
       `,

@@ -14,7 +14,7 @@ Three methods are available for adding jobs:
 | `queue.add(name, payload, options?)` | Add a single job |
 | `queue.addJobs(name, payloads, options?)` | Add multiple jobs of the same type in a batch |
 | `queue.enqueueAndWait(name, payload, options?)` | Add a job and await its result |
-| `queue.addFlow(flow)` | Add a parent job with children — see [Flows](/docs/vorsteh-queue/core/flows/overview) |
+| `flowProducer.add(definition)` | Create a parent-child flow tree — see [Flows](/docs/vorsteh-queue/core/flows/overview) |
 
 ## Immediate Jobs
 

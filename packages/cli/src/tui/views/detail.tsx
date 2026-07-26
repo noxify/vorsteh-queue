@@ -19,7 +19,7 @@ interface JobDetailDrawerProps {
  */
 // oxlint-disable-next-line complexity -- many optional job fields to display
 export function JobDetailDrawer({ isFocused }: JobDetailDrawerProps) {
-  const { transport, selectedJobId, goBack, openFlowTree } = useDashboard()
+  const { transport, selectedJobId, goBack } = useDashboard()
   const { write: copyToClipboard } = useClipboard()
   const [job, setJob] = useState<Job | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -107,13 +107,9 @@ export function JobDetailDrawer({ isFocused }: JobDetailDrawerProps) {
       setConfirmAction("run-now")
     } else if (input === "x") {
       setConfirmAction("delete")
-    } else if (input === "f") {
-      if (job?.flowId) {
-        openFlowTree(job.flowId)
-      } else if (job) {
-        setMessage("Job is not part of a flow")
-        setTimeout(() => setMessage(null), 2000)
-      }
+    } else if (input === "f" && job) {
+      setMessage("Use flows list to view flow trees")
+      setTimeout(() => setMessage(null), 2000)
     }
 
     // Clipboard shortcuts
@@ -225,21 +221,8 @@ export function JobDetailDrawer({ isFocused }: JobDetailDrawerProps) {
           {job.groupKey && <Field label="Group" value={job.groupKey} />}
           {job.uniqueKey && <Field label="Unique Key" value={job.uniqueKey} />}
 
-          {/* Dependencies & Flows */}
-          {job.dependsOn && job.dependsOn.length > 0 && (
-            <Field label="Depends On" value={job.dependsOn.join(", ")} />
-          )}
-          {job.onDependencyFailure && job.onDependencyFailure !== "fail" && (
-            <Field label="On Dep Failure" value={job.onDependencyFailure} />
-          )}
-          {job.parentId && <Field label="Parent ID" value={job.parentId} />}
-          {job.flowId && <Field label="Flow ID" value={job.flowId} />}
-          {job.childrenCount !== undefined && job.childrenCount > 0 && (
-            <Field
-              label="Children"
-              value={`${job.childrenCompleted ?? 0}/${job.childrenCount} completed`}
-            />
-          )}
+          {/* Flow */}
+          {job.flowNodeId && <Field label="Flow Node" value={job.flowNodeId} />}
 
           {/* Payload & Result */}
           <Box marginTop={1}>

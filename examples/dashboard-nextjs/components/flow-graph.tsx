@@ -1,6 +1,6 @@
 "use client"
 
-import type { FlowNode } from "@vorsteh-queue/core"
+import type { FlowNodeStatus, FlowTree } from "@vorsteh-queue/core"
 import type { Edge, Node } from "@xyflow/react"
 import {
   Background,
@@ -10,40 +10,35 @@ import {
 } from "@xyflow/react"
 import { useMemo } from "react"
 
-import { StatusBadge } from "@/components/status-badge"
-
 import "@xyflow/react/dist/style.css"
 
-const statusColors: Record<string, string> = {
-  pending: "#3b82f6",
-  delayed: "#eab308",
-  processing: "#a855f7",
+const statusColors: Record<FlowNodeStatus, string> = {
+  waiting: "#8b5cf6",
+  ready: "#3b82f6",
   completed: "#22c55e",
-  failed: "#f97316",
+  failed: "#ef4444",
   cancelled: "#6b7280",
-  dead: "#ef4444",
-  "waiting-children": "#8b5cf6",
 }
 
-function countLeaves(node: FlowNode): number {
-  if (node.children.length === 0) {
+function countLeaves(tree: FlowTree): number {
+  if (tree.children.length === 0) {
     return 1
   }
-  return node.children.reduce((sum, child) => sum + countLeaves(child), 0)
+  return tree.children.reduce((sum, child) => sum + countLeaves(child), 0)
 }
 
 function buildNodes(
-  node: FlowNode,
+  tree: FlowTree,
   nodes: Node[],
   edges: Edge[],
-  highlightJobId: string | undefined,
+  highlightNodeId: string | undefined,
   depth = 0,
   xOffset = 0
 ): number {
-  const width = countLeaves(node)
+  const width = countLeaves(tree)
   const nodeX = xOffset + (width - 1) / 2
-  const nodeId = node.job.id
-  const isCurrent = nodeId === highlightJobId
+  const nodeId = tree.node.id
+  const isCurrent = nodeId === highlightNodeId
 
   nodes.push({
     id: nodeId,
@@ -51,16 +46,16 @@ function buildNodes(
     data: {
       label: (
         <div className="flex flex-col items-center gap-1 p-1.5">
-          <div className="text-[11px] font-medium">{node.job.name}</div>
-          <StatusBadge status={node.job.status} />
+          <div className="text-[11px] font-medium">{tree.node.name}</div>
+          <div className="text-[10px] font-medium">{tree.node.status}</div>
           <div className="text-muted-foreground font-mono text-[9px]">
-            {node.job.id.slice(0, 8)}
+            {tree.node.id.slice(0, 8)}
           </div>
         </div>
       ),
     },
     style: {
-      border: `${isCurrent ? "3px" : "2px"} solid ${statusColors[node.job.status] ?? "#6b7280"}`,
+      border: `${isCurrent ? "3px" : "2px"} solid ${statusColors[tree.node.status] ?? "#6b7280"}`,
       borderRadius: "8px",
       background: isCurrent ? "var(--accent)" : "var(--card)",
       padding: "2px",
@@ -70,19 +65,19 @@ function buildNodes(
   })
 
   let childOffset = xOffset
-  for (const child of node.children) {
-    const childId = child.job.id
+  for (const child of tree.children) {
+    const childId = child.node.id
     edges.push({
       id: `${nodeId}-${childId}`,
       source: nodeId,
       target: childId,
-      animated: child.job.status === "processing",
+      animated: child.node.status === "ready",
     })
     childOffset += buildNodes(
       child,
       nodes,
       edges,
-      highlightJobId,
+      highlightNodeId,
       depth + 1,
       childOffset
     )
@@ -93,27 +88,27 @@ function buildNodes(
 
 interface FlowGraphProps {
   /** The flow tree data to render. */
-  tree: FlowNode
-  /** Optional: highlight a specific job node (e.g. the currently viewed job). */
-  highlightJobId?: string
-  /** Called when a node is clicked. Receives the job ID. */
-  onNodeClick?: (jobId: string) => void
+  tree: FlowTree
+  /** Optional: highlight a specific node (e.g. the currently viewed flow node). */
+  highlightNodeId?: string
+  /** Called when a node is clicked. Receives the node ID. */
+  onNodeClick?: (nodeId: string) => void
   /** Height of the graph container. */
   height?: string
 }
 
 export function FlowGraph({
   tree,
-  highlightJobId,
+  highlightNodeId,
   onNodeClick,
   height = "500px",
 }: FlowGraphProps) {
   const { nodes, edges } = useMemo(() => {
     const n: Node[] = []
     const e: Edge[] = []
-    buildNodes(tree, n, e, highlightJobId)
+    buildNodes(tree, n, e, highlightNodeId)
     return { nodes: n, edges: e }
-  }, [tree, highlightJobId])
+  }, [tree, highlightNodeId])
 
   return (
     <div className="border-border w-full rounded-lg border" style={{ height }}>

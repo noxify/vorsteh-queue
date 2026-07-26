@@ -86,17 +86,6 @@ export class QueueJobEntity {
   @Column({ name: "cancellation_reason", type: "text", nullable: true })
   cancellationReason!: string | null
 
-  @Column({ name: "depends_on", type: "jsonb", nullable: true })
-  dependsOn!: unknown
-
-  @Column({
-    name: "on_dependency_failure",
-    type: "varchar",
-    length: 10,
-    nullable: true,
-  })
-  onDependencyFailure!: string | null
-
   @Column({ type: "jsonb", nullable: true })
   error!: unknown
 
@@ -109,20 +98,8 @@ export class QueueJobEntity {
   @Column({ type: "jsonb", nullable: true })
   signals!: unknown
 
-  @Column({ name: "parent_id", type: "varchar", nullable: true })
-  parentId!: string | null
-
-  @Column({ name: "flow_id", type: "varchar", nullable: true })
-  flowId!: string | null
-
-  @Column({ name: "children_count", type: "int", default: 0 })
-  childrenCount!: number
-
-  @Column({ name: "children_completed", type: "int", default: 0 })
-  childrenCompleted!: number
-
-  @Column({ name: "fail_parent_on_failure", type: "int", default: 0 })
-  failParentOnFailure!: number
+  @Column({ name: "flow_node_id", type: "uuid", nullable: true })
+  flowNodeId!: string | null
 
   @CreateDateColumn({
     name: "created_at",

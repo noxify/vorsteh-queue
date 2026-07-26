@@ -1,13 +1,15 @@
+import { FlowProducer } from "@vorsteh-queue/core"
+
 import {
+  createAdapter,
   dataQueue,
-  deploymentQueue,
   emailQueue,
   notificationQueue,
 } from "./queues"
 
 /**
  * Seeds the queues with diverse job types for TUI dashboard testing.
- * Covers: one-time, delayed, recurring (cron), dependencies, priorities,
+ * Covers: one-time, delayed, recurring (cron), priorities,
  * groups, unique keys, and flow trees.
  */
 export async function seedJobs(): Promise<void> {
@@ -93,17 +95,16 @@ export async function seedJobs(): Promise<void> {
     { cron: "*/45 * * * * *" }
   )
 
-  // Jobs with dependencies (pipeline)
+  // Jobs in a pipeline (report depends on import completing)
   const importJob = await dataQueue.add(
     "import-csv",
     { file: "products.csv", rows: 2000 },
     { priority: 1 }
   )
-  await dataQueue.add(
-    "generate-report",
-    { reportType: "import-summary", sourceJob: importJob.id },
-    { dependsOn: [importJob.id] }
-  )
+  await dataQueue.add("generate-report", {
+    reportType: "import-summary",
+    sourceJob: importJob.id,
+  })
 
   // ─── Notification Queue ──────────────────────────────────────────────────
 
@@ -158,16 +159,26 @@ export async function seedJobs(): Promise<void> {
 
   // ─── Flow: Onboarding Pipeline ───────────────────────────────────────────
 
-  await emailQueue.addFlow({
+  const emailFlowProducer = new FlowProducer(createAdapter())
+
+  await emailFlowProducer.add({
+    name: "send-digest",
+    queueName: "email",
+    payload: { to: "newuser@example.com", type: "onboarding-complete" },
     children: [
       {
         name: "send-welcome",
+        queueName: "email",
         payload: { to: "newuser@example.com", template: "onboarding-step1" },
       },
       {
+        name: "send-welcome",
+        queueName: "email",
+        payload: { to: "newuser@example.com", template: "onboarding-step2" },
         children: [
           {
             name: "push-notification",
+            queueName: "notifications",
             payload: {
               userId: "new-user",
               platform: "ios",
@@ -175,67 +186,74 @@ export async function seedJobs(): Promise<void> {
             },
           },
         ],
-        name: "send-welcome",
-        payload: { to: "newuser@example.com", template: "onboarding-step2" },
       },
     ],
-    name: "send-digest",
-    payload: { to: "newuser@example.com", type: "onboarding-complete" },
   })
 
   // ─── Flow: Deployment Pipeline (multi-step with children) ────────────────
 
-  await deploymentQueue.addFlow({
+  const deployFlowProducer = new FlowProducer(createAdapter())
+
+  await deployFlowProducer.add({
+    name: "deploy-nested",
+    queueName: "deployments",
+    payload: { environment: "production", version: "2.5.0" },
+    options: { timeout: 120_000 },
     children: [
       {
+        name: "run-integration-tests",
+        queueName: "deployments",
+        payload: { suite: "full", coverage: true },
+        failureStrategy: "fail-parent",
         children: [
           {
             name: "build",
+            queueName: "deployments",
             payload: { target: "linux-amd64" },
-            failParentOnFailure: true,
+            failureStrategy: "fail-parent",
           },
           {
             name: "build",
+            queueName: "deployments",
             payload: { target: "linux-arm64" },
-            failParentOnFailure: true,
+            failureStrategy: "fail-parent",
           },
         ],
-        failParentOnFailure: true,
-        name: "run-integration-tests",
-        payload: { suite: "full", coverage: true },
       },
       {
+        name: "provision-infra",
+        queueName: "deployments",
+        payload: { environment: "staging", region: "eu-west-1" },
         children: [
           {
             name: "notify-deploy",
+            queueName: "notifications",
             payload: { channel: "#infra", message: "Provisioning staging..." },
           },
         ],
-        name: "provision-infra",
-        payload: { environment: "staging", region: "eu-west-1" },
       },
     ],
-    name: "deploy-nested",
-    options: { timeout: 120_000 },
-    payload: { environment: "production", version: "2.5.0" },
   })
 
   // Second flow: hotfix deploy (simpler tree)
-  await deploymentQueue.addFlow({
+  await deployFlowProducer.add({
+    name: "deploy-simple",
+    queueName: "deployments",
+    payload: { environment: "production", version: "2.4.2-hotfix.1" },
+    options: { priority: 0 },
     children: [
       {
         name: "build",
+        queueName: "deployments",
         payload: { target: "linux-amd64" },
-        failParentOnFailure: true,
+        failureStrategy: "fail-parent",
       },
       {
         name: "run-integration-tests",
+        queueName: "deployments",
         payload: { suite: "smoke", coverage: false },
-        failParentOnFailure: true,
+        failureStrategy: "fail-parent",
       },
     ],
-    name: "deploy-simple",
-    options: { priority: 0 },
-    payload: { environment: "production", version: "2.4.2-hotfix.1" },
   })
 }

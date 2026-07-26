@@ -2,7 +2,12 @@
  * GraphQL transport — connects to a remote vorsteh-queue server.
  */
 
-import type { FlowNode, Job, QueueStats } from "@vorsteh-queue/core"
+import type {
+  FlowSummary,
+  FlowTree,
+  Job,
+  QueueStats,
+} from "@vorsteh-queue/core"
 
 import { CLIError } from "../errors"
 import type { Transport } from "./types"
@@ -96,7 +101,7 @@ export function createGraphQLTransport(
 
     async getJob(id: string) {
       const result = await query<{ job: Job | null }>(
-        `query($id: ID!, $queue: String) { job(id: $id, queue: $queue) { id name status priority attempts maxAttempts progress payload result createdAt processAt processedAt completedAt failedAt cancelledAt error { name message } cron repeatEvery repeatLimit repeatCount timeout groupKey uniqueKey cancellationReason dependsOn onDependencyFailure parentId flowId childrenCount childrenCompleted } }`,
+        `query($id: ID!, $queue: String) { job(id: $id, queue: $queue) { id name status priority attempts maxAttempts progress payload result createdAt processAt processedAt completedAt failedAt cancelledAt error { name message } cron repeatEvery repeatLimit repeatCount timeout groupKey uniqueKey cancellationReason flowNodeId } }`,
         { id, queue: queueName }
       )
       return result.job
@@ -104,7 +109,7 @@ export function createGraphQLTransport(
 
     async getJobs(options) {
       const result = await query<{ jobs: readonly Job[] }>(
-        `query($queue: String!, $where: JobWhereInput, $limit: Int, $offset: Int) { jobs(queue: $queue, where: $where, limit: $limit, offset: $offset) { id name status priority attempts maxAttempts progress createdAt processAt error { name message } cron groupKey flowId parentId childrenCount childrenCompleted } }`,
+        `query($queue: String!, $where: JobWhereInput, $limit: Int, $offset: Int) { jobs(queue: $queue, where: $where, limit: $limit, offset: $offset) { id name status priority attempts maxAttempts progress createdAt processAt error { name message } cron groupKey flowNodeId } }`,
         {
           limit: options?.limit,
           offset: options?.offset,
@@ -194,11 +199,11 @@ export function createGraphQLTransport(
     },
 
     async getFlowTree(flowId: string) {
-      const jobFields =
-        "id name status priority attempts maxAttempts progress flowId parentId childrenCount childrenCompleted"
-      const nodeFields = `job { ${jobFields} } children { job { ${jobFields} } children { job { ${jobFields} } children { job { ${jobFields} } children { job { ${jobFields} } } } } }`
-      const result = await query<{ flowTree: FlowNode | null }>(
-        `query($queue: String!, $flowId: String!) { flowTree(queue: $queue, flowId: $flowId) { ${nodeFields} } }`,
+      const nodeFields =
+        "id flowId parentNodeId jobId queueName name status failureStrategy childrenCount childrenCompleted payload result error { name message } createdAt completedAt"
+      const treeFields = `node { ${nodeFields} } children { node { ${nodeFields} } children { node { ${nodeFields} } children { node { ${nodeFields} } children { node { ${nodeFields} } } } } }`
+      const result = await query<{ flowTree: FlowTree | null }>(
+        `query($queue: String!, $flowId: String!) { flowTree(queue: $queue, flowId: $flowId) { ${treeFields} } }`,
         { flowId, queue: queueName }
       )
       return result.flowTree
@@ -206,9 +211,9 @@ export function createGraphQLTransport(
 
     async getFlows(options) {
       const result = await query<{
-        flows: readonly { flowId: string; rootJob: Job }[]
+        flows: readonly FlowSummary[]
       }>(
-        `query($queue: String!, $limit: Int, $offset: Int) { flows(queue: $queue, limit: $limit, offset: $offset) { flowId rootJob { id name status priority attempts maxAttempts progress createdAt processAt flowId parentId childrenCount childrenCompleted } } }`,
+        `query($queue: String!, $limit: Int, $offset: Int) { flows(queue: $queue, limit: $limit, offset: $offset) { flowId status rootNode { id flowId queueName name status failureStrategy childrenCount childrenCompleted createdAt completedAt } createdAt completedAt } }`,
         { limit: options?.limit, offset: options?.offset, queue: queueName }
       )
       return result.flows

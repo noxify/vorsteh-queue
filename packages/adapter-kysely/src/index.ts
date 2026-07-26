@@ -1,6 +1,13 @@
 export {
   PostgresQueueAdapter,
   PostgresQueueAdapter as PostgresKyselyQueueAdapter,
-} from "./postgres-adapter"
+} from "./adapter"
 
-export { createQueueJobsTable } from "./helpers"
+export { createQueueFlowsTable, createQueueJobsTable } from "./helpers"
+
+export type {
+  QueueFlowTableDefinition,
+  QueueFlow,
+  NewQueueFlow,
+  QueueFlowUpdate,
+} from "./types"

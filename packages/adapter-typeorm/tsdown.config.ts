@@ -5,5 +5,10 @@ export default defineConfig({
     skipNodeModulesBundle: true,
   },
   dts: true,
-  entry: ["src/index.ts", "src/postgres-adapter.ts", "src/entity.ts"],
+  entry: [
+    "src/index.ts",
+    "src/adapter.ts",
+    "src/queue-entity.ts",
+    "src/flow-entity.ts",
+  ],
 })

@@ -152,9 +152,11 @@ describe("SQL Security Hardening", () => {
         handlerNames: ["handler-a"],
       })
 
-      // Second call is the pending-jobs query (first is delayed promotion)
+      // Find the pending-jobs query (contains NOT IN for group exclusion)
       const { calls } = queryRawUnsafe.mock
-      const pendingCall = calls[1] as [string, ...unknown[]]
+      const pendingCall = calls.find((c) =>
+        (c as [string])[0].includes("NOT IN")
+      ) as [string, ...unknown[]]
       const [sql, ...params] = pendingCall
 
       // SQL must not contain interpolated group values

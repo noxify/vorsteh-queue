@@ -7,7 +7,7 @@ export default defineConfig({
   dts: true,
   entry: [
     "src/index.ts",
-    "src/postgres-adapter.ts",
+    "src/adapter.ts",
     "src/migrations/queue-table.ts",
     "src/types.ts",
   ],

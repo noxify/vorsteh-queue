@@ -33,17 +33,11 @@ export class QueueJobModel extends Model {
   declare repeatLimit: number | null
   declare repeatCount: number
   declare cancellationReason: string | null
-  declare dependsOn: unknown
-  declare onDependencyFailure: string | null
+  declare flowNodeId: string | null
   declare error: unknown
   declare result: unknown
   declare steps: unknown
   declare signals: unknown
-  declare parentId: string | null
-  declare flowId: string | null
-  declare childrenCount: number
-  declare childrenCompleted: number
-  declare failParentOnFailure: number
   declare createdAt: Date
   declare processAt: Date
   declare processedAt: Date | null
@@ -56,6 +50,7 @@ export class QueueJobModel extends Model {
  * Initialize the QueueJobModel with a Sequelize instance.
  *
  * @param sequelize - The Sequelize instance to register the model with
+ * @param tableName - The table name for the model
  * @returns The initialized QueueJobModel class
  *
  * @example
@@ -67,7 +62,10 @@ export class QueueJobModel extends Model {
  * initQueueJobModel(sequelize)
  * ```
  */
-export function initQueueJobModel(sequelize: Sequelize): typeof QueueJobModel {
+export function initQueueJobModel(
+  sequelize: Sequelize,
+  tableName = "queue_jobs"
+): typeof QueueJobModel {
   QueueJobModel.init(
     {
       id: {
@@ -132,48 +130,15 @@ export function initQueueJobModel(sequelize: Sequelize): typeof QueueJobModel {
         allowNull: true,
         field: "cancellation_reason",
       },
-      dependsOn: {
-        type: DataTypes.JSONB,
+      flowNodeId: {
+        type: DataTypes.UUID,
         allowNull: true,
-        field: "depends_on",
-      },
-      onDependencyFailure: {
-        type: DataTypes.STRING(10),
-        allowNull: true,
-        field: "on_dependency_failure",
+        field: "flow_node_id",
       },
       error: { type: DataTypes.JSONB, allowNull: true },
       result: { type: DataTypes.JSONB, allowNull: true },
       steps: { type: DataTypes.JSONB, allowNull: true },
       signals: { type: DataTypes.JSONB, allowNull: true },
-      parentId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        field: "parent_id",
-      },
-      flowId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        field: "flow_id",
-      },
-      childrenCount: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-        field: "children_count",
-      },
-      childrenCompleted: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-        field: "children_completed",
-      },
-      failParentOnFailure: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-        field: "fail_parent_on_failure",
-      },
       createdAt: {
         type: DataTypes.DATE(6),
         allowNull: false,
@@ -208,7 +173,7 @@ export function initQueueJobModel(sequelize: Sequelize): typeof QueueJobModel {
     },
     {
       sequelize,
-      tableName: "queue_jobs",
+      tableName,
       timestamps: false,
       indexes: [
         {

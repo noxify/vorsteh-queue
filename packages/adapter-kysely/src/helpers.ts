@@ -29,6 +29,31 @@ export function createQueueJobsTable(tableName: string, schemaName?: string) {
   }
 }
 
+/**
+ * Create migration helpers for the queue flows table.
+ *
+ * @param tableName - Table name to use
+ * @param schemaName - Optional PostgreSQL schema name
+ * @returns Object with up/down migration functions
+ *
+ * @example
+ * ```typescript
+ * const { up, down } = createQueueFlowsTable("queue_flows")
+ * await up(db)
+ * ```
+ */
+export function createQueueFlowsTable(tableName: string, schemaName?: string) {
+  return {
+    down: async (db: Kysely<unknown>) => {
+      const schema = schemaName ? db.schema.withSchema(schemaName) : db.schema
+      await schema.dropTable(tableName).execute()
+    },
+    up: async (db: Kysely<unknown>) => {
+      await generateFlowUp({ schemaName, tableName, db })
+    },
+  }
+}
+
 async function generateUp({
   schemaName,
   tableName,
@@ -64,8 +89,6 @@ async function generateUp({
     .addColumn("group_key", "varchar(255)")
     .addColumn("unique_key", "varchar(255)")
     .addColumn("cron", "varchar(255)")
-    .addColumn("depends_on", "jsonb")
-    .addColumn("on_dependency_failure", "varchar(10)")
     .addColumn("repeat_every", "int4")
     .addColumn("repeat_limit", "int4")
     .addColumn("repeat_count", "int4", (col) => col.defaultTo(0).notNull())
@@ -74,15 +97,7 @@ async function generateUp({
     .addColumn("result", "jsonb")
     .addColumn("steps", "jsonb")
     .addColumn("signals", "jsonb")
-    .addColumn("parent_id", "uuid")
-    .addColumn("flow_id", "uuid")
-    .addColumn("children_count", "int4", (col) => col.defaultTo(0).notNull())
-    .addColumn("children_completed", "int4", (col) =>
-      col.defaultTo(0).notNull()
-    )
-    .addColumn("fail_parent_on_failure", "int4", (col) =>
-      col.defaultTo(0).notNull()
-    )
+    .addColumn("flow_node_id", "uuid")
     .addColumn("created_at", "timestamptz", (col) =>
       col.defaultTo(sql`timezone('utc'::text, now())`).notNull()
     )
@@ -115,5 +130,76 @@ async function generateUp({
     .createIndex(`idx_${tableName}_stats`)
     .on(tableName)
     .columns(["queue_name", "status"])
+    .execute()
+}
+
+async function generateFlowUp({
+  schemaName,
+  tableName,
+  db,
+}: {
+  schemaName?: string
+  tableName: string
+  db: Kysely<unknown>
+}) {
+  if (schemaName) {
+    await db.schema.createSchema(schemaName).ifNotExists().execute()
+  }
+
+  const schema = schemaName ? db.schema.withSchema(schemaName) : db.schema
+
+  await schema
+    .createTable(tableName)
+    .addColumn("id", "uuid", (col) =>
+      col
+        .defaultTo(sql`gen_random_uuid()`)
+        .primaryKey()
+        .notNull()
+    )
+    .addColumn("flow_id", "uuid", (col) => col.notNull())
+    .addColumn("parent_node_id", "uuid")
+    .addColumn("job_id", "uuid")
+    .addColumn("queue_name", "varchar(255)", (col) => col.notNull())
+    .addColumn("name", "varchar(255)", (col) => col.notNull())
+    .addColumn("payload", "jsonb", (col) => col.notNull())
+    .addColumn("options", "jsonb")
+    .addColumn("status", "varchar(50)", (col) => col.notNull())
+    .addColumn("failure_strategy", "varchar(20)", (col) =>
+      col.defaultTo("default").notNull()
+    )
+    .addColumn("children_count", "int4", (col) => col.defaultTo(0).notNull())
+    .addColumn("children_completed", "int4", (col) =>
+      col.defaultTo(0).notNull()
+    )
+    .addColumn("result", "jsonb")
+    .addColumn("error", "jsonb")
+    .addColumn("created_at", "timestamptz", (col) =>
+      col.defaultTo(sql`timezone('utc'::text, now())`).notNull()
+    )
+    .addColumn("completed_at", "timestamptz")
+    .execute()
+
+  await schema
+    .createIndex(`idx_${tableName}_flow_id`)
+    .on(tableName)
+    .columns(["flow_id"])
+    .execute()
+
+  await schema
+    .createIndex(`idx_${tableName}_parent_node_id`)
+    .on(tableName)
+    .columns(["parent_node_id"])
+    .execute()
+
+  await schema
+    .createIndex(`idx_${tableName}_job_id`)
+    .on(tableName)
+    .columns(["job_id"])
+    .execute()
+
+  await schema
+    .createIndex(`idx_${tableName}_status`)
+    .on(tableName)
+    .columns(["flow_id", "status"])
     .execute()
 }

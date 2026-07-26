@@ -1,12 +1,18 @@
 import type { MikroORM } from "@mikro-orm/postgresql"
 import type {
   CancelJobsFilter,
+  FlowAdapter,
+  FlowListOptions,
   FlowNode,
+  FlowNodeUpdate,
+  FlowSummary,
+  FlowTree,
   GetNextJobOptions,
   Job,
   JobStatus,
   JobStatusUpdate,
   MikroormAdapterProps,
+  NewFlowNode,
   NewJob,
   PaginationOptions,
   QueueStats,
@@ -17,7 +23,8 @@ import { BaseQueueAdapter } from "@vorsteh-queue/core"
 import type { JobWhereInput } from "@vorsteh-queue/query-builder"
 import { normalizeWhere } from "@vorsteh-queue/query-builder"
 
-import { QueueJobEntity } from "./entity"
+import { QueueFlowEntity } from "./flow-entity"
+import { QueueJobEntity } from "./queue-entity"
 
 /** Allowed pattern for SQL identifiers: letters, digits, underscores only. */
 const VALID_IDENTIFIER_PATTERN = /^[a-zA-Z0-9_]+$/
@@ -70,17 +77,11 @@ interface RawQueueJob {
   group_key: string | null
   unique_key: string | null
   cron: string | null
-  depends_on: unknown
   repeat_every: number | null
   repeat_limit: number | null
   repeat_count: number
   cancellation_reason: string | null
-  on_dependency_failure: string | null
-  flow_id: string | null
-  parent_id: string | null
-  children_count: number
-  children_completed: number
-  fail_parent_on_failure: number
+  flow_node_id: string | null
   error: unknown
   result: unknown
   created_at: Date
@@ -111,9 +112,13 @@ interface RawQueueJob {
  * const adapter = new PostgresMikroormQueueAdapter(orm)
  * ```
  */
-export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
+export class PostgresMikroormQueueAdapter
+  extends BaseQueueAdapter
+  implements FlowAdapter
+{
   private orm: MikroORM
   private readonly fullTable: string
+  private readonly fullFlowTable: string
 
   constructor(orm: MikroORM, adapterConfig?: MikroormAdapterProps) {
     super()
@@ -121,8 +126,10 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
 
     const tableName = adapterConfig?.tableName ?? "queue_jobs"
     const schemaName = adapterConfig?.schemaName
+    const flowTableName = adapterConfig?.flowTableName ?? "queue_flows"
 
     assertValidIdentifier(tableName, "tableName")
+    assertValidIdentifier(flowTableName, "flowTableName")
     if (schemaName !== undefined) {
       assertValidIdentifier(schemaName, "schemaName")
     }
@@ -130,6 +137,10 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
     this.fullTable = schemaName
       ? `"${schemaName}"."${tableName}"`
       : `"${tableName}"`
+
+    this.fullFlowTable = schemaName
+      ? `"${schemaName}"."${flowTableName}"`
+      : `"${flowTableName}"`
   }
 
   async connect(): Promise<void> {
@@ -145,17 +156,11 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
     const entity = em.create(QueueJobEntity, {
       attempts: job.attempts,
       cancellationReason: null,
-      childrenCompleted: job.childrenCompleted ?? 0,
-      childrenCount: job.childrenCount ?? 0,
       cron: job.cron ?? null,
-      dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
-      failParentOnFailure: job.failParentOnFailure ? 1 : 0,
-      flowId: job.flowId ?? null,
+      flowNodeId: job.flowNodeId ?? null,
       groupKey: job.groupKey ?? null,
       maxAttempts: job.maxAttempts,
       name: job.name,
-      onDependencyFailure: job.onDependencyFailure ?? null,
-      parentId: job.parentId ?? null,
       payload: JSON.stringify(job.payload),
       priority: job.priority,
       processAt: job.processAt,
@@ -456,7 +461,6 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
       failed: 0,
       pending: 0,
       processing: 0,
-      "waiting-children": 0,
     }
     for (const stat of stats) {
       if (stat.status in result) {
@@ -544,30 +548,6 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
     return results.map((row) =>
       PostgresMikroormQueueAdapter.transformRawJob(row)
     )
-  }
-
-  async getFlows(
-    options?: PaginationOptions
-  ): Promise<readonly { flowId: string; rootJob: Job }[]> {
-    const em = this.orm.em.fork()
-    const limit = options?.limit ?? 20
-    const offset = options?.offset ?? 0
-
-    const rows = await em.find(
-      QueueJobEntity,
-      {
-        queueName: this.queueName,
-        flowId: { $ne: null },
-        parentId: null,
-      },
-      { orderBy: { createdAt: "DESC" }, limit, offset }
-    )
-
-    return rows.map((r) => {
-      const job = PostgresMikroormQueueAdapter.transformEntity(r)
-      // oxlint-disable-next-line typescript/no-non-null-assertion
-      return { flowId: job.flowId!, rootJob: job }
-    })
   }
 
   async clearJobs(status?: JobStatus): Promise<number> {
@@ -708,65 +688,290 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
     return true
   }
 
-  async getFlowTree(flowId: string): Promise<FlowNode | null> {
+  // ─── FlowAdapter Implementation ─────────────────────────────────────────────
+
+  async createFlow(
+    nodes: readonly NewFlowNode[],
+    leafJobs: readonly NewJob[]
+  ): Promise<readonly FlowNode[]> {
+    const em = this.orm.em.fork()
+    return em.transactional(async (txEm) => {
+      // Insert all flow nodes with pre-generated IDs
+      for (const n of nodes) {
+        const entity = txEm.create(QueueFlowEntity, {
+          id: n.id,
+          flowId: n.flowId,
+          parentNodeId: n.parentNodeId ?? null,
+          jobId: n.jobId ?? null,
+          queueName: n.queueName,
+          name: n.name,
+          payload: n.payload,
+          options: n.options ?? null,
+          status: n.status,
+          failureStrategy: n.failureStrategy,
+          childrenCount: n.childrenCount,
+          childrenCompleted: n.childrenCompleted,
+        })
+        txEm.persist(entity)
+      }
+      await txEm.flush()
+
+      // Insert leaf jobs and update flow nodes with job IDs
+      for (const job of leafJobs) {
+        const matchingNode = nodes.find((n) => n.id === job.flowNodeId)
+        const jobEntity = txEm.create(QueueJobEntity, {
+          attempts: job.attempts,
+          cancellationReason: null,
+          cron: job.cron ?? null,
+          flowNodeId: job.flowNodeId ?? null,
+          groupKey: job.groupKey ?? null,
+          maxAttempts: job.maxAttempts,
+          name: job.name,
+          payload: JSON.stringify(job.payload),
+          priority: job.priority,
+          processAt: job.processAt,
+          progress: job.progress ?? 0,
+          queueName: matchingNode?.queueName ?? this.queueName,
+          repeatCount: job.repeatCount ?? 0,
+          repeatEvery: job.repeatEvery ?? null,
+          repeatLimit: job.repeatLimit ?? null,
+          status: job.status,
+          timeout: typeof job.timeout === "number" ? job.timeout : null,
+          uniqueKey: job.uniqueKey ?? null,
+        })
+        txEm.persist(jobEntity)
+        await txEm.flush()
+
+        // Update the flow node with the created job ID
+        if (job.flowNodeId) {
+          await txEm.nativeUpdate(
+            QueueFlowEntity,
+            { id: job.flowNodeId },
+            { jobId: jobEntity.id }
+          )
+        }
+      }
+
+      // Re-fetch all nodes to get updated jobId values
+      // oxlint-disable-next-line unicorn/no-array-method-this-argument
+      const finalNodes = await txEm.find(QueueFlowEntity, {
+        id: { $in: nodes.map((n) => n.id) },
+      })
+      return finalNodes.map((e) =>
+        PostgresMikroormQueueAdapter.transformFlowEntity(e)
+      )
+    })
+  }
+
+  async getFlowNode(nodeId: string): Promise<FlowNode | null> {
+    const em = this.orm.em.fork()
+    const entity = await em.findOne(QueueFlowEntity, { id: nodeId })
+    return entity
+      ? PostgresMikroormQueueAdapter.transformFlowEntity(entity)
+      : null
+  }
+
+  async getFlowTree(flowId: string): Promise<FlowTree | null> {
     const em = this.orm.em.fork()
     // oxlint-disable-next-line unicorn/no-array-method-this-argument
-    const jobs = await em.find(QueueJobEntity, {
-      flowId,
-      queueName: this.queueName,
+    const rows = await em.find(QueueFlowEntity, { flowId })
+    if (rows.length === 0) {
+      return null
+    }
+
+    const allNodes = rows.map((r) =>
+      PostgresMikroormQueueAdapter.transformFlowEntity(r)
+    )
+    const rootNode = allNodes.find((n) => !n.parentNodeId)
+    if (!rootNode) {
+      return null
+    }
+
+    const buildTree = (node: FlowNode): FlowTree => {
+      const children = allNodes
+        .filter((n) => n.parentNodeId === node.id)
+        .map(buildTree)
+      return { node, children }
+    }
+
+    return buildTree(rootNode)
+  }
+
+  async getFlows(options?: FlowListOptions): Promise<readonly FlowSummary[]> {
+    const em = this.orm.em.fork()
+    const limit = options?.limit ?? 20
+    const offset = options?.offset ?? 0
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: Record<string, any> = { parentNodeId: null }
+    if (options?.status) {
+      where.status = options.status
+    }
+
+    const rows = await em.find(QueueFlowEntity, where, {
+      orderBy: { createdAt: "DESC" },
+      limit,
+      offset,
     })
-    if (jobs.length === 0) {
-      return null
-    }
 
-    const allJobs = jobs.map((j) =>
-      PostgresMikroormQueueAdapter.transformEntity(j)
-    )
-    const root = allJobs.find((j) => !j.parentId)
-    if (!root) {
-      return null
-    }
-
-    const buildNode = (job: Job): FlowNode => {
-      const children = allJobs.filter((j) => j.parentId === job.id)
-      return { children: children.map((c) => buildNode(c)), job }
-    }
-    return buildNode(root)
+    return rows.map((r) => {
+      const node = PostgresMikroormQueueAdapter.transformFlowEntity(r)
+      return {
+        flowId: node.flowId,
+        rootNode: node,
+        status: node.status,
+        createdAt: node.createdAt,
+        completedAt: node.completedAt,
+      }
+    })
   }
 
-  async deleteFlow(flowId: string): Promise<number> {
-    const connection = this.orm.em.getConnection()
-    const result = await connection.execute<{ id: string }[]>(
-      `DELETE FROM ${this.fullTable} WHERE queue_name = ? AND flow_id = ? RETURNING id`,
-      [this.queueName, flowId]
-    )
-    return result.length
+  async updateFlowNode(nodeId: string, update: FlowNodeUpdate): Promise<void> {
+    const em = this.orm.em.fork()
+    const updates: Record<string, unknown> = {}
+
+    if (update.status !== undefined) {
+      updates.status = update.status
+    }
+    if (update.jobId !== undefined) {
+      updates.jobId = update.jobId
+    }
+    if (update.result !== undefined) {
+      updates.result = update.result
+    }
+    if (update.error !== undefined) {
+      updates.error = update.error
+    }
+    if (update.completedAt !== undefined) {
+      updates.completedAt = update.completedAt
+    }
+
+    await em.nativeUpdate(QueueFlowEntity, { id: nodeId }, updates)
   }
 
-  async incrementChildrenCompleted(
-    parentId: string
+  async incrementNodeChildrenCompleted(
+    nodeId: string
   ): Promise<{ completed: number; total: number }> {
     const connection = this.orm.em.getConnection()
     await connection.execute(
-      `UPDATE ${this.fullTable} SET children_completed = children_completed + 1 WHERE id = ?`,
-      [parentId]
+      `UPDATE ${this.fullFlowTable} SET children_completed = children_completed + 1 WHERE id = ?`,
+      [nodeId]
     )
     const em = this.orm.em.fork()
-    const updated = await em.findOne(QueueJobEntity, { id: parentId })
+    const updated = await em.findOne(QueueFlowEntity, { id: nodeId })
     return {
       completed: updated?.childrenCompleted ?? 0,
       total: updated?.childrenCount ?? 0,
     }
   }
 
-  async getChildrenJobs(parentId: string): Promise<readonly Job[]> {
+  async getNodeChildren(nodeId: string): Promise<readonly FlowNode[]> {
     const em = this.orm.em.fork()
     // oxlint-disable-next-line unicorn/no-array-method-this-argument
-    const jobs = await em.find(QueueJobEntity, {
-      parentId,
-      queueName: this.queueName,
+    const rows = await em.find(QueueFlowEntity, { parentNodeId: nodeId })
+    return rows.map((r) => PostgresMikroormQueueAdapter.transformFlowEntity(r))
+  }
+
+  async getChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    const em = this.orm.em.fork()
+    // oxlint-disable-next-line unicorn/no-array-method-this-argument
+    const rows = await em.find(QueueFlowEntity, {
+      parentNodeId: nodeId,
+      status: "completed",
     })
-    return jobs.map((j) => PostgresMikroormQueueAdapter.transformEntity(j))
+
+    const results = new Map<string, unknown>()
+    for (const row of rows) {
+      // oxlint-disable-next-line typescript/no-non-null-assertion
+      results.set(row.id!, row.result)
+    }
+    return results
+  }
+
+  async getFailedChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    const em = this.orm.em.fork()
+    // oxlint-disable-next-line unicorn/no-array-method-this-argument
+    const rows = await em.find(QueueFlowEntity, {
+      parentNodeId: nodeId,
+      status: "failed",
+    })
+
+    const results = new Map<string, unknown>()
+    for (const row of rows) {
+      // oxlint-disable-next-line typescript/no-non-null-assertion
+      results.set(row.id!, row.error)
+    }
+    return results
+  }
+
+  async cancelUnprocessedChildren(nodeId: string): Promise<number> {
+    const em = this.orm.em.fork()
+    // oxlint-disable-next-line unicorn/no-array-method-this-argument
+    const children = await em.find(QueueFlowEntity, { parentNodeId: nodeId })
+
+    let cancelled = 0
+    const now = new Date()
+
+    for (const child of children) {
+      if (child.status === "waiting") {
+        await em.nativeUpdate(
+          QueueFlowEntity,
+          { id: child.id },
+          { status: "cancelled", completedAt: now }
+        )
+        cancelled++
+        cancelled += await this.cancelUnprocessedChildren(child.id as string)
+      } else if (child.status === "ready" && child.jobId) {
+        // Cancel the corresponding job if still pending/delayed
+        const jobEm = this.orm.em.fork()
+        const updated = await jobEm.nativeUpdate(
+          QueueJobEntity,
+          { id: child.jobId, status: { $in: ["pending", "delayed"] } },
+          { cancelledAt: now, status: "cancelled" }
+        )
+
+        if (updated > 0) {
+          await em.nativeUpdate(
+            QueueFlowEntity,
+            { id: child.id },
+            { status: "cancelled", completedAt: now }
+          )
+          cancelled++
+        }
+        cancelled += await this.cancelUnprocessedChildren(child.id as string)
+      }
+    }
+
+    return cancelled
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    const em = this.orm.em.fork()
+    return em.nativeDelete(QueueFlowEntity, { flowId })
+  }
+
+  async cleanupFlows(keepCount: number): Promise<number> {
+    const em = this.orm.em.fork()
+
+    // Find root nodes of completed flows, ordered by creation time
+    const rootNodes = await em.find(
+      QueueFlowEntity,
+      { parentNodeId: null, status: "completed" },
+      { orderBy: { createdAt: "DESC" }, offset: keepCount, fields: ["flowId"] }
+    )
+
+    if (rootNodes.length === 0) {
+      return 0
+    }
+
+    const flowIdsToDelete = rootNodes.map((r) => r.flowId)
+    return em.nativeDelete(QueueFlowEntity, {
+      flowId: { $in: flowIdsToDelete },
+    })
   }
 
   // ─── Private helpers ─────────────────────────────────────────────────────────
@@ -961,29 +1166,18 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
       attempts: entity.attempts,
       cancellationReason: entity.cancellationReason ?? undefined,
       cancelledAt: entity.cancelledAt ?? undefined,
-      childrenCompleted: entity.childrenCompleted ?? 0,
-      childrenCount: entity.childrenCount ?? 0,
       completedAt: entity.completedAt ?? undefined,
       // oxlint-disable-next-line typescript/no-non-null-assertion
       createdAt: entity.createdAt!,
       cron: entity.cron ?? undefined,
-      dependsOn: entity.dependsOn
-        ? ((typeof entity.dependsOn === "string"
-            ? JSON.parse(entity.dependsOn)
-            : entity.dependsOn) as string[])
-        : undefined,
       error: entity.error as SerializedError | undefined,
-      failParentOnFailure: entity.failParentOnFailure === 1 || undefined,
       failedAt: entity.failedAt ?? undefined,
-      flowId: entity.flowId ?? undefined,
+      flowNodeId: entity.flowNodeId ?? undefined,
       groupKey: entity.groupKey ?? undefined,
       // oxlint-disable-next-line typescript/no-non-null-assertion
       id: entity.id!,
       maxAttempts: entity.maxAttempts,
       name: entity.name,
-      onDependencyFailure:
-        (entity.onDependencyFailure as "fail" | "cancel") ?? undefined,
-      parentId: entity.parentId ?? undefined,
       payload:
         typeof entity.payload === "string"
           ? JSON.parse(entity.payload)
@@ -1008,27 +1202,16 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
       attempts: job.attempts,
       cancellationReason: job.cancellation_reason ?? undefined,
       cancelledAt: job.cancelled_at ?? undefined,
-      childrenCompleted: job.children_completed ?? 0,
-      childrenCount: job.children_count ?? 0,
       completedAt: job.completed_at ?? undefined,
       createdAt: job.created_at,
       cron: job.cron ?? undefined,
-      dependsOn: job.depends_on
-        ? ((typeof job.depends_on === "string"
-            ? JSON.parse(job.depends_on)
-            : job.depends_on) as string[])
-        : undefined,
       error: job.error as SerializedError | undefined,
-      failParentOnFailure: job.fail_parent_on_failure === 1 || undefined,
       failedAt: job.failed_at ?? undefined,
-      flowId: job.flow_id ?? undefined,
+      flowNodeId: job.flow_node_id ?? undefined,
       groupKey: job.group_key ?? undefined,
       id: job.id,
       maxAttempts: job.max_attempts,
       name: job.name,
-      onDependencyFailure:
-        (job.on_dependency_failure as "fail" | "cancel") ?? undefined,
-      parentId: job.parent_id ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,
@@ -1042,6 +1225,28 @@ export class PostgresMikroormQueueAdapter extends BaseQueueAdapter {
       status: job.status as JobStatus,
       timeout: job.timeout ?? undefined,
       uniqueKey: job.unique_key ?? undefined,
+    }
+  }
+
+  private static transformFlowEntity(entity: QueueFlowEntity): FlowNode {
+    return {
+      id: entity.id,
+      flowId: entity.flowId,
+      parentNodeId: entity.parentNodeId ?? undefined,
+      jobId: entity.jobId ?? undefined,
+      queueName: entity.queueName,
+      name: entity.name,
+      payload: entity.payload,
+      options: entity.options as FlowNode["options"],
+      status: entity.status as FlowNode["status"],
+      failureStrategy: entity.failureStrategy as FlowNode["failureStrategy"],
+      childrenCount: entity.childrenCount,
+      childrenCompleted: entity.childrenCompleted,
+      result: entity.result ?? undefined,
+      error: entity.error as SerializedError | undefined,
+      // oxlint-disable-next-line typescript/no-non-null-assertion
+      createdAt: entity.createdAt!,
+      completedAt: entity.completedAt ?? undefined,
     }
   }
 }

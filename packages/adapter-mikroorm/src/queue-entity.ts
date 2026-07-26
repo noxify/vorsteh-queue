@@ -35,17 +35,11 @@ export class QueueJobEntity {
   repeatLimit!: number | null
   repeatCount!: number
   cancellationReason!: string | null
-  dependsOn!: unknown
-  onDependencyFailure!: string | null
   error!: unknown
   result!: unknown
   steps!: unknown
   signals!: unknown
-  parentId!: string | null
-  flowId!: string | null
-  childrenCount!: number
-  childrenCompleted!: number
-  failParentOnFailure!: number
+  flowNodeId!: string | null
   createdAt?: Date
   processAt!: Date
   processedAt!: Date | null
@@ -84,37 +78,14 @@ export const QueueJobSchema = new EntitySchema<QueueJobEntity>({
       nullable: true,
       fieldName: "cancellation_reason",
     },
-    dependsOn: {
-      type: "json",
-      columnType: "jsonb",
-      nullable: true,
-      fieldName: "depends_on",
-    },
-    onDependencyFailure: {
-      type: "string",
-      nullable: true,
-      fieldName: "on_dependency_failure",
-    },
     error: { type: "json", columnType: "jsonb", nullable: true },
     result: { type: "json", columnType: "jsonb", nullable: true },
     steps: { type: "json", columnType: "jsonb", nullable: true },
     signals: { type: "json", columnType: "jsonb", nullable: true },
-    parentId: { type: "string", nullable: true, fieldName: "parent_id" },
-    flowId: { type: "string", nullable: true, fieldName: "flow_id" },
-    childrenCount: {
-      type: "integer",
-      default: 0,
-      fieldName: "children_count",
-    },
-    childrenCompleted: {
-      type: "integer",
-      default: 0,
-      fieldName: "children_completed",
-    },
-    failParentOnFailure: {
-      type: "integer",
-      default: 0,
-      fieldName: "fail_parent_on_failure",
+    flowNodeId: {
+      type: "string",
+      nullable: true,
+      fieldName: "flow_node_id",
     },
     createdAt: {
       type: "Date",

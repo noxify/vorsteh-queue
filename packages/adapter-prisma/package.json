@@ -38,9 +38,9 @@
       "default": "./dist/index.mjs"
     },
     "./postgres-adapter": {
-      "types": "./dist/postgres-adapter.d.mts",
-      "source": "./src/postgres-adapter.ts",
-      "default": "./dist/postgres-adapter.mjs"
+      "types": "./dist/adapter.d.mts",
+      "source": "./src/adapter.ts",
+      "default": "./dist/adapter.mjs"
     }
   },
   "scripts": {

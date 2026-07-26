@@ -18,6 +18,7 @@ The Sequelize adapter provides PostgreSQL support using Sequelize, one of the mo
 import { Sequelize } from "sequelize"
 import {
   PostgresSequelizeQueueAdapter,
+  initQueueFlowModel,
   initQueueJobModel,
 } from "@vorsteh-queue/adapter-sequelize"
 import { Queue, Worker } from "@vorsteh-queue/core"
@@ -28,6 +29,7 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
 })
 
 initQueueJobModel(sequelize)
+initQueueFlowModel(sequelize)
 
 const adapter = new PostgresSequelizeQueueAdapter(sequelize)
 

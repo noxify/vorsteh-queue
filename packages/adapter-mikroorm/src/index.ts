@@ -1,6 +1,7 @@
 export {
   PostgresMikroormQueueAdapter,
   PostgresMikroormQueueAdapter as PostgresQueueAdapter,
-} from "./postgres-adapter"
+} from "./adapter"
 
-export { QueueJobEntity, QueueJobSchema } from "./entity"
+export { QueueJobEntity, QueueJobSchema } from "./queue-entity"
+export { QueueFlowEntity, QueueFlowSchema } from "./flow-entity"

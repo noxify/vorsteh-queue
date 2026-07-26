@@ -81,7 +81,7 @@ const count = await queue.cancelAll({ name: "send-email", status: "pending" })
 
 ```typescript
 const stats = await queue.getStats()
-// { pending, delayed, processing, completed, failed, cancelled, dead, "waiting-children" }
+// { pending, delayed, processing, completed, failed, cancelled, dead }
 
 // Clear jobs
 await queue.clear() // Clear all jobs

@@ -1,6 +1,7 @@
 export {
   PostgresSequelizeQueueAdapter,
   PostgresSequelizeQueueAdapter as PostgresQueueAdapter,
-} from "./postgres-adapter"
+} from "./adapter"
 
-export { QueueJobModel, initQueueJobModel } from "./model"
+export { QueueJobModel, initQueueJobModel } from "./queue-model"
+export { QueueFlowModel, initQueueFlowModel } from "./flow-model"

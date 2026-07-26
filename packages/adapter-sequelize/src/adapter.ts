@@ -1,10 +1,16 @@
 import type {
   CancelJobsFilter,
+  FlowAdapter,
+  FlowListOptions,
   FlowNode,
+  FlowNodeUpdate,
+  FlowSummary,
+  FlowTree,
   GetNextJobOptions,
   Job,
   JobStatus,
   JobStatusUpdate,
+  NewFlowNode,
   NewJob,
   PaginationOptions,
   QueueStats,
@@ -18,7 +24,8 @@ import { normalizeWhere } from "@vorsteh-queue/query-builder"
 import type { Sequelize } from "sequelize"
 import { QueryTypes } from "sequelize"
 
-import { QueueJobModel, initQueueJobModel } from "./model"
+import { QueueFlowModel, initQueueFlowModel } from "./flow-model"
+import { QueueJobModel, initQueueJobModel } from "./queue-model"
 
 /** Allowed pattern for SQL identifiers: letters, digits, underscores only. */
 const VALID_IDENTIFIER_PATTERN = /^[a-zA-Z0-9_]+$/
@@ -71,17 +78,11 @@ interface RawQueueJob {
   group_key: string | null
   unique_key: string | null
   cron: string | null
-  depends_on: unknown
   repeat_every: number | null
   repeat_limit: number | null
   repeat_count: number
   cancellation_reason: string | null
-  on_dependency_failure: string | null
-  flow_id: string | null
-  parent_id: string | null
-  children_count: number
-  children_completed: number
-  fail_parent_on_failure: number
+  flow_node_id: string | null
   error: unknown
   result: unknown
   created_at: Date
@@ -110,9 +111,13 @@ interface RawQueueJob {
  * const adapter = new PostgresSequelizeQueueAdapter(sequelize)
  * ```
  */
-export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
+export class PostgresSequelizeQueueAdapter
+  extends BaseQueueAdapter
+  implements FlowAdapter
+{
   private sequelize: Sequelize
   private readonly fullTable: string
+  private readonly fullFlowTable: string
 
   constructor(sequelize: Sequelize, adapterConfig?: SequelizeAdapterProps) {
     super()
@@ -120,8 +125,10 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
 
     const tableName = adapterConfig?.tableName ?? "queue_jobs"
     const schemaName = adapterConfig?.schemaName
+    const flowTableName = adapterConfig?.flowTableName ?? "queue_flows"
 
     assertValidIdentifier(tableName, "tableName")
+    assertValidIdentifier(flowTableName, "flowTableName")
     if (schemaName !== undefined) {
       assertValidIdentifier(schemaName, "schemaName")
     }
@@ -130,8 +137,13 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
       ? `"${schemaName}"."${tableName}"`
       : `"${tableName}"`
 
-    // Initialize the model with the sequelize instance
-    initQueueJobModel(sequelize)
+    this.fullFlowTable = schemaName
+      ? `"${schemaName}"."${flowTableName}"`
+      : `"${flowTableName}"`
+
+    // Initialize models with the sequelize instance
+    initQueueJobModel(sequelize, tableName)
+    initQueueFlowModel(sequelize, flowTableName)
   }
 
   async connect(): Promise<void> {
@@ -146,17 +158,11 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
     const entity = await QueueJobModel.create({
       attempts: job.attempts,
       cancellationReason: null,
-      childrenCompleted: job.childrenCompleted ?? 0,
-      childrenCount: job.childrenCount ?? 0,
       cron: job.cron ?? null,
-      dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
-      failParentOnFailure: job.failParentOnFailure ? 1 : 0,
-      flowId: job.flowId ?? null,
+      flowNodeId: job.flowNodeId ?? null,
       groupKey: job.groupKey ?? null,
       maxAttempts: job.maxAttempts,
       name: job.name,
-      onDependencyFailure: job.onDependencyFailure ?? null,
-      parentId: job.parentId ?? null,
       payload: JSON.stringify(job.payload),
       priority: job.priority,
       processAt: job.processAt,
@@ -449,7 +455,6 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
       failed: 0,
       pending: 0,
       processing: 0,
-      "waiting-children": 0,
     }
     for (const stat of stats) {
       if (stat.status in result) {
@@ -532,25 +537,6 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
     return results.map((row) =>
       PostgresSequelizeQueueAdapter.transformRawJob(row)
     )
-  }
-
-  async getFlows(
-    options?: PaginationOptions
-  ): Promise<readonly { flowId: string; rootJob: Job }[]> {
-    const limit = options?.limit ?? 20
-    const offset = options?.offset ?? 0
-
-    const params: unknown[] = [this.queueName]
-    const results = await this.sequelize.query<RawQueueJob>(
-      `SELECT * FROM ${this.fullTable} WHERE queue_name = $1 AND flow_id IS NOT NULL AND parent_id IS NULL ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-      { bind: [...params, limit, offset], type: QueryTypes.SELECT }
-    )
-
-    return results.map((r) => {
-      const job = PostgresSequelizeQueueAdapter.transformRawJob(r)
-      // oxlint-disable-next-line typescript/no-non-null-assertion
-      return { flowId: job.flowId!, rootJob: job }
-    })
   }
 
   async clearJobs(status?: JobStatus): Promise<number> {
@@ -674,56 +660,287 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
     return true
   }
 
-  async getFlowTree(flowId: string): Promise<FlowNode | null> {
-    const jobs = await QueueJobModel.findAll({
-      where: { flowId, queueName: this.queueName },
+  // ─── FlowAdapter Implementation ──────────────────────────────────────────
+
+  async createFlow(
+    nodes: readonly NewFlowNode[],
+    leafJobs: readonly NewJob[]
+  ): Promise<readonly FlowNode[]> {
+    return this.sequelize.transaction(async (t) => {
+      // Insert all flow nodes
+      for (const node of nodes) {
+        await QueueFlowModel.create(
+          {
+            id: node.id,
+            flowId: node.flowId,
+            parentNodeId: node.parentNodeId ?? null,
+            jobId: node.jobId ?? null,
+            queueName: node.queueName,
+            name: node.name,
+            payload: node.payload,
+            options: node.options ?? null,
+            status: node.status,
+            failureStrategy: node.failureStrategy,
+            childrenCount: node.childrenCount,
+            childrenCompleted: node.childrenCompleted,
+          },
+          { transaction: t }
+        )
+      }
+
+      // Insert leaf jobs and update flow nodes with job IDs
+      for (const job of leafJobs) {
+        const matchingNode = nodes.find((n) => n.id === job.flowNodeId)
+        const created = await QueueJobModel.create(
+          {
+            attempts: job.attempts,
+            cancellationReason: null,
+            cron: job.cron ?? null,
+            flowNodeId: job.flowNodeId ?? null,
+            groupKey: job.groupKey ?? null,
+            maxAttempts: job.maxAttempts,
+            name: job.name,
+            payload: JSON.stringify(job.payload),
+            priority: job.priority,
+            processAt: job.processAt,
+            progress: job.progress ?? 0,
+            queueName: matchingNode?.queueName ?? this.queueName,
+            repeatCount: job.repeatCount ?? 0,
+            repeatEvery: job.repeatEvery ?? null,
+            repeatLimit: job.repeatLimit ?? null,
+            status: job.status,
+            timeout: typeof job.timeout === "number" ? job.timeout : null,
+            uniqueKey: job.uniqueKey ?? null,
+          },
+          { transaction: t }
+        )
+
+        // Update the flow node with the created job ID
+        if (job.flowNodeId) {
+          await QueueFlowModel.update(
+            { jobId: created.id },
+            { where: { id: job.flowNodeId }, transaction: t }
+          )
+        }
+      }
+
+      // Re-fetch all nodes to get updated jobId values
+      const finalNodes = await QueueFlowModel.findAll({
+        where: { id: nodes.map((n) => n.id) },
+        transaction: t,
+      })
+      return finalNodes.map((e) =>
+        PostgresSequelizeQueueAdapter.transformFlowModel(e)
+      )
     })
-    if (jobs.length === 0) {
+  }
+
+  // oxlint-disable-next-line eslint/class-methods-use-this
+  async getFlowNode(nodeId: string): Promise<FlowNode | null> {
+    const entity = await QueueFlowModel.findOne({ where: { id: nodeId } })
+    return entity
+      ? PostgresSequelizeQueueAdapter.transformFlowModel(entity)
+      : null
+  }
+
+  // oxlint-disable-next-line eslint/class-methods-use-this
+  async getFlowTree(flowId: string): Promise<FlowTree | null> {
+    const rows = await QueueFlowModel.findAll({ where: { flowId } })
+    if (rows.length === 0) {
       return null
     }
 
-    const allJobs = jobs.map((j) =>
-      PostgresSequelizeQueueAdapter.transformModel(j)
+    const allNodes = rows.map((r) =>
+      PostgresSequelizeQueueAdapter.transformFlowModel(r)
     )
-    const root = allJobs.find((j) => !j.parentId)
-    if (!root) {
+    const rootNode = allNodes.find((n) => !n.parentNodeId)
+    if (!rootNode) {
       return null
     }
 
-    const buildNode = (job: Job): FlowNode => {
-      const children = allJobs.filter((j) => j.parentId === job.id)
-      return { children: children.map((c) => buildNode(c)), job }
+    const buildTree = (node: FlowNode): FlowTree => {
+      const children = allNodes
+        .filter((n) => n.parentNodeId === node.id)
+        .map(buildTree)
+      return { node, children }
     }
-    return buildNode(root)
+
+    return buildTree(rootNode)
   }
 
-  async deleteFlow(flowId: string): Promise<number> {
-    const result = await this.sequelize.query(
-      `DELETE FROM ${this.fullTable} WHERE queue_name = $1 AND flow_id = $2 RETURNING id`,
-      { bind: [this.queueName, flowId], type: QueryTypes.SELECT }
-    )
-    return result.length
+  // oxlint-disable-next-line eslint/class-methods-use-this
+  async getFlows(options?: FlowListOptions): Promise<readonly FlowSummary[]> {
+    const limit = options?.limit ?? 20
+    const offset = options?.offset ?? 0
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: Record<string, any> = { parentNodeId: null }
+    if (options?.status) {
+      where.status = options.status
+    }
+
+    const rows = await QueueFlowModel.findAll({
+      where,
+      order: [["created_at", "DESC"]],
+      limit,
+      offset,
+    })
+
+    return rows.map((r) => {
+      const node = PostgresSequelizeQueueAdapter.transformFlowModel(r)
+      return {
+        flowId: node.flowId,
+        rootNode: node,
+        status: node.status,
+        createdAt: node.createdAt,
+        completedAt: node.completedAt,
+      }
+    })
   }
 
-  async incrementChildrenCompleted(
-    parentId: string
+  // oxlint-disable-next-line eslint/class-methods-use-this
+  async updateFlowNode(nodeId: string, update: FlowNodeUpdate): Promise<void> {
+    const updates: Record<string, unknown> = {}
+
+    if (update.status !== undefined) {
+      updates.status = update.status
+    }
+    if (update.jobId !== undefined) {
+      updates.jobId = update.jobId
+    }
+    if (update.result !== undefined) {
+      updates.result = update.result
+    }
+    if (update.error !== undefined) {
+      updates.error = update.error
+    }
+    if (update.completedAt !== undefined) {
+      updates.completedAt = update.completedAt
+    }
+
+    await QueueFlowModel.update(updates, { where: { id: nodeId } })
+  }
+
+  async incrementNodeChildrenCompleted(
+    nodeId: string
   ): Promise<{ completed: number; total: number }> {
     await this.sequelize.query(
-      `UPDATE ${this.fullTable} SET children_completed = children_completed + 1 WHERE id = $1`,
-      { bind: [parentId], type: QueryTypes.UPDATE }
+      `UPDATE ${this.fullFlowTable} SET children_completed = children_completed + 1 WHERE id = $1`,
+      { bind: [nodeId], type: QueryTypes.UPDATE }
     )
-    const updated = await QueueJobModel.findOne({ where: { id: parentId } })
+    const updated = await QueueFlowModel.findOne({ where: { id: nodeId } })
     return {
       completed: updated?.childrenCompleted ?? 0,
       total: updated?.childrenCount ?? 0,
     }
   }
 
-  async getChildrenJobs(parentId: string): Promise<readonly Job[]> {
-    const jobs = await QueueJobModel.findAll({
-      where: { parentId, queueName: this.queueName },
+  // oxlint-disable-next-line eslint/class-methods-use-this
+  async getNodeChildren(nodeId: string): Promise<readonly FlowNode[]> {
+    const rows = await QueueFlowModel.findAll({
+      where: { parentNodeId: nodeId },
     })
-    return jobs.map((j) => PostgresSequelizeQueueAdapter.transformModel(j))
+    return rows.map((r) => PostgresSequelizeQueueAdapter.transformFlowModel(r))
+  }
+
+  // oxlint-disable-next-line eslint/class-methods-use-this
+  async getChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    const rows = await QueueFlowModel.findAll({
+      where: { parentNodeId: nodeId, status: "completed" },
+    })
+
+    const results = new Map<string, unknown>()
+    for (const row of rows) {
+      results.set(row.id, row.result)
+    }
+    return results
+  }
+
+  // oxlint-disable-next-line eslint/class-methods-use-this
+  async getFailedChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    const rows = await QueueFlowModel.findAll({
+      where: { parentNodeId: nodeId, status: "failed" },
+    })
+
+    const results = new Map<string, unknown>()
+    for (const row of rows) {
+      results.set(row.id, row.error)
+    }
+    return results
+  }
+
+  async cancelUnprocessedChildren(nodeId: string): Promise<number> {
+    const children = await QueueFlowModel.findAll({
+      where: { parentNodeId: nodeId },
+    })
+
+    let cancelled = 0
+    const now = new Date()
+
+    for (const child of children) {
+      if (child.status === "waiting") {
+        await QueueFlowModel.update(
+          { status: "cancelled", completedAt: now },
+          { where: { id: child.id } }
+        )
+        cancelled++
+        cancelled += await this.cancelUnprocessedChildren(child.id)
+      } else if (child.status === "ready" && child.jobId) {
+        // Cancel the corresponding job if still pending/delayed
+        const [, affected] = await this.sequelize.query(
+          `UPDATE ${this.fullTable} SET status = 'cancelled', cancelled_at = $2 WHERE id = $1 AND status IN ('pending', 'delayed')`,
+          { bind: [child.jobId, now], type: QueryTypes.UPDATE }
+        )
+
+        if ((affected ?? 0) > 0) {
+          await QueueFlowModel.update(
+            { status: "cancelled", completedAt: now },
+            { where: { id: child.id } }
+          )
+          cancelled++
+        }
+        cancelled += await this.cancelUnprocessedChildren(child.id)
+      }
+    }
+
+    return cancelled
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    const result = await this.sequelize.query(
+      `DELETE FROM ${this.fullFlowTable} WHERE flow_id = $1 RETURNING id`,
+      { bind: [flowId], type: QueryTypes.SELECT }
+    )
+    return result.length
+  }
+
+  async cleanupFlows(keepCount: number): Promise<number> {
+    // Find flow IDs of completed root nodes to delete (skip most recent keepCount)
+    const rootNodes = await this.sequelize.query<{ flow_id: string }>(
+      `SELECT flow_id FROM ${this.fullFlowTable} WHERE parent_node_id IS NULL AND status = 'completed' ORDER BY created_at DESC OFFSET $1`,
+      { bind: [keepCount], type: QueryTypes.SELECT }
+    )
+
+    if (rootNodes.length === 0) {
+      return 0
+    }
+
+    const params: unknown[] = []
+    const flowIdPlaceholders = buildInPlaceholders(
+      rootNodes.map((r) => r.flow_id),
+      params
+    )
+
+    const result = await this.sequelize.query(
+      `DELETE FROM ${this.fullFlowTable} WHERE flow_id IN (${flowIdPlaceholders}) RETURNING id`,
+      { bind: params, type: QueryTypes.SELECT }
+    )
+
+    return result.length
   }
 
   // ─── Private helpers ─────────────────────────────────────────────────────────
@@ -918,27 +1135,16 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
       attempts: model.attempts,
       cancellationReason: model.cancellationReason ?? undefined,
       cancelledAt: model.cancelledAt ?? undefined,
-      childrenCompleted: model.childrenCompleted ?? 0,
-      childrenCount: model.childrenCount ?? 0,
       completedAt: model.completedAt ?? undefined,
       createdAt: model.createdAt,
       cron: model.cron ?? undefined,
-      dependsOn: model.dependsOn
-        ? ((typeof model.dependsOn === "string"
-            ? JSON.parse(model.dependsOn)
-            : model.dependsOn) as string[])
-        : undefined,
       error: model.error as SerializedError | undefined,
-      failParentOnFailure: model.failParentOnFailure === 1 || undefined,
       failedAt: model.failedAt ?? undefined,
-      flowId: model.flowId ?? undefined,
+      flowNodeId: model.flowNodeId ?? undefined,
       groupKey: model.groupKey ?? undefined,
       id: model.id,
       maxAttempts: model.maxAttempts,
       name: model.name,
-      onDependencyFailure:
-        (model.onDependencyFailure as "fail" | "cancel") ?? undefined,
-      parentId: model.parentId ?? undefined,
       payload:
         typeof model.payload === "string"
           ? JSON.parse(model.payload)
@@ -963,27 +1169,16 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
       attempts: job.attempts,
       cancellationReason: job.cancellation_reason ?? undefined,
       cancelledAt: job.cancelled_at ?? undefined,
-      childrenCompleted: job.children_completed ?? 0,
-      childrenCount: job.children_count ?? 0,
       completedAt: job.completed_at ?? undefined,
       createdAt: job.created_at,
       cron: job.cron ?? undefined,
-      dependsOn: job.depends_on
-        ? ((typeof job.depends_on === "string"
-            ? JSON.parse(job.depends_on)
-            : job.depends_on) as string[])
-        : undefined,
       error: job.error as SerializedError | undefined,
-      failParentOnFailure: job.fail_parent_on_failure === 1 || undefined,
       failedAt: job.failed_at ?? undefined,
-      flowId: job.flow_id ?? undefined,
+      flowNodeId: job.flow_node_id ?? undefined,
       groupKey: job.group_key ?? undefined,
       id: job.id,
       maxAttempts: job.max_attempts,
       name: job.name,
-      onDependencyFailure:
-        (job.on_dependency_failure as "fail" | "cancel") ?? undefined,
-      parentId: job.parent_id ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,
@@ -997,6 +1192,27 @@ export class PostgresSequelizeQueueAdapter extends BaseQueueAdapter {
       status: job.status as JobStatus,
       timeout: job.timeout ?? undefined,
       uniqueKey: job.unique_key ?? undefined,
+    }
+  }
+
+  private static transformFlowModel(model: QueueFlowModel): FlowNode {
+    return {
+      id: model.id,
+      flowId: model.flowId,
+      parentNodeId: model.parentNodeId ?? undefined,
+      jobId: model.jobId ?? undefined,
+      queueName: model.queueName,
+      name: model.name,
+      payload: model.payload,
+      options: model.options as FlowNode["options"],
+      status: model.status as FlowNode["status"],
+      failureStrategy: model.failureStrategy as FlowNode["failureStrategy"],
+      childrenCount: model.childrenCount,
+      childrenCompleted: model.childrenCompleted,
+      result: model.result ?? undefined,
+      error: model.error as SerializedError | undefined,
+      createdAt: model.createdAt,
+      completedAt: model.completedAt ?? undefined,
     }
   }
 }

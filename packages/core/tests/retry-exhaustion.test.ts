@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-non-null-assertion
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { MemoryQueueAdapter } from "../src/adapters/memory"
@@ -60,15 +61,11 @@ describe("retry exhaustion", () => {
       async (_job: JobWithProgress, { step }: JobContext) => {
         executionCount += 1
 
-        await step.run("work", async () => {
-          return "done"
-        })
+        await step.run("work", async () => "done")
 
         await step.sleep("pause", 50)
 
-        await step.run("after-sleep", async () => {
-          return "final"
-        })
+        await step.run("after-sleep", async () => "final")
 
         return "completed"
       }
@@ -102,9 +99,7 @@ describe("retry exhaustion", () => {
       repeatCount: 0,
     })
 
-    worker.register("test-job", async () => {
-      return "should not run"
-    })
+    worker.register("test-job", async () => "should not run")
 
     worker.start()
     await wait(500)
@@ -116,23 +111,26 @@ describe("retry exhaustion", () => {
   })
 
   it("should move flow child jobs to dead after maxAttempts", async () => {
-    worker.register("parent-job", async () => {
-      return "parent done"
-    })
+    const { FlowProducer } = await import("../src/flow-producer")
+    const flowProducer = new FlowProducer(adapter)
+
+    worker.register("parent-job", async () => "parent done")
 
     worker.register("child-job", async () => {
       throw new Error("child always fails")
     })
 
-    const flow = await queue.addFlow({
+    await flowProducer.add({
       name: "parent-job",
       payload: { type: "parent" },
+      queueName: "test",
       children: [
         {
           name: "child-job",
           payload: { type: "child" },
+          queueName: "test",
           options: { maxAttempts: 2 },
-          failParentOnFailure: true,
+          failureStrategy: "fail-parent",
         },
       ],
     })
@@ -143,9 +141,7 @@ describe("retry exhaustion", () => {
     await wait(3000)
 
     const allJobs = await adapter.getJobs({ limit: 100, offset: 0 })
-    const childJob = allJobs.find(
-      (j: Job) => j.name === "child-job" && j.flowId === flow.id
-    )
+    const childJob = allJobs.find((j: Job) => j.name === "child-job")
 
     expect(childJob).not.toBeNull()
     expect(childJob!.status).toBe("dead")

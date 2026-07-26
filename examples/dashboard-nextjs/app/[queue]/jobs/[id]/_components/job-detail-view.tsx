@@ -3,13 +3,11 @@
 import type { Job } from "@vorsteh-queue/core"
 import { ArrowLeftIcon } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 
-import { FlowGraph } from "@/components/flow-graph"
 import { JobActions } from "@/components/job-actions"
 import { StatusBadge } from "@/components/status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useFlowTree, useJob } from "@/hooks/use-queue-data"
+import { useJob } from "@/hooks/use-queue-data"
 import { formatRelativeTime } from "@/lib/utils"
 
 export function JobDetailView({
@@ -55,13 +53,6 @@ export function JobDetailView({
         {job.steps && job.steps.length > 0 && (
           <JobStepsCard steps={job.steps} />
         )}
-        {job.flowId && (
-          <JobFlowCard
-            flowId={job.flowId}
-            queue={queue}
-            currentJobId={job.id}
-          />
-        )}
       </div>
     </div>
   )
@@ -103,22 +94,12 @@ function JobDetailsCard({ job, queue }: { job: Job; queue: string }) {
         {job.cancellationReason && (
           <DetailRow label="Cancel Reason" value={job.cancellationReason} />
         )}
-        {job.flowId && (
+        {job.flowNodeId && (
           <DetailRow
-            label="Flow ID"
-            value={job.flowId}
-            href={`/${queue}/flows/${job.flowId}`}
+            label="Flow Node"
+            value={job.flowNodeId}
+            href={`/${queue}/flows`}
           />
-        )}
-        {job.parentId && (
-          <DetailRow
-            label="Parent Job"
-            value={job.parentId}
-            href={`/${queue}/jobs/${job.parentId}`}
-          />
-        )}
-        {job.dependsOn && job.dependsOn.length > 0 && (
-          <DetailRow label="Depends On" value={job.dependsOn.join(", ")} />
         )}
       </CardContent>
     </Card>
@@ -270,39 +251,6 @@ function JobStepsCard({
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function JobFlowCard({
-  flowId,
-  queue,
-  currentJobId,
-}: {
-  flowId: string
-  queue: string
-  currentJobId: string
-}) {
-  const router = useRouter()
-  const { data: tree } = useFlowTree(queue, flowId)
-
-  if (!tree) {
-    return null
-  }
-
-  return (
-    <Card className="lg:col-span-2">
-      <CardHeader>
-        <CardTitle>Flow</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <FlowGraph
-          tree={tree}
-          highlightJobId={currentJobId}
-          height="300px"
-          onNodeClick={(jobId) => router.push(`/${queue}/jobs/${jobId}`)}
-        />
       </CardContent>
     </Card>
   )

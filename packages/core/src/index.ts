@@ -1,6 +1,7 @@
 // Main classes
 export { Queue } from "./queue"
 export { Worker } from "./worker"
+export { FlowProducer } from "./flow-producer"
 
 // Adapters
 export { BaseQueueAdapter } from "./adapters/base"
@@ -68,9 +69,6 @@ export type {
   StepRunOptions,
   WaitForOptions,
   TriggerConfig,
-  FlowJobDefinition,
-  FlowNode,
-  FlowResult,
   RetryStrategyConfig,
   AdapterKind,
   AdapterProps,
@@ -82,6 +80,29 @@ export type {
   MikroormAdapterProps,
   SequelizeAdapterProps,
 } from "./types"
+
+// Flow Types
+export type {
+  FlowNodeStatus,
+  FlowFailureStrategy,
+  FlowNode,
+  NewFlowNode,
+  FlowNodeUpdate,
+  FlowTree,
+  FlowSummary,
+  FlowListOptions,
+  FlowJobDefinition,
+  FlowChainStep,
+  FlowResult,
+  FlowChainResult,
+  FlowBulkThenResult,
+  FlowProducerConfig,
+  FlowProducerEvents,
+  ChildrenFilter,
+  ChildNodeValue,
+  FlowJobContext,
+  FlowAdapter,
+} from "./flow-types"
 
 // Query Builder (filter types)
 export type {
@@ -103,15 +124,6 @@ export {
   SleepInterrupt,
   WaitForInterrupt,
 } from "./steps"
-
-// Dependencies
-export {
-  detectCircularDependencies,
-  areDependenciesMet,
-  getFailedDependency,
-  cascadeDependencyFailure,
-  CircularDependencyError,
-} from "./dependencies"
 
 // Rate Limiting
 export { RateLimiter, RateLimiterRegistry } from "./rate-limiter"

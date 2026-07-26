@@ -19,8 +19,6 @@ export const queueJobs = pgTable(
       withTimezone: true,
       mode: "date",
     }),
-    childrenCompleted: integer("children_completed").default(0).notNull(),
-    childrenCount: integer("children_count").default(0).notNull(),
     completedAt: timestamp("completed_at", {
       withTimezone: true,
       mode: "date",
@@ -29,19 +27,15 @@ export const queueJobs = pgTable(
       .notNull()
       .default(sql`timezone('utc', now())`),
     cron: varchar("cron", { length: 255 }),
-    dependsOn: jsonb("depends_on"),
     error: jsonb("error"),
-    failParentOnFailure: integer("fail_parent_on_failure").default(0).notNull(),
     failedAt: timestamp("failed_at", { withTimezone: true, mode: "date" }),
-    flowId: uuid("flow_id"),
+    flowNodeId: uuid("flow_node_id"),
     groupKey: varchar("group_key", { length: 255 }),
     id: uuid("id")
       .primaryKey()
       .default(sql`gen_random_uuid()`),
     maxAttempts: integer("max_attempts").notNull(),
     name: varchar("name", { length: 255 }).notNull(),
-    onDependencyFailure: varchar("on_dependency_failure", { length: 10 }),
-    parentId: uuid("parent_id"),
     payload: jsonb("payload").notNull(),
     priority: integer("priority").notNull(),
     processAt: timestamp("process_at", {

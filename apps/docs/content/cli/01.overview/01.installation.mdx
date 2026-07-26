@@ -50,12 +50,12 @@ For direct mode, create a `queue.config.ts` in your project root:
 
     import {
       PostgresQueueAdapter,
-      postgresSchema,
+      queueFlows,
+      queueJobs,
     } from "@vorsteh-queue/adapter-drizzle"
     import { Queue } from "@vorsteh-queue/core"
 
-    const { queueJobs } = postgresSchema
-    const relations = defineRelations({ queueJobs })
+    const relations = defineRelations({ queueFlows, queueJobs })
 
     const pool = new Pool({ connectionString: process.env.DATABASE_URL })
     const db = drizzle({ client: pool, relations })

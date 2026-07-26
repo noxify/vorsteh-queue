@@ -26,7 +26,6 @@ export interface QueueJobTableDefinition {
   group_key: string | null
   unique_key: string | null
   cron: string | null
-  depends_on: unknown
   repeat_every: number | null
   repeat_limit: number | null
   repeat_count: Generated<number>
@@ -35,12 +34,7 @@ export interface QueueJobTableDefinition {
   result: unknown
   steps: unknown
   signals: unknown
-  on_dependency_failure: string | null
-  parent_id: string | null
-  flow_id: string | null
-  children_count: Generated<number>
-  children_completed: Generated<number>
-  fail_parent_on_failure: Generated<number>
+  flow_node_id: string | null
   created_at: Generated<Timestamp>
   process_at: Timestamp
   processed_at: Timestamp | null
@@ -53,8 +47,32 @@ export type QueueJob = Selectable<QueueJobTableDefinition>
 export type NewQueueJob = Insertable<QueueJobTableDefinition>
 export type QueueJobUpdate = Updateable<QueueJobTableDefinition>
 
+export interface QueueFlowTableDefinition {
+  id: Generated<string>
+  flow_id: string
+  parent_node_id: string | null
+  job_id: string | null
+  queue_name: string
+  name: string
+  payload: unknown
+  options: unknown
+  status: string
+  failure_strategy: Generated<string>
+  children_count: Generated<number>
+  children_completed: Generated<number>
+  result: unknown
+  error: unknown
+  created_at: Generated<Timestamp>
+  completed_at: Timestamp | null
+}
+
+export type QueueFlow = Selectable<QueueFlowTableDefinition>
+export type NewQueueFlow = Insertable<QueueFlowTableDefinition>
+export type QueueFlowUpdate = Updateable<QueueFlowTableDefinition>
+
 export interface DB {
   tablename: QueueJobTableDefinition
+  flowtablename: QueueFlowTableDefinition
 }
 
 export type InsertQueueJobValue = InsertObject<DB, "tablename">

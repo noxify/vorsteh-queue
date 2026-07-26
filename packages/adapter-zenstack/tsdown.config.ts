@@ -5,5 +5,5 @@ export default defineConfig({
     skipNodeModulesBundle: true,
   },
   dts: true,
-  entry: ["src/index.ts", "src/postgres-adapter.ts"],
+  entry: ["src/index.ts", "src/adapter.ts"],
 })

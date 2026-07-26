@@ -6,6 +6,7 @@
 
 import type { JobWhereInput } from "@vorsteh-queue/query-builder"
 
+import type { FlowJobContext } from "./flow-types"
 import type { Telemetry } from "./telemetry"
 
 // ─── Job Status & State Machine ─────────────────────────────────────────────
@@ -19,19 +20,12 @@ export type JobStatus =
   | "failed"
   | "cancelled"
   | "dead"
-  | "waiting-children"
 
 /** Terminal statuses — jobs in these states are "done" */
 export type TerminalStatus = "completed" | "cancelled" | "dead"
 
 /** Active (non-terminal) statuses */
-export type ActiveStatus =
-  | "pending"
-  | "delayed"
-  | "processing"
-  | "failed"
-  | "waiting-children"
-
+export type ActiveStatus = "pending" | "delayed" | "processing" | "failed"
 /**
  * Valid state transitions.
  * Key = current status, Value = array of allowed next statuses.
@@ -42,9 +36,8 @@ export const STATE_TRANSITIONS: Record<JobStatus, readonly JobStatus[]> = {
   dead: ["pending"],
   delayed: ["pending", "cancelled"],
   failed: ["pending", "dead", "cancelled"],
-  pending: ["processing", "cancelled", "waiting-children"],
+  pending: ["processing", "cancelled"],
   processing: ["completed", "failed", "cancelled"],
-  "waiting-children": ["pending", "cancelled", "failed"],
 } as const
 
 // ─── Serialized Error ────────────────────────────────────────────────────────
@@ -121,40 +114,6 @@ export interface TriggerConfig<TPayload = unknown, TResult = unknown> {
   readonly options?: JobOptions
 }
 
-// ─── Flow Types ──────────────────────────────────────────────────────────────
-
-/** A node in a flow tree (for addFlow input) */
-export interface FlowJobDefinition {
-  /** Job type name */
-  readonly name: string
-  /** Job payload */
-  readonly payload: unknown
-  /** Job options */
-  readonly options?: JobOptions
-  /** Whether parent should fail when this child fails
-   * @default false
-   */
-  readonly failParentOnFailure?: boolean
-  /** Child jobs (processed before this job) */
-  readonly children?: readonly FlowJobDefinition[]
-}
-
-/** A node in a resolved flow tree (returned by getFlowTree) */
-export interface FlowNode {
-  /** The job at this node */
-  readonly job: Job
-  /** Child nodes */
-  readonly children: readonly FlowNode[]
-}
-
-/** Result of addFlow */
-export interface FlowResult {
-  /** Flow ID (shared by all jobs in this tree) */
-  readonly id: string
-  /** The root (parent) job */
-  readonly job: Job
-}
-
 // ─── Base Job Interface ──────────────────────────────────────────────────────
 
 /**
@@ -218,26 +177,12 @@ export interface Job<TPayload = unknown, TResult = unknown> {
   readonly uniqueKey?: string
   /** Reason for cancellation */
   readonly cancellationReason?: string
-  /** Job dependency IDs */
-  readonly dependsOn?: readonly string[]
-  /** Behavior when a dependency fails
-   * @default "fail"
-   */
-  readonly onDependencyFailure?: "fail" | "cancel"
   /** Step execution state */
   readonly steps?: readonly StepState[]
   /** Received signals for waitFor steps */
   readonly signals?: Readonly<Record<string, unknown>>
-  /** Parent job ID (for flow trees) */
-  readonly parentId?: string
-  /** Flow ID shared by all jobs in the same flow tree */
-  readonly flowId?: string
-  /** Number of direct children in this flow node */
-  readonly childrenCount?: number
-  /** Number of completed children */
-  readonly childrenCompleted?: number
-  /** If true, this job fails when any child fails */
-  readonly failParentOnFailure?: boolean
+  /** Flow node ID — links this job back to a flow node in the queue_flows table */
+  readonly flowNodeId?: string
 }
 
 // ─── Job Options ─────────────────────────────────────────────────────────────
@@ -284,12 +229,6 @@ export interface JobOptions {
      */
     readonly action: "reject" | "replace"
   }
-  /** Job IDs that must complete before this job is processed */
-  readonly dependsOn?: readonly string[]
-  /** Behavior when a dependency fails
-   * @default "fail"
-   */
-  readonly onDependencyFailure?: "fail" | "cancel"
 }
 
 // ─── Queue Configuration ─────────────────────────────────────────────────────
@@ -381,8 +320,8 @@ export interface JobContext {
   readonly signal: AbortSignal
   /** Step API for multi-step jobs (Phase 2) */
   readonly step: StepContext
-  /** Get results of children jobs (for parent jobs in flows) */
-  readonly getChildrenResults?: () => Promise<ReadonlyMap<string, unknown>>
+  /** Flow context methods (only available for jobs that are part of a flow) */
+  readonly flow?: FlowJobContext
 }
 
 /** Single job handler function */
@@ -483,6 +422,12 @@ export interface WorkerEvents {
   "batch:completed": readonly Job[]
   /** Emitted when a batch fails */
   "batch:failed": { jobs: readonly Job[]; error: SerializedError }
+  /** Emitted when a flow's root node job completes */
+  "flow:completed": { flowId: string; result: unknown }
+  /** Emitted when a flow's root node is marked as failed */
+  "flow:failed": { flowId: string; error: SerializedError }
+  /** Emitted when a flow parent node is promoted (job created) */
+  "flow:node:promoted": { flowId: string; nodeId: string; jobId: string }
 }
 
 // ─── Queue Stats ─────────────────────────────────────────────────────────────
@@ -496,7 +441,6 @@ export interface QueueStats {
   readonly failed: number
   readonly cancelled: number
   readonly dead: number
-  readonly "waiting-children": number
 }
 
 // ─── Adapter Types ───────────────────────────────────────────────────────────
@@ -631,14 +575,6 @@ export interface QueueAdapter {
     offset?: number
   }) => Promise<readonly Job[]>
 
-  /** Get paginated list of flows (root jobs that have a flowId) */
-  getFlows: (options?: PaginationOptions) => Promise<
-    readonly {
-      flowId: string
-      rootJob: Job
-    }[]
-  >
-
   // ─── Cleanup ───────────────────────────────────────────────
 
   /** Delete jobs by status */
@@ -675,22 +611,6 @@ export interface QueueAdapter {
 
   /** Store a signal on a job and promote it to pending (for waitFor) */
   setJobSignal: (id: string, event: string, data: unknown) => Promise<boolean>
-
-  // ─── Flows ─────────────────────────────────────────────────
-
-  /** Get all jobs in a flow as a tree */
-  getFlowTree: (flowId: string) => Promise<FlowNode | null>
-
-  /** Delete all jobs belonging to a flow */
-  deleteFlow: (flowId: string) => Promise<number>
-
-  /** Increment children_completed on a parent job. Returns updated counts. */
-  incrementChildrenCompleted: (
-    parentId: string
-  ) => Promise<{ completed: number; total: number }>
-
-  /** Get all direct children of a job */
-  getChildrenJobs: (parentId: string) => Promise<readonly Job[]>
 }
 
 // ─── Adapter Props ───────────────────────────────────────────────────────────
@@ -700,15 +620,23 @@ export interface PrismaAdapterProps {
   /** Model name in the `schema.prisma` file
    * @default "QueueJob"
    */
-  modelName?: string
+  readonly modelName?: string
   /** Table name in the database
    * @default "queue_jobs"
    */
-  tableName?: string
+  readonly tableName?: string
   /** Schema name in the database
    * @default undefined (uses default schema `public`)
    */
-  schemaName?: string
+  readonly schemaName?: string
+  /** Flow model name in the `schema.prisma` file
+   * @default "QueueFlow"
+   */
+  readonly flowModelName?: string
+  /** Flow table name in the database
+   * @default "queue_flows"
+   */
+  readonly flowTableName?: string
 }
 
 /** Kysely adapter configuration */
@@ -716,11 +644,15 @@ export interface KyselyAdapterProps {
   /** Table name in the database
    * @default "queue_jobs"
    */
-  tableName?: string
+  readonly tableName?: string
   /** Schema name in the database
    * @default "public"
    */
-  schemaName?: string
+  readonly schemaName?: string
+  /** Flow table name in the database
+   * @default "queue_flows"
+   */
+  readonly flowTableName?: string
 }
 
 /** Drizzle adapter configuration */
@@ -728,7 +660,11 @@ export interface DrizzleAdapterProps {
   /** Export name in the `schema.ts` file
    * @default "queueJobs"
    */
-  modelName?: string
+  readonly modelName?: string
+  /** Flow export name in the `schema.ts` file
+   * @default "queueFlows"
+   */
+  readonly flowModelName?: string
 }
 
 /** ZenStack adapter configuration */
@@ -736,15 +672,23 @@ export interface ZenstackAdapterProps {
   /** Model name used in the ZenStack client (camelCase accessor)
    * @default "queueJob"
    */
-  modelName?: string
+  readonly modelName?: string
   /** Table name in the database
    * @default "queue_jobs"
    */
-  tableName?: string
+  readonly tableName?: string
   /** Schema name in the database
    * @default undefined (uses default schema `public`)
    */
-  schemaName?: string
+  readonly schemaName?: string
+  /** Flow model name used in the ZenStack client (camelCase accessor)
+   * @default "queueFlow"
+   */
+  readonly flowModelName?: string
+  /** Flow table name in the database
+   * @default "queue_flows"
+   */
+  readonly flowTableName?: string
 }
 
 /** TypeORM adapter configuration */
@@ -752,11 +696,15 @@ export interface TypeormAdapterProps {
   /** Table name in the database
    * @default "queue_jobs"
    */
-  tableName?: string
+  readonly tableName?: string
   /** Schema name in the database
    * @default undefined (uses default schema `public`)
    */
-  schemaName?: string
+  readonly schemaName?: string
+  /** Flow table name in the database
+   * @default "queue_flows"
+   */
+  readonly flowTableName?: string
 }
 
 /** MikroORM adapter configuration */
@@ -764,11 +712,15 @@ export interface MikroormAdapterProps {
   /** Table name in the database
    * @default "queue_jobs"
    */
-  tableName?: string
+  readonly tableName?: string
   /** Schema name in the database
    * @default undefined (uses default schema `public`)
    */
-  schemaName?: string
+  readonly schemaName?: string
+  /** Flow table name in the database
+   * @default "queue_flows"
+   */
+  readonly flowTableName?: string
 }
 
 /** Sequelize adapter configuration */
@@ -776,11 +728,15 @@ export interface SequelizeAdapterProps {
   /** Table name in the database
    * @default "queue_jobs"
    */
-  tableName?: string
+  readonly tableName?: string
   /** Schema name in the database
    * @default undefined (uses default schema `public`)
    */
-  schemaName?: string
+  readonly schemaName?: string
+  /** Flow table name in the database
+   * @default "queue_flows"
+   */
+  readonly flowTableName?: string
 }
 
 /** Adapter kind discriminator */

@@ -2,10 +2,13 @@
 export {
   PostgresQueueAdapter,
   PostgresQueueAdapter as PostgresDrizzleQueueAdapter,
-} from "./postgres-adapter"
+} from "./adapter"
 
-export * as postgresSchema from "./postgres-schema"
+export { queueJobs } from "./queue-schema"
 
-export type { QueueJob as PostgresQueueJob } from "./postgres-schema"
+export type { QueueJob as PostgresQueueJob } from "./queue-schema"
+
+export { queueFlows } from "./flow-schema"
+export type { QueueFlow, InsertQueueFlow } from "./flow-schema"
 
 export { createQueueJobsTable } from "./helpers"

@@ -1,10 +1,16 @@
 import type {
   CancelJobsFilter,
+  FlowAdapter,
+  FlowListOptions,
   FlowNode,
+  FlowNodeUpdate,
+  FlowSummary,
+  FlowTree,
   GetNextJobOptions,
   Job,
   JobStatus,
   JobStatusUpdate,
+  NewFlowNode,
   NewJob,
   PaginationOptions,
   QueueStats,
@@ -70,17 +76,11 @@ interface RawQueueJob {
   group_key: string | null
   unique_key: string | null
   cron: string | null
-  depends_on: unknown
   repeat_every: number | null
   repeat_limit: number | null
   repeat_count: number
   cancellation_reason: string | null
-  on_dependency_failure: string | null
-  flow_id: string | null
-  parent_id: string | null
-  children_count: number
-  children_completed: number
-  fail_parent_on_failure: number
+  flow_node_id: string | null
   error: unknown
   result: unknown
   created_at: Date
@@ -107,20 +107,28 @@ interface RawQueueJob {
  * const adapter = new PostgresZenstackQueueAdapter(db)
  * ```
  */
-export class PostgresZenstackQueueAdapter extends BaseQueueAdapter {
+export class PostgresZenstackQueueAdapter
+  extends BaseQueueAdapter
+  implements FlowAdapter
+{
   private db: ZenStackClientInternal
   private modelName: string
+  private readonly flowModelName: string
   private readonly fullTable: string
+  private readonly fullFlowTable: string
 
   constructor(client: ZenStackClient, adapterConfig?: ZenstackAdapterProps) {
     super()
     this.db = client as ZenStackClientInternal
     this.modelName = adapterConfig?.modelName ?? "queueJob"
+    this.flowModelName = adapterConfig?.flowModelName ?? "queueFlow"
 
     const tableName = adapterConfig?.tableName ?? "queue_jobs"
+    const flowTableName = adapterConfig?.flowTableName ?? "queue_flows"
     const schemaName = adapterConfig?.schemaName
 
     assertValidIdentifier(tableName, "tableName")
+    assertValidIdentifier(flowTableName, "flowTableName")
     if (schemaName !== undefined) {
       assertValidIdentifier(schemaName, "schemaName")
     }
@@ -128,6 +136,9 @@ export class PostgresZenstackQueueAdapter extends BaseQueueAdapter {
     this.fullTable = schemaName
       ? `"${schemaName}"."${tableName}"`
       : `"${tableName}"`
+    this.fullFlowTable = schemaName
+      ? `"${schemaName}"."${flowTableName}"`
+      : `"${flowTableName}"`
   }
 
   async connect(): Promise<void> {
@@ -143,17 +154,11 @@ export class PostgresZenstackQueueAdapter extends BaseQueueAdapter {
     const result = await this.db[this.modelName]!.create({
       data: {
         attempts: job.attempts,
-        childrenCompleted: job.childrenCompleted ?? 0,
-        childrenCount: job.childrenCount ?? 0,
         cron: job.cron ?? null,
-        dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
-        failParentOnFailure: job.failParentOnFailure ? 1 : 0,
-        flowId: job.flowId ?? null,
+        flowNodeId: job.flowNodeId ?? null,
         groupKey: job.groupKey ?? null,
         maxAttempts: job.maxAttempts,
         name: job.name,
-        onDependencyFailure: job.onDependencyFailure ?? null,
-        parentId: job.parentId ?? null,
         payload: JSON.stringify(job.payload),
         priority: job.priority,
         processAt: job.processAt,
@@ -474,7 +479,6 @@ export class PostgresZenstackQueueAdapter extends BaseQueueAdapter {
       failed: 0,
       pending: 0,
       processing: 0,
-      "waiting-children": 0,
     }
     for (const stat of stats) {
       const status = stat.status as string
@@ -532,31 +536,6 @@ export class PostgresZenstackQueueAdapter extends BaseQueueAdapter {
     return (rows as unknown[]).map((r) =>
       PostgresZenstackQueueAdapter.transformJob(r)
     )
-  }
-
-  async getFlows(
-    options?: PaginationOptions
-  ): Promise<readonly { flowId: string; rootJob: Job }[]> {
-    const limit = options?.limit ?? 20
-    const offset = options?.offset ?? 0
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const rows = await this.db[this.modelName]!.findMany({
-      orderBy: { createdAt: "desc" },
-      skip: offset,
-      take: limit,
-      where: {
-        flowId: { not: null },
-        parentId: null,
-        queueName: this.queueName,
-      },
-    })
-
-    return (rows as unknown[]).map((r) => {
-      const job = PostgresZenstackQueueAdapter.transformJob(r)
-      // oxlint-disable-next-line typescript/no-non-null-assertion
-      return { flowId: job.flowId!, rootJob: job }
-    })
   }
 
   async clearJobs(status?: JobStatus): Promise<number> {
@@ -696,90 +675,22 @@ export class PostgresZenstackQueueAdapter extends BaseQueueAdapter {
     return true
   }
 
-  async getFlowTree(flowId: string): Promise<FlowNode | null> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const jobs = await this.db[this.modelName]!.findMany({
-      where: { flowId, queueName: this.queueName },
-    })
-    if (jobs.length === 0) {
-      return null
-    }
-
-    const allJobs = jobs.map((j: unknown) =>
-      PostgresZenstackQueueAdapter.transformJob(j)
-    )
-    const root = allJobs.find((j: Job) => !j.parentId)
-    if (!root) {
-      return null
-    }
-
-    const buildNode = (job: Job): FlowNode => {
-      const children = allJobs.filter((j: Job) => j.parentId === job.id)
-      return { children: children.map((c: Job) => buildNode(c)), job }
-    }
-    return buildNode(root)
-  }
-
-  async deleteFlow(flowId: string): Promise<number> {
-    const result = await this.db.$queryRawUnsafe<{ id: string }[]>(
-      `DELETE FROM ${this.fullTable} WHERE queue_name = $1 AND flow_id = $2 RETURNING id`,
-      this.queueName,
-      flowId
-    )
-    return result.length
-  }
-
-  async incrementChildrenCompleted(
-    parentId: string
-  ): Promise<{ completed: number; total: number }> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const updated = await this.db[this.modelName]!.update({
-      data: { childrenCompleted: { increment: 1 } },
-      where: { id: parentId },
-    })
-    return {
-      completed: updated.childrenCompleted ?? 0,
-      total: updated.childrenCount ?? 0,
-    }
-  }
-
-  async getChildrenJobs(parentId: string): Promise<readonly Job[]> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const jobs = await this.db[this.modelName]!.findMany({
-      where: { parentId, queueName: this.queueName },
-    })
-    return jobs.map((j: unknown) =>
-      PostgresZenstackQueueAdapter.transformJob(j)
-    )
-  }
-
   // oxlint-disable-next-line complexity, typescript/no-explicit-any
   private static transformJob(job: any): Job {
     return {
       attempts: job.attempts,
       cancellationReason: job.cancellationReason ?? undefined,
       cancelledAt: job.cancelledAt ?? undefined,
-      childrenCompleted: job.childrenCompleted ?? 0,
-      childrenCount: job.childrenCount ?? 0,
       completedAt: job.completedAt ?? undefined,
       createdAt: job.createdAt,
       cron: job.cron ?? undefined,
-      dependsOn: job.dependsOn
-        ? ((typeof job.dependsOn === "string"
-            ? JSON.parse(job.dependsOn)
-            : job.dependsOn) as string[])
-        : undefined,
       error: job.error as SerializedError | undefined,
-      failParentOnFailure: job.failParentOnFailure === 1 || undefined,
       failedAt: job.failedAt ?? undefined,
-      flowId: job.flowId ?? undefined,
+      flowNodeId: job.flowNodeId ?? undefined,
       groupKey: job.groupKey ?? undefined,
       id: job.id,
       maxAttempts: job.maxAttempts,
       name: job.name,
-      onDependencyFailure:
-        (job.onDependencyFailure as "fail" | "cancel") ?? undefined,
-      parentId: job.parentId ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,
@@ -802,27 +713,16 @@ export class PostgresZenstackQueueAdapter extends BaseQueueAdapter {
       attempts: job.attempts,
       cancellationReason: job.cancellation_reason ?? undefined,
       cancelledAt: job.cancelled_at ?? undefined,
-      childrenCompleted: job.children_completed ?? 0,
-      childrenCount: job.children_count ?? 0,
       completedAt: job.completed_at ?? undefined,
       createdAt: job.created_at,
       cron: job.cron ?? undefined,
-      dependsOn: job.depends_on
-        ? ((typeof job.depends_on === "string"
-            ? JSON.parse(job.depends_on)
-            : job.depends_on) as string[])
-        : undefined,
       error: job.error as SerializedError | undefined,
-      failParentOnFailure: job.fail_parent_on_failure === 1 || undefined,
       failedAt: job.failed_at ?? undefined,
-      flowId: job.flow_id ?? undefined,
+      flowNodeId: job.flow_node_id ?? undefined,
       groupKey: job.group_key ?? undefined,
       id: job.id,
       maxAttempts: job.max_attempts,
       name: job.name,
-      onDependencyFailure:
-        (job.on_dependency_failure as "fail" | "cancel") ?? undefined,
-      parentId: job.parent_id ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,
@@ -837,5 +737,349 @@ export class PostgresZenstackQueueAdapter extends BaseQueueAdapter {
       timeout: job.timeout ?? undefined,
       uniqueKey: job.unique_key ?? undefined,
     }
+  }
+
+  // eslint-disable-next-line class-methods-use-this, typescript/no-explicit-any
+  private static transformFlowRow(row: any): FlowNode {
+    return {
+      id: row.id,
+      flowId: row.flowId,
+      parentNodeId: row.parentNodeId ?? undefined,
+      jobId: row.jobId ?? undefined,
+      queueName: row.queueName,
+      name: row.name,
+      payload:
+        typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload,
+      options: row.options
+        ? typeof row.options === "string"
+          ? JSON.parse(row.options)
+          : row.options
+        : undefined,
+      status: row.status as FlowNode["status"],
+      failureStrategy: row.failureStrategy as FlowNode["failureStrategy"],
+      childrenCount: row.childrenCount,
+      childrenCompleted: row.childrenCompleted,
+      result: row.result ?? undefined,
+      error: row.error as SerializedError | undefined,
+      createdAt: row.createdAt,
+      completedAt: row.completedAt ?? undefined,
+    }
+  }
+
+  // ─── FlowAdapter Implementation ──────────────────────────────────────────
+
+  async createFlow(
+    nodes: readonly NewFlowNode[],
+    leafJobs: readonly NewJob[]
+  ): Promise<readonly FlowNode[]> {
+    return this.db.$transaction(async (tx: ZenStackClientInternal) => {
+      // Insert all flow nodes with pre-generated IDs
+      for (const n of nodes) {
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop, typescript/no-non-null-assertion -- sequential inserts in transaction
+        await tx[this.flowModelName]!.create({
+          data: {
+            id: n.id,
+            flowId: n.flowId,
+            parentNodeId: n.parentNodeId ?? null,
+            jobId: n.jobId ?? null,
+            queueName: n.queueName,
+            name: n.name,
+            payload: JSON.stringify(n.payload),
+            options: n.options ? JSON.stringify(n.options) : null,
+            status: n.status,
+            failureStrategy: n.failureStrategy,
+            childrenCount: n.childrenCount,
+            childrenCompleted: n.childrenCompleted,
+          },
+        })
+      }
+
+      // Insert leaf jobs and update their flow nodes with the job ID
+      for (const job of leafJobs) {
+        const matchingNode = nodes.find((n) => n.id === job.flowNodeId)
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop, typescript/no-non-null-assertion -- sequential inserts in transaction
+        const createdJob = await tx[this.modelName]!.create({
+          data: {
+            attempts: job.attempts,
+            cron: job.cron ?? null,
+            flowNodeId: job.flowNodeId ?? null,
+            groupKey: job.groupKey ?? null,
+            maxAttempts: job.maxAttempts,
+            name: job.name,
+            payload: JSON.stringify(job.payload),
+            priority: job.priority,
+            processAt: job.processAt,
+            progress: job.progress ?? 0,
+            queueName: matchingNode?.queueName ?? this.queueName,
+            repeatCount: job.repeatCount ?? 0,
+            repeatEvery: job.repeatEvery ?? null,
+            repeatLimit: job.repeatLimit ?? null,
+            status: job.status,
+            timeout: typeof job.timeout === "number" ? job.timeout : null,
+            uniqueKey: job.uniqueKey ?? null,
+          },
+        })
+
+        // Update the flow node with the created job ID
+        if (createdJob && job.flowNodeId) {
+          // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop, typescript/no-non-null-assertion -- sequential updates in transaction
+          await tx[this.flowModelName]!.update({
+            data: { jobId: createdJob.id },
+            where: { id: job.flowNodeId },
+          })
+        }
+      }
+
+      // Re-fetch all nodes to get updated jobId values
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const finalNodes = await tx[this.flowModelName]!.findMany({
+        where: { id: { in: nodes.map((n) => n.id) } },
+      })
+
+      return (finalNodes as unknown[]).map((r) =>
+        PostgresZenstackQueueAdapter.transformFlowRow(r)
+      )
+    })
+  }
+
+  async getFlowNode(nodeId: string): Promise<FlowNode | null> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const row = await this.db[this.flowModelName]!.findFirst({
+      where: { id: nodeId },
+    })
+    return row ? PostgresZenstackQueueAdapter.transformFlowRow(row) : null
+  }
+
+  async getFlowTree(flowId: string): Promise<FlowTree | null> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const rows = await this.db[this.flowModelName]!.findMany({
+      where: { flowId },
+    })
+    if (rows.length === 0) {
+      return null
+    }
+
+    const allNodes = (rows as unknown[]).map((r) =>
+      PostgresZenstackQueueAdapter.transformFlowRow(r)
+    )
+    const rootNode = allNodes.find((n) => !n.parentNodeId)
+    if (!rootNode) {
+      return null
+    }
+
+    const buildTree = (node: FlowNode): FlowTree => {
+      const children = allNodes
+        .filter((n) => n.parentNodeId === node.id)
+        .map(buildTree)
+      return { node, children }
+    }
+
+    return buildTree(rootNode)
+  }
+
+  async getFlows(options?: FlowListOptions): Promise<readonly FlowSummary[]> {
+    const limit = options?.limit ?? 20
+    const offset = options?.offset ?? 0
+
+    const where: Record<string, unknown> = { parentNodeId: null }
+    if (options?.status) {
+      where.status = options.status
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const rows = await this.db[this.flowModelName]!.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: offset,
+      take: limit,
+      where,
+    })
+
+    return (rows as unknown[]).map((r) => {
+      const node = PostgresZenstackQueueAdapter.transformFlowRow(r)
+      return {
+        flowId: node.flowId,
+        rootNode: node,
+        status: node.status,
+        createdAt: node.createdAt,
+        completedAt: node.completedAt,
+      }
+    })
+  }
+
+  async updateFlowNode(nodeId: string, update: FlowNodeUpdate): Promise<void> {
+    const data: Record<string, unknown> = {}
+
+    if (update.status !== undefined) {
+      data.status = update.status
+    }
+    if (update.jobId !== undefined) {
+      data.jobId = update.jobId
+    }
+    if (update.result !== undefined) {
+      data.result = update.result
+    }
+    if (update.error !== undefined) {
+      data.error = update.error
+    }
+    if (update.completedAt !== undefined) {
+      data.completedAt = update.completedAt
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await this.db[this.flowModelName]!.update({
+      data,
+      where: { id: nodeId },
+    })
+  }
+
+  async incrementNodeChildrenCompleted(
+    nodeId: string
+  ): Promise<{ completed: number; total: number }> {
+    // Use raw SQL to atomically increment and avoid race conditions
+    await this.db.$queryRawUnsafe(
+      `UPDATE ${this.fullFlowTable} SET children_completed = children_completed + 1 WHERE id = $1`,
+      nodeId
+    )
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const updated = await this.db[this.flowModelName]!.findFirst({
+      where: { id: nodeId },
+    })
+
+    if (!updated) {
+      return { completed: 0, total: 0 }
+    }
+
+    return {
+      completed: updated.childrenCompleted ?? 0,
+      total: updated.childrenCount ?? 0,
+    }
+  }
+
+  async getNodeChildren(nodeId: string): Promise<readonly FlowNode[]> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const rows = await this.db[this.flowModelName]!.findMany({
+      where: { parentNodeId: nodeId },
+    })
+    return (rows as unknown[]).map((r) =>
+      PostgresZenstackQueueAdapter.transformFlowRow(r)
+    )
+  }
+
+  async getChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const rows = await this.db[this.flowModelName]!.findMany({
+      where: { parentNodeId: nodeId, status: "completed" },
+    })
+
+    const results = new Map<string, unknown>()
+    for (const row of rows as { id: string; result: unknown }[]) {
+      results.set(row.id, row.result)
+    }
+    return results
+  }
+
+  async getFailedChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const rows = await this.db[this.flowModelName]!.findMany({
+      where: { parentNodeId: nodeId, status: "failed" },
+    })
+
+    const results = new Map<string, unknown>()
+    for (const row of rows as { id: string; error: unknown }[]) {
+      results.set(row.id, row.error)
+    }
+    return results
+  }
+
+  async cancelUnprocessedChildren(nodeId: string): Promise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const children = await this.db[this.flowModelName]!.findMany({
+      where: { parentNodeId: nodeId },
+    })
+
+    let cancelled = 0
+    const now = new Date()
+
+    for (const child of children as {
+      id: string
+      status: string
+      jobId: string | null
+    }[]) {
+      if (child.status === "waiting") {
+        // Cancel waiting nodes (no job yet)
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop, typescript/no-non-null-assertion -- sequential cancellation
+        await this.db[this.flowModelName]!.update({
+          data: { status: "cancelled", completedAt: now },
+          where: { id: child.id },
+        })
+        cancelled++
+        // Recursively cancel subtree
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- recursive traversal
+        cancelled += await this.cancelUnprocessedChildren(child.id)
+      } else if (child.status === "ready" && child.jobId) {
+        // Cancel the corresponding job if it's still pending/delayed
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop, typescript/no-non-null-assertion -- sequential cancellation
+        const result = await this.db[this.modelName]!.updateMany({
+          data: { cancelledAt: now, status: "cancelled" },
+          where: {
+            id: child.jobId,
+            status: { in: ["pending", "delayed"] },
+          },
+        })
+
+        if ((result.count ?? 0) > 0) {
+          // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop, typescript/no-non-null-assertion -- sequential cancellation
+          await this.db[this.flowModelName]!.update({
+            data: { status: "cancelled", completedAt: now },
+            where: { id: child.id },
+          })
+          cancelled++
+        }
+        // Recursively cancel subtree
+        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- recursive traversal
+        cancelled += await this.cancelUnprocessedChildren(child.id)
+      }
+    }
+
+    return cancelled
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const result = await this.db[this.flowModelName]!.deleteMany({
+      where: { flowId },
+    })
+    return result.count ?? 0
+  }
+
+  async cleanupFlows(keepCount: number): Promise<number> {
+    // Find root nodes of completed flows, ordered by creation time
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const rootNodes = await this.db[this.flowModelName]!.findMany({
+      orderBy: { createdAt: "desc" },
+      select: { flowId: true },
+      skip: keepCount,
+      where: { parentNodeId: null, status: "completed" },
+    })
+
+    if (rootNodes.length === 0) {
+      return 0
+    }
+
+    const flowIdsToDelete = (rootNodes as { flowId: string }[]).map(
+      (r) => r.flowId
+    )
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const result = await this.db[this.flowModelName]!.deleteMany({
+      where: { flowId: { in: flowIdsToDelete } },
+    })
+
+    return result.count ?? 0
   }
 }

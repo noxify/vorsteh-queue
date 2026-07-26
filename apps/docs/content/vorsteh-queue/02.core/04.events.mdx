@@ -82,6 +82,32 @@ worker.off("job:completed", handler)
 
 <InterfaceReference file="core/src/types" name="WorkerEvents" />
 
+### Flow Events
+
+The Worker emits flow lifecycle events when jobs participate in a flow:
+
+```typescript
+worker.on("flow:completed", ({ flowId, result }) => {
+  console.log(`Flow ${flowId} completed with:`, result)
+})
+
+worker.on("flow:failed", ({ flowId, error }) => {
+  console.error(`Flow ${flowId} failed:`, error.message)
+})
+
+worker.on("flow:node:promoted", ({ flowId, nodeId, jobId }) => {
+  console.log(`Flow ${flowId}: node ${nodeId} promoted, job ${jobId} created`)
+})
+```
+
+The `FlowProducer` also emits events:
+
+```typescript
+flowProducer.on("flow:created", ({ flowId, rootNode }) => {
+  console.log(`New flow ${flowId} created: ${rootNode.name}`)
+})
+```
+
 ## Use Cases
 
 - Logging and audit trails

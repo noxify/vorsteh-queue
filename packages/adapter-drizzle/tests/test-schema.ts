@@ -1,6 +1,8 @@
 import { index, pgTable } from "drizzle-orm/pg-core"
 
-import { columns, createQueueJobsTable } from "./helpers"
+import { columns, createQueueJobsTable } from "../src/helpers"
+
+export { queueFlows } from "../src/flow-schema"
 
 export const queueJobs = pgTable("queue_jobs", columns, (table) => [
   index("idx_queue_jobs_status_priority").on(

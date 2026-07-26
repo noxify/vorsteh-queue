@@ -19,12 +19,13 @@ The MikroORM adapter provides PostgreSQL support using MikroORM v6, offering a p
 import { MikroORM } from "@mikro-orm/postgresql"
 import {
   PostgresMikroormQueueAdapter,
+  QueueFlowSchema,
   QueueJobSchema,
 } from "@vorsteh-queue/adapter-mikroorm"
 import { Queue, Worker } from "@vorsteh-queue/core"
 
 const orm = await MikroORM.init({
-  entities: [QueueJobSchema],
+  entities: [QueueJobSchema, QueueFlowSchema],
   clientUrl: process.env.DATABASE_URL,
 })
 
@@ -43,7 +44,7 @@ await queue.connect()
 
 ## Database Schema
 
-The adapter ships with a pre-built `QueueJobSchema` (EntitySchema) that you can use directly with MikroORM's schema generator or migrations.
+The adapter ships with pre-built `QueueJobSchema` and `QueueFlowSchema` (EntitySchema) that you can use directly with MikroORM's schema generator or migrations.
 
 ```bash
 npx mikro-orm schema:create

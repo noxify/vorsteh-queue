@@ -21,21 +21,19 @@ import { Pool } from "pg"
 
 import {
   PostgresQueueAdapter,
-  postgresSchema,
+  queueFlows,
+  queueJobs,
 } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 
-// 1. Export the queue table from your schema
-const { queueJobs } = postgresSchema
+// 1. Define relations (include your own tables here too)
+const relations = defineRelations({ queueFlows, queueJobs })
 
-// 2. Define relations (include your own tables here too)
-const relations = defineRelations({ queueJobs })
-
-// 3. Create drizzle client with relations
+// 2. Create drizzle client with relations
 const pool = new Pool({ connectionString: "postgresql://..." })
 const db = drizzle({ client: pool, relations })
 
-// 4. Create adapter and queue
+// 3. Create adapter and queue
 const adapter = new PostgresQueueAdapter(db)
 const queue = new Queue(adapter, { name: "my-queue" })
 ```
@@ -58,13 +56,13 @@ The adapter ships with a pre-defined schema:
 ```typescript
 import { defineRelations } from "drizzle-orm"
 
-import { postgresSchema } from "@vorsteh-queue/adapter-drizzle"
+import { queueFlows, queueJobs } from "@vorsteh-queue/adapter-drizzle"
 
-// Export the queue table for drizzle-kit migrations
-export const { queueJobs } = postgresSchema
+// Export the queue tables for drizzle-kit migrations
+export { queueFlows, queueJobs }
 
-// Define relations — add your own tables here alongside queueJobs
-export const relations = defineRelations({ queueJobs })
+// Define relations — add your own tables here alongside queue tables
+export const relations = defineRelations({ queueFlows, queueJobs })
 ```
 
 ## Custom Table and Schema Names
@@ -74,12 +72,15 @@ Use `createQueueJobsTable` to customize the table name and database schema:
 ```typescript
 import { defineRelations } from "drizzle-orm"
 
-import { createQueueJobsTable } from "@vorsteh-queue/adapter-drizzle"
+import {
+  createQueueJobsTable,
+  queueFlows,
+} from "@vorsteh-queue/adapter-drizzle"
 
 export const { table: customQueueJobs, schema: customSchema } =
   createQueueJobsTable("custom_queue_jobs", "custom_schema")
 
-export const relations = defineRelations({ customQueueJobs })
+export const relations = defineRelations({ customQueueJobs, queueFlows })
 ```
 
 Pass the custom model name to the adapter:

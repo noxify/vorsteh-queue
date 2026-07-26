@@ -59,6 +59,17 @@ export interface Telemetry {
     span: TelemetrySpan,
     fn: () => TResult
   ) => TResult
+
+  // ─── Flow-level observability ────────────────────────────────
+
+  /** Record a flow being created */
+  readonly flowCreated: (flowId: string) => void
+  /** Record a flow completing successfully */
+  readonly flowCompleted: (flowId: string, durationMs: number) => void
+  /** Record a flow failing */
+  readonly flowFailed: (flowId: string) => void
+  /** Record a flow node being promoted (parent job created) */
+  readonly flowNodePromoted: (flowId: string, nodeId: string) => void
 }
 
 // ─── Noop Implementation ─────────────────────────────────────────────────────
@@ -86,6 +97,10 @@ export const noopTelemetry: Telemetry = {
   withSpan(_span, fn) {
     return fn()
   },
+  flowCreated() {}, // oxlint-disable-line no-empty-function
+  flowCompleted() {}, // oxlint-disable-line no-empty-function
+  flowFailed() {}, // oxlint-disable-line no-empty-function
+  flowNodePromoted() {}, // oxlint-disable-line no-empty-function
 }
 
 /**
@@ -176,6 +191,33 @@ export function createOtelTelemetry(config: TelemetryConfig): Telemetry {
     unit: "ms",
   })
 
+  // ─── Flow Metrics ────────────────────────────────────────────
+
+  const flowsCreated = meter.createCounter("vorsteh_queue.flows.created", {
+    description: "Total number of flows created",
+    unit: "{flow}",
+  })
+  const flowsCompleted = meter.createCounter("vorsteh_queue.flows.completed", {
+    description: "Total number of flows completed successfully",
+    unit: "{flow}",
+  })
+  const flowsFailed = meter.createCounter("vorsteh_queue.flows.failed", {
+    description: "Total number of flows that failed",
+    unit: "{flow}",
+  })
+  const flowNodesPromoted = meter.createCounter(
+    "vorsteh_queue.flows.nodes_promoted",
+    {
+      description: "Total number of flow nodes promoted to ready",
+      unit: "{node}",
+    }
+  )
+  const flowDuration = meter.createHistogram("vorsteh_queue.flows.duration", {
+    description:
+      "Duration of flow execution from creation to completion, in milliseconds",
+    unit: "ms",
+  })
+
   const queueAttr = { "vorsteh_queue.queue": config.queueName }
 
   return {
@@ -258,6 +300,26 @@ export function createOtelTelemetry(config: TelemetryConfig): Telemetry {
     withSpan<TResult>(span: TelemetrySpan, fn: () => TResult): TResult {
       const otelSpan = span as OtelSpan
       return context.with(trace.setSpan(context.active(), otelSpan), fn)
+    },
+    flowCreated(flowId: string): void {
+      flowsCreated.add(1, { ...queueAttr, "vorsteh_queue.flow.id": flowId })
+    },
+    flowCompleted(flowId: string, durationMs: number): void {
+      flowsCompleted.add(1, { ...queueAttr, "vorsteh_queue.flow.id": flowId })
+      flowDuration.record(durationMs, {
+        ...queueAttr,
+        "vorsteh_queue.flow.id": flowId,
+      })
+    },
+    flowFailed(flowId: string): void {
+      flowsFailed.add(1, { ...queueAttr, "vorsteh_queue.flow.id": flowId })
+    },
+    flowNodePromoted(flowId: string, nodeId: string): void {
+      flowNodesPromoted.add(1, {
+        ...queueAttr,
+        "vorsteh_queue.flow.id": flowId,
+        "vorsteh_queue.flow.node_id": nodeId,
+      })
     },
   }
 }

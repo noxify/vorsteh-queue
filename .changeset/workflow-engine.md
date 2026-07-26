@@ -37,30 +37,3 @@ worker.trigger({
   condition: (result) => result.total > 0,
 })
 ```
-
-### Flow Producer (Parent-Child Job Trees)
-
-Declarative job trees with parent-child relationships:
-
-```typescript
-const flow = await queue.addFlow({
-  name: "deploy",
-  payload: { version: "1.0" },
-  children: [
-    { name: "build", payload: { target: "linux" } },
-    { name: "test", payload: {}, children: [{ name: "lint", payload: {} }] },
-  ],
-})
-```
-
-- Parent waits in `waiting-children` status until all children complete
-- `failParentOnFailure` cascades child failures upward
-- `ctx.getChildrenResults()` provides children results to parent handlers
-- `queue.getFlowTree(flowId)` returns the full tree for visualization
-
-### New Status: `waiting-children`
-
-Added to the state machine. Valid transitions:
-
-- `pending` → `waiting-children`
-- `waiting-children` → `pending` (all children done), `cancelled`, `failed`

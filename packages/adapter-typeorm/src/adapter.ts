@@ -1,10 +1,16 @@
 import type {
   CancelJobsFilter,
+  FlowAdapter,
+  FlowListOptions,
   FlowNode,
+  FlowNodeUpdate,
+  FlowSummary,
+  FlowTree,
   GetNextJobOptions,
   Job,
   JobStatus,
   JobStatusUpdate,
+  NewFlowNode,
   NewJob,
   PaginationOptions,
   QueueStats,
@@ -15,9 +21,10 @@ import type {
 import { BaseQueueAdapter } from "@vorsteh-queue/core"
 import type { JobWhereInput } from "@vorsteh-queue/query-builder"
 import { normalizeWhere } from "@vorsteh-queue/query-builder"
-import type { DataSource, Repository } from "typeorm"
+import type { DataSource, EntityManager, Repository } from "typeorm"
 
-import { QueueJobEntity } from "./entity"
+import { QueueFlowEntity } from "./flow-entity"
+import { QueueJobEntity } from "./queue-entity"
 
 /** Allowed pattern for SQL identifiers: letters, digits, underscores only. */
 const VALID_IDENTIFIER_PATTERN = /^[a-zA-Z0-9_]+$/
@@ -70,17 +77,11 @@ interface RawQueueJob {
   group_key: string | null
   unique_key: string | null
   cron: string | null
-  depends_on: unknown
   repeat_every: number | null
   repeat_limit: number | null
   repeat_count: number
   cancellation_reason: string | null
-  on_dependency_failure: string | null
-  flow_id: string | null
-  parent_id: string | null
-  children_count: number
-  children_completed: number
-  fail_parent_on_failure: number
+  flow_node_id: string | null
   error: unknown
   result: unknown
   created_at: Date
@@ -113,10 +114,15 @@ interface RawQueueJob {
  * const adapter = new PostgresTypeormQueueAdapter(dataSource)
  * ```
  */
-export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
+export class PostgresTypeormQueueAdapter
+  extends BaseQueueAdapter
+  implements FlowAdapter
+{
   private dataSource: DataSource
   private repo!: Repository<QueueJobEntity>
+  private flowRepo!: Repository<QueueFlowEntity>
   private readonly fullTable: string
+  private readonly fullFlowTable: string
 
   constructor(dataSource: DataSource, adapterConfig?: TypeormAdapterProps) {
     super()
@@ -124,8 +130,10 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
 
     const tableName = adapterConfig?.tableName ?? "queue_jobs"
     const schemaName = adapterConfig?.schemaName
+    const flowTableName = adapterConfig?.flowTableName ?? "queue_flows"
 
     assertValidIdentifier(tableName, "tableName")
+    assertValidIdentifier(flowTableName, "flowTableName")
     if (schemaName !== undefined) {
       assertValidIdentifier(schemaName, "schemaName")
     }
@@ -133,6 +141,10 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
     this.fullTable = schemaName
       ? `"${schemaName}"."${tableName}"`
       : `"${tableName}"`
+
+    this.fullFlowTable = schemaName
+      ? `"${schemaName}"."${flowTableName}"`
+      : `"${flowTableName}"`
   }
 
   async connect(): Promise<void> {
@@ -140,6 +152,7 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
       await this.dataSource.initialize()
     }
     this.repo = this.dataSource.getRepository(QueueJobEntity)
+    this.flowRepo = this.dataSource.getRepository(QueueFlowEntity)
   }
 
   async disconnect(): Promise<void> {
@@ -152,17 +165,11 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
     const entity = this.repo.create({
       attempts: job.attempts,
       cancellationReason: null,
-      childrenCompleted: job.childrenCompleted ?? 0,
-      childrenCount: job.childrenCount ?? 0,
       cron: job.cron ?? null,
-      dependsOn: job.dependsOn ? JSON.stringify(job.dependsOn) : null,
-      failParentOnFailure: job.failParentOnFailure ? 1 : 0,
-      flowId: job.flowId ?? null,
+      flowNodeId: job.flowNodeId ?? null,
       groupKey: job.groupKey ?? null,
       maxAttempts: job.maxAttempts,
       name: job.name,
-      onDependencyFailure: job.onDependencyFailure ?? null,
-      parentId: job.parentId ?? null,
       payload: JSON.stringify(job.payload),
       priority: job.priority,
       processAt: job.processAt,
@@ -439,7 +446,6 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
       failed: 0,
       pending: 0,
       processing: 0,
-      "waiting-children": 0,
     }
     for (const stat of stats) {
       if (stat.status in result) {
@@ -492,29 +498,6 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
 
     const rows = await qb.getMany()
     return rows.map((r) => PostgresTypeormQueueAdapter.transformEntity(r))
-  }
-
-  async getFlows(
-    options?: PaginationOptions
-  ): Promise<readonly { flowId: string; rootJob: Job }[]> {
-    const limit = options?.limit ?? 20
-    const offset = options?.offset ?? 0
-
-    const rows = await this.repo
-      .createQueryBuilder("job")
-      .where("job.queueName = :queueName", { queueName: this.queueName })
-      .andWhere("job.flowId IS NOT NULL")
-      .andWhere("job.parentId IS NULL")
-      .orderBy("job.createdAt", "DESC")
-      .take(limit)
-      .skip(offset)
-      .getMany()
-
-    return rows.map((r) => {
-      const job = PostgresTypeormQueueAdapter.transformEntity(r)
-      // oxlint-disable-next-line typescript/no-non-null-assertion
-      return { flowId: job.flowId!, rootJob: job }
-    })
   }
 
   async clearJobs(status?: JobStatus): Promise<number> {
@@ -631,55 +614,6 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
       status: "pending",
     })
     return true
-  }
-
-  async getFlowTree(flowId: string): Promise<FlowNode | null> {
-    const jobs = await this.repo.find({
-      where: { flowId, queueName: this.queueName },
-    })
-    if (jobs.length === 0) {
-      return null
-    }
-
-    const allJobs = jobs.map((j) =>
-      PostgresTypeormQueueAdapter.transformEntity(j)
-    )
-    const root = allJobs.find((j) => !j.parentId)
-    if (!root) {
-      return null
-    }
-
-    const buildNode = (job: Job): FlowNode => {
-      const children = allJobs.filter((j) => j.parentId === job.id)
-      return { children: children.map((c) => buildNode(c)), job }
-    }
-    return buildNode(root)
-  }
-
-  async deleteFlow(flowId: string): Promise<number> {
-    const [, count] = (await this.dataSource.query(
-      `DELETE FROM ${this.fullTable} WHERE queue_name = $1 AND flow_id = $2`,
-      [this.queueName, flowId]
-    )) as [unknown, number]
-    return count
-  }
-
-  async incrementChildrenCompleted(
-    parentId: string
-  ): Promise<{ completed: number; total: number }> {
-    await this.repo.increment({ id: parentId }, "childrenCompleted", 1)
-    const updated = await this.repo.findOneBy({ id: parentId })
-    return {
-      completed: updated?.childrenCompleted ?? 0,
-      total: updated?.childrenCount ?? 0,
-    }
-  }
-
-  async getChildrenJobs(parentId: string): Promise<readonly Job[]> {
-    const jobs = await this.repo.find({
-      where: { parentId, queueName: this.queueName },
-    })
-    return jobs.map((j) => PostgresTypeormQueueAdapter.transformEntity(j))
   }
 
   // ─── Private helpers ─────────────────────────────────────────────────────────
@@ -931,27 +865,16 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
       attempts: entity.attempts,
       cancellationReason: entity.cancellationReason ?? undefined,
       cancelledAt: entity.cancelledAt ?? undefined,
-      childrenCompleted: entity.childrenCompleted ?? 0,
-      childrenCount: entity.childrenCount ?? 0,
       completedAt: entity.completedAt ?? undefined,
       createdAt: entity.createdAt,
       cron: entity.cron ?? undefined,
-      dependsOn: entity.dependsOn
-        ? ((typeof entity.dependsOn === "string"
-            ? JSON.parse(entity.dependsOn)
-            : entity.dependsOn) as string[])
-        : undefined,
       error: entity.error as SerializedError | undefined,
-      failParentOnFailure: entity.failParentOnFailure === 1 || undefined,
       failedAt: entity.failedAt ?? undefined,
-      flowId: entity.flowId ?? undefined,
+      flowNodeId: entity.flowNodeId ?? undefined,
       groupKey: entity.groupKey ?? undefined,
       id: entity.id,
       maxAttempts: entity.maxAttempts,
       name: entity.name,
-      onDependencyFailure:
-        (entity.onDependencyFailure as "fail" | "cancel") ?? undefined,
-      parentId: entity.parentId ?? undefined,
       payload:
         typeof entity.payload === "string"
           ? JSON.parse(entity.payload)
@@ -976,27 +899,16 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
       attempts: job.attempts,
       cancellationReason: job.cancellation_reason ?? undefined,
       cancelledAt: job.cancelled_at ?? undefined,
-      childrenCompleted: job.children_completed ?? 0,
-      childrenCount: job.children_count ?? 0,
       completedAt: job.completed_at ?? undefined,
       createdAt: job.created_at,
       cron: job.cron ?? undefined,
-      dependsOn: job.depends_on
-        ? ((typeof job.depends_on === "string"
-            ? JSON.parse(job.depends_on)
-            : job.depends_on) as string[])
-        : undefined,
       error: job.error as SerializedError | undefined,
-      failParentOnFailure: job.fail_parent_on_failure === 1 || undefined,
       failedAt: job.failed_at ?? undefined,
-      flowId: job.flow_id ?? undefined,
+      flowNodeId: job.flow_node_id ?? undefined,
       groupKey: job.group_key ?? undefined,
       id: job.id,
       maxAttempts: job.max_attempts,
       name: job.name,
-      onDependencyFailure:
-        (job.on_dependency_failure as "fail" | "cancel") ?? undefined,
-      parentId: job.parent_id ?? undefined,
       payload:
         typeof job.payload === "string" ? JSON.parse(job.payload) : job.payload,
       priority: job.priority,
@@ -1011,5 +923,297 @@ export class PostgresTypeormQueueAdapter extends BaseQueueAdapter {
       timeout: job.timeout ?? undefined,
       uniqueKey: job.unique_key ?? undefined,
     }
+  }
+
+  private static transformFlowEntity(entity: QueueFlowEntity): FlowNode {
+    return {
+      id: entity.id,
+      flowId: entity.flowId,
+      parentNodeId: entity.parentNodeId ?? undefined,
+      jobId: entity.jobId ?? undefined,
+      queueName: entity.queueName,
+      name: entity.name,
+      payload: entity.payload,
+      options: entity.options as FlowNode["options"],
+      status: entity.status as FlowNode["status"],
+      failureStrategy: entity.failureStrategy as FlowNode["failureStrategy"],
+      childrenCount: entity.childrenCount,
+      childrenCompleted: entity.childrenCompleted,
+      result: entity.result ?? undefined,
+      error: entity.error as SerializedError | undefined,
+      createdAt: entity.createdAt,
+      completedAt: entity.completedAt ?? undefined,
+    }
+  }
+
+  // ─── FlowAdapter Implementation ──────────────────────────────────────────
+
+  async createFlow(
+    nodes: readonly NewFlowNode[],
+    leafJobs: readonly NewJob[]
+  ): Promise<readonly FlowNode[]> {
+    return this.dataSource.transaction(async (manager: EntityManager) => {
+      const flowRepo = manager.getRepository(QueueFlowEntity)
+      const jobRepo = manager.getRepository(QueueJobEntity)
+
+      // Insert all flow nodes with pre-generated IDs
+      const flowEntities = nodes.map((n) =>
+        flowRepo.create({
+          id: n.id,
+          flowId: n.flowId,
+          parentNodeId: n.parentNodeId ?? null,
+          jobId: n.jobId ?? null,
+          queueName: n.queueName,
+          name: n.name,
+          payload: n.payload,
+          options: n.options ?? null,
+          status: n.status,
+          failureStrategy: n.failureStrategy,
+          childrenCount: n.childrenCount,
+          childrenCompleted: n.childrenCompleted,
+        })
+      )
+      await flowRepo.save(flowEntities)
+
+      // Insert leaf jobs and update flow nodes with job IDs
+      for (const job of leafJobs) {
+        const matchingNode = nodes.find((n) => n.id === job.flowNodeId)
+        const jobEntity = jobRepo.create({
+          attempts: job.attempts,
+          cancellationReason: null,
+          cron: job.cron ?? null,
+          flowNodeId: job.flowNodeId ?? null,
+          groupKey: job.groupKey ?? null,
+          maxAttempts: job.maxAttempts,
+          name: job.name,
+          payload: JSON.stringify(job.payload),
+          priority: job.priority,
+          processAt: job.processAt,
+          progress: job.progress ?? 0,
+          queueName: matchingNode?.queueName ?? this.queueName,
+          repeatCount: job.repeatCount ?? 0,
+          repeatEvery: job.repeatEvery ?? null,
+          repeatLimit: job.repeatLimit ?? null,
+          status: job.status,
+          timeout: typeof job.timeout === "number" ? job.timeout : null,
+          uniqueKey: job.uniqueKey ?? null,
+        })
+        const saved = await jobRepo.save(jobEntity)
+
+        // Update the flow node with the created job ID
+        if (job.flowNodeId) {
+          await flowRepo.update(job.flowNodeId, { jobId: saved.id })
+        }
+      }
+
+      // Re-fetch all nodes to get updated jobId values
+      const finalNodes = await flowRepo.findBy(nodes.map((n) => ({ id: n.id })))
+      return finalNodes.map((e) =>
+        PostgresTypeormQueueAdapter.transformFlowEntity(e)
+      )
+    })
+  }
+
+  async getFlowNode(nodeId: string): Promise<FlowNode | null> {
+    const entity = await this.flowRepo.findOneBy({ id: nodeId })
+    return entity
+      ? PostgresTypeormQueueAdapter.transformFlowEntity(entity)
+      : null
+  }
+
+  async getFlowTree(flowId: string): Promise<FlowTree | null> {
+    const rows = await this.flowRepo.findBy({ flowId })
+    if (rows.length === 0) {
+      return null
+    }
+
+    const allNodes = rows.map((r) =>
+      PostgresTypeormQueueAdapter.transformFlowEntity(r)
+    )
+    const rootNode = allNodes.find((n) => !n.parentNodeId)
+    if (!rootNode) {
+      return null
+    }
+
+    const buildTree = (node: FlowNode): FlowTree => {
+      const children = allNodes
+        .filter((n) => n.parentNodeId === node.id)
+        .map(buildTree)
+      return { node, children }
+    }
+
+    return buildTree(rootNode)
+  }
+
+  async getFlows(options?: FlowListOptions): Promise<readonly FlowSummary[]> {
+    const limit = options?.limit ?? 20
+    const offset = options?.offset ?? 0
+
+    const qb = this.flowRepo
+      .createQueryBuilder("flow")
+      .where("flow.parentNodeId IS NULL")
+      .orderBy("flow.createdAt", "DESC")
+      .take(limit)
+      .skip(offset)
+
+    if (options?.status) {
+      qb.andWhere("flow.status = :status", { status: options.status })
+    }
+
+    const rows = await qb.getMany()
+    return rows.map((r) => {
+      const node = PostgresTypeormQueueAdapter.transformFlowEntity(r)
+      return {
+        flowId: node.flowId,
+        rootNode: node,
+        status: node.status,
+        createdAt: node.createdAt,
+        completedAt: node.completedAt,
+      }
+    })
+  }
+
+  async updateFlowNode(nodeId: string, update: FlowNodeUpdate): Promise<void> {
+    const updates: Record<string, unknown> = {}
+
+    if (update.status !== undefined) {
+      updates.status = update.status
+    }
+    if (update.jobId !== undefined) {
+      updates.jobId = update.jobId
+    }
+    if (update.result !== undefined) {
+      updates.result = update.result
+    }
+    if (update.error !== undefined) {
+      updates.error = update.error
+    }
+    if (update.completedAt !== undefined) {
+      updates.completedAt = update.completedAt
+    }
+
+    await this.flowRepo.update(nodeId, updates)
+  }
+
+  async incrementNodeChildrenCompleted(
+    nodeId: string
+  ): Promise<{ completed: number; total: number }> {
+    await this.flowRepo.increment({ id: nodeId }, "childrenCompleted", 1)
+    const updated = await this.flowRepo.findOneBy({ id: nodeId })
+    return {
+      completed: updated?.childrenCompleted ?? 0,
+      total: updated?.childrenCount ?? 0,
+    }
+  }
+
+  async getNodeChildren(nodeId: string): Promise<readonly FlowNode[]> {
+    const rows = await this.flowRepo.findBy({ parentNodeId: nodeId })
+    return rows.map((r) => PostgresTypeormQueueAdapter.transformFlowEntity(r))
+  }
+
+  async getChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    const rows = await this.flowRepo
+      .createQueryBuilder("flow")
+      .where("flow.parentNodeId = :nodeId", { nodeId })
+      .andWhere("flow.status = :status", { status: "completed" })
+      .getMany()
+
+    const results = new Map<string, unknown>()
+    for (const row of rows) {
+      results.set(row.id, row.result)
+    }
+    return results
+  }
+
+  async getFailedChildrenResults(
+    nodeId: string
+  ): Promise<ReadonlyMap<string, unknown>> {
+    const rows = await this.flowRepo
+      .createQueryBuilder("flow")
+      .where("flow.parentNodeId = :nodeId", { nodeId })
+      .andWhere("flow.status = :status", { status: "failed" })
+      .getMany()
+
+    const results = new Map<string, unknown>()
+    for (const row of rows) {
+      results.set(row.id, row.error)
+    }
+    return results
+  }
+
+  async cancelUnprocessedChildren(nodeId: string): Promise<number> {
+    const children = await this.flowRepo.findBy({ parentNodeId: nodeId })
+
+    let cancelled = 0
+    const now = new Date()
+
+    for (const child of children) {
+      if (child.status === "waiting") {
+        await this.flowRepo.update(child.id, {
+          status: "cancelled",
+          completedAt: now,
+        })
+        cancelled++
+        cancelled += await this.cancelUnprocessedChildren(child.id)
+      } else if (child.status === "ready" && child.jobId) {
+        // Cancel the corresponding job if still pending/delayed
+        const result = await this.repo
+          .createQueryBuilder()
+          .update()
+          .set({ cancelledAt: now, status: "cancelled" })
+          .where("id = :id", { id: child.jobId })
+          .andWhere("status IN (:...statuses)", {
+            statuses: ["pending", "delayed"],
+          })
+          .execute()
+
+        if ((result.affected ?? 0) > 0) {
+          await this.flowRepo.update(child.id, {
+            status: "cancelled",
+            completedAt: now,
+          })
+          cancelled++
+        }
+        cancelled += await this.cancelUnprocessedChildren(child.id)
+      }
+    }
+
+    return cancelled
+  }
+
+  async deleteFlow(flowId: string): Promise<number> {
+    const result = await this.flowRepo
+      .createQueryBuilder()
+      .delete()
+      .where("flowId = :flowId", { flowId })
+      .execute()
+    return result.affected ?? 0
+  }
+
+  async cleanupFlows(keepCount: number): Promise<number> {
+    // Find root nodes of completed flows, ordered by creation time
+    const rootNodes = await this.flowRepo
+      .createQueryBuilder("flow")
+      .select("flow.flowId")
+      .where("flow.parentNodeId IS NULL")
+      .andWhere("flow.status = :status", { status: "completed" })
+      .orderBy("flow.createdAt", "DESC")
+      .skip(keepCount)
+      .getMany()
+
+    if (rootNodes.length === 0) {
+      return 0
+    }
+
+    const flowIdsToDelete = rootNodes.map((r) => r.flowId)
+    const result = await this.flowRepo
+      .createQueryBuilder()
+      .delete()
+      .where("flowId IN (:...flowIds)", { flowIds: flowIdsToDelete })
+      .execute()
+
+    return result.affected ?? 0
   }
 }

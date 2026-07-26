@@ -18,6 +18,7 @@ The TypeORM adapter provides PostgreSQL support using TypeORM, offering a mature
 import { DataSource } from "typeorm"
 import {
   PostgresTypeormQueueAdapter,
+  QueueFlowEntity,
   QueueJobEntity,
 } from "@vorsteh-queue/adapter-typeorm"
 import { Queue, Worker } from "@vorsteh-queue/core"
@@ -25,7 +26,7 @@ import { Queue, Worker } from "@vorsteh-queue/core"
 const dataSource = new DataSource({
   type: "postgres",
   url: process.env.DATABASE_URL,
-  entities: [QueueJobEntity],
+  entities: [QueueJobEntity, QueueFlowEntity],
   synchronize: true,
 })
 
@@ -44,12 +45,15 @@ await queue.connect()
 
 ## Database Schema
 
-The adapter ships with a pre-built `QueueJobEntity` that you can use directly with TypeORM's `synchronize: true` or migrations. The entity maps to the `queue_jobs` table.
+The adapter ships with pre-built `QueueJobEntity` and `QueueFlowEntity` that you can use directly with TypeORM's `synchronize: true` or migrations. The entities map to the `queue_jobs` and `queue_flows` tables respectively.
 
-If you prefer manual control, you can import the entity and use TypeORM migrations:
+If you prefer manual control, you can import the entities and use TypeORM migrations:
 
 ```typescript
-import { QueueJobEntity } from "@vorsteh-queue/adapter-typeorm/entity"
+import {
+  QueueFlowEntity,
+  QueueJobEntity,
+} from "@vorsteh-queue/adapter-typeorm/entity"
 ```
 
 The entity defines all required columns with proper types, indexes, and column mappings.

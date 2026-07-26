@@ -64,9 +64,9 @@ Each adapter provides schema definitions and migration tooling:
 - **Prisma** — add the model to `schema.prisma` and run `prisma migrate`
 - **Kysely** — use the provided migration and run via `kysely-ctl`
 - **ZenStack** — add the model to `schema.zmodel` and run `zen db push`
-- **TypeORM** — use the included `QueueJobEntity` with `synchronize: true` or generate migrations
-- **MikroORM** — use the included EntitySchema and run `mikro-orm migration:create`
-- **Sequelize** — use the included model with `sequelize.sync()` or CLI migrations
+- **TypeORM** — use the included `QueueJobEntity` and `QueueFlowEntity` with `synchronize: true` or generate migrations
+- **MikroORM** — use the included EntitySchemas and run `mikro-orm migration:create`
+- **Sequelize** — use the included models with `sequelize.sync()` or CLI migrations
 
 Refer to the specific adapter documentation for detailed instructions.
 

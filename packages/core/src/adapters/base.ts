@@ -19,7 +19,6 @@ import type { JobWhereInput } from "@vorsteh-queue/query-builder"
 
 import type {
   CancelJobsFilter,
-  FlowNode,
   GetNextJobOptions,
   Job,
   JobStatus,
@@ -90,13 +89,6 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
     limit?: number
     offset?: number
   }): Promise<readonly Job[]>
-  abstract getFlows(options?: PaginationOptions): Promise<
-    readonly {
-      flowId: string
-      rootJob: Job
-    }[]
-  >
-
   // ─── Cleanup ───────────────────────────────────────────────
 
   abstract clearJobs(status?: JobStatus): Promise<number>
@@ -127,15 +119,6 @@ export abstract class BaseQueueAdapter implements QueueAdapter {
     event: string,
     data: unknown
   ): Promise<boolean>
-
-  // ─── Flows ─────────────────────────────────────────────────
-
-  abstract getFlowTree(flowId: string): Promise<FlowNode | null>
-  abstract deleteFlow(flowId: string): Promise<number>
-  abstract incrementChildrenCompleted(
-    parentId: string
-  ): Promise<{ completed: number; total: number }>
-  abstract getChildrenJobs(parentId: string): Promise<readonly Job[]>
 
   // ─── Utilities ─────────────────────────────────────────────
 

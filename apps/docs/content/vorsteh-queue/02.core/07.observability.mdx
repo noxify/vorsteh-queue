@@ -44,6 +44,12 @@ const worker = new Worker(adapter, { name: "email-queue", telemetry })
 
 The `telemetry` parameter is optional on both Queue and Worker. When omitted, a no-op implementation is used with zero overhead.
 
+The same telemetry instance can be passed to `FlowProducer` for flow-level observability:
+
+```typescript
+const flowProducer = new FlowProducer(adapter, { telemetry })
+```
+
 ## How It Works
 
 - `createOtelTelemetry(config)` — creates a telemetry instance backed by the global OTel providers. Requires `@opentelemetry/api` to be installed.
@@ -78,6 +84,21 @@ All metrics use the `vorsteh_queue` namespace and include queue name and job nam
 | --- | --- | --- |
 | `vorsteh_queue.jobs.duration` | ms | Time spent processing a job |
 | `vorsteh_queue.jobs.wait_time` | ms | Time from enqueue to processing start |
+
+### Flow Counters
+
+| Metric | Description |
+| --- | --- |
+| `vorsteh_queue.flows.created` | Total flows created |
+| `vorsteh_queue.flows.completed` | Total flows completed successfully |
+| `vorsteh_queue.flows.failed` | Total flows that failed |
+| `vorsteh_queue.flows.nodes_promoted` | Total flow nodes promoted (parent job created) |
+
+### Flow Histograms
+
+| Metric | Unit | Description |
+| --- | --- | --- |
+| `vorsteh_queue.flows.duration` | ms | End-to-end flow duration (creation to root completion) |
 
 ## Distributed Tracing
 

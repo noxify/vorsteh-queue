@@ -11,15 +11,11 @@
  * outside the Next.js runtime (t3-env is not available in this context).
  */
 
-import {
-  postgresSchema,
-  PostgresQueueAdapter,
-} from "@vorsteh-queue/adapter-drizzle"
+import { PostgresQueueAdapter, queueJobs } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 import { defineRelations } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 
-const { queueJobs } = postgresSchema
 const relations = defineRelations({ queueJobs })
 
 const db = drizzle({

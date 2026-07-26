@@ -36,14 +36,14 @@
       "default": "./dist/index.mjs"
     },
     "./postgres-adapter": {
-      "types": "./dist/postgres-adapter.d.mts",
-      "source": "./src/postgres-adapter.ts",
-      "default": "./dist/postgres-adapter.mjs"
+      "types": "./dist/adapter.d.mts",
+      "source": "./src/adapter.ts",
+      "default": "./dist/adapter.mjs"
     },
     "./model": {
-      "types": "./dist/model.d.mts",
-      "source": "./src/model.ts",
-      "default": "./dist/model.mjs"
+      "types": "./dist/queue-model.d.mts",
+      "source": "./src/queue-model.ts",
+      "default": "./dist/queue-model.mjs"
     }
   },
   "scripts": {

@@ -2,7 +2,11 @@
  * Direct transport — uses a QueueAdapter instance directly.
  */
 
-import type { QueueAdapter } from "@vorsteh-queue/core"
+import type {
+  FlowAdapter,
+  FlowListOptions,
+  QueueAdapter,
+} from "@vorsteh-queue/core"
 
 import type { Transport } from "./types"
 
@@ -32,10 +36,12 @@ export function createDirectTransport(
       return adapter.getDeadJobs(options)
     },
     async getFlowTree(flowId: string) {
-      return adapter.getFlowTree(flowId)
+      return (adapter as unknown as FlowAdapter).getFlowTree(flowId)
     },
     async getFlows(options) {
-      return adapter.getFlows(options)
+      return (adapter as unknown as FlowAdapter).getFlows(
+        options as FlowListOptions | undefined
+      )
     },
     async getJob(id: string) {
       return adapter.getJobById(id)

@@ -16,7 +16,6 @@
  * ```
  */
 
-import { detectCircularDependencies } from "./dependencies"
 import {
   DuplicateJobError,
   JobCancelledError,
@@ -29,9 +28,6 @@ import type { Telemetry } from "./telemetry"
 import { noopTelemetry } from "./telemetry"
 import type {
   ActiveStatus,
-  FlowJobDefinition,
-  FlowNode,
-  FlowResult,
   Job,
   JobOptions,
   JobStatus,
@@ -140,9 +136,6 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
       }
     }
 
-    // Validate and check dependencies
-    await this.validateDependencies(jobOptions)
-
     // Determine initial status and processAt
     let processAt: Date
     let status: JobStatus = "pending"
@@ -163,13 +156,9 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     const job = await this._adapter.addJob({
       attempts: 0,
       cron: jobOptions.cron,
-      dependsOn: jobOptions.dependsOn,
       groupKey: jobOptions.group,
       maxAttempts: jobOptions.maxAttempts ?? 3,
       name,
-      onDependencyFailure: jobOptions.dependsOn?.length
-        ? (jobOptions.onDependencyFailure ?? "fail")
-        : undefined,
       payload,
       priority: jobOptions.priority ?? 2,
       processAt,
@@ -203,18 +192,11 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
     const jobOptions = { ...this._config.defaultJobOptions, ...options }
     const now = new Date()
 
-    // Validate and check dependencies
-    await this.validateDependencies(jobOptions)
-
     const newJobs = payloads.map((payload) => ({
       attempts: 0,
-      dependsOn: jobOptions.dependsOn,
       groupKey: jobOptions.group,
       maxAttempts: jobOptions.maxAttempts ?? 3,
       name,
-      onDependencyFailure: jobOptions.dependsOn?.length
-        ? (jobOptions.onDependencyFailure ?? "fail")
-        : undefined,
       payload,
       priority: jobOptions.priority ?? 2,
       processAt: asUtc(now),
@@ -540,110 +522,5 @@ export class Queue extends TypedEventEmitter<QueueEvents> {
    */
   async deleteJob(jobId: string): Promise<boolean> {
     return this._adapter.deleteJob(jobId)
-  }
-
-  // ─── Dependency Validation ──────────────────────────────────
-
-  /**
-   * Validate dependency options and check for circular dependencies.
-   *
-   * @param options - Job options containing dependsOn and onDependencyFailure
-   * @throws {Error} If onDependencyFailure has an invalid value
-   * @throws {CircularDependencyError} If circular dependencies are detected
-   */
-  private async validateDependencies(options: JobOptions): Promise<void> {
-    if (!options.dependsOn || options.dependsOn.length === 0) {
-      return
-    }
-
-    const tempId = crypto.randomUUID()
-    await detectCircularDependencies(tempId, options.dependsOn, this._adapter)
-
-    const policy = options.onDependencyFailure ?? "fail"
-    if (policy !== "fail" && policy !== "cancel") {
-      throw new Error(
-        `Invalid onDependencyFailure value: "${policy as string}". Must be "fail" or "cancel".`
-      )
-    }
-  }
-
-  // ─── Flows ─────────────────────────────────────────────────
-
-  /**
-   * Create a flow (parent-child job tree). Children are processed first;
-   * the parent moves to `pending` only when all children complete.
-   *
-   * @param definition - Declarative tree of jobs
-   * @returns Flow result with ID and root job
-   *
-   * @example
-   * ```typescript
-   * const flow = await queue.addFlow({
-   *   name: "deploy",
-   *   payload: { version: "1.0" },
-   *   children: [
-   *     { name: "build", payload: { target: "linux" } },
-   *     { name: "build", payload: { target: "macos" } },
-   *     { name: "test", payload: {}, children: [
-   *       { name: "lint", payload: {} },
-   *     ]},
-   *   ],
-   * })
-   * ```
-   */
-  async addFlow(definition: FlowJobDefinition): Promise<FlowResult> {
-    const flowId = crypto.randomUUID()
-    const rootJob = await this.createFlowNode(definition, flowId)
-    return { id: flowId, job: rootJob }
-  }
-
-  /**
-   * Get the full flow tree for visualization.
-   *
-   * @param flowId - Flow ID
-   * @returns Tree structure with jobs and children, or null
-   */
-  async getFlowTree(flowId: string): Promise<FlowNode | null> {
-    return this._adapter.getFlowTree(flowId)
-  }
-
-  private async createFlowNode(
-    definition: FlowJobDefinition,
-    flowId: string,
-    parentId?: string
-  ): Promise<Job> {
-    const hasChildren = definition.children && definition.children.length > 0
-
-    // Create the job
-    const job = await this._adapter.addJob({
-      name: definition.name,
-      payload: definition.payload,
-      status: hasChildren ? "waiting-children" : "pending",
-      priority: definition.options?.priority ?? 2,
-      attempts: 0,
-      maxAttempts: definition.options?.maxAttempts ?? 3,
-      processAt: new Date(),
-      progress: 0,
-      repeatCount: 0,
-      timeout: definition.options?.timeout,
-      groupKey: definition.options?.group,
-      parentId,
-      flowId,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      childrenCount: hasChildren ? definition.children!.length : 0,
-      childrenCompleted: 0,
-      failParentOnFailure: definition.failParentOnFailure,
-    })
-
-    // Create children recursively
-    if (hasChildren) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      for (const childDef of definition.children!) {
-        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- recursive tree creation must be sequential
-        await this.createFlowNode(childDef, flowId, job.id)
-      }
-    }
-
-    return job
   }
 }

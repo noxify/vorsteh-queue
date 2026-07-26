@@ -1,4 +1,4 @@
-import type { FlowNode } from "@vorsteh-queue/core"
+import type { FlowTree } from "@vorsteh-queue/core"
 import consola from "consola"
 
 import { buildFlowCommandStructure } from "../metadata/flow-metadata"
@@ -8,34 +8,29 @@ import { withTransport } from "../transport/with-transport"
 const STATUS_ICONS: Record<string, string> = {
   cancelled: "⊘",
   completed: "✓",
-  dead: "☠",
-  delayed: "◷",
   failed: "✗",
-  pending: "○",
-  processing: "⟳",
-  "waiting-children": "⏳",
+  ready: "○",
+  waiting: "⏳",
 }
 
-function renderTree(node: FlowNode, prefix = "", isLast = true): string {
-  const icon = STATUS_ICONS[node.job.status] ?? "?"
+function renderTree(tree: FlowTree, prefix = "", isLast = true): string {
+  const icon = STATUS_ICONS[tree.node.status] ?? "?"
   const connector = prefix === "" ? "" : isLast ? "└── " : "├── "
-  const statusColor = node.job.status === "completed" ? "✓" : icon
+  let line = `${prefix}${connector}${tree.node.name} (${tree.node.status}) ${icon}`
 
-  let line = `${prefix}${connector}${node.job.name} (${node.job.status}) ${statusColor}`
-
-  if (node.job.result) {
+  if (tree.node.result) {
     line += "  [done]"
   }
 
   const lines = [line]
   const childPrefix = prefix + (prefix === "" ? "" : isLast ? "    " : "│   ")
 
-  for (let i = 0; i < node.children.length; i += 1) {
-    const child = node.children[i]
+  for (let i = 0; i < tree.children.length; i += 1) {
+    const child = tree.children[i]
     if (!child) {
       continue
     }
-    const childIsLast = i === node.children.length - 1
+    const childIsLast = i === tree.children.length - 1
     lines.push(renderTree(child, childPrefix, childIsLast))
   }
 
@@ -64,7 +59,7 @@ export function createFlowCommand() {
           return
         }
 
-        consola.info(`Flow: ${tree.job.name}  [flow-id: ${id}]`)
+        consola.info(`Flow: ${tree.node.name}  [flow-id: ${id}]`)
         consola.log("")
         consola.log(renderTree(tree))
       }

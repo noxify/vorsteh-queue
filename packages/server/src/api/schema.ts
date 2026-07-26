@@ -4,7 +4,10 @@
 
 import SchemaBuilder from "@pothos/core"
 import type {
+  FlowAdapter,
   FlowNode,
+  FlowSummary,
+  FlowTree,
   Job,
   JobStatus,
   Queue,
@@ -53,7 +56,6 @@ const JobStatusEnum = builder.enumType("JobStatus", {
     failed: { value: "failed" },
     pending: { value: "pending" },
     processing: { value: "processing" },
-    waiting_children: { value: "waiting-children" },
   },
 })
 
@@ -133,8 +135,6 @@ JobWhereInputRef.implement({
     cron: t.field({ type: NullFilterInput, required: false }),
     repeatCount: t.field({ type: IntFilterInput, required: false }),
     timeout: t.field({ type: NullFilterInput, required: false }),
-    flowId: t.field({ type: StringFilterInput, required: false }),
-    parentId: t.field({ type: StringFilterInput, required: false }),
   }),
 })
 
@@ -243,32 +243,9 @@ const JobType = builder.objectRef<Job>("Job").implement({
       resolve: (parent) =>
         typeof parent.timeout === "number" ? parent.timeout : null,
     }),
-    dependsOn: t.stringList({
+    flowNodeId: t.string({
       nullable: true,
-      resolve: (parent) =>
-        parent.dependsOn && parent.dependsOn.length > 0
-          ? [...parent.dependsOn]
-          : null,
-    }),
-    onDependencyFailure: t.string({
-      nullable: true,
-      resolve: (parent) => parent.onDependencyFailure ?? null,
-    }),
-    parentId: t.string({
-      nullable: true,
-      resolve: (parent) => parent.parentId ?? null,
-    }),
-    flowId: t.string({
-      nullable: true,
-      resolve: (parent) => parent.flowId ?? null,
-    }),
-    childrenCount: t.int({
-      nullable: true,
-      resolve: (parent) => parent.childrenCount ?? null,
-    }),
-    childrenCompleted: t.int({
-      nullable: true,
-      resolve: (parent) => parent.childrenCompleted ?? null,
+      resolve: (parent) => parent.flowNodeId ?? null,
     }),
   }),
 })
@@ -303,7 +280,7 @@ builder.queryType({
     }),
 
     flowTree: t.field({
-      type: FlowNodeType,
+      type: FlowTreeType,
       nullable: true,
       args: {
         queue: t.arg.string({ required: true }),
@@ -311,12 +288,13 @@ builder.queryType({
       },
       resolve: async (_parent, args, ctx) => {
         const queue = getQueue(args.queue, ctx.queues)
-        return queue.adapter.getFlowTree(args.flowId)
+        const adapter = queue.adapter as unknown as FlowAdapter
+        return adapter.getFlowTree(args.flowId)
       },
     }),
 
     flows: t.field({
-      type: [FlowEntryType],
+      type: [FlowSummaryType],
       args: {
         queue: t.arg.string({ required: true }),
         limit: t.arg.int({ required: false }),
@@ -324,7 +302,8 @@ builder.queryType({
       },
       resolve: async (_parent, args, ctx) => {
         const queue = getQueue(args.queue, ctx.queues)
-        return queue.adapter.getFlows({
+        const adapter = queue.adapter as unknown as FlowAdapter
+        return adapter.getFlows({
           limit: args.limit ?? 20,
           offset: args.offset ?? 0,
         })
@@ -500,24 +479,69 @@ builder.mutationType({
 
 // ─── Flow Types ──────────────────────────────────────────────────────────────
 
-const FlowNodeType = builder.objectRef<FlowNode>("FlowNode")
-
-FlowNodeType.implement({
+const FlowNodeObjectType = builder.objectRef<FlowNode>("FlowNode").implement({
   fields: (t) => ({
-    children: t.field({
-      type: [FlowNodeType],
-      resolve: (parent) => parent.children,
+    id: t.exposeID("id"),
+    flowId: t.exposeString("flowId"),
+    parentNodeId: t.string({
+      nullable: true,
+      resolve: (p) => p.parentNodeId ?? null,
     }),
-    job: t.field({ type: JobType, resolve: (parent) => parent.job }),
+    jobId: t.string({ nullable: true, resolve: (p) => p.jobId ?? null }),
+    queueName: t.exposeString("queueName"),
+    name: t.exposeString("name"),
+    status: t.exposeString("status"),
+    failureStrategy: t.exposeString("failureStrategy"),
+    childrenCount: t.exposeInt("childrenCount"),
+    childrenCompleted: t.exposeInt("childrenCompleted"),
+    payload: t.string({ resolve: (p) => JSON.stringify(p.payload) }),
+    result: t.string({
+      nullable: true,
+      resolve: (p) => (p.result ? JSON.stringify(p.result) : null),
+    }),
+    error: t.field({
+      type: SerializedErrorType,
+      nullable: true,
+      resolve: (p) => p.error ?? null,
+    }),
+    createdAt: t.string({ resolve: (p) => p.createdAt.toISOString() }),
+    completedAt: t.string({
+      nullable: true,
+      resolve: (p) => p.completedAt?.toISOString() ?? null,
+    }),
   }),
 })
 
-const FlowEntryType = builder
-  .objectRef<{ flowId: string; rootJob: Job }>("FlowEntry")
+const FlowTreeType = builder.objectRef<FlowTree>("FlowTree")
+
+FlowTreeType.implement({
+  fields: (t) => ({
+    node: t.field({
+      type: FlowNodeObjectType,
+      resolve: (parent) => parent.node,
+    }),
+    children: t.field({
+      type: [FlowTreeType],
+      resolve: (parent) => parent.children,
+    }),
+  }),
+})
+
+const FlowSummaryType = builder
+  .objectRef<FlowSummary>("FlowSummary")
   .implement({
     fields: (t) => ({
       flowId: t.exposeString("flowId"),
-      rootJob: t.field({ resolve: (parent) => parent.rootJob, type: JobType }),
+      status: t.exposeString("status"),
+      rootNode: t.field({
+        type: FlowNodeObjectType,
+        resolve: (p) => p.rootNode,
+      }),
+      createdAt: t.string({ resolve: (p) => p.createdAt.toISOString() }),
+      completedAt: t.string({
+        nullable: true,
+        resolve: (p) => p.completedAt?.toISOString() ?? null,
+      }),
     }),
   })
 

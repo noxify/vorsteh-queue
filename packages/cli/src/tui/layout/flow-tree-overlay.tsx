@@ -1,4 +1,4 @@
-import type { FlowNode, Job } from "@vorsteh-queue/core"
+import type { FlowTree } from "@vorsteh-queue/core"
 import { Box, Text, useInput } from "ink"
 import { useEffect, useState } from "react"
 
@@ -16,23 +16,17 @@ interface FlowTreeOverlayProps {
 const STATUS_ICONS: Record<string, string> = {
   cancelled: "⊘",
   completed: "✓",
-  dead: "☠",
-  delayed: "◷",
   failed: "✗",
-  pending: "○",
-  processing: "⟳",
-  "waiting-children": "⏳",
+  ready: "○",
+  waiting: "⏳",
 }
 
 const STATUS_COLORS: Record<string, string> = {
   cancelled: "gray",
   completed: "green",
-  dead: "magenta",
-  delayed: "blue",
   failed: "red",
-  pending: "yellow",
-  processing: "cyan",
-  "waiting-children": "#f97316",
+  ready: "yellow",
+  waiting: "#f97316",
 }
 
 /**
@@ -46,7 +40,7 @@ export function FlowTreeOverlay({
 }: FlowTreeOverlayProps) {
   const theme = useTheme()
   const { transport, refreshInterval } = useDashboard()
-  const [flowTree, setFlowTree] = useState<FlowNode | null>(null)
+  const [flowTree, setFlowTree] = useState<FlowTree | null>(null)
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -121,7 +115,7 @@ export function FlowTreeOverlay({
       ) : errorMsg ? (
         <Text color="red">Error: {errorMsg}</Text>
       ) : flowTree ? (
-        <FlowTreeRenderer node={flowTree} />
+        <FlowTreeRenderer tree={flowTree} />
       ) : (
         <Text color="red">Flow not found.</Text>
       )}
@@ -150,38 +144,38 @@ interface TreeLine {
 }
 
 function collectTreeLines(
-  node: FlowNode,
+  tree: FlowTree,
   prefix: string,
   isLast: boolean,
   isRoot: boolean
 ): TreeLine[] {
-  const icon = STATUS_ICONS[node.job.status] ?? "?"
-  const color = STATUS_COLORS[node.job.status] ?? "white"
+  const { node } = tree
+  const icon = STATUS_ICONS[node.status] ?? "?"
+  const color = STATUS_COLORS[node.status] ?? "white"
   const connector = isRoot ? "" : isLast ? "└── " : "├── "
   const childPrefix = isRoot ? "" : prefix + (isLast ? "    " : "│   ")
 
   const childrenProgress =
-    node.job.childrenCount && node.job.childrenCount > 0
-      ? ` [${node.job.childrenCompleted ?? 0}/${node.job.childrenCount}]`
+    node.childrenCount > 0
+      ? ` [${node.childrenCompleted}/${node.childrenCount}]`
       : ""
-  const stepsInfo = getStepsInfo(node.job)
-  const suffix = `${childrenProgress}${stepsInfo ? ` ${stepsInfo}` : ""}`
+  const suffix = childrenProgress
 
   const lines: TreeLine[] = [
     {
       color,
       connector,
       icon,
-      key: node.job.id,
-      name: node.job.name,
+      key: node.id,
+      name: node.name,
       prefix,
-      status: node.job.status,
-      statusVariant: getStatusVariant(node.job.status),
+      status: node.status,
+      statusVariant: getStatusVariant(node.status),
       suffix,
     },
   ]
 
-  const children = node.children ?? []
+  const children = tree.children ?? []
   for (let i = 0; i < children.length; i++) {
     const child = children[i]
     if (!child) {
@@ -194,8 +188,8 @@ function collectTreeLines(
   return lines
 }
 
-function FlowTreeRenderer({ node }: { readonly node: FlowNode }) {
-  const lines = collectTreeLines(node, "", true, true)
+function FlowTreeRenderer({ tree }: { readonly tree: FlowTree }) {
+  const lines = collectTreeLines(tree, "", true, true)
 
   return (
     <Box flexDirection="column">
@@ -220,28 +214,6 @@ function FlowTreeRenderer({ node }: { readonly node: FlowNode }) {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-interface StepInfo {
-  readonly name: string
-  readonly status: string
-}
-
-function getStepsInfo(job: Job): string | null {
-  if (!job.steps || job.steps.length === 0) {
-    return null
-  }
-  const completed = job.steps.filter(
-    (s: StepInfo) => s.status === "completed"
-  ).length
-  const total = job.steps.length
-  const running = job.steps.find(
-    (s: StepInfo) => s.status === "running" || s.status === "waiting"
-  )
-  if (running) {
-    return `step: ${running.name} (${completed}/${total})`
-  }
-  return `steps: ${completed}/${total}`
-}
-
 function getStatusVariant(
   status: string
 ): "default" | "success" | "warning" | "error" | "info" | "secondary" {
@@ -249,15 +221,13 @@ function getStatusVariant(
     case "completed": {
       return "success"
     }
-    case "failed":
-    case "dead": {
+    case "failed": {
       return "error"
     }
-    case "pending":
-    case "delayed": {
+    case "ready": {
       return "warning"
     }
-    case "processing": {
+    case "waiting": {
       return "info"
     }
     case "cancelled": {

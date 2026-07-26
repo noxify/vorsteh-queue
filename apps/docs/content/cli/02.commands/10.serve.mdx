@@ -31,12 +31,12 @@ The serve command reads from `queue.config.ts`:
 
     import {
       PostgresQueueAdapter,
-      postgresSchema,
+      queueFlows,
+      queueJobs,
     } from "@vorsteh-queue/adapter-drizzle"
     import { Queue } from "@vorsteh-queue/core"
 
-    const { queueJobs } = postgresSchema
-    const relations = defineRelations({ queueJobs })
+    const relations = defineRelations({ queueFlows, queueJobs })
 
     const pool = new Pool({ connectionString: process.env.DATABASE_URL })
     const db = drizzle({ client: pool, relations })

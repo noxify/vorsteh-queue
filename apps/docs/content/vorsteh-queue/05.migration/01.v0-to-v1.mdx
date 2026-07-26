@@ -62,7 +62,7 @@ worker.register("job", async (job, { signal, step }) => {
 
 ### New Statuses
 
-Added `cancelled`, `dead`, and `waiting-children` statuses. Update any code that checks job statuses.
+Added `cancelled` and `dead` statuses. Update any code that checks job statuses.
 
 ### Removed APIs
 
@@ -121,10 +121,10 @@ const db = drizzle(pool, { schema })
 
 ```typescript
 import { defineRelations } from "drizzle-orm"
-import { postgresSchema } from "@vorsteh-queue/adapter-drizzle"
+import { queueFlows, queueJobs } from "@vorsteh-queue/adapter-drizzle"
 
-export const { queueJobs } = postgresSchema
-export const relations = defineRelations({ queueJobs })
+export { queueFlows, queueJobs }
+export const relations = defineRelations({ queueFlows, queueJobs })
 
 // In your database setup:
 import { relations } from "./schema"

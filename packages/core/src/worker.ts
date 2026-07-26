@@ -17,12 +17,8 @@
  * ```
  */
 
-import {
-  areDependenciesMet,
-  cascadeDependencyFailure,
-  getFailedDependency,
-} from "./dependencies"
 import { TypedEventEmitter } from "./events"
+import type { ChildNodeValue, FlowAdapter, FlowJobContext } from "./flow-types"
 import { RateLimiterRegistry } from "./rate-limiter"
 import { calculateRetryDelay, DEFAULT_RETRY_STRATEGY } from "./retry"
 import { createStepContext, SleepInterrupt, WaitForInterrupt } from "./steps"
@@ -36,6 +32,7 @@ import type {
   Job,
   JobContext,
   JobHandler,
+  SerializedError,
   StepState,
   JobWithProgress,
   QueueAdapter,
@@ -65,6 +62,7 @@ interface ActiveJob {
 
 export class Worker extends TypedEventEmitter<WorkerEvents> {
   private readonly adapter: QueueAdapter
+  private readonly flowAdapter?: FlowAdapter
   private readonly config: Required<
     Pick<WorkerConfig, "name" | "concurrency" | "pollInterval">
   > &
@@ -90,6 +88,11 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       ...config,
     }
     this.telemetry = config.telemetry ?? noopTelemetry
+
+    // Detect flow adapter support
+    if ("createFlow" in adapter) {
+      this.flowAdapter = adapter as unknown as FlowAdapter
+    }
 
     this.adapter.setQueueName(this.config.name)
   }
@@ -276,13 +279,9 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         activeGroups
       )
 
-      // Filter out jobs with unmet dependencies
-      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- must resolve before processing
-      const eligibleJobs = await this.filterByDependencies(jobs)
-
       const minSize = options.minSize ?? 1
-      if (eligibleJobs.length >= minSize) {
-        void this.processBatch(name, eligibleJobs, handler, options)
+      if (jobs.length >= minSize) {
+        void this.processBatch(name, jobs, handler, options)
       }
     }
 
@@ -328,14 +327,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         continue
       }
 
-      // Check dependency-gating
-      // eslint-disable-next-line no-await-in-loop
-      const [eligible] = await this.filterByDependencies([job])
-      if (!eligible) {
-        continue
-      }
-
-      void this.processJob(eligible, registered.handler)
+      void this.processJob(job, registered.handler)
     }
   }
 
@@ -428,9 +420,9 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       this.emit("job:completed", completedJob)
       this.telemetry.jobCompleted(completedJob, span)
 
-      /* oxlint-disable react-doctor/async-parallel -- these must run sequentially (promote before triggers, triggers before schedule) */
-      // Promote parent if this is a child in a flow
-      await this.promoteParentIfReady(processingJob)
+      /* oxlint-disable react-doctor/async-parallel -- these must run sequentially (triggers before schedule) */
+      // Promote flow node if this job belongs to a flow
+      await this.handleFlowNodeCompletion(processingJob, result)
 
       // Fire event triggers
       await this.fireTriggers(completedJob, result)
@@ -550,15 +542,13 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         error,
         status: "dead",
       }
+
+      // Handle flow node failure (fail-parent cascade)
+      await this.handleFlowNodeFailure(deadJob, error)
+
       this.emit("job:dead", deadJob)
       this.emit("job:failed", { ...deadJob, error })
       this.telemetry.jobDead(job.name)
-
-      // Cascade failure to parent if configured
-      await this.failParentOnChildFailure(deadJob)
-
-      // Cascade failure to dependent jobs
-      await cascadeDependencyFailure(job.id, this.adapter)
 
       // Cleanup old failed/dead jobs
       await this.cleanupAfterFailure()
@@ -705,6 +695,203 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     }
   }
 
+  // ─── Flow Node Promotion ─────────────────────────────────
+
+  /**
+   * After a job completes successfully, check if it belongs to a flow
+   * and promote the parent node if all children are terminal.
+   */
+  private async handleFlowNodeCompletion(
+    job: Job,
+    result: unknown
+  ): Promise<void> {
+    if (!job.flowNodeId || !this.flowAdapter) {
+      return
+    }
+
+    // Update this node to completed
+    await this.flowAdapter.updateFlowNode(job.flowNodeId, {
+      status: "completed",
+      result,
+      completedAt: new Date(),
+    })
+
+    // Get the node to find its parent
+    const node = await this.flowAdapter.getFlowNode(job.flowNodeId)
+    if (!node) {
+      return
+    }
+
+    // Root node completed — flow is complete
+    if (!node.parentNodeId) {
+      this.emit("flow:completed", { flowId: node.flowId, result })
+      const durationMs = Date.now() - node.createdAt.getTime()
+      this.telemetry.flowCompleted(node.flowId, durationMs)
+      return
+    }
+
+    // Increment parent's childrenCompleted
+    const { completed, total } =
+      await this.flowAdapter.incrementNodeChildrenCompleted(node.parentNodeId)
+
+    // Check if parent is promotable (all children terminal)
+    if (completed >= total) {
+      await this.promoteFlowNode(node.parentNodeId)
+    }
+  }
+
+  /**
+   * Handle flow node failure when a job moves to "dead" status (terminal failure).
+   * Marks the flow node as failed and applies the failure strategy (fail-parent cascade,
+   * continue-parent promotion, or default increment-and-check).
+   */
+  private async handleFlowNodeFailure(
+    job: Job,
+    error: SerializedError
+  ): Promise<void> {
+    if (!job.flowNodeId || !this.flowAdapter) {
+      return
+    }
+
+    // Update this node to failed
+    await this.flowAdapter.updateFlowNode(job.flowNodeId, {
+      status: "failed",
+      error,
+      completedAt: new Date(),
+    })
+
+    // Get the node to find its parent and failureStrategy
+    const node = await this.flowAdapter.getFlowNode(job.flowNodeId)
+    if (!node) {
+      return
+    }
+
+    // Root node failed — flow failed
+    if (!node.parentNodeId) {
+      this.emit("flow:failed", { flowId: node.flowId, error })
+      this.telemetry.flowFailed(node.flowId)
+      return
+    }
+
+    if (node.failureStrategy === "fail-parent") {
+      // Cascade failure to parent recursively
+      await this.cascadeFlowFailure(node.parentNodeId, node.id, error)
+    } else if (node.failureStrategy === "continue-parent") {
+      // Promote parent immediately regardless of other children's state
+      await this.flowAdapter.incrementNodeChildrenCompleted(node.parentNodeId)
+      await this.promoteFlowNode(node.parentNodeId)
+    } else {
+      // Default: increment parent's completed count, check if all terminal
+      const { completed, total } =
+        await this.flowAdapter.incrementNodeChildrenCompleted(node.parentNodeId)
+      if (completed >= total) {
+        await this.promoteFlowNode(node.parentNodeId)
+      }
+    }
+  }
+
+  /**
+   * Recursively fail parent nodes when a child with "fail-parent" strategy fails.
+   * No job is created for failed parent nodes.
+   */
+  private async cascadeFlowFailure(
+    parentNodeId: string,
+    childNodeId: string,
+    childError: SerializedError
+  ): Promise<void> {
+    if (!this.flowAdapter) {
+      return
+    }
+
+    const parentNode = await this.flowAdapter.getFlowNode(parentNodeId)
+    if (!parentNode || parentNode.status !== "waiting") {
+      return
+    }
+
+    const cascadedError: SerializedError = {
+      name: "FlowCascadeError",
+      message: `Child node "${childNodeId}" failed with strategy "fail-parent": ${childError.message}`,
+    }
+
+    await this.flowAdapter.updateFlowNode(parentNodeId, {
+      status: "failed",
+      error: cascadedError,
+      completedAt: new Date(),
+    })
+
+    // If this parent has no parent, it's the root — emit flow:failed
+    if (!parentNode.parentNodeId) {
+      this.emit("flow:failed", {
+        flowId: parentNode.flowId,
+        error: cascadedError,
+      })
+      this.telemetry.flowFailed(parentNode.flowId)
+      return
+    }
+
+    // If this parent also has a parent, check if it should cascade further
+    if (parentNode.failureStrategy === "fail-parent") {
+      await this.cascadeFlowFailure(
+        parentNode.parentNodeId,
+        parentNodeId,
+        cascadedError
+      )
+    } else {
+      // Default: increment grandparent's completed count
+      const { completed, total } =
+        await this.flowAdapter.incrementNodeChildrenCompleted(
+          parentNode.parentNodeId
+        )
+      if (completed >= total) {
+        await this.promoteFlowNode(parentNode.parentNodeId)
+      }
+    }
+  }
+
+  /**
+   * Promote a flow node: create a real job for the parent and update
+   * the node status to "ready".
+   */
+  private async promoteFlowNode(nodeId: string): Promise<void> {
+    if (!this.flowAdapter) {
+      return
+    }
+
+    const parentNode = await this.flowAdapter.getFlowNode(nodeId)
+    if (!parentNode || parentNode.status !== "waiting") {
+      return
+    }
+
+    // Create a real job for the parent
+    const job = await this.adapter.addJob({
+      name: parentNode.name,
+      payload: parentNode.payload,
+      status: "pending",
+      priority: parentNode.options?.priority ?? 2,
+      attempts: 0,
+      maxAttempts: parentNode.options?.maxAttempts ?? 3,
+      processAt: new Date(),
+      progress: 0,
+      repeatCount: 0,
+      timeout: parentNode.options?.timeout,
+      flowNodeId: nodeId,
+      groupKey: parentNode.options?.group,
+    })
+
+    // Update flow node to ready with job ID
+    await this.flowAdapter.updateFlowNode(nodeId, {
+      status: "ready",
+      jobId: job.id,
+    })
+
+    this.emit("flow:node:promoted", {
+      flowId: parentNode.flowId,
+      nodeId,
+      jobId: job.id,
+    })
+    this.telemetry.flowNodePromoted(parentNode.flowId, nodeId)
+  }
+
   // ─── Event Triggers ─────────────────────────────────────────
 
   /**
@@ -739,43 +926,6 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
         status: "pending",
         timeout: config.options?.timeout,
       })
-    }
-  }
-
-  // ─── Flow Parent Promotion ─────────────────────────────────
-
-  private async promoteParentIfReady(job: Job): Promise<void> {
-    if (!job.parentId) {
-      return
-    }
-
-    const { completed, total } = await this.adapter.incrementChildrenCompleted(
-      job.parentId
-    )
-
-    if (completed >= total) {
-      // All children done — promote parent to pending
-      await this.adapter.updateJobStatus(job.parentId, { status: "pending" })
-    }
-  }
-
-  private async failParentOnChildFailure(job: Job): Promise<void> {
-    if (!job.parentId || !job.failParentOnFailure) {
-      return
-    }
-
-    await this.adapter.updateJobStatus(job.parentId, {
-      error: {
-        message: `Child job ${job.id} (${job.name}) failed`,
-        name: "ChildFailedError",
-      },
-      status: "failed",
-    })
-
-    // Cascade upward if parent also has a parent
-    const parent = await this.adapter.getJobById(job.parentId)
-    if (parent?.parentId && parent.failParentOnFailure) {
-      await this.failParentOnChildFailure(parent)
     }
   }
 
@@ -815,16 +965,7 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
 
   // ─── Job Cleanup ───────────────────────────────────────────
 
-  private async cleanupAfterCompletion(job: Job): Promise<void> {
-    // Flow-level cleanup: if this is a flow root completing, delete the entire flow
-    if (job.flowId && !job.parentId) {
-      const { removeOnComplete } = this.config
-      if (removeOnComplete !== false) {
-        await this.adapter.deleteFlow(job.flowId)
-        return
-      }
-    }
-
+  private async cleanupAfterCompletion(_job: Job): Promise<void> {
     const { removeOnComplete } = this.config
     if (removeOnComplete === undefined) {
       // Default: keep 100
@@ -867,21 +1008,89 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
       runCompensations,
     } = createStepContext(job.id, job, this.adapter)
 
+    const flow: FlowJobContext | undefined =
+      job.flowNodeId && this.flowAdapter
+        ? this.createFlowContext(job.flowNodeId)
+        : undefined
+
     return {
       ctx: {
-        getChildrenResults: async () => {
-          const children = await this.adapter.getChildrenJobs(job.id)
-          const results = new Map<string, unknown>()
-          for (const child of children) {
-            results.set(child.id, child.result)
-          }
-          return results
-        },
         signal,
         step: stepContext,
+        flow,
       },
       getSteps,
       runCompensations,
+    }
+  }
+
+  /**
+   * Create a FlowJobContext for a job that belongs to a flow.
+   * Provides methods to query children values and cancel unprocessed children.
+   */
+  private createFlowContext(nodeId: string): FlowJobContext {
+    return {
+      getChildrenValues: async () => {
+        if (!this.flowAdapter) {
+          return new Map()
+        }
+        return this.flowAdapter.getChildrenResults(nodeId)
+      },
+      getFailedChildrenValues: async () => {
+        if (!this.flowAdapter) {
+          return new Map()
+        }
+        const results = await this.flowAdapter.getFailedChildrenResults(nodeId)
+        return results as ReadonlyMap<string, SerializedError>
+      },
+      getChildrenValuesBy: async (filter) => {
+        if (!this.flowAdapter) {
+          return new Map()
+        }
+        const children = await this.flowAdapter.getNodeChildren(nodeId)
+        const result = new Map<string, ChildNodeValue>()
+
+        for (const child of children) {
+          if (filter.name) {
+            const names = Array.isArray(filter.name)
+              ? filter.name
+              : [filter.name]
+            if (!names.includes(child.name)) {
+              continue
+            }
+          }
+          if (filter.status) {
+            const statuses = Array.isArray(filter.status)
+              ? filter.status
+              : [filter.status]
+            if (!statuses.includes(child.status)) {
+              continue
+            }
+          }
+          if (
+            child.status !== "completed" &&
+            child.status !== "failed" &&
+            child.status !== "cancelled"
+          ) {
+            continue
+          }
+          result.set(child.id, {
+            nodeId: child.id,
+            name: child.name,
+            status: child.status,
+            result: child.result,
+            error: child.error,
+          })
+        }
+
+        return result
+      },
+      removeUnprocessedChildren: async () => {
+        if (!this.flowAdapter) {
+          return 0
+        }
+        return this.flowAdapter.cancelUnprocessedChildren(nodeId)
+      },
     }
   }
 
@@ -918,67 +1127,6 @@ export class Worker extends TypedEventEmitter<WorkerEvents> {
     if (job.groupKey) {
       this.activeGroupKeys.delete(job.groupKey)
     }
-  }
-
-  /**
-   * Filter a list of jobs by dependency status.
-   * Jobs with failed dependencies are cascaded based on their onDependencyFailure policy.
-   * Jobs with unmet dependencies are delayed.
-   * Returns only jobs eligible for processing.
-   */
-  private async filterByDependencies(jobs: readonly Job[]): Promise<Job[]> {
-    const eligible: Job[] = []
-    for (const job of jobs) {
-      if (!job.dependsOn || job.dependsOn.length === 0) {
-        eligible.push(job)
-        continue
-      }
-
-      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential per job
-      const failedDep = await getFailedDependency(job, this.adapter)
-      if (failedDep) {
-        const policy = job.onDependencyFailure ?? "fail"
-
-        // oxlint-disable-next-line unicorn/prefer-ternary -- different status update shapes
-        if (policy === "cancel") {
-          // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- immediate transition
-          await this.adapter.updateJobStatus(job.id, {
-            cancellationReason: `Dependency job ${failedDep.id} (${failedDep.name}) failed`,
-            status: "cancelled",
-          })
-        } else {
-          // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- immediate transition
-          await this.adapter.updateJobStatus(job.id, {
-            error: {
-              message: `Dependency job ${failedDep.id} (${failedDep.name}) failed`,
-              name: "DependencyFailedError",
-            },
-            status: "failed",
-          })
-        }
-
-        // Cascade further (only "fail" policy triggers recursive cascade)
-        if (policy === "fail") {
-          // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- cascade
-          await cascadeDependencyFailure(job.id, this.adapter)
-        }
-        continue
-      }
-
-      // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- sequential check
-      const met = await areDependenciesMet(job, this.adapter)
-      if (!met) {
-        // oxlint-disable-next-line react-doctor/async-await-in-loop, no-await-in-loop -- delay
-        await this.adapter.updateJobStatus(job.id, {
-          processAt: new Date(Date.now() + this.config.pollInterval),
-          status: "delayed",
-        })
-        continue
-      }
-
-      eligible.push(job)
-    }
-    return eligible
   }
 
   private canRunHandler(name: string): boolean {

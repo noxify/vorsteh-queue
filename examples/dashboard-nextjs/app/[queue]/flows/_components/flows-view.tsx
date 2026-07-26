@@ -1,10 +1,9 @@
 "use client"
 
-import type { Job } from "@vorsteh-queue/core"
+import type { FlowSummary } from "@vorsteh-queue/core"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
-import { StatusBadge } from "@/components/status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useFlows } from "@/hooks/use-queue-data"
 import { formatRelativeTime } from "@/lib/utils"
@@ -13,7 +12,7 @@ export function FlowsView({
   initialData,
   queue,
 }: {
-  initialData: { flowId: string; rootJob: Job }[]
+  initialData: FlowSummary[]
   queue: string
 }) {
   const params = useParams()
@@ -37,8 +36,10 @@ export function FlowsView({
               <Card className="hover:border-primary/50 transition-colors">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center justify-between text-base">
-                    {flow.rootJob.name}
-                    <StatusBadge status={flow.rootJob.status} />
+                    {flow.rootNode.name}
+                    <span className="text-muted-foreground text-xs font-normal">
+                      {flow.status}
+                    </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -46,9 +47,7 @@ export function FlowsView({
                     <div className="font-mono text-xs">
                       {flow.flowId.slice(0, 8)}...
                     </div>
-                    <div>
-                      {formatRelativeTime(new Date(flow.rootJob.createdAt))}
-                    </div>
+                    <div>{formatRelativeTime(new Date(flow.createdAt))}</div>
                   </div>
                 </CardContent>
               </Card>

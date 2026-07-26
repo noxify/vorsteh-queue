@@ -61,7 +61,7 @@ worker.register<EmailPayload, EmailResult>(
 The handler receives:
 
 - `job` — the full Job object with payload, metadata, and a `updateProgress()` method
-- `ctx` — context with `signal` (AbortSignal for timeout/cancellation), `step` (multi-step API), and `getChildrenResults` (for flow parents)
+- `ctx` — context with `signal` (AbortSignal for timeout/cancellation), `step` (multi-step API), and flow context methods (`getChildrenValues`, `getFailedChildrenValues`, `getChildrenValuesBy`, `removeUnprocessedChildren`) for flow parents
 
 ## Starting and Stopping
 

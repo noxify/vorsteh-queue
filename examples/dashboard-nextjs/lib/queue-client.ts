@@ -1,5 +1,11 @@
 import "server-only"
-import type { FlowNode, Job, JobStatus, QueueStats } from "@vorsteh-queue/core"
+import type {
+  FlowSummary,
+  FlowTree,
+  Job,
+  JobStatus,
+  QueueStats,
+} from "@vorsteh-queue/core"
 
 import { env } from "./env"
 
@@ -29,8 +35,8 @@ export interface QueueClient {
   getFlows: (options?: {
     limit?: number
     offset?: number
-  }) => Promise<readonly { flowId: string; rootJob: Job }[]>
-  getFlowTree: (flowId: string) => Promise<FlowNode | null>
+  }) => Promise<readonly FlowSummary[]>
+  getFlowTree: (flowId: string) => Promise<FlowTree | null>
 
   // ─── Mutations ──────────────────────────────────────────────
   cancelJob: (id: string, reason?: string) => Promise<void>

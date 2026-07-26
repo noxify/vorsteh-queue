@@ -4,15 +4,11 @@
  * The dashboard command reads this file to connect directly to the adapter.
  * Connects to the PGlite socket server started by `pnpm dev:prod`.
  */
-import {
-  postgresSchema,
-  PostgresQueueAdapter,
-} from "@vorsteh-queue/adapter-drizzle"
+import { PostgresQueueAdapter, queueJobs } from "@vorsteh-queue/adapter-drizzle"
 import { Queue } from "@vorsteh-queue/core"
 import { defineRelations } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 
-const { queueJobs } = postgresSchema
 const relations = defineRelations({ queueJobs })
 
 const port = process.env.PGLITE_PORT ?? "5488"

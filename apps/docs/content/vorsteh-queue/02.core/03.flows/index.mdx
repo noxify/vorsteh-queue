@@ -1,8 +1,8 @@
 ---
 title: Flows
-description: Workflow orchestration with flow trees, durable steps, and job dependencies.
+description: Workflow orchestration with flow trees and durable steps.
 ---
 
-Flows help you orchestrate jobs across multiple stages and dependency constraints.
+Flows help you orchestrate jobs across multiple stages.
 
-Use flow trees for structured parent-child pipelines, steps for durable resumable workflows, and dependencies for lightweight ordering between independent jobs.
+Use flow trees (via `FlowProducer`) for structured parent-child pipelines with fan-out/fan-in patterns, and steps for durable resumable workflows within a single job.
