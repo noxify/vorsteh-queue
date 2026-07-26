@@ -98,7 +98,10 @@ runWhereFilterTests<PostgresJsDatabase<AnyRelations>>({
 
 runFlowAdapterTests<PostgresJsDatabase<AnyRelations>>({
   initAdapter: (db, adapterConfig) =>
-    new PostgresQueueAdapter(db, adapterConfig),
+    new PostgresQueueAdapter(db, {
+      ...adapterConfig,
+      flowModelName: adapterConfig?.schemaName ? "customQueueFlows" : undefined,
+    }),
   initDbClient: (
     props: DatabaseConnectionProps
   ): PostgresJsDatabase<AnyRelations> => {
@@ -127,6 +130,7 @@ runFlowAdapterTests<PostgresJsDatabase<AnyRelations>>({
       modelName: "customQueueJobs",
       tableName: "custom_queue_jobs",
       schemaName: "custom_schema",
+      flowTableName: "custom_queue_flows",
       useDefault: false,
       description: "custom table and schema",
     },

@@ -1,6 +1,10 @@
 import { index, pgTable } from "drizzle-orm/pg-core"
 
-import { columns, createQueueJobsTable } from "../src/helpers"
+import {
+  columns,
+  createQueueFlowsTable,
+  createQueueJobsTable,
+} from "../src/helpers"
 
 export { queueFlows } from "../src/flow-schema"
 
@@ -19,8 +23,14 @@ const { schema, table } = createQueueJobsTable(
   "custom_schema"
 )
 
+const { table: customFlowTable } = createQueueFlowsTable(
+  "custom_queue_flows",
+  "custom_schema"
+)
+
 export const customSchema = schema
 export const customQueueJobs = table
+export const customQueueFlows = customFlowTable
 
 export type QueueJob = typeof queueJobs.$inferSelect
 export type InsertQueueJob = typeof queueJobs.$inferInsert

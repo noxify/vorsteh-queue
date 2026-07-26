@@ -23,7 +23,7 @@ export function runFlowAdapterTests<TDatabase = unknown>(
 ) {
   describe.each(ctx.testCases)(
     "FlowAdapter Tests - $description",
-    ({ modelName, schemaName, tableName, useDefault }) => {
+    ({ modelName, schemaName, tableName, flowTableName, useDefault }) => {
       let database: Awaited<ReturnType<typeof initDatabase>>
       let db: ReturnType<FlowAdapterTestContext<TDatabase>["initDbClient"]>
       let adapter: FlowAdapter & QueueAdapter
@@ -55,11 +55,13 @@ export function runFlowAdapterTests<TDatabase = unknown>(
 
       beforeEach(async () => {
         // Clean flow and job tables
-        await internalDbClient`DELETE FROM queue_flows`
         // eslint-disable-next-line unicorn/prefer-ternary
         if (useDefault === false) {
+          const flowTable = flowTableName ?? "queue_flows"
+          await internalDbClient`DELETE FROM ${internalDbClient(schemaName)}.${internalDbClient(flowTable)}`
           await internalDbClient`DELETE FROM ${internalDbClient(schemaName)}.${internalDbClient(tableName)};`
         } else {
+          await internalDbClient`DELETE FROM queue_flows`
           await internalDbClient`DELETE FROM queue_jobs`
         }
 

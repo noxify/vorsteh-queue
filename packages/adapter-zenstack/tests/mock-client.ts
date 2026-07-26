@@ -191,8 +191,10 @@ function buildWhereClause(
 
 // ─── Typed SQL helper ────────────────────────────────────────────────────────
 
+type SqlClient = postgres.Sql | postgres.TransactionSql
+
 async function query(
-  sql: postgres.Sql,
+  sql: SqlClient,
   text: string,
   params: unknown[]
 ): Promise<any[]> {
@@ -201,117 +203,124 @@ async function query(
 
 // ─── Mock Client Factory ─────────────────────────────────────────────────────
 
+function createModelProxy(sqlClient: SqlClient, tableName: string) {
+  return new Proxy(
+    {},
+    {
+      get(_target, prop: string) {
+        if (prop === "create") {
+          return async ({ data }: { data: Record<string, unknown> }) => {
+            const id = (data.id as string) ?? crypto.randomUUID()
+            const columns = Object.keys(data).filter((c) => c !== "id")
+            const snakeColumns = columns.map((c) => camelToSnake(c))
+            const values = columns.map((c) => data[c])
+
+            const colStr = snakeColumns.map((c) => `"${c}"`).join(", ")
+            const placeholders = values.map((_, i) => `$${i + 2}`).join(", ")
+
+            const rows = await query(
+              sqlClient,
+              `INSERT INTO ${tableName} ("id", ${colStr}) VALUES ($1, ${placeholders}) RETURNING *`,
+              [id, ...values]
+            )
+            return transformRowToCamel(rows[0] as Record<string, unknown>)
+          }
+        }
+
+        if (prop === "findFirst") {
+          return async ({ where }: { where: Record<string, unknown> }) => {
+            const { clause, params } = buildWhereClause(where)
+            const rows = await query(
+              sqlClient,
+              `SELECT * FROM ${tableName} WHERE ${clause} LIMIT 1`,
+              params
+            )
+            return rows[0]
+              ? transformRowToCamel(rows[0] as Record<string, unknown>)
+              : null
+          }
+        }
+
+        if (prop === "findMany") {
+          return buildFindMany(sqlClient, tableName)
+        }
+
+        if (prop === "update") {
+          return buildUpdate(sqlClient, tableName)
+        }
+
+        if (prop === "updateMany") {
+          return buildUpdateMany(sqlClient, tableName)
+        }
+
+        if (prop === "delete") {
+          return async ({ where }: { where: Record<string, unknown> }) => {
+            const { clause, params } = buildWhereClause(where)
+            const rows = await query(
+              sqlClient,
+              `DELETE FROM ${tableName} WHERE ${clause} RETURNING *`,
+              params
+            )
+            if (rows.length === 0) {
+              throw new Error("Record not found")
+            }
+            return transformRowToCamel(rows[0] as Record<string, unknown>)
+          }
+        }
+
+        if (prop === "deleteMany") {
+          return async ({ where }: { where: Record<string, unknown> }) => {
+            const { clause, params } = buildWhereClause(where)
+            const rows = await query(
+              sqlClient,
+              `DELETE FROM ${tableName} WHERE ${clause}`,
+              params
+            )
+            return { count: (rows as any).count ?? 0 }
+          }
+        }
+
+        if (prop === "count") {
+          return async ({ where }: { where: Record<string, unknown> }) => {
+            const { clause, params } = buildWhereClause(where)
+            const rows = await query(
+              sqlClient,
+              `SELECT COUNT(*)::int as count FROM ${tableName} WHERE ${clause}`,
+              params
+            )
+            return (rows[0] as any)?.count ?? 0
+          }
+        }
+
+        if (prop === "groupBy") {
+          return buildGroupBy(sqlClient, tableName)
+        }
+
+        return null
+      },
+    }
+  )
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function createMockZenStackClient(connectionUri: string) {
   const sql = postgres(connectionUri, { max: 10 })
 
-  const createModelProxy = () =>
-    new Proxy(
-      {},
-      {
-        get(_target, prop: string) {
-          if (prop === "create") {
-            return async ({ data }: { data: Record<string, unknown> }) => {
-              const id = (data.id as string) ?? crypto.randomUUID()
-              const columns = Object.keys(data)
-              const snakeColumns = columns.map((c) => camelToSnake(c))
-              const values = columns.map((c) => data[c])
-
-              const colStr = snakeColumns.map((c) => `"${c}"`).join(", ")
-              const placeholders = values.map((_, i) => `$${i + 2}`).join(", ")
-
-              const rows = await query(
-                sql,
-                `INSERT INTO queue_jobs ("id", ${colStr}) VALUES ($1, ${placeholders}) RETURNING *`,
-                [id, ...values]
-              )
-              return transformRowToCamel(rows[0] as Record<string, unknown>)
-            }
-          }
-
-          if (prop === "findFirst") {
-            return async ({ where }: { where: Record<string, unknown> }) => {
-              const { clause, params } = buildWhereClause(where)
-              const rows = await query(
-                sql,
-                `SELECT * FROM queue_jobs WHERE ${clause} LIMIT 1`,
-                params
-              )
-              return rows[0]
-                ? transformRowToCamel(rows[0] as Record<string, unknown>)
-                : null
-            }
-          }
-
-          if (prop === "findMany") {
-            return buildFindMany(sql)
-          }
-
-          if (prop === "update") {
-            return buildUpdate(sql)
-          }
-
-          if (prop === "updateMany") {
-            return buildUpdateMany(sql)
-          }
-
-          if (prop === "delete") {
-            return async ({ where }: { where: Record<string, unknown> }) => {
-              const { clause, params } = buildWhereClause(where)
-              const rows = await query(
-                sql,
-                `DELETE FROM queue_jobs WHERE ${clause} RETURNING *`,
-                params
-              )
-              if (rows.length === 0) {
-                throw new Error("Record not found")
-              }
-              return transformRowToCamel(rows[0] as Record<string, unknown>)
-            }
-          }
-
-          if (prop === "deleteMany") {
-            return async ({ where }: { where: Record<string, unknown> }) => {
-              const { clause, params } = buildWhereClause(where)
-              const rows = await query(
-                sql,
-                `DELETE FROM queue_jobs WHERE ${clause}`,
-                params
-              )
-              return { count: (rows as any).count ?? 0 }
-            }
-          }
-
-          if (prop === "count") {
-            return async ({ where }: { where: Record<string, unknown> }) => {
-              const { clause, params } = buildWhereClause(where)
-              const rows = await query(
-                sql,
-                `SELECT COUNT(*)::int as count FROM queue_jobs WHERE ${clause}`,
-                params
-              )
-              return (rows[0] as any)?.count ?? 0
-            }
-          }
-
-          if (prop === "groupBy") {
-            return buildGroupBy(sql)
-          }
-
-          return null
-        },
-      }
-    )
-
   return {
-    queueJob: createModelProxy(),
+    queueJob: createModelProxy(sql, "queue_jobs"),
+    queueFlow: createModelProxy(sql, "queue_flows"),
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     $connect: async () => {},
     $disconnect: async () => {
       await sql.end()
     },
     $transaction: async <T>(fn: (tx: unknown) => Promise<T>) =>
-      sql.begin(async () => fn(null)),
+      sql.begin(async (txSql) =>
+        fn({
+          queueJob: createModelProxy(txSql, "queue_jobs"),
+          queueFlow: createModelProxy(txSql, "queue_flows"),
+        })
+      ),
     $queryRaw: async <T>(..._args: unknown[]) => [] as unknown as T,
     $queryRawUnsafe: async <T>(queryStr: string, ...values: unknown[]) => {
       const rows = await sql.unsafe(queryStr, values as any[])
@@ -327,7 +336,7 @@ export function createMockZenStackClient(connectionUri: string) {
 
 // ─── Extracted handler builders ──────────────────────────────────────────────
 
-function buildFindMany(sql: postgres.Sql) {
+function buildFindMany(sql: SqlClient, tableName: string) {
   return async (args: {
     where?: Record<string, unknown>
     orderBy?: Record<string, string>
@@ -336,7 +345,7 @@ function buildFindMany(sql: postgres.Sql) {
     select?: Record<string, boolean>
   }) => {
     const { clause, params } = buildWhereClause(args.where ?? {})
-    let queryStr = `SELECT * FROM queue_jobs WHERE ${clause}`
+    let queryStr = `SELECT * FROM ${tableName} WHERE ${clause}`
     if (args.orderBy) {
       const entries = Object.entries(args.orderBy)
       if (entries.length > 0) {
@@ -366,7 +375,7 @@ function buildFindMany(sql: postgres.Sql) {
   }
 }
 
-function buildUpdate(sql: postgres.Sql) {
+function buildUpdate(sql: SqlClient, tableName: string) {
   return async ({
     data,
     where,
@@ -402,7 +411,7 @@ function buildUpdate(sql: postgres.Sql) {
 
     const rows = await query(
       sql,
-      `UPDATE queue_jobs SET ${setClauses.join(", ")} WHERE ${whereClause} RETURNING *`,
+      `UPDATE ${tableName} SET ${setClauses.join(", ")} WHERE ${whereClause} RETURNING *`,
       setParams
     )
     return rows[0]
@@ -411,7 +420,7 @@ function buildUpdate(sql: postgres.Sql) {
   }
 }
 
-function buildUpdateMany(sql: postgres.Sql) {
+function buildUpdateMany(sql: SqlClient, tableName: string) {
   return async ({
     data,
     where,
@@ -437,14 +446,14 @@ function buildUpdateMany(sql: postgres.Sql) {
 
     const rows = await query(
       sql,
-      `UPDATE queue_jobs SET ${setClauses.join(", ")} WHERE ${whereClause}`,
+      `UPDATE ${tableName} SET ${setClauses.join(", ")} WHERE ${whereClause}`,
       setParams
     )
     return { count: (rows as any).count ?? 0 }
   }
 }
 
-function buildGroupBy(sql: postgres.Sql) {
+function buildGroupBy(sql: SqlClient, tableName: string) {
   return async ({
     by,
     where,
@@ -459,7 +468,7 @@ function buildGroupBy(sql: postgres.Sql) {
     const countField = Object.keys(_count)[0] ?? "id"
     const rows = await query(
       sql,
-      `SELECT ${groupCols}, COUNT("${camelToSnake(countField)}")::int as count FROM queue_jobs WHERE ${clause} GROUP BY ${groupCols}`,
+      `SELECT ${groupCols}, COUNT("${camelToSnake(countField)}")::int as count FROM ${tableName} WHERE ${clause} GROUP BY ${groupCols}`,
       params
     )
     return rows.map((r: any) => {

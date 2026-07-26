@@ -9,6 +9,7 @@ export type TestCaseProps =
       modelName?: string
       tableName: string
       schemaName: string
+      flowTableName?: string
       description: string
       useDefault: false
     }
@@ -16,6 +17,7 @@ export type TestCaseProps =
       modelName?: never
       tableName?: never
       schemaName?: never
+      flowTableName?: never
       description: string
       useDefault: true
     }

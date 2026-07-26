@@ -16,26 +16,20 @@ export const columns = {
   attempts: integer("attempts").default(0).notNull(),
   cancellationReason: text("cancellation_reason"),
   cancelledAt: timestamp("cancelled_at", { withTimezone: true, mode: "date" }),
-  childrenCompleted: integer("children_completed").default(0).notNull(),
-  childrenCount: integer("children_count").default(0).notNull(),
   completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
     .notNull()
     .default(sql`timezone('utc', now())`),
   cron: varchar("cron", { length: 255 }),
-  dependsOn: jsonb("depends_on"),
   error: jsonb("error"),
-  failParentOnFailure: integer("fail_parent_on_failure").default(0).notNull(),
   failedAt: timestamp("failed_at", { withTimezone: true, mode: "date" }),
-  flowId: uuid("flow_id"),
+  flowNodeId: uuid("flow_node_id"),
   groupKey: varchar("group_key", { length: 255 }),
   id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   maxAttempts: integer("max_attempts").notNull(),
   name: varchar("name", { length: 255 }).notNull(),
-  onDependencyFailure: varchar("on_dependency_failure", { length: 10 }),
-  parentId: uuid("parent_id"),
   payload: jsonb("payload").notNull(),
   priority: integer("priority").notNull(),
   processAt: timestamp("process_at", {
@@ -54,6 +48,31 @@ export const columns = {
   steps: jsonb("steps"),
   timeout: integer("timeout"),
   uniqueKey: varchar("unique_key", { length: 255 }),
+}
+
+export const flowColumns = {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  flowId: uuid("flow_id").notNull(),
+  parentNodeId: uuid("parent_node_id"),
+  jobId: uuid("job_id"),
+  queueName: varchar("queue_name", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  payload: jsonb("payload").notNull(),
+  options: jsonb("options"),
+  status: varchar("status", { length: 50 }).notNull(),
+  failureStrategy: varchar("failure_strategy", { length: 20 })
+    .default("default")
+    .notNull(),
+  childrenCount: integer("children_count").default(0).notNull(),
+  childrenCompleted: integer("children_completed").default(0).notNull(),
+  result: jsonb("result"),
+  error: jsonb("error"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .notNull()
+    .default(sql`timezone('utc', now())`),
+  completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
 }
 
 /**
@@ -110,6 +129,48 @@ export const createQueueJobsTable = (
         table.groupKey
       ),
       index(`idx_${tableName}_stats`).on(table.queueName, table.status),
+    ]),
+  }
+}
+
+/**
+ * Create a custom queue flows table with optional schema support.
+ *
+ * @param tableName - Table name to use
+ * @param schemaName - Optional PostgreSQL schema name
+ * @returns Object with schema and table definitions
+ *
+ * @example
+ * ```typescript
+ * const { table } = createQueueFlowsTable("my_flows")
+ * const { schema, table } = createQueueFlowsTable("queue_flows", "custom_schema")
+ * ```
+ */
+export const createQueueFlowsTable = (
+  tableName: string,
+  schemaName?: string
+) => {
+  const schema = schemaName ? pgSchema(schemaName) : undefined
+
+  if (isPgSchema(schema)) {
+    return {
+      schema,
+      table: schema.table(tableName, flowColumns, (table) => [
+        index(`idx_${tableName}_flow_id`).on(table.flowId),
+        index(`idx_${tableName}_parent_node_id`).on(table.parentNodeId),
+        index(`idx_${tableName}_job_id`).on(table.jobId),
+        index(`idx_${tableName}_status`).on(table.flowId, table.status),
+      ]),
+    }
+  }
+
+  return {
+    schema: undefined,
+    table: pgTable(tableName, flowColumns, (table) => [
+      index(`idx_${tableName}_flow_id`).on(table.flowId),
+      index(`idx_${tableName}_parent_node_id`).on(table.parentNodeId),
+      index(`idx_${tableName}_job_id`).on(table.jobId),
+      index(`idx_${tableName}_status`).on(table.flowId, table.status),
     ]),
   }
 }

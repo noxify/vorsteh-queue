@@ -11,4 +11,9 @@ export type { QueueJob as PostgresQueueJob } from "./queue-schema"
 export { queueFlows } from "./flow-schema"
 export type { QueueFlow, InsertQueueFlow } from "./flow-schema"
 
-export { createQueueJobsTable } from "./helpers"
+export {
+  columns,
+  createQueueFlowsTable,
+  createQueueJobsTable,
+  flowColumns,
+} from "./helpers"

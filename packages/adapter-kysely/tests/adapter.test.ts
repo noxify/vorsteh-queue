@@ -89,7 +89,12 @@ runWhereFilterTests<Kysely<DB>>({
 
 runFlowAdapterTests<Kysely<DB>>({
   initAdapter: (db, adapterConfig) =>
-    new PostgresQueueAdapter(db, adapterConfig),
+    new PostgresQueueAdapter(db, {
+      ...adapterConfig,
+      flowTableName: adapterConfig?.schemaName
+        ? "custom_queue_flows"
+        : undefined,
+    }),
   initDbClient: (props: DatabaseConnectionProps): Kysely<DB> =>
     new Kysely<DB>({
       dialect: new PostgresJSDialect({
@@ -109,9 +114,15 @@ runFlowAdapterTests<Kysely<DB>>({
       )
       await customMigration.up(db as Kysely<unknown>)
 
-      // Flow table
+      // Flow tables (both schemas)
       const flowMigration = createQueueFlowsTable("queue_flows")
       await flowMigration.up(db as Kysely<unknown>)
+
+      const customFlowMigration = createQueueFlowsTable(
+        "custom_queue_flows",
+        "custom_schema"
+      )
+      await customFlowMigration.up(db as Kysely<unknown>)
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Migration error:", error)
@@ -124,6 +135,7 @@ runFlowAdapterTests<Kysely<DB>>({
       description: "custom schema and tablename",
       tableName: "custom_queue_jobs",
       schemaName: "custom_schema",
+      flowTableName: "custom_queue_flows",
     },
     { useDefault: true, description: "default table and schema" },
   ],
