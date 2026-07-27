@@ -48,7 +48,7 @@ The worker process starts a PGlite instance with a socket server. Next.js connec
 
 The dashboard reads `queue.config.ts` via c12 and instantiates the adapter directly within the Next.js server process. No separate API server needed.
 
-```env
+```bash
 QUEUE_MODE=direct
 DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5488/postgres
 ```
@@ -69,7 +69,7 @@ export default {
 
 The dashboard connects to a running `@vorsteh-queue/server` GraphQL endpoint. Use this when the dashboard and workers run on different machines.
 
-```env
+```bash
 QUEUE_MODE=api
 QUEUE_API_URL=http://localhost:4000/graphql
 QUEUE_API_TOKEN=your-token-here
