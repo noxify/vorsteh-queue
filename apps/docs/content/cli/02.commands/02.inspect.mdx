@@ -1,0 +1,29 @@
+---
+title: "vorsteh-queue inspect"
+navTitle: "inspect"
+description: Show details of a specific job.
+cliCommand: "inspect"
+---
+
+Displays detailed information about a single job including status, payload, result, and error data.
+
+## Usage
+
+```bash
+vorsteh-queue inspect <job-id>
+```
+
+```
+ℹ Job: abc-123
+  Name:       send-email
+  Status:     completed
+  Priority:   2
+  Attempts:   1/3
+  Progress:   100%
+  Created:    2025-01-15T10:30:00Z
+  Process At: 2025-01-15T10:30:00Z
+  Result:     {"sent":true}
+  Payload:    {"to":"user@example.com"}
+```
+
+<CliCommandDetails command="inspect" />

@@ -1,0 +1,39 @@
+---
+title: Group FIFO
+description: Per-group FIFO ordering for multi-tenant job processing.
+tags: ["groups", "fifo", "multi-tenant"]
+---
+
+Demonstrates grouped job processing where jobs within the same group are processed in strict FIFO order, while different groups can be processed concurrently.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=group-fifo
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- Group key assignment for job ordering
+- FIFO processing within a group
+- Concurrent processing across groups
+- Multi-tenant isolation patterns
+
+## Related documentation
+
+- [Job Types](/docs/vorsteh-queue/core/job-types)
+- [Queue](/docs/vorsteh-queue/core/queue)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/group-fifo)

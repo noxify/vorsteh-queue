@@ -1,0 +1,174 @@
+---
+title: Installation
+description: How to install and configure the Vorsteh Queue CLI for job management and monitoring.
+---
+
+The Vorsteh Queue CLI (`@vorsteh-queue/cli`) provides commands for inspecting, managing, and monitoring queue jobs from the terminal.
+
+## Install as a project dependency
+
+<Command variant="install">@vorsteh-queue/cli</Command>
+
+## Run without installing
+
+<Command variant="exec">vorsteh-queue</Command>
+
+## Transport Modes
+
+The CLI supports two transport modes for communicating with your queue:
+
+### Direct (default)
+
+In direct mode, the CLI loads your `queue.config.ts` and uses the configured adapter to interact with the database directly. No running server is required.
+
+This is the default behavior when no `--url` flag or `VORSTEH_QUEUE_URL` environment variable is provided.
+
+### Remote
+
+In remote mode, the CLI connects to a running Vorsteh Queue server via GraphQL. This mode is activated by providing a URL through the `--url` flag or the `VORSTEH_QUEUE_URL` environment variable.
+
+```bash
+# Via flag
+vorsteh-queue status --url https://my-server.example.com/graphql
+
+# Via environment variable
+export VORSTEH_QUEUE_URL=https://my-server.example.com/graphql
+vorsteh-queue status
+```
+
+## Configuration
+
+For direct mode, create a `queue.config.ts` in your project root:
+
+<AdapterTabs>
+  <AdapterTab adapter="drizzle">
+    ```typescript
+    // queue.config.ts
+    import { defineRelations } from "drizzle-orm"
+    import { drizzle } from "drizzle-orm/node-postgres"
+    import { Pool } from "pg"
+
+    import {
+      PostgresQueueAdapter,
+      queueFlows,
+      queueJobs,
+    } from "@vorsteh-queue/adapter-drizzle"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const relations = defineRelations({ queueFlows, queueJobs })
+
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const db = drizzle({ client: pool, relations })
+    const adapter = new PostgresQueueAdapter(db)
+
+    const emailQueue = new Queue(adapter, { name: "email-queue" })
+    const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+    export default {
+      adapter,
+      queues: [emailQueue, reportQueue],
+      defaultQueue: "email-queue",
+    }
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="prisma">
+    ```typescript
+    // queue.config.ts
+    import { PrismaClient } from "@prisma/client"
+
+    import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const prisma = new PrismaClient()
+    const adapter = new PostgresPrismaQueueAdapter(prisma)
+
+    const emailQueue = new Queue(adapter, { name: "email-queue" })
+    const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+    export default {
+      adapter,
+      queues: [emailQueue, reportQueue],
+      defaultQueue: "email-queue",
+    }
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="kysely">
+    ```typescript
+    // queue.config.ts
+    import { Kysely, PostgresDialect } from "kysely"
+    import { Pool } from "pg"
+
+    import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const db = new Kysely({
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+    const adapter = new PostgresQueueAdapter(db)
+
+    const emailQueue = new Queue(adapter, { name: "email-queue" })
+    const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+    export default {
+      adapter,
+      queues: [emailQueue, reportQueue],
+      defaultQueue: "email-queue",
+    }
+    ```
+
+  </AdapterTab>
+</AdapterTabs>
+
+The `adapter` and `queues` fields are required for direct mode. If either is missing, the CLI will exit with an error. When multiple queues are configured, `defaultQueue` is also required.
+
+For a single-queue setup, `defaultQueue` is optional (the single queue is used automatically):
+
+```typescript
+export default {
+  adapter,
+  queues: [emailQueue],
+}
+```
+
+## Global Options
+
+These options can be passed to any command:
+
+| Option | Description |
+| --- | --- |
+| `--url <string>` | Remote server GraphQL endpoint. Enables remote mode. |
+| `--token <string>` | Bearer token for authentication with the remote server. |
+| `--queue <name>` | Target queue name. Overrides the default queue from configuration. |
+
+The `--url` flag takes precedence over the `VORSTEH_QUEUE_URL` environment variable. Likewise, `--token` takes precedence over `VORSTEH_QUEUE_TOKEN`.
+
+### Queue Resolution
+
+The `--queue` flag determines which queue a command targets. Resolution priority:
+
+1. `--queue` flag (highest priority)
+2. `defaultQueue` from config
+3. Single queue in array (when only one queue is configured)
+
+In remote mode (`--url` without a local config file), the `--queue` flag is required.
+
+## Environment Variables
+
+| Variable | Description |
+| --- | --- |
+| `VORSTEH_QUEUE_URL` | Remote server GraphQL endpoint. Enables remote mode when set. |
+| `VORSTEH_QUEUE_TOKEN` | Bearer token for authentication with the remote server. |
+
+## Troubleshooting
+
+Use the `doctor` command to diagnose configuration and connectivity issues:
+
+```bash
+vorsteh-queue doctor
+```
+
+The doctor command displays your current transport mode, adapter or endpoint details, authentication status, and verifies connectivity. It exits with code 0 on success or 1 if there is a problem.

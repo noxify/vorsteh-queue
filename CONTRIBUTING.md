@@ -14,7 +14,9 @@ Thank you for your interest in contributing to Vorsteh Queue! This document outl
     payload: TJobPayload
   }
 
-  function process<TJobPayload, TResult>(job: BaseJob<TJobPayload>): Promise<TResult>
+  function process<TJobPayload, TResult>(
+    job: BaseJob<TJobPayload>
+  ): Promise<TResult>
 
   // ❌ Avoid
   interface BaseJob<JobPayload = unknown> {
@@ -48,6 +50,7 @@ Follow this import order:
 5. Relative imports (`~/`, `../`, `./`)
 
 **Import Path Conventions**:
+
 - No file extensions: Never use `.js`, `.ts` extensions
 - Prefer directory imports: Use `../src` instead of `../src/index`
 - Avoid useless path segments: Skip `/index` when possible

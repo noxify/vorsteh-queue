@@ -1,0 +1,39 @@
+---
+title: Prisma Client
+description: Example using Prisma with prisma-client provider and PostgreSQL.
+tags: ["prisma", "postgresql"]
+---
+
+An example using the modern `prisma-client` provider with PostgreSQL and the `@prisma/adapter-pg` driver adapter.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=prisma-client
+</Command>
+
+Then install dependencies, generate the Prisma client and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm prisma:generate
+pnpm dev
+```
+
+## What it demonstrates
+
+- Prisma adapter with the `prisma-client` provider
+- TypeScript-generated Prisma client
+- Queue setup and job processing
+
+## Related documentation
+
+- [Quickstart](/docs/vorsteh-queue/getting-started/quickstart)
+- [Prisma Adapter](/docs/vorsteh-queue/adapters/prisma)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/prisma-client)

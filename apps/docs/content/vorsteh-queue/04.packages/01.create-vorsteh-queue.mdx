@@ -1,0 +1,46 @@
+---
+title: create-vorsteh-queue
+description: CLI scaffolding tool for quickly creating new Vorsteh Queue projects from templates.
+---
+
+The `create-vorsteh-queue` CLI provides the fastest way to get started by creating new projects from pre-built templates.
+
+## Usage
+
+### Interactive Mode
+
+```bash
+npx create-vorsteh-queue
+```
+
+The CLI prompts for project name, template, package manager, and dependency installation.
+
+### Direct Mode
+
+```bash
+npx create-vorsteh-queue my-app --template=drizzle-postgres --package-manager=pnpm --quiet
+```
+
+## Options
+
+| Option                   | Short       | Description             |
+| ------------------------ | ----------- | ----------------------- |
+| `--template=<name>`      | `-t=<name>` | Choose template         |
+| `--package-manager=<pm>` | `-p=<pm>`   | Package manager         |
+| `--no-install`           | n/a         | Skip dependency install |
+| `--quiet`                | `-q`        | Minimal output          |
+
+## Available Templates
+
+<TemplateList />
+
+## Example
+
+```bash
+npx create-vorsteh-queue worker-service \
+  --template=drizzle-postgres \
+  --package-manager=pnpm
+cd worker-service
+pnpm db:push
+pnpm dev
+```

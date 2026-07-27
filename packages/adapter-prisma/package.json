@@ -3,79 +3,78 @@
   "version": "0.4.1",
   "description": "Prisma ORM adapter for Vorsteh Queue with PostgreSQL support",
   "keywords": [
-    "queue",
+    "adapter",
+    "background-jobs",
+    "database",
     "job-queue",
+    "orm",
+    "postgresql",
     "prisma",
     "prisma-client",
-    "database",
-    "adapter",
-    "typescript",
-    "background-jobs",
+    "queue",
     "task-queue",
-    "worker",
-    "orm",
-    "postgresql"
+    "typescript",
+    "worker"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/noxify/vorsteh-queue",
     "directory": "packages/adapter-prisma"
   },
-  "license": "MIT",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./postgres-adapter": {
-      "types": "./dist/postgres-adapter.d.ts",
-      "default": "./dist/postgres-adapter.js"
-    }
-  },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "types"
   ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./postgres-adapter": {
+      "types": "./dist/adapter.d.mts",
+      "source": "./src/adapter.ts",
+      "default": "./dist/adapter.mjs"
+    }
+  },
   "scripts": {
-    "build": "pnpm prisma:generate && rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "build": "pnpm prisma:generate && tsdown --log-level error",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
-    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
-    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
-    "lint": "eslint .",
+    "dev": "tsdown --watch",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
     "prisma:generate_test": "prisma generate --schema=prisma/schema.test.prisma",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
-  "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
-    "@vorsteh-queue/core": "workspace:*"
+    "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/query-builder": "workspace:*"
   },
   "devDependencies": {
-    "@prisma/adapter-pg": "^6.19.0",
-    "@prisma/client": "^6.19.0",
-    "@prisma/internals": "^6.19.0",
-    "@prisma/migrate": "^6.19.0",
-    "@vorsteh-queue/eslint-config": "workspace:*",
-    "@vorsteh-queue/prettier-config": "workspace:*",
+    "@prisma/adapter-pg": "7.9.0",
+    "@prisma/client": "^7.9.0",
+    "@prisma/internals": "7.9.0",
+    "@prisma/migrate": "7.9.0",
+    "@types/node": "24.13.3",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.39.2",
-    "prettier": "^3.8.1",
-    "prisma": "^6.19.0",
-    "rolldown": "1.0.0-rc.2",
-    "rollup-plugin-delete": "^3.0.2",
-    "testcontainers": "^11.11.0",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "prisma": "7.9.0",
+    "testcontainers": "12.0.4",
+    "tsdown": "0.22.14",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "@prisma/client": ">=6.1.0"
+    "@prisma/client": ">=7.0.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

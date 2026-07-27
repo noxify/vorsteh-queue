@@ -1,0 +1,104 @@
+---
+title: TypeORM Adapter
+navTitle: TypeORM
+description: TypeORM adapter for PostgreSQL with entity-based schema and decorator-driven models.
+---
+
+The TypeORM adapter provides PostgreSQL support using TypeORM, offering a mature ORM with decorator-based entity definitions, migrations, and broad database support.
+
+## Installation
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-typeorm typeorm pg
+</Command>
+
+## Quick Start
+
+```typescript
+import { DataSource } from "typeorm"
+import {
+  PostgresTypeormQueueAdapter,
+  QueueFlowEntity,
+  QueueJobEntity,
+} from "@vorsteh-queue/adapter-typeorm"
+import { Queue, Worker } from "@vorsteh-queue/core"
+
+const dataSource = new DataSource({
+  type: "postgres",
+  url: process.env.DATABASE_URL,
+  entities: [QueueJobEntity, QueueFlowEntity],
+  synchronize: true,
+})
+
+const adapter = new PostgresTypeormQueueAdapter(dataSource)
+
+const queue = new Queue(adapter, { name: "my-queue" })
+const worker = new Worker(adapter, { name: "my-queue" })
+
+await queue.connect()
+```
+
+<Note title="Tip">
+  For real projects, extract this setup into a shared `src/queues.ts` file. See
+  [Project Structure](/docs/vorsteh-queue/getting-started/project-structure).
+</Note>
+
+## Database Schema
+
+The adapter ships with pre-built `QueueJobEntity` and `QueueFlowEntity` that you can use directly with TypeORM's `synchronize: true` or migrations. The entities map to the `queue_jobs` and `queue_flows` tables respectively.
+
+If you prefer manual control, you can import the entities and use TypeORM migrations:
+
+```typescript
+import {
+  QueueFlowEntity,
+  QueueJobEntity,
+} from "@vorsteh-queue/adapter-typeorm/entity"
+```
+
+The entity defines all required columns with proper types, indexes, and column mappings.
+
+## Custom Table and Schema Names
+
+```typescript
+const adapter = new PostgresTypeormQueueAdapter(dataSource, {
+  tableName: "custom_queue_jobs", // database table name
+  schemaName: "custom_schema", // PostgreSQL schema
+})
+```
+
+<Note title="Important">
+  When using custom table names, you need to create your own entity class with
+  the matching `@Entity("custom_queue_jobs")` decorator, or use raw SQL
+  migrations.
+</Note>
+
+## Migrations
+
+Use the [TypeORM CLI](https://typeorm.io/docs/migrations/) for migrations:
+
+```bash
+npx typeorm migration:generate -d src/data-source.ts src/migrations/AddQueueTable
+npx typeorm migration:run -d src/data-source.ts
+```
+
+Alternatively, set `synchronize: true` in development for automatic schema creation.
+
+## Why TypeORM?
+
+TypeORM is one of the most established ORMs in the Node.js ecosystem:
+
+- **Decorator-based entities** — define schemas with familiar TypeScript decorators
+- **Active Record and Data Mapper** — choose the pattern that fits your architecture
+- **Broad database support** — PostgreSQL, MySQL, SQLite, MSSQL, Oracle, and more
+- **Mature migration system** — automatic generation and manual migration support
+- **QueryBuilder** — powerful and flexible SQL query construction
+- **Large ecosystem** — extensive community and plugin support
+
+## Adapter Properties
+
+<ApiReference
+  file="core/src/types"
+  name="TypeormAdapterProps"
+  variant="table"
+/>

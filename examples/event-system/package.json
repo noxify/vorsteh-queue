@@ -1,9 +1,9 @@
 {
   "name": "event-system-example",
   "version": "1.0.0",
+  "private": true,
   "description": "Comprehensive event monitoring and statistics example using Drizzle ORM with postgres.js",
   "type": "module",
-  "private": true,
   "scripts": {
     "dev": "tsx src/index.ts",
     "db:push": "drizzle-kit push"
@@ -11,12 +11,12 @@
   "dependencies": {
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
-    "drizzle-orm": "^0.45.1",
-    "postgres": "^3.4.8"
+    "drizzle-orm": "1.0.0-rc.4",
+    "postgres": "3.4.9"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.8",
-    "tsx": "4.21.0",
-    "typescript": "^5.9.3"
+    "drizzle-kit": "1.0.0-rc.4",
+    "tsx": "4.23.1",
+    "typescript": "6.0.3"
   }
 }

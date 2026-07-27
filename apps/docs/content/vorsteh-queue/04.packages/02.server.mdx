@@ -1,0 +1,214 @@
+---
+title: Server API
+navTitle: Server
+description: GraphQL API server for monitoring and managing queues.
+---
+
+The `@vorsteh-queue/server` package provides a standalone GraphQL API for managing Vorsteh Queue jobs. It can run as a standalone server or be mounted as middleware in an existing Hono app.
+
+## Installation
+
+<Command variant="install">@vorsteh-queue/server</Command>
+
+## Quick Start
+
+```typescript
+import { Queue, Worker, MemoryQueueAdapter } from "@vorsteh-queue/core"
+import { createQueueServer } from "@vorsteh-queue/server"
+
+const adapter = new MemoryQueueAdapter()
+const queue = new Queue(adapter, { name: "email-queue" })
+const worker = new Worker(adapter, { name: "email-queue" })
+
+worker.register("send-email", async (job) => {
+  // process job...
+  return { sent: true }
+})
+
+const server = createQueueServer({
+  queues: [queue],
+  workers: [worker], // enables real-time subscription events
+  port: 3000,
+  auth: { tokens: [process.env.QUEUE_TOKEN] },
+})
+
+worker.start()
+await server.start()
+```
+
+## Features
+
+- **GraphQL API** — query queue stats, inspect jobs, cancel, retry, redrive
+- **Multi-queue support** — manage multiple queues from a single server
+- **Authentication** — optional token-based auth with custom middleware support
+- **Subscriptions** — real-time job lifecycle events via SSE
+- **Hono middleware** — mount on existing apps via `createQueueMiddleware`
+
+## Configuration
+
+### Standalone Server
+
+```typescript
+import { Queue, Worker } from "@vorsteh-queue/core"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { createQueueServer } from "@vorsteh-queue/server"
+
+// 1. Create adapter (shared between queues and workers)
+const adapter = new PostgresQueueAdapter(db)
+
+// 2. Create Queue instances (one per logical queue)
+const emailQueue = new Queue(adapter, { name: "email-queue" })
+const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+// 3. Create Worker instances (must use same name as their queue)
+const emailWorker = new Worker(adapter, { name: "email-queue", concurrency: 5 })
+const reportWorker = new Worker(adapter, { name: "report-queue" })
+
+// 4. Register handlers
+emailWorker.register("send-email", async (job) => {
+  await sendEmail(job.payload)
+  return { sent: true }
+})
+
+reportWorker.register("generate-report", async (job) => {
+  return generateReport(job.payload)
+})
+
+// 5. Create server — pass both queues and workers
+const server = createQueueServer({
+  queues: [emailQueue, reportQueue],
+  workers: [emailWorker, reportWorker],
+  port: 3000,
+  auth: { tokens: [process.env.QUEUE_TOKEN] },
+})
+
+// 6. Start workers and server
+emailWorker.start()
+reportWorker.start()
+await server.start()
+```
+
+### As Hono Middleware
+
+```typescript
+import { Hono } from "hono"
+import { Queue, Worker } from "@vorsteh-queue/core"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { createQueueMiddleware } from "@vorsteh-queue/server"
+
+const adapter = new PostgresQueueAdapter(db)
+const queue = new Queue(adapter, { name: "my-queue" })
+const worker = new Worker(adapter, { name: "my-queue" })
+
+worker.register("process-task", async (job) => {
+  // handle job...
+  return { ok: true }
+})
+
+const app = new Hono()
+app.route(
+  "/queue",
+  createQueueMiddleware({
+    queues: [queue],
+    workers: [worker],
+    auth: { tokens: ["secret"] },
+  })
+)
+
+worker.start()
+export default app
+```
+
+### Via CLI
+
+Create a `queue.config.ts` in your project root and use the CLI:
+
+```bash
+vorsteh-queue serve
+vorsteh-queue serve --port 4000
+```
+
+## Server Config
+
+| Property | Type | Default | Description |
+| --- | --- | --- | --- |
+| `queues` | `readonly Queue[]` | required | Queue instances to manage |
+| `workers?` | `readonly Worker[]` | `[]` | Workers to observe for subscription events |
+| `auth?` | `AuthConfig` | `false` | Authentication configuration |
+| `port?` | `number` | `3000` | Server port (standalone mode) |
+
+### Authentication
+
+```typescript
+// Token-based
+auth: {
+  tokens: ["my-secret-token"]
+}
+
+// Custom middleware
+auth: {
+  middleware: myAuthMiddleware
+}
+
+// Disabled
+auth: false
+```
+
+## GraphQL API
+
+The server exposes a GraphQL endpoint at `/graphql`.
+
+### Queries
+
+| Query | Description |
+| --- | --- |
+| `queues` | List all configured queues |
+| `stats(queue)` | Queue statistics by status |
+| `size(queue)` | Count of pending + delayed jobs |
+| `job(id, queue?)` | Get a single job by ID |
+| `jobs(queue, status?, name?, limit?, offset?)` | Paginated job list |
+| `deadJobs(queue, limit?, offset?)` | Dead letter queue jobs |
+| `flows(queue, limit?, offset?)` | Flow trees |
+| `flowTree(queue, flowId)` | Full flow tree structure |
+
+### Mutations
+
+| Mutation                        | Description           |
+| ------------------------------- | --------------------- |
+| `cancelJob(id, queue, reason?)` | Cancel a job          |
+| `retryJob(id, queue)`           | Retry a failed job    |
+| `runJobNow(id, queue)`          | Promote a delayed job |
+| `deleteJob(id, queue)`          | Delete a job          |
+| `redriveAll(queue, name?)`      | Redrive dead jobs     |
+| `clearJobs(queue, status?)`     | Clear jobs by status  |
+
+### Subscriptions
+
+| Subscription | Payload | Description |
+| --- | --- | --- |
+| `jobStatusChanged` | `JobLifecycleEvent` | Fires on any job status transition |
+| `statsUpdated` | `QueueStats` | Fires when queue stats change |
+
+The `JobLifecycleEvent` envelope contains:
+
+```graphql
+type JobLifecycleEvent {
+  jobId: ID!
+  jobName: String!
+  queueName: String!
+  previousStatus: JobStatus
+  currentStatus: JobStatus!
+  timestamp: String!
+  progress: Int
+}
+```
+
+Subscriptions are delivered via Server-Sent Events (SSE). They require `workers` to be passed in the server config for processing lifecycle events.
+
+## Health Check
+
+The server exposes a `/health` endpoint (behind auth) that returns:
+
+```json
+{ "status": "ok" }
+```

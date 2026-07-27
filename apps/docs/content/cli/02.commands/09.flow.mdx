@@ -1,0 +1,25 @@
+---
+title: "vorsteh-queue flow"
+navTitle: "flow"
+description: Show a flow tree (parent-child job hierarchy).
+cliCommand: "flow"
+---
+
+Displays the parent-child job hierarchy as a tree, useful for debugging flow-based job pipelines.
+
+## Usage
+
+```bash
+vorsteh-queue flow <flow-id>
+```
+
+```
+ℹ Flow: process-order  [flow-id: flow_abc123]
+
+process-order (completed) ✓
+├── validate-payment (completed) ✓
+├── reserve-stock (completed) ✓
+└── send-confirmation (processing) ⟳
+```
+
+<CliCommandDetails command="flow" />

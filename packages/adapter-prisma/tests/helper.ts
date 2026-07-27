@@ -1,39 +1,43 @@
-import path from "path"
-import PrismaInternals from "@prisma/internals"
-import PrismaMigrate from "@prisma/migrate"
+import { execSync } from "node:child_process"
+import path from "node:path"
 
-// based on
-// https://github.com/prisma/prisma/issues/13549#issuecomment-1987343945
+/**
+ * Push the Prisma test schema to the database.
+ *
+ * Uses `prisma db push` CLI with `--url` flag to pass the Testcontainer URL directly.
+ * This is the most reliable approach across Prisma versions since the programmatic
+ * Migrate API is internal and changes frequently between versions.
+ */
 export async function prepareTable() {
-  let migrate
-
   try {
-    const schemaPathResult = await PrismaInternals.getSchemaWithPath(
-      path.join(__dirname, "../prisma/schema.test.prisma"),
+    const schemaPath = path.join(
+      import.meta.dirname,
+      "../prisma/schema.test.prisma"
     )
+    // eslint-disable-next-line no-restricted-properties
+    const databaseUrl = process.env.DATABASE_URL
 
-    if (!schemaPathResult.schemaPath) {
-      // eslint-disable-next-line no-console
-      console.error("No schema found")
-      return { result: false }
+    if (!databaseUrl) {
+      throw new Error("DATABASE_URL environment variable is not set")
     }
 
-    const migrationsDirPath = path.join(schemaPathResult.schemaRootDir, "migrations")
-    const schemaContext = { schemaFiles: schemaPathResult.schemas } as PrismaInternals.SchemaContext
-
-    migrate = await PrismaMigrate.Migrate.setup({
-      migrationsDirPath,
-      schemaContext,
-    })
-
-    await migrate.push({ force: true })
+    execSync(
+      `npx prisma db push --schema=${schemaPath} --url="${databaseUrl}" --accept-data-loss`,
+      {
+        stdio: "pipe",
+        // eslint-disable-next-line no-restricted-properties
+        env: { ...process.env },
+      }
+    )
 
     return { result: true }
   } catch (error) {
+    const stderr = (error as { stderr?: Buffer })?.stderr?.toString() ?? ""
     // eslint-disable-next-line no-console
-    console.log({ error })
-    return { result: false, error }
-  } finally {
-    void migrate?.stop()
+    console.error(
+      "Migration error:",
+      stderr || (error instanceof Error ? error.message : error)
+    )
+    return { error, result: false }
   }
 }

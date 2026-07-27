@@ -1,9 +1,9 @@
 {
   "name": "pm2-workers-example",
   "version": "1.0.0",
+  "private": true,
   "description": "Manage multiple Vorsteh Queues with PM2 using Drizzle ORM with postgres.js",
   "type": "module",
-  "private": true,
   "scripts": {
     "dev": "pnpm with-env tsx src/producer.ts",
     "start": "pnpm with-env pm2 start ecosystem.config.cjs",
@@ -19,14 +19,14 @@
   "dependencies": {
     "@vorsteh-queue/adapter-drizzle": "workspace:*",
     "@vorsteh-queue/core": "workspace:*",
-    "drizzle-orm": "^0.45.1",
-    "postgres": "^3.4.8"
+    "drizzle-orm": "1.0.0-rc.4",
+    "postgres": "3.4.9"
   },
   "devDependencies": {
     "dotenv-cli": "11.0.0",
-    "drizzle-kit": "^0.31.8",
-    "pm2": "6.0.14",
-    "tsx": "4.21.0",
-    "typescript": "^5.9.3"
+    "drizzle-kit": "1.0.0-rc.4",
+    "pm2": "7.0.3",
+    "tsx": "4.23.1",
+    "typescript": "6.0.3"
   }
 }

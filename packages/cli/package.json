@@ -1,0 +1,76 @@
+{
+  "name": "@vorsteh-queue/cli",
+  "version": "0.1.0",
+  "description": "CLI tool for monitoring and managing Vorsteh Queue jobs",
+  "keywords": [
+    "cli",
+    "job-queue",
+    "management",
+    "monitoring",
+    "queue"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/cli"
+  },
+  "bin": {
+    "vorsteh-queue": "./dist/bin.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
+    "./commands-metadata": {
+      "types": "./dist/commands-metadata.d.mts",
+      "source": "./src/commands-metadata.ts",
+      "import": "./dist/commands-metadata.mjs",
+      "default": "./dist/commands-metadata.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown --log-level error",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@commander-js/extra-typings": "15.0.0",
+    "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/query-builder": "workspace:*",
+    "@vorsteh-queue/server": "workspace:*",
+    "c12": "3.3.4",
+    "cli-spinners": "^3.4.0",
+    "commander": "15.0.0",
+    "consola": "3.4.2",
+    "ink": "^7.1.1",
+    "mnemonist": "^0.40.4",
+    "react": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.17",
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "fast-check": "^4.9.0",
+    "ink-testing-library": "^4.0.0",
+    "tsdown": "0.22.14",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

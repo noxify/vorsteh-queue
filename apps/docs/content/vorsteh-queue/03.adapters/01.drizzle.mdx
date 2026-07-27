@@ -1,0 +1,109 @@
+---
+title: Drizzle Adapter
+navTitle: Drizzle
+description: Drizzle ORM adapter for PostgreSQL with type-safe database operations.
+---
+
+The Drizzle adapter provides PostgreSQL support using Drizzle ORM, offering excellent TypeScript integration and performance.
+
+## Installation
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
+</Command>
+
+## Quick Start
+
+```typescript
+import { defineRelations } from "drizzle-orm"
+import { drizzle } from "drizzle-orm/node-postgres"
+import { Pool } from "pg"
+
+import {
+  PostgresQueueAdapter,
+  queueFlows,
+  queueJobs,
+} from "@vorsteh-queue/adapter-drizzle"
+import { Queue } from "@vorsteh-queue/core"
+
+// 1. Define relations (include your own tables here too)
+const relations = defineRelations({ queueFlows, queueJobs })
+
+// 2. Create drizzle client with relations
+const pool = new Pool({ connectionString: "postgresql://..." })
+const db = drizzle({ client: pool, relations })
+
+// 3. Create adapter and queue
+const adapter = new PostgresQueueAdapter(db)
+const queue = new Queue(adapter, { name: "my-queue" })
+```
+
+<Note title="Tip">
+  For real projects, extract this setup into a shared `src/queues.ts` file. See
+  [Project Structure](/docs/vorsteh-queue/getting-started/project-structure).
+</Note>
+
+## Supported Drivers
+
+- **node-postgres (pg)** — `drizzle-orm/node-postgres` ( [Docs](https://orm.drizzle.team/docs/get-started-postgresql#node-postgres) )
+- **Postgres.js** — `drizzle-orm/postgres-js` ( [Docs](https://orm.drizzle.team/docs/get-started-postgresql#postgresjs) )
+- **PGlite** — `drizzle-orm/pglite` (embedded, great for development) ( [Docs](https://orm.drizzle.team/docs/connect-pglite) )
+
+## Database Schema
+
+The adapter ships with a pre-defined schema:
+
+```typescript
+import { defineRelations } from "drizzle-orm"
+
+import { queueFlows, queueJobs } from "@vorsteh-queue/adapter-drizzle"
+
+// Export the queue tables for drizzle-kit migrations
+export { queueFlows, queueJobs }
+
+// Define relations — add your own tables here alongside queue tables
+export const relations = defineRelations({ queueFlows, queueJobs })
+```
+
+## Custom Table and Schema Names
+
+Use `createQueueJobsTable` to customize the table name and database schema:
+
+```typescript
+import { defineRelations } from "drizzle-orm"
+
+import {
+  createQueueJobsTable,
+  queueFlows,
+} from "@vorsteh-queue/adapter-drizzle"
+
+export const { table: customQueueJobs, schema: customSchema } =
+  createQueueJobsTable("custom_queue_jobs", "custom_schema")
+
+export const relations = defineRelations({ customQueueJobs, queueFlows })
+```
+
+Pass the custom model name to the adapter:
+
+```typescript
+const adapter = new PostgresQueueAdapter(db, {
+  modelName: "customQueueJobs",
+})
+```
+
+## Migrations
+
+Use [drizzle-kit](https://orm.drizzle.team/docs/kit-overview) to generate and run migrations:
+
+```bash
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+## Adapter Properties
+
+<ApiReference
+  file="core/src/types"
+  name="DrizzleAdapterProps"
+  variant="table"
+/>

@@ -3,89 +3,86 @@
   "version": "0.3.1",
   "description": "Kysely adapter for Vorsteh Queue with PostgreSQL support",
   "keywords": [
-    "queue",
-    "job-queue",
+    "adapter",
+    "background-jobs",
+    "database",
     "drizzle",
     "drizzle-orm",
-    "postgresql",
-    "postgres",
-    "database",
-    "adapter",
-    "typescript",
-    "background-jobs",
-    "task-queue",
-    "worker",
+    "job-queue",
+    "node-postgres",
+    "orm",
     "pg",
     "pglite",
+    "postgres",
     "postgres-js",
-    "node-postgres",
+    "postgresql",
+    "queue",
     "sql",
-    "orm"
+    "task-queue",
+    "typescript",
+    "worker"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/noxify/vorsteh-queue",
     "directory": "packages/adapter-kysely"
   },
-  "license": "MIT",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./migrations": {
-      "default": "./dist/migrations.js",
-      "types": "./dist/migrations/queue_table.d.ts"
-    },
-    "./postgres-adapter": {
-      "types": "./dist/postgres-adapter.d.ts",
-      "default": "./dist/postgres-adapter.js"
-    },
-    "./types": {
-      "types": "./dist/types.d.ts",
-      "default": "./dist/types.js"
-    }
-  },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./migrations": {
+      "types": "./dist/migrations/queue-table.d.mts",
+      "source": "./src/migrations/queue-table.ts",
+      "default": "./dist/migrations/queue-table.mjs"
+    },
+    "./postgres-adapter": {
+      "types": "./dist/adapter.d.mts",
+      "source": "./src/adapter.ts",
+      "default": "./dist/adapter.mjs"
+    },
+    "./types": {
+      "types": "./dist/types.d.mts",
+      "source": "./src/types.ts",
+      "default": "./dist/types.mjs"
+    }
+  },
   "scripts": {
-    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "build": "tsdown --log-level error",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "db:generate": "drizzle-kit generate",
-    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
-    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
-    "lint": "eslint .",
+    "dev": "tsdown --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "typecheck": "tsc --noEmit"
   },
-  "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
-    "@vorsteh-queue/core": "workspace:*"
+    "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/query-builder": "workspace:*"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.3.15",
-    "@vorsteh-queue/eslint-config": "workspace:*",
-    "@vorsteh-queue/prettier-config": "workspace:*",
+    "@electric-sql/pglite": "0.5.4",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "eslint": "^9.39.2",
-    "kysely": "^0.28.10",
-    "kysely-ctl": "^0.20.0",
-    "kysely-postgres-js": "^3.0.0",
-    "postgres": "^3.4.8",
-    "prettier": "^3.8.1",
-    "rolldown": "1.0.0-rc.2",
-    "rollup-plugin-delete": "^3.0.2",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "kysely": "^0.29.4",
+    "kysely-ctl": "0.21.0",
+    "kysely-postgres-js": "3.0.0",
+    "postgres": "3.4.9",
+    "tsdown": "0.22.14",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
     "kysely": ">=0.28.0"
@@ -100,5 +97,8 @@
     "postgres": {
       "optional": true
     }
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

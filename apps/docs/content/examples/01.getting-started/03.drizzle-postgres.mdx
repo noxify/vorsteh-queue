@@ -1,0 +1,42 @@
+---
+title: Drizzle + postgres.js
+navTitle: Drizzle + postgres.js
+description: Advanced example using Drizzle ORM with postgres.js and recurring jobs.
+tags: ["drizzle", "postgres.js", "recurring"]
+---
+
+An advanced example using Drizzle ORM with the `postgres.js` driver, demonstrating recurring jobs with cron expressions.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=drizzle-postgres
+</Command>
+
+Then install dependencies, push the schema and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm db:push
+pnpm dev
+```
+
+## What it demonstrates
+
+- Drizzle ORM with postgres.js driver
+- Recurring jobs using cron expressions
+- Timezone-aware scheduling
+- Multiple job types in one queue
+
+## Related documentation
+
+- [Quickstart](/docs/vorsteh-queue/getting-started/quickstart)
+- [Drizzle Adapter](/docs/vorsteh-queue/adapters/drizzle)
+- [Job Types](/docs/vorsteh-queue/core/job-types)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/drizzle-postgres)

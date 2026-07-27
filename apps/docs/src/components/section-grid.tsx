@@ -1,71 +1,175 @@
 import Link from "next/link"
 
-import type { getSections } from "~/collections"
-import { getMetadata, isHidden } from "~/collections"
+import type { getSections } from "@/collection-helpers"
+import {
+  getTitle,
+  isExternal,
+  isHidden,
+  resolveDocEntry,
+} from "@/collection-helpers"
+import { cn } from "@/lib/utils"
 
-export default async function SectionGrid({
-  sections,
-}: {
-  sections: Awaited<ReturnType<typeof getSections>>
-}) {
-  if (sections.length === 0) {
-    return <></>
+interface SectionGridItem {
+  title: string
+  description?: string
+  path: string
+}
+
+interface GridElement {
+  title: string
+  description: string
+  path: string
+}
+
+type SectionItem = Awaited<ReturnType<typeof getSections>>[number]
+
+type SectionGridProps =
+  | {
+      sections: Awaited<ReturnType<typeof getSections>>
+      items?: never
+      className?: string
+    }
+  | {
+      items: readonly SectionGridItem[]
+      sections?: never
+      className?: string
+    }
+
+function isEmptyInput(
+  sections: Awaited<ReturnType<typeof getSections>> | undefined,
+  inputItems: readonly SectionGridItem[] | undefined
+): boolean {
+  return (
+    (!sections || sections.length === 0) &&
+    (!inputItems || inputItems.length === 0)
+  )
+}
+
+function toElementFromItem(item: SectionGridItem): GridElement {
+  return {
+    description: item.description ?? "",
+    path: item.path,
+    title: item.title,
+  }
+}
+
+function shouldSkipEntry(entry: SectionItem): boolean {
+  return isHidden(entry) || isExternal(entry)
+}
+
+async function resolveSectionElement(
+  section: SectionItem
+): Promise<GridElement | null> {
+  if (shouldSkipEntry(section)) {
+    return null
   }
 
-  const elements = []
+  try {
+    const resolved = await resolveDocEntry(section)
 
-  for (const section of sections) {
-    if (isHidden(section.entry)) {
-      continue
+    if (shouldSkipEntry(resolved.entry)) {
+      return null
     }
 
-    let frontmatter: Awaited<ReturnType<typeof getMetadata>>
-    try {
-      frontmatter = await getMetadata(section.file)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e: unknown) {
-      continue
+    const frontmatterWithSectionGridFlag = resolved.frontmatter as
+      | (typeof resolved.frontmatter & { hideFromSectionGrid?: boolean })
+      | undefined
+
+    if (frontmatterWithSectionGridFlag?.hideFromSectionGrid) {
+      return null
     }
 
-    if (!frontmatter) {
-      elements.push({
-        title: section.title,
-        description: "",
-        path: section.raw_pathname,
-      })
-    } else {
-      elements.push({
-        title: section.title,
-        description: frontmatter.description ?? "",
-        path: section.raw_pathname,
-      })
+    return {
+      description: resolved.frontmatter?.description ?? "",
+      path: `/docs${resolved.entry.getPathname({ includeBasePathname: true })}`,
+      title: getTitle(resolved.entry, resolved.frontmatter, true),
+    }
+  } catch {
+    return null
+  }
+}
+
+export default async function SectionGrid(props: SectionGridProps) {
+  const sections = "sections" in props ? props.sections : undefined
+  const inputItems = "items" in props ? props.items : undefined
+
+  if (isEmptyInput(sections, inputItems)) {
+    return null
+  }
+
+  const elements: GridElement[] = []
+
+  if (inputItems) {
+    for (const item of inputItems) {
+      elements.push(toElementFromItem(item))
+    }
+  } else if (sections) {
+    const resolvedElements = await Promise.all(
+      sections.map((section) => resolveSectionElement(section))
+    )
+    const seenPaths = new Set<string>()
+
+    for (const element of resolvedElements) {
+      if (!element) {
+        continue
+      }
+
+      const { path } = element
+
+      if (seenPaths.has(path)) {
+        continue
+      }
+
+      seenPaths.add(path)
+      elements.push(element)
     }
   }
 
   return (
     <div
-      className="mt-12 grid auto-rows-fr place-items-stretch gap-4 md:grid-cols-2 2xl:grid-cols-2"
-      data-pagefind-ignore
+      className={cn(
+        "mt-12 grid auto-rows-fr gap-4 md:grid-cols-2 2xl:grid-cols-2",
+        props.className
+      )}
     >
-      {elements.map((ele, index) => {
-        return (
-          <Link href={ele.path} key={index}>
-            <div className="h-full rounded-lg border border-orange-primary/40 bg-cream-100 p-6 transition-colors hover:bg-cream-200 dark:border-dark-50 dark:bg-dark-100 dark:hover:bg-dark-50">
-              <h3 className="mb-2 font-semibold text-dark-200 dark:text-dark-900">{ele.title}</h3>
-              <div className="text-sm text-fur-500 dark:text-dark-800">{ele.description}</div>
+      {elements.map((ele, index) => (
+        <Link
+          href={ele.path}
+          prefetch={false}
+          key={index} // oxlint-disable-line react-doctor/no-array-index-as-key -- static list, order won't change
+          className="not-prose group block h-full"
+        >
+          <div className="hover:border-brand/50 hover:dark:border-brand/30 bg-sidebar relative h-full overflow-hidden rounded-2xl border border-black/10 shadow transition-transform duration-200 dark:border-white/10">
+            {/* Dot pattern background */}
+            <div
+              className="pointer-events-none absolute inset-0 opacity-[0.2]"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle, currentColor 1px, transparent 1px)",
+                backgroundSize: "24px 24px",
+              }}
+            />
+            {/* Radial fade mask */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, transparent 30%, var(--sidebar) 80%)",
+              }}
+            />
+
+            <div className="relative px-4 py-8">
+              <h2 className="text-foreground/70 group-hover:text-foreground mt-0 mb-1 text-xl font-bold">
+                {ele.title}
+              </h2>
+
+              <p className="text-muted-foreground text-base font-normal">
+                {ele.description}
+              </p>
             </div>
-          </Link>
-        )
-        return <div key={index}>{ele.title}</div>
-        // return (
-        //   <AnimatedCard
-        //     link={ele.path}
-        //     title={ele.title}
-        //     description={ele.description}
-        //     key={index}
-        //   />
-        // )
-      })}
+          </div>
+        </Link>
+      ))}
     </div>
   )
 }

@@ -1,0 +1,39 @@
+---
+title: GraphQL Server
+description: Standalone GraphQL server for queue monitoring and management.
+tags: ["graphql", "server", "monitoring"]
+---
+
+A standalone GraphQL server exposing queue operations — inspect jobs, get stats, cancel, retry, and redrive from any GraphQL client.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=graphql-server
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- `@vorsteh-queue/server` setup
+- GraphQL API with Yoga and Hono
+- Query queue stats and job details
+- Mutation operations (cancel, retry, redrive)
+
+## Related documentation
+
+- [Queue](/docs/vorsteh-queue/core/queue)
+- [Events](/docs/vorsteh-queue/core/events)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/graphql-server)

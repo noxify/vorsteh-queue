@@ -226,7 +226,10 @@
 
   ```typescript
   // PostgreSQL
-  import { PostgresQueueAdapter, postgresSchema } from "@vorsteh-queue/adapter-drizzle"
+  import {
+    PostgresQueueAdapter,
+    postgresSchema,
+  } from "@vorsteh-queue/adapter-drizzle"
 
   const db = drizzle(pool, { schema: postgresSchema })
   const adapter = new PostgresQueueAdapter(db, "my-queue")

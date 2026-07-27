@@ -1,0 +1,74 @@
+{
+  "name": "@vorsteh-queue/adapter-zenstack",
+  "version": "0.1.0",
+  "description": "ZenStack ORM adapter for Vorsteh Queue with PostgreSQL support",
+  "keywords": [
+    "adapter",
+    "background-jobs",
+    "database",
+    "job-queue",
+    "orm",
+    "postgresql",
+    "queue",
+    "task-queue",
+    "typescript",
+    "worker",
+    "zenstack"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/adapter-zenstack"
+  },
+  "files": [
+    "dist",
+    "types"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./postgres-adapter": {
+      "types": "./dist/adapter.d.mts",
+      "source": "./src/adapter.ts",
+      "default": "./dist/adapter.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown --log-level error",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/query-builder": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "@vorsteh-queue/shared-tests": "workspace:*",
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "@zenstackhq/orm": "^3.0.0",
+    "postgres": "^3.4.7",
+    "testcontainers": "12.0.4",
+    "tsdown": "0.22.14",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  },
+  "peerDependencies": {
+    "@zenstackhq/orm": ">=3.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

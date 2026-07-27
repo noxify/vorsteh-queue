@@ -1,0 +1,88 @@
+---
+title: MikroORM Adapter
+navTitle: MikroORM
+description: MikroORM adapter for PostgreSQL with schema-first entity definitions and identity map.
+---
+
+The MikroORM adapter provides PostgreSQL support using MikroORM v6, offering a powerful ORM with unit of work pattern, identity map, and schema-first entity definitions.
+
+## Installation
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-mikroorm @mikro-orm/core
+  @mikro-orm/postgresql
+</Command>
+
+## Quick Start
+
+```typescript
+import { MikroORM } from "@mikro-orm/postgresql"
+import {
+  PostgresMikroormQueueAdapter,
+  QueueFlowSchema,
+  QueueJobSchema,
+} from "@vorsteh-queue/adapter-mikroorm"
+import { Queue, Worker } from "@vorsteh-queue/core"
+
+const orm = await MikroORM.init({
+  entities: [QueueJobSchema, QueueFlowSchema],
+  clientUrl: process.env.DATABASE_URL,
+})
+
+const adapter = new PostgresMikroormQueueAdapter(orm)
+
+const queue = new Queue(adapter, { name: "my-queue" })
+const worker = new Worker(adapter, { name: "my-queue" })
+
+await queue.connect()
+```
+
+<Note title="Tip">
+  For real projects, extract this setup into a shared `src/queues.ts` file. See
+  [Project Structure](/docs/vorsteh-queue/getting-started/project-structure).
+</Note>
+
+## Database Schema
+
+The adapter ships with pre-built `QueueJobSchema` and `QueueFlowSchema` (EntitySchema) that you can use directly with MikroORM's schema generator or migrations.
+
+```bash
+npx mikro-orm schema:create
+```
+
+## Custom Table and Schema Names
+
+```typescript
+const adapter = new PostgresMikroormQueueAdapter(orm, {
+  tableName: "custom_queue_jobs",
+  schemaName: "custom_schema",
+})
+```
+
+## Migrations
+
+Use the [MikroORM CLI](https://mikro-orm.io/docs/migrations) for migrations:
+
+```bash
+npx mikro-orm migration:create
+npx mikro-orm migration:up
+```
+
+## Why MikroORM?
+
+MikroORM v6 is a modern TypeScript ORM with:
+
+- **Unit of Work pattern** — automatic change tracking and optimized flushes
+- **Identity Map** — ensures entity identity across queries
+- **Schema-first entities** — define schemas without decorators using `EntitySchema`
+- **Powerful QueryBuilder** — Knex-powered query construction
+- **Database-agnostic** — supports PostgreSQL, MySQL, SQLite, MongoDB, and more
+- **Strict typing** — full TypeScript support with generic entities
+
+## Adapter Properties
+
+<ApiReference
+  file="core/src/types"
+  name="MikroormAdapterProps"
+  variant="table"
+/>

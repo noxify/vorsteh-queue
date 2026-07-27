@@ -1,0 +1,23 @@
+---
+title: Global CLI Options
+description: Reference for all available global CLI options with syntax, options, and usage examples.
+---
+
+All commands support the same global transport and targeting options:
+
+<CliCommandDetails scope="global" />
+
+Queue resolution priority:
+
+1. `--queue` flag
+2. `defaultQueue` from `queue.config.ts`
+3. Single configured queue (when only one queue exists)
+
+In remote mode without a local config file, `--queue` is required.
+
+Examples:
+
+```bash
+vorsteh-queue status --queue email-queue
+vorsteh-queue inspect <jobId> --url https://my-server.example.com/graphql --queue report-queue
+```

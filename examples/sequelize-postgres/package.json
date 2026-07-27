@@ -1,0 +1,22 @@
+{
+  "name": "sequelize-postgres-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vorsteh Queue example using Sequelize with PostgreSQL",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm with-env tsx src/index.ts",
+    "with-env": "dotenv -e .env --"
+  },
+  "dependencies": {
+    "@vorsteh-queue/adapter-sequelize": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "pg": "^8.13.0",
+    "sequelize": "^6.37.0"
+  },
+  "devDependencies": {
+    "dotenv-cli": "11.0.0",
+    "tsx": "4.23.1",
+    "typescript": "6.0.3"
+  }
+}

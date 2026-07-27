@@ -1,0 +1,36 @@
+---
+title: "vorsteh-queue status"
+navTitle: "status"
+description: Show queue status overview with job counts per state.
+cliCommand: "status"
+---
+
+Displays a summary of job counts grouped by status.
+
+## Usage
+
+```bash
+vorsteh-queue status
+```
+
+```
+ℹ Queue Status:
+  Pending:    12
+  Delayed:    3
+  Processing: 2
+  Completed:  847
+  Failed:     5
+  Cancelled:  1
+  Dead:       0
+  Size:       870
+```
+
+## JSON Output
+
+```bash
+vorsteh-queue status --json
+```
+
+Returns structured JSON for scripting and CI pipelines.
+
+<CliCommandDetails command="status" />

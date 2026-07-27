@@ -1,0 +1,24 @@
+---
+title: "vorsteh-queue clear"
+navTitle: "clear"
+description: Clear jobs from the queue by status.
+cliCommand: "clear"
+---
+
+Removes multiple jobs from the queue. Use `--status` to target a specific state or `--all` to clear everything.
+
+## Usage
+
+```bash
+# Clear completed jobs
+vorsteh-queue clear --status completed
+
+# Clear all jobs
+vorsteh-queue clear --all
+```
+
+## Valid Statuses
+
+`pending`, `delayed`, `processing`, `completed`, `failed`, `cancelled`, `dead`
+
+<CliCommandDetails command="clear" />

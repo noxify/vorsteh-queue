@@ -1,5 +1,5 @@
-import { Fragment } from "react"
 import Link from "next/link"
+import { Fragment } from "react"
 
 import {
   Breadcrumb,
@@ -8,14 +8,13 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator,
-} from "~/components/ui/breadcrumb"
+} from "@/components/ui/breadcrumb"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu"
-import { removeFromArray } from "~/lib/utils"
+} from "@/components/ui/dropdown-menu"
 
 interface Item {
   title: string
@@ -31,80 +30,81 @@ interface GroupItem {
 
 function groupBreadcrumb(input: Item[]): (ElementItem | GroupItem)[] {
   if (input.length <= 3) {
-    return input.map((item) => ({
-      type: "element",
-      title: item.title,
-      path: ["docs", ...removeFromArray(item.path, ["docs"])],
-    }))
+    return input.map((item) => ({ type: "element" as const, ...item }))
   }
 
-  const groupItems = input.slice(1, -2)
-  const restItems = input
-    .slice(input.length - 2)
-    .map((item) => ({ type: "element", ...item })) as ElementItem[]
+  const [firstItem, ...remainingItems] = input
+  if (!firstItem) {
+    return []
+  }
+
+  const groupItems = remainingItems.slice(0, -2)
+  const restItems = remainingItems
+    .slice(-2)
+    .map((item) => ({ type: "element" as const, ...item }))
+
   return [
-    { type: "element", ...input[0] } as ElementItem,
-    { type: "group", items: groupItems.reverse() } as GroupItem,
+    { type: "element" as const, ...firstItem },
+    { items: groupItems.toReversed(), type: "group" },
     ...restItems,
   ]
 }
 
-export function SiteBreadcrumb({ items }: { items: { title: string; path: string[] }[] }) {
+export function SiteBreadcrumb({
+  items,
+}: {
+  items: { title: string; path: string[] }[]
+}) {
   const breadcrumbItems = groupBreadcrumb(items)
-  const searchBreadcrumb = breadcrumbItems
-    .slice(1)
-    .map((item) => {
-      if (item.type === "group") {
-        return item.items.map((ele) => ele.title)
-      }
-
-      return item.title
-    })
-    .flat()
-    .join(" / ")
 
   return (
-    <Breadcrumb
-      className="mb-4 w-full"
-      data-pagefind-ignore
-      data-pagefind-meta={`breadcrumb:${searchBreadcrumb}`}
-    >
+    <Breadcrumb className="mb-4 hidden w-full md:block">
       <BreadcrumbList>
-        {breadcrumbItems.map((item, idx) => {
-          return (
-            <Fragment key={idx}>
-              {idx > 0 && <BreadcrumbSeparator />}
-              {item.type == "element" && (
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link href={`/${item.path.join("/")}`} prefetch={true}>
+        {breadcrumbItems.map((item, idx) => (
+          <Fragment key={idx}>
+            {idx > 0 && <BreadcrumbSeparator />}
+            {item.type === "element" && (
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  render={
+                    <Link
+                      href={`/docs/${item.path.join("/")}`}
+                      prefetch={false}
+                    >
                       {item.title}
                     </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              )}
-              {item.type == "group" && (
-                <BreadcrumbItem>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-1">
-                      <BreadcrumbEllipsis className="h-4 w-4" />
-                      <span className="sr-only">Toggle menu</span>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      {item.items.map((subItem, idy) => (
-                        <DropdownMenuItem key={idy} asChild className="cursor-pointer">
-                          <Link href={`/${subItem.path.join("/")}`} prefetch={true}>
+                  }
+                />
+              </BreadcrumbItem>
+            )}
+            {item.type === "group" && (
+              <BreadcrumbItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-1">
+                    <BreadcrumbEllipsis className="h-4 w-4" />
+                    <span className="sr-only">Toggle menu</span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {item.items.map((subItem, idy) => (
+                      <DropdownMenuItem
+                        key={idy}
+                        render={
+                          <Link
+                            href={`/docs/${subItem.path.join("/")}`}
+                            prefetch={false}
+                          >
                             {subItem.title}
                           </Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </BreadcrumbItem>
-              )}
-            </Fragment>
-          )
-        })}
+                        }
+                        className="cursor-pointer"
+                      />
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </BreadcrumbItem>
+            )}
+          </Fragment>
+        ))}
       </BreadcrumbList>
     </Breadcrumb>
   )

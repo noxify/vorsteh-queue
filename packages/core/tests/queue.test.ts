@@ -1,326 +1,298 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { MemoryQueueAdapter, Queue } from "../src"
-import { waitFor } from "../src/utils/helpers"
+import { MemoryQueueAdapter } from "../src/adapters/memory"
+import { DuplicateJobError } from "../src/errors"
+import { Queue } from "../src/queue"
 
-describe("Queue", () => {
+describe("Queue (Producer)", () => {
   let adapter: MemoryQueueAdapter
   let queue: Queue
 
-  beforeEach(() => {
+  beforeEach(async () => {
     adapter = new MemoryQueueAdapter()
-    queue = new Queue(adapter, { name: "test-queue", pollInterval: 10, jobInterval: 1 })
+    queue = new Queue(adapter, { name: "test-queue" })
+    await queue.connect()
   })
 
-  describe("basic operations", () => {
-    it("should connect and disconnect", async () => {
-      await queue.connect()
-      await queue.disconnect()
-    })
+  describe("add", () => {
+    it("should add a job and return it", async () => {
+      /* eslint-disable vitest/max-expects */
+      const job = await queue.add("send-email", { to: "user@test.com" })
 
-    it("should register job handlers", () => {
-      const handler = vi.fn()
-      queue.register("test-job", handler)
-      void queue.enqueue("test-job-2", handler)
-    })
-
-    it("should add jobs to queue", async () => {
-      await queue.connect()
-
-      const job = await queue.add("test-job", { data: "test" })
-
-      expect(job.name).toBe("test-job")
-      expect(job.payload).toEqual({ data: "test" })
+      expect(job.id).toBeDefined()
+      expect(job.name).toBe("send-email")
+      expect(job.payload).toStrictEqual({ to: "user@test.com" })
       expect(job.status).toBe("pending")
       expect(job.priority).toBe(2)
+      expect(job.attempts).toBe(0)
+      expect(job.maxAttempts).toBe(3)
+      /* eslint-enable vitest/max-expects */
     })
 
-    it("should add jobs with enqueue alias", async () => {
-      await queue.connect()
-
-      const job = await queue.enqueue("test-job", { data: "test" })
-
-      expect(job.name).toBe("test-job")
-      expect(job.payload).toEqual({ data: "test" })
+    it("should apply custom priority", async () => {
+      const job = await queue.add("urgent", {}, { priority: 1 })
+      expect(job.priority).toBe(1)
     })
 
-    it("should add delayed jobs", async () => {
-      await queue.connect()
-
-      const job = await queue.add("test-job", { data: "test" }, { delay: 1000 })
-
+    it("should create delayed job with delay option", async () => {
+      const job = await queue.add("delayed", {}, { delay: 5000 })
       expect(job.status).toBe("delayed")
       expect(job.processAt.getTime()).toBeGreaterThan(Date.now())
     })
 
-    it("should add jobs with priority", async () => {
-      await queue.connect()
+    it("should create delayed job with cron option", async () => {
+      const job = await queue.add("cron", {}, { cron: "0 9 * * *" })
+      expect(job.status).toBe("delayed")
+      expect(job.cron).toBe("0 9 * * *")
+    })
 
-      const job = await queue.add("test-job", { data: "test" }, { priority: 1 })
+    it("should emit job:added event", async () => {
+      const listener = vi.fn<() => void>()
+      queue.on("job:added", listener)
 
+      await queue.add("test", { data: 1 })
+
+      expect(listener).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ name: "test" })
+      )
+    })
+
+    it("should set unique key", async () => {
+      const job = await queue.add(
+        "sync",
+        {},
+        {
+          unique: { action: "reject", key: "sync:123" },
+        }
+      )
+      expect(job.uniqueKey).toBe("sync:123")
+    })
+
+    it("should reject duplicate unique jobs", async () => {
+      await queue.add("sync", {}, { unique: { action: "reject", key: "dup" } })
+
+      await expect(
+        queue.add("sync", {}, { unique: { action: "reject", key: "dup" } })
+      ).rejects.toThrow(DuplicateJobError)
+    })
+
+    it("should replace duplicate unique jobs", async () => {
+      const first = await queue.add(
+        "sync",
+        { v: 1 },
+        {
+          unique: { action: "replace", key: "replace-me" },
+        }
+      )
+
+      const second = await queue.add(
+        "sync",
+        { v: 2 },
+        {
+          unique: { action: "replace", key: "replace-me" },
+        }
+      )
+
+      expect(second.id).not.toBe(first.id)
+      const oldJob = await queue.getJob(first.id)
+      expect(oldJob?.status).toBe("cancelled")
+    })
+
+    it("should set group key", async () => {
+      const job = await queue.add("grouped", {}, { group: "tenant-1" })
+      expect(job.groupKey).toBe("tenant-1")
+    })
+  })
+
+  describe("addJobs", () => {
+    it("should add multiple jobs", async () => {
+      const jobs = await queue.addJobs("batch", [{ n: 1 }, { n: 2 }, { n: 3 }])
+
+      expect(jobs).toHaveLength(3)
+      expect(jobs[0]?.name).toBe("batch")
+      expect(jobs[2]?.payload).toStrictEqual({ n: 3 })
+    })
+
+    it("should emit job:added for each job", async () => {
+      const listener = vi.fn<() => void>()
+      queue.on("job:added", listener)
+
+      await queue.addJobs("multi", [{ a: 1 }, { a: 2 }])
+      expect(listener).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe("cancel / cancelAll", () => {
+    it("should cancel a job by ID", async () => {
+      const job = await queue.add("cancellable", {})
+      await queue.cancel(job.id, "no longer needed")
+
+      const updated = await queue.getJob(job.id)
+      expect(updated?.status).toBe("cancelled")
+    })
+
+    it("should emit job:cancelled event", async () => {
+      const listener = vi.fn<() => void>()
+      queue.on("job:cancelled", listener)
+
+      const job = await queue.add("cancellable", {})
+      await queue.cancel(job.id, "reason")
+
+      expect(listener).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ cancellationReason: "reason" })
+      )
+    })
+
+    it("should cancel multiple jobs with filter", async () => {
+      await queue.add("email", {})
+      await queue.add("email", {})
+      await queue.add("sms", {})
+
+      const count = await queue.cancelAll({ name: "email" })
+      expect(count).toBe(2)
+    })
+  })
+
+  describe("getJob / getStats / clear", () => {
+    it("should get a job by ID", async () => {
+      const job = await queue.add("lookup", { key: "value" })
+      const retrieved = await queue.getJob(job.id)
+
+      expect(retrieved?.id).toBe(job.id)
+      expect(retrieved?.payload).toStrictEqual({ key: "value" })
+    })
+
+    it("should return null for unknown job", async () => {
+      const result = await queue.getJob("unknown-id")
+      expect(result).toBeNull()
+    })
+
+    it("should return queue stats", async () => {
+      await queue.add("a", {})
+      await queue.add("b", {})
+
+      const stats = await queue.getStats()
+      expect(stats.pending).toBe(2)
+    })
+
+    it("should clear all jobs", async () => {
+      await queue.add("a", {})
+      await queue.add("b", {})
+
+      const count = await queue.clear()
+      expect(count).toBe(2)
+      const statsAfterClear = await queue.getStats()
+      expect(statsAfterClear.pending).toBe(0)
+    })
+  })
+
+  describe("DLQ: getDeadJobs / redrive / redriveAll", () => {
+    it("should get dead jobs", async () => {
+      const job = await queue.add("failing", {})
+      await adapter.updateJobStatus(job.id, { status: "dead" })
+
+      const dead = await queue.getDeadJobs()
+      expect(dead).toHaveLength(1)
+    })
+
+    it("should redrive a dead job", async () => {
+      const job = await queue.add("failing", {})
+      await adapter.updateJobStatus(job.id, { status: "dead" })
+      await queue.redrive(job.id)
+
+      const updated = await queue.getJob(job.id)
+      expect(updated?.status).toBe("pending")
+    })
+
+    it("should redrive all dead jobs", async () => {
+      const j1 = await queue.add("a", {})
+      const j2 = await queue.add("b", {})
+      await adapter.updateJobStatus(j1.id, { status: "dead" })
+      await adapter.updateJobStatus(j2.id, { status: "dead" })
+
+      const count = await queue.redriveAll()
+      expect(count).toBe(2)
+    })
+  })
+
+  describe("defaultJobOptions", () => {
+    it("should apply default options from config", async () => {
+      const customQueue = new Queue(adapter, {
+        defaultJobOptions: { maxAttempts: 5, priority: 1 },
+        name: "test-queue",
+      })
+      await customQueue.connect()
+
+      const job = await customQueue.add("default-test", {})
       expect(job.priority).toBe(1)
+      expect(job.maxAttempts).toBe(5)
+    })
+
+    it("should allow per-job override of defaults", async () => {
+      const customQueue = new Queue(adapter, {
+        defaultJobOptions: { priority: 1 },
+        name: "test-queue",
+      })
+      await customQueue.connect()
+
+      const job = await customQueue.add("override", {}, { priority: 5 })
+      expect(job.priority).toBe(5)
     })
   })
 
-  describe("job processing", () => {
-    it("should process multiple job types with different handlers", async () => {
-      const fooHandler = vi.fn().mockResolvedValue({ foo: true })
-      const barHandler = vi.fn().mockResolvedValue({ bar: true })
-      queue.register("foo", fooHandler)
-      queue.register("bar", barHandler)
-
-      await queue.connect()
-      await queue.add("foo", { data: 1 })
-      await queue.add("bar", { data: 2 })
-      queue.start()
-
-      await waitFor(100)
-
-      expect(fooHandler).toHaveBeenCalledTimes(1)
-      expect(barHandler).toHaveBeenCalledTimes(1)
-
-      await queue.stop()
-    })
-    it("should process jobs", async () => {
-      const handler = vi.fn().mockResolvedValue({ result: "success" })
-      queue.register("test-job", handler)
-
-      await queue.connect()
-      await queue.add("test-job", { data: "test" })
-      queue.start()
-
-      await waitFor(100)
-
-      expect(handler).toHaveBeenCalled()
-
-      await queue.stop()
-    })
-
-    it("should emit job events", async () => {
-      const addedSpy = vi.fn()
-      const processingSpy = vi.fn()
-      const completedSpy = vi.fn()
-
-      queue.on("job:added", addedSpy)
-      queue.on("job:processing", processingSpy)
-      queue.on("job:completed", completedSpy)
-
-      queue.register("test-job", vi.fn().mockResolvedValue({}))
-
-      await queue.connect()
-      await queue.add("test-job", { data: "test" })
-      queue.start()
-
-      await waitFor(100)
-
-      expect(addedSpy).toHaveBeenCalled()
-      expect(processingSpy).toHaveBeenCalled()
-      expect(completedSpy).toHaveBeenCalled()
-
-      await queue.stop()
-    })
-
-    it("should handle job failures and retries", async () => {
-      const handler = vi.fn().mockRejectedValue(new Error("Test error"))
-      const failedSpy = vi.fn()
-      const retriedSpy = vi.fn()
-
-      queue.on("job:failed", failedSpy)
-      queue.on("job:retried", retriedSpy)
-      queue.register("test-job", handler)
-
-      await queue.connect()
-      await queue.add("test-job", { data: "test" }, { maxAttempts: 2 })
-      queue.start()
-
-      await waitFor(200)
-
-      expect(handler).toHaveBeenCalledTimes(2)
-      expect(retriedSpy).toHaveBeenCalled()
-      expect(failedSpy).toHaveBeenCalled()
-
-      await queue.stop()
-    })
-  })
-
-  describe("cleanup configuration", () => {
-    it("should accept boolean values for cleanup options", () => {
-      const queue1 = new Queue(adapter, {
-        name: "test-queue",
-        removeOnComplete: true,
-        removeOnFail: false,
+  describe("retry / runNow / deleteJob", () => {
+    it("should retry a failed job", async () => {
+      const job = await queue.add("failing", {})
+      await adapter.updateJobStatus(job.id, {
+        error: { message: "fail", name: "Error" },
+        status: "failed",
       })
 
-      const queue2 = new Queue(adapter, {
-        name: "test-queue",
-        removeOnComplete: false,
-        removeOnFail: true,
-      })
+      const success = await queue.retry(job.id)
+      expect(success).toBeTruthy()
 
-      expect(queue1).toBeDefined()
-      expect(queue2).toBeDefined()
+      const updated = await queue.getJob(job.id)
+      expect(updated?.status).toBe("pending")
+      expect(updated?.attempts).toBe(0)
+      expect(updated?.error).toBeUndefined()
     })
 
-    it("should accept number values for cleanup options", () => {
-      const queue = new Queue(adapter, {
-        name: "test-queue",
-        removeOnComplete: 100,
-        removeOnFail: 50,
-      })
-
-      expect(queue).toBeDefined()
+    it("should not retry a non-failed job", async () => {
+      const job = await queue.add("pending-job", {})
+      const success = await queue.retry(job.id)
+      expect(success).toBeFalsy()
     })
 
-    it("should accept mixed boolean and number values", () => {
-      const queue = new Queue(adapter, {
-        name: "test-queue",
-        removeOnComplete: true,
-        removeOnFail: 25,
-      })
+    it("should promote a delayed job to run now", async () => {
+      const job = await queue.add("delayed", {}, { delay: 60_000 })
+      expect(job.status).toBe("delayed")
 
-      expect(queue).toBeDefined()
-    })
-  })
+      const success = await queue.runNow(job.id)
+      expect(success).toBeTruthy()
 
-  describe("queue control", () => {
-    it("should pause and resume queue", () => {
-      const pausedSpy = vi.fn()
-      const resumedSpy = vi.fn()
-
-      queue.on("queue:paused", pausedSpy)
-      queue.on("queue:resumed", resumedSpy)
-
-      queue.pause()
-      expect(pausedSpy).toHaveBeenCalled()
-
-      queue.resume()
-      expect(resumedSpy).toHaveBeenCalled()
+      const updated = await queue.getJob(job.id)
+      expect(updated?.status).toBe("pending")
+      expect(updated?.processAt.getTime()).toBeLessThanOrEqual(Date.now())
     })
 
-    it("should get queue stats", async () => {
-      await queue.connect()
-      await queue.add("test-job", { data: "test" })
-
-      const stats = await queue.getStats()
-
-      expect(stats.pending).toBe(1)
-      expect(stats.processing).toBe(0)
-      expect(stats.completed).toBe(0)
-      expect(stats.failed).toBe(0)
+    it("should not run-now a non-delayed job", async () => {
+      const job = await queue.add("pending-job", {})
+      const success = await queue.runNow(job.id)
+      expect(success).toBeFalsy()
     })
 
-    it("should clear jobs", async () => {
-      await queue.connect()
-      await queue.add("test-job", { data: "test" })
+    it("should delete a job", async () => {
+      const job = await queue.add("deletable", {})
+      const success = await queue.deleteJob(job.id)
+      expect(success).toBeTruthy()
 
-      const cleared = await queue.clear("pending")
-
-      expect(cleared).toBe(1)
-
-      const stats = await queue.getStats()
-      expect(stats.pending).toBe(0)
+      const found = await queue.getJob(job.id)
+      expect(found).toBeNull()
     })
 
-    it("should dequeue jobs", async () => {
-      await queue.connect()
-      await queue.add("test-job", { data: "test" })
-
-      const job = await queue.dequeue()
-
-      expect(job?.name).toBe("test-job")
-      expect(job?.payload).toEqual({ data: "test" })
-
-      const stats = await queue.getStats()
-      expect(stats.completed).toBe(1)
-    })
-  })
-
-  describe("result handling", () => {
-    it("should store job result when job completes successfully", async () => {
-      const result = { success: true, data: "processed" }
-      const handler = vi.fn().mockResolvedValue(result)
-      const completedSpy = vi.fn()
-
-      queue.register("test-job", handler)
-      queue.on("job:completed", completedSpy)
-
-      await queue.connect()
-      await queue.add("test-job", { input: "test" })
-      queue.start()
-
-      await waitFor(100)
-
-      expect(handler).toHaveBeenCalled()
-      expect(completedSpy).toHaveBeenCalled()
-
-      const completedJob = completedSpy.mock.calls[0]?.[0] as { result: unknown }
-      expect(completedJob.result).toEqual(result)
-
-      await queue.stop()
-    })
-
-    it("should handle null/undefined results", async () => {
-      const handler = vi.fn().mockResolvedValue(null)
-      const completedSpy = vi.fn()
-
-      queue.register("test-job", handler)
-      queue.on("job:completed", completedSpy)
-
-      await queue.connect()
-      await queue.add("test-job", { input: "test" })
-      queue.start()
-
-      await waitFor(100)
-
-      const completedJob = completedSpy.mock.calls[0]?.[0] as { result: unknown }
-      expect(completedJob.result).toBeNull()
-
-      await queue.stop()
-    })
-
-    it("should handle complex result objects", async () => {
-      const result = {
-        processed: 100,
-        errors: [],
-        metadata: { timestamp: new Date().toISOString() },
-        nested: { deep: { value: "test" } },
-      }
-      const handler = vi.fn().mockResolvedValue(result)
-      const completedSpy = vi.fn()
-
-      queue.register("test-job", handler)
-      queue.on("job:completed", completedSpy)
-
-      await queue.connect()
-      await queue.add("test-job", { input: "test" })
-      queue.start()
-
-      await waitFor(100)
-
-      const completedJob = completedSpy.mock.calls[0]?.[0] as { result: unknown }
-      expect(completedJob.result).toEqual(result)
-
-      await queue.stop()
-    })
-
-    it("should not store result when job fails", async () => {
-      const handler = vi.fn().mockRejectedValue(new Error("Test error"))
-      const failedSpy = vi.fn()
-
-      queue.register("test-job", handler)
-      queue.on("job:failed", failedSpy)
-
-      await queue.connect()
-      await queue.add("test-job", { input: "test" }, { maxAttempts: 1 })
-      queue.start()
-
-      await waitFor(100)
-
-      const failedJob = failedSpy.mock.calls[0]?.[0] as { result?: unknown; error: unknown }
-      expect(failedJob.result).toBeUndefined()
-      expect(failedJob.error).toBeDefined()
-
-      await queue.stop()
+    it("should return false when deleting non-existent job", async () => {
+      const success = await queue.deleteJob("nonexistent-id")
+      expect(success).toBeFalsy()
     })
   })
 })

@@ -1,0 +1,170 @@
+---
+title: Worker
+description: Process jobs with handlers, concurrency, retries, timeouts, and batch processing.
+---
+
+The `Worker` class is the consumer-side component. It polls for jobs, executes handlers, manages retries, timeouts, and emits lifecycle events. A Worker connects to the same adapter as the Queue and processes jobs from the same named queue.
+
+## Creating a Worker
+
+```typescript
+import { Worker, MemoryQueueAdapter } from "@vorsteh-queue/core"
+
+const adapter = new MemoryQueueAdapter()
+const worker = new Worker(adapter, {
+  name: "email-queue", // must match the Queue name
+  concurrency: 5, // process up to 5 jobs simultaneously
+  pollInterval: 100, // poll every 100ms (default)
+})
+```
+
+In production, the adapter is shared with the Queue:
+
+```typescript
+import { drizzle } from "drizzle-orm/node-postgres"
+import { Pool } from "pg"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { Queue, Worker } from "@vorsteh-queue/core"
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const db = drizzle(pool)
+const adapter = new PostgresQueueAdapter(db)
+
+const queue = new Queue(adapter, { name: "email-queue" })
+const worker = new Worker(adapter, { name: "email-queue", concurrency: 5 })
+```
+
+## Registering Handlers
+
+Each job type needs a handler registered on the Worker:
+
+```typescript
+interface EmailPayload {
+  to: string
+  subject: string
+  body: string
+}
+
+interface EmailResult {
+  messageId: string
+}
+
+worker.register<EmailPayload, EmailResult>(
+  "send-email",
+  async (job, { signal }) => {
+    const id = await sendEmail(job.payload, { signal })
+    return { messageId: id }
+  }
+)
+```
+
+The handler receives:
+
+- `job` — the full Job object with payload, metadata, and a `updateProgress()` method
+- `ctx` — context with `signal` (AbortSignal for timeout/cancellation), `step` (multi-step API), and flow context methods (`getChildrenValues`, `getFailedChildrenValues`, `getChildrenValuesBy`, `removeUnprocessedChildren`) for flow parents
+
+## Starting and Stopping
+
+```typescript
+worker.start() // Begin polling and processing
+worker.pause() // Stop picking new jobs (in-flight jobs continue)
+worker.resume() // Resume polling
+await worker.stop() // Graceful shutdown (waits for active jobs)
+```
+
+## Batch Processing
+
+Process multiple jobs of the same type in a single handler call:
+
+```typescript
+worker.registerBatch(
+  "index-documents",
+  async (jobs, { signal }) => {
+    const results = await bulkIndex(
+      jobs.map((j) => j.payload),
+      { signal }
+    )
+    return results // must return one result per job
+  },
+  {
+    minSize: 5, // wait for at least 5 jobs before processing
+    maxSize: 50, // process up to 50 at once
+  }
+)
+```
+
+## Per-Handler Options
+
+```typescript
+worker.register("send-email", handler, {
+  concurrency: 3, // max 3 concurrent jobs for this handler
+  rateLimit: {
+    max: 100, // max 100 jobs
+    duration: 60_000, // per 60 seconds
+  },
+})
+```
+
+## Event Triggers
+
+Automatically create follow-up jobs when a job completes:
+
+```typescript
+worker.trigger({
+  on: "process-image", // when this job completes...
+  create: "send-notification", // ...create this job
+  data: (result, job) => ({
+    // ...with this payload
+    userId: job.payload.userId,
+    imageUrl: result.url,
+  }),
+  condition: (result) => result.success, // only when condition is met
+})
+```
+
+## Worker Properties
+
+```typescript
+worker.isRunning // boolean — is the worker polling?
+worker.activeJobCount // number — currently processing jobs
+worker.name // string — the queue name
+```
+
+## Cancellation
+
+Cancel a specific job being processed by this worker:
+
+```typescript
+await worker.cancelJob(jobId, "User requested cancellation")
+```
+
+## Worker Configuration
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | required | Queue name to consume from (must match Queue) |
+| `concurrency` | `number` | `1` | Max concurrent jobs |
+| `pollInterval` | `number` | `100` | Polling interval in ms |
+| `telemetry` | `Telemetry` | `noopTelemetry` | Optional telemetry instance |
+| `retryStrategy` | `RetryStrategyConfig` | exponential backoff | Retry delay strategy |
+| `removeOnComplete` | `boolean \| number` | `100` | Auto-remove completed jobs |
+| `removeOnFail` | `boolean \| number` | `50` | Auto-remove failed jobs |
+
+## Retry Strategy
+
+```typescript
+const worker = new Worker(adapter, {
+  name: "email-queue",
+  retryStrategy: {
+    type: "exponential", // "exponential" | "linear" | "fixed"
+    delay: 1000, // base delay in ms
+    maxDelay: 30000, // cap for exponential/linear
+  },
+})
+
+// Or a custom function:
+const worker = new Worker(adapter, {
+  name: "email-queue",
+  retryStrategy: (attempt) => Math.min(1000 * 2 ** attempt, 60000),
+})
+```

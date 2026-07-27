@@ -3,87 +3,83 @@
   "version": "0.5.1",
   "description": "Drizzle ORM adapter for Vorsteh Queue with PostgreSQL support",
   "keywords": [
-    "queue",
-    "job-queue",
+    "adapter",
+    "background-jobs",
+    "database",
     "drizzle",
     "drizzle-orm",
-    "postgresql",
-    "postgres",
-    "database",
-    "adapter",
-    "typescript",
-    "background-jobs",
-    "task-queue",
-    "worker",
+    "job-queue",
+    "node-postgres",
+    "orm",
     "pg",
     "pglite",
+    "postgres",
     "postgres-js",
-    "node-postgres",
+    "postgresql",
+    "queue",
     "sql",
-    "orm"
+    "task-queue",
+    "typescript",
+    "worker"
   ],
   "homepage": "https://vorsteh-queue.dev",
   "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/noxify/vorsteh-queue",
     "directory": "packages/adapter-drizzle"
   },
-  "license": "MIT",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./postgres-adapter": {
-      "types": "./dist/postgres-adapter.d.ts",
-      "default": "./dist/postgres-adapter.js"
-    },
-    "./postgres-schema": {
-      "types": "./dist/postgres-schema.d.ts",
-      "default": "./dist/postgres-schema.js"
-    }
-  },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./postgres-adapter": {
+      "types": "./dist/adapter.d.mts",
+      "source": "./src/adapter.ts",
+      "default": "./dist/adapter.mjs"
+    },
+    "./postgres-schema": {
+      "types": "./dist/queue-schema.d.mts",
+      "source": "./src/queue-schema.ts",
+      "default": "./dist/queue-schema.mjs"
+    }
+  },
   "scripts": {
-    "build": "rolldown -c rolldown.config.ts && tsc -p tsconfig.build.json",
+    "build": "tsdown --log-level error",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "clean:cache": "git clean -xdf .cache",
     "db:generate": "drizzle-kit generate",
-    "dev": "rolldown -c rolldown.config.ts --watch & tsc -p tsconfig.build.json --watch",
-    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore",
-    "lint": "eslint .",
+    "dev": "tsdown --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "typecheck": "tsc --noEmit"
   },
-  "prettier": "@vorsteh-queue/prettier-config",
   "dependencies": {
-    "@vorsteh-queue/core": "workspace:*"
+    "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/query-builder": "workspace:*"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.3.15",
-    "@vorsteh-queue/eslint-config": "workspace:*",
-    "@vorsteh-queue/prettier-config": "workspace:*",
+    "@electric-sql/pglite": "0.5.4",
     "@vorsteh-queue/shared-tests": "workspace:*",
     "@vorsteh-queue/tsconfig": "workspace:*",
-    "drizzle-kit": "^0.31.8",
-    "drizzle-orm": "^0.45.1",
-    "eslint": "^9.39.2",
-    "postgres": "^3.4.8",
-    "prettier": "^3.8.1",
-    "rolldown": "1.0.0-rc.2",
-    "rollup-plugin-delete": "^3.0.2",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "drizzle-kit": "1.0.0-rc.4",
+    "drizzle-orm": "1.0.0-rc.4",
+    "postgres": "3.4.9",
+    "tsdown": "0.22.14",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "drizzle-orm": ">=0.44.3"
+    "drizzle-orm": ">=1.0.0-rc.4"
   },
   "peerDependenciesMeta": {
     "@types/pg": {
@@ -95,5 +91,8 @@
     "postgres": {
       "optional": true
     }
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

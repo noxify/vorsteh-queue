@@ -16,19 +16,16 @@
       "cache": false
     },
     "format": {
-      "outputs": [".cache/.prettiercache"],
+      "outputs": [],
       "outputLogs": "new-only"
     },
     "lint": {
-      "outputs": [".cache/.eslintcache"]
+      "outputs": []
     },
     "typecheck": {
       "outputs": [".cache/tsbuildinfo.json"]
     },
     "clean": {
-      "cache": false
-    },
-    "//#clean": {
       "cache": false
     },
     "clean:cache": {

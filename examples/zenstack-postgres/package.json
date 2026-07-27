@@ -1,0 +1,26 @@
+{
+  "name": "zenstack-postgres-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vorsteh Queue example using ZenStack ORM with PostgreSQL",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm with-env tsx src/index.ts",
+    "zen:generate": "zen generate",
+    "db:push": "zen db push",
+    "with-env": "dotenv -e .env --"
+  },
+  "dependencies": {
+    "@vorsteh-queue/adapter-zenstack": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "@zenstackhq/orm": "^3.0.0",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0",
+    "@zenstackhq/cli": "^3.0.0",
+    "dotenv-cli": "11.0.0",
+    "tsx": "4.23.1",
+    "typescript": "6.0.3"
+  }
+}

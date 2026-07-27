@@ -1,0 +1,110 @@
+---
+title: "vorsteh-queue serve"
+navTitle: "serve"
+description: Start the graphql server
+cliCommand: "serve"
+---
+
+Starts the GraphQL API server. Requires a `queue.config.ts` with a direct adapter configuration.
+
+## Usage
+
+```bash
+vorsteh-queue serve
+```
+
+```bash
+vorsteh-queue serve --port 4000
+```
+
+## Configuration
+
+The serve command reads from `queue.config.ts`:
+
+<AdapterTabs>
+  <AdapterTab adapter="drizzle">
+    ```typescript
+    // queue.config.ts
+    import { defineRelations } from "drizzle-orm"
+    import { drizzle } from "drizzle-orm/node-postgres"
+    import { Pool } from "pg"
+
+    import {
+      PostgresQueueAdapter,
+      queueFlows,
+      queueJobs,
+    } from "@vorsteh-queue/adapter-drizzle"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const relations = defineRelations({ queueFlows, queueJobs })
+
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const db = drizzle({ client: pool, relations })
+    const adapter = new PostgresQueueAdapter(db)
+
+    const emailQueue = new Queue(adapter, { name: "email-queue" })
+    const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+    export default {
+      adapter,
+      queues: [emailQueue, reportQueue],
+      defaultQueue: "email-queue",
+      port: 3000,
+    }
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="prisma">
+    ```typescript
+    // queue.config.ts
+    import { PrismaClient } from "@prisma/client"
+
+    import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const prisma = new PrismaClient()
+    const adapter = new PostgresPrismaQueueAdapter(prisma)
+
+    const emailQueue = new Queue(adapter, { name: "email-queue" })
+    const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+    export default {
+      adapter,
+      queues: [emailQueue, reportQueue],
+      defaultQueue: "email-queue",
+      port: 3000,
+    }
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="kysely">
+    ```typescript
+    // queue.config.ts
+    import { Kysely, PostgresDialect } from "kysely"
+    import { Pool } from "pg"
+
+    import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const db = new Kysely({
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+    const adapter = new PostgresQueueAdapter(db)
+
+    const emailQueue = new Queue(adapter, { name: "email-queue" })
+    const reportQueue = new Queue(adapter, { name: "report-queue" })
+
+    export default {
+      adapter,
+      queues: [emailQueue, reportQueue],
+      defaultQueue: "email-queue",
+      port: 3000,
+    }
+    ```
+
+  </AdapterTab>
+</AdapterTabs>
+
+<CliCommandDetails command="serve" />

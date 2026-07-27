@@ -1,10 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "customConditions": ["source"],
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "ES2022",
-    "lib": ["ES2022"],
+    "target": "ES2024",
+    "lib": ["ES2024"],
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",

@@ -1,0 +1,409 @@
+---
+title: Project Structure
+description: Recommended project structure for Vorsteh Queue applications.
+---
+
+## Why centralize?
+
+Defining your adapter and queue instances in a single shared file keeps your project DRY. Instead of recreating the adapter in every file that needs it, you export once and import everywhere — your config file, workers, and application code all reference the same instances. This makes refactoring painless and ensures configuration changes propagate automatically.
+
+## Recommended structure
+
+```
+my-app/
+├── src/
+│   ├── schema.ts          # Database schema (Drizzle tables + relations)
+│   ├── queues.ts          # Queue definitions (adapter + Queue instances)
+│   ├── handlers/
+│   │   ├── email.ts       # Job handlers
+│   │   └── reports.ts
+│   └── worker.ts          # Worker setup
+├── queue.config.ts         # CLI/Server config (imports from src/queues.ts)
+└── package.json
+```
+
+## The shared queue file
+
+`src/queues.ts` is the single source of truth for your adapter and queue instances:
+
+<AdapterTabs>
+  <AdapterTab adapter="drizzle">
+    ```typescript
+    // src/queues.ts
+    import { defineRelations } from "drizzle-orm"
+    import { drizzle } from "drizzle-orm/node-postgres"
+    import { Pool } from "pg"
+
+    import {
+      PostgresQueueAdapter,
+      queueFlows,
+      queueJobs,
+    } from "@vorsteh-queue/adapter-drizzle"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const relations = defineRelations({ queueFlows, queueJobs })
+
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const db = drizzle({ client: pool, relations })
+
+    export const adapter = new PostgresQueueAdapter(db)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="prisma">
+    ```typescript
+    // src/queues.ts
+    import { PrismaClient } from "@prisma/client"
+
+    import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const prisma = new PrismaClient()
+
+    export const adapter = new PostgresPrismaQueueAdapter(prisma)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="kysely">
+    ```typescript
+    // src/queues.ts
+    import { Kysely, PostgresDialect } from "kysely"
+    import { Pool } from "pg"
+
+    import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const db = new Kysely({
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+
+    export const adapter = new PostgresQueueAdapter(db)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="zenstack">
+    ```typescript
+    // src/queues.ts
+    import { ZenStackClient } from "@zenstackhq/orm"
+    import { PostgresDialect } from "@zenstackhq/orm/dialects/postgres"
+    import { Pool } from "pg"
+
+    import { PostgresZenstackQueueAdapter } from "@vorsteh-queue/adapter-zenstack"
+    import { Queue } from "@vorsteh-queue/core"
+
+    import { schema } from "../zenstack/schema"
+
+    const db = new ZenStackClient(schema, {
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+
+    export const adapter = new PostgresZenstackQueueAdapter(db)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="typeorm">
+    ```typescript
+    // src/queues.ts
+    import { DataSource } from "typeorm"
+
+    import {
+      PostgresTypeormQueueAdapter,
+      QueueFlowEntity,
+      QueueJobEntity,
+    } from "@vorsteh-queue/adapter-typeorm"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const dataSource = new DataSource({
+      type: "postgres",
+      url: process.env.DATABASE_URL,
+      entities: [QueueJobEntity, QueueFlowEntity],
+      synchronize: true,
+    })
+
+    export const adapter = new PostgresTypeormQueueAdapter(dataSource)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="mikroorm">
+    ```typescript
+    // src/queues.ts
+    import { MikroORM } from "@mikro-orm/postgresql"
+
+    import {
+      PostgresMikroormQueueAdapter,
+      QueueFlowSchema,
+      QueueJobSchema,
+    } from "@vorsteh-queue/adapter-mikroorm"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const orm = await MikroORM.init({
+      entities: [QueueJobSchema, QueueFlowSchema],
+      clientUrl: process.env.DATABASE_URL,
+    })
+
+    export const adapter = new PostgresMikroormQueueAdapter(orm)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="sequelize">
+    ```typescript
+    // src/queues.ts
+    import { Sequelize } from "sequelize"
+
+    import {
+      PostgresSequelizeQueueAdapter,
+      initQueueFlowModel,
+      initQueueJobModel,
+    } from "@vorsteh-queue/adapter-sequelize"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const sequelize = new Sequelize(process.env.DATABASE_URL, {
+      dialect: "postgres",
+      logging: false,
+    })
+    initQueueJobModel(sequelize)
+    initQueueFlowModel(sequelize)
+
+    export const adapter = new PostgresSequelizeQueueAdapter(sequelize)
+
+    export const emailQueue = new Queue(adapter, { name: "email-queue" })
+    export const reportQueue = new Queue(adapter, { name: "report-queue" })
+    ```
+
+  </AdapterTab>
+</AdapterTabs>
+
+## CLI and server configuration
+
+Your `queue.config.ts` simply imports from the shared file:
+
+```typescript
+// queue.config.ts
+import { adapter, emailQueue, reportQueue } from "./src/queues"
+
+export default {
+  adapter,
+  queues: [emailQueue, reportQueue],
+  defaultQueue: "email-queue",
+}
+```
+
+## Worker setup
+
+Workers import the adapter and use the `Worker` class:
+
+```typescript
+// src/worker.ts
+import { Worker } from "@vorsteh-queue/core"
+
+import { adapter } from "./queues"
+
+const worker = new Worker(adapter, { name: "email-queue", concurrency: 5 })
+
+worker.register("send-email", async (job) => {
+  // handle job
+})
+
+worker.start()
+```
+
+## Adding jobs from your app
+
+Application code imports the queue instance to add jobs:
+
+```typescript
+import { emailQueue } from "./queues"
+
+await emailQueue.add("send-email", { to: "user@example.com", subject: "Hello" })
+```
+
+## Single queue simplification
+
+For projects with a single queue, the pattern is the same — just simpler:
+
+<AdapterTabs>
+  <AdapterTab adapter="drizzle">
+    ```typescript
+    // src/queues.ts
+    import { defineRelations } from "drizzle-orm"
+    import { drizzle } from "drizzle-orm/node-postgres"
+    import { Pool } from "pg"
+
+    import {
+      PostgresQueueAdapter,
+      queueFlows,
+      queueJobs,
+    } from "@vorsteh-queue/adapter-drizzle"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const relations = defineRelations({ queueFlows, queueJobs })
+
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const db = drizzle({ client: pool, relations })
+
+    export const adapter = new PostgresQueueAdapter(db)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="prisma">
+    ```typescript
+    // src/queues.ts
+    import { PrismaClient } from "@prisma/client"
+
+    import { PostgresPrismaQueueAdapter } from "@vorsteh-queue/adapter-prisma"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const prisma = new PrismaClient()
+
+    export const adapter = new PostgresPrismaQueueAdapter(prisma)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="kysely">
+    ```typescript
+    // src/queues.ts
+    import { Kysely, PostgresDialect } from "kysely"
+    import { Pool } from "pg"
+
+    import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-kysely"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const db = new Kysely({
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+
+    export const adapter = new PostgresQueueAdapter(db)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="zenstack">
+    ```typescript
+    // src/queues.ts
+    import { ZenStackClient } from "@zenstackhq/orm"
+    import { PostgresDialect } from "@zenstackhq/orm/dialects/postgres"
+    import { Pool } from "pg"
+
+    import { PostgresZenstackQueueAdapter } from "@vorsteh-queue/adapter-zenstack"
+    import { Queue } from "@vorsteh-queue/core"
+
+    import { schema } from "../zenstack/schema"
+
+    const db = new ZenStackClient(schema, {
+      dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+      }),
+    })
+
+    export const adapter = new PostgresZenstackQueueAdapter(db)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="typeorm">
+    ```typescript
+    // src/queues.ts
+    import { DataSource } from "typeorm"
+
+    import {
+      PostgresTypeormQueueAdapter,
+      QueueFlowEntity,
+      QueueJobEntity,
+    } from "@vorsteh-queue/adapter-typeorm"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const dataSource = new DataSource({
+      type: "postgres",
+      url: process.env.DATABASE_URL,
+      entities: [QueueJobEntity, QueueFlowEntity],
+      synchronize: true,
+    })
+
+    export const adapter = new PostgresTypeormQueueAdapter(dataSource)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="mikroorm">
+    ```typescript
+    // src/queues.ts
+    import { MikroORM } from "@mikro-orm/postgresql"
+
+    import {
+      PostgresMikroormQueueAdapter,
+      QueueFlowSchema,
+      QueueJobSchema,
+    } from "@vorsteh-queue/adapter-mikroorm"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const orm = await MikroORM.init({
+      entities: [QueueJobSchema, QueueFlowSchema],
+      clientUrl: process.env.DATABASE_URL,
+    })
+
+    export const adapter = new PostgresMikroormQueueAdapter(orm)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTab>
+  <AdapterTab adapter="sequelize">
+    ```typescript
+    // src/queues.ts
+    import { Sequelize } from "sequelize"
+
+    import {
+      PostgresSequelizeQueueAdapter,
+      initQueueFlowModel,
+      initQueueJobModel,
+    } from "@vorsteh-queue/adapter-sequelize"
+    import { Queue } from "@vorsteh-queue/core"
+
+    const sequelize = new Sequelize(process.env.DATABASE_URL, {
+      dialect: "postgres",
+      logging: false,
+    })
+    initQueueJobModel(sequelize)
+    initQueueFlowModel(sequelize)
+
+    export const adapter = new PostgresSequelizeQueueAdapter(sequelize)
+    export const queue = new Queue(adapter, { name: "my-queue" })
+    ```
+
+  </AdapterTab>
+</AdapterTabs>
+
+```typescript
+// queue.config.ts
+import { adapter, queue } from "./src/queues"
+
+export default {
+  adapter,
+  queues: [queue],
+}
+```

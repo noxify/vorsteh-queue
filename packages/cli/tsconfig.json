@@ -1,0 +1,9 @@
+{
+  "extends": "@vorsteh-queue/tsconfig/external-package.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
+  },
+  "include": ["src", "tests", "*.config.ts"],
+  "exclude": ["node_modules"]
+}

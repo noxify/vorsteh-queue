@@ -1,0 +1,54 @@
+---
+title: "vorsteh-queue doctor"
+navTitle: "doctor"
+description: Check configuration and connectivity.
+cliCommand: "doctor"
+---
+
+Verifies your CLI configuration and tests connectivity to the queue backend. Useful for troubleshooting connection issues.
+
+## Usage
+
+```bash
+vorsteh-queue doctor
+```
+
+### Direct Mode Output
+
+```
+ℹ Mode:           Direct
+ℹ Adapter:        configured via queue.config.ts
+✔ Connection:     OK
+```
+
+### Remote Mode Output
+
+```bash
+vorsteh-queue doctor --url http://localhost:3000/graphql --token my-token
+```
+
+```
+ℹ Mode:           Remote
+ℹ Endpoint:       http://localhost:3000/graphql
+ℹ Authentication: bearer token
+✔ Connection:     OK
+```
+
+### Connection Failure
+
+```
+ℹ Mode:           Remote
+ℹ Endpoint:       http://localhost:3000/graphql
+ℹ Authentication: none
+✗ Connection:     FAILED
+✗ Reason:         Could not connect to http://localhost:3000/health. Verify the server is running and the URL is correct.
+```
+
+## Exit Codes
+
+| Code | Meaning                                       |
+| ---- | --------------------------------------------- |
+| `0`  | Configuration valid and connection successful |
+| `1`  | Connection failed or configuration error      |
+
+<CliCommandDetails command="doctor" />

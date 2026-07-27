@@ -1,0 +1,250 @@
+---
+title: Flow Trees
+description: Parent-child job trees where children run first and the parent waits until all are complete.
+---
+
+The `FlowProducer` class creates declarative job trees with parent-child relationships. Children are processed first, and parent jobs are only created once all their children reach a terminal state. This enables DAG-style orchestration without external coordinators.
+
+## Setup
+
+Create a `FlowProducer` instance with an adapter that implements both `QueueAdapter` and `FlowAdapter`:
+
+```typescript
+import { FlowProducer, Worker } from "@vorsteh-queue/core"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+
+const adapter = new PostgresQueueAdapter(db)
+const flowProducer = new FlowProducer(adapter)
+const worker = new Worker(adapter, { name: "my-queue" })
+```
+
+## Creating a Flow
+
+Use `flowProducer.add()` with a declarative tree definition:
+
+```typescript
+const flow = await flowProducer.add({
+  name: "deploy",
+  queueName: "ops",
+  payload: { version: "1.2.0" },
+  children: [
+    { name: "build", queueName: "ci", payload: { target: "linux" } },
+    { name: "build", queueName: "ci", payload: { target: "macos" } },
+    {
+      name: "test",
+      queueName: "ci",
+      payload: {},
+      children: [{ name: "lint", queueName: "ci", payload: {} }],
+    },
+  ],
+})
+
+console.log(flow.flowId) // shared flow ID
+console.log(flow.rootNode.status) // "waiting"
+```
+
+## How It Works
+
+1. `flowProducer.add()` creates all flow nodes in the `queue_flows` table atomically.
+2. Leaf nodes (no children) immediately create jobs in `queue_jobs` with status `"pending"`.
+3. Parent nodes stay in `"waiting"` status with no job created yet.
+4. When a leaf job completes, the Worker updates the flow node and checks if the parent is promotable.
+5. Once all children reach a terminal state, the parent node is promoted — a real job is created for it.
+6. This cascades up the tree until the root job runs.
+
+```
+deploy (waiting — no job yet)
+├── build:linux (ready — job pending)
+├── build:macos (ready — job pending)
+└── test (waiting — no job yet)
+    └── lint (ready — job pending)
+```
+
+## Convenience Methods
+
+### Sequential Chain
+
+`addChain` creates a sequence where each step runs after the previous one completes:
+
+```typescript
+const chain = await flowProducer.addChain([
+  { name: "fetch-data", queueName: "etl", payload: { source: "s3" } },
+  { name: "transform", queueName: "etl", payload: { format: "parquet" } },
+  { name: "upload", queueName: "etl", payload: { dest: "warehouse" } },
+])
+// fetch-data → transform → upload (sequential)
+```
+
+### Fan-In (Bulk Then)
+
+`addBulkThen` runs parallel jobs, then a final aggregation job:
+
+```typescript
+const result = await flowProducer.addBulkThen(
+  [
+    { name: "fetch-users", queueName: "data", payload: {} },
+    { name: "fetch-orders", queueName: "data", payload: {} },
+    { name: "fetch-products", queueName: "data", payload: {} },
+  ],
+  { name: "generate-report", queueName: "reports", payload: { format: "pdf" } }
+)
+// All three fetch jobs run in parallel
+// generate-report runs after all three complete
+```
+
+## Accessing Children Results
+
+Inside a parent handler, use `ctx.flow` to access children results:
+
+```typescript
+worker.register("deploy", async (job, ctx) => {
+  const childResults = await ctx.flow?.getChildrenValues()
+  // ReadonlyMap<nodeId, result>
+
+  const failedChildren = await ctx.flow?.getFailedChildrenValues()
+  // ReadonlyMap<nodeId, SerializedError>
+
+  // Filter by name or status
+  const buildResults = await ctx.flow?.getChildrenValuesBy({
+    name: "build",
+    status: "completed",
+  })
+
+  return { deployed: true, builds: childResults?.size }
+})
+```
+
+## Failure Strategies
+
+Each child node can specify a failure strategy that controls how the parent reacts when the child fails terminally (moves to dead):
+
+```typescript
+const flow = await flowProducer.add({
+  name: "pipeline",
+  queueName: "ops",
+  payload: {},
+  children: [
+    {
+      name: "critical-step",
+      queueName: "ops",
+      payload: {},
+      failureStrategy: "fail-parent",
+    },
+    {
+      name: "optional-step",
+      queueName: "ops",
+      payload: {},
+      failureStrategy: "continue-parent",
+    },
+    {
+      name: "normal-step",
+      queueName: "ops",
+      payload: {},
+      // default: parent promoted when all children are terminal
+    },
+  ],
+})
+```
+
+| Strategy | Behavior |
+| --- | --- |
+| `"default"` | Parent is promoted once ALL children reach a terminal state (completed, failed, or cancelled) |
+| `"fail-parent"` | Parent is immediately marked as failed — no job is created for it. Cascades recursively upward. |
+| `"continue-parent"` | Parent is immediately promoted (job created) even while other siblings may still be running. |
+
+## Cancelling Unprocessed Children
+
+A promoted parent handler can cancel remaining unprocessed children:
+
+```typescript
+worker.register("eager-parent", async (job, ctx) => {
+  // Cancel children that haven't completed yet
+  const cancelled = await ctx.flow?.removeUnprocessedChildren()
+  console.log(`Cancelled ${cancelled} unprocessed children`)
+
+  return { early: true }
+})
+```
+
+## Inspecting a Flow
+
+Retrieve the full tree structure for visualization or debugging:
+
+```typescript
+const tree = await flowProducer.getFlow(flow.flowId)
+
+if (tree) {
+  console.log(tree.node.name, tree.node.status)
+  for (const child of tree.children) {
+    console.log(`  ${child.node.name}: ${child.node.status}`)
+  }
+}
+```
+
+List all flows with pagination and filtering:
+
+```typescript
+const flows = await flowProducer.getFlows({
+  status: "completed",
+  limit: 10,
+  offset: 0,
+})
+```
+
+## Cleanup
+
+Configure automatic cleanup of completed flows:
+
+```typescript
+const flowProducer = new FlowProducer(adapter, {
+  removeOnComplete: 100, // keep 100 most recent completed flows (default)
+  // removeOnComplete: true   // delete immediately on completion
+  // removeOnComplete: false  // keep forever
+})
+```
+
+Call `cleanupCompletedFlows()` to trigger cleanup (typically called after a flow completes):
+
+```typescript
+worker.on("flow:completed", async () => {
+  await flowProducer.cleanupCompletedFlows()
+})
+```
+
+## Cross-Queue Flows
+
+Nodes in a flow can target different queues. Each queue needs its own Worker:
+
+```typescript
+const flow = await flowProducer.add({
+  name: "process-order",
+  queueName: "orders",
+  payload: { orderId: "123" },
+  children: [
+    { name: "charge-payment", queueName: "payments", payload: { amount: 99 } },
+    { name: "reserve-stock", queueName: "inventory", payload: { sku: "ABC" } },
+  ],
+})
+
+// Each queue needs its own worker
+const orderWorker = new Worker(adapter, { name: "orders" })
+const paymentWorker = new Worker(adapter, { name: "payments" })
+const inventoryWorker = new Worker(adapter, { name: "inventory" })
+```
+
+> **Note:** All flow nodes must reside in the same database schema. Cross-database flows are not supported.
+
+## Database Schema
+
+The FlowProducer uses a separate `queue_flows` table for orchestration data. This table is created alongside `queue_jobs` when you set up your adapter schema.
+
+| Column               | Description                                  |
+| -------------------- | -------------------------------------------- |
+| `id`                 | Flow node UUID                               |
+| `flow_id`            | Groups all nodes in a flow                   |
+| `parent_node_id`     | FK to parent node (null for root)            |
+| `job_id`             | FK to queue_jobs (set when promoted)         |
+| `status`             | waiting, ready, completed, failed, cancelled |
+| `failure_strategy`   | default, fail-parent, continue-parent        |
+| `children_count`     | Number of direct children                    |
+| `children_completed` | Children at terminal state                   |

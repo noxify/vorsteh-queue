@@ -1,0 +1,153 @@
+---
+title: TUI Dashboard
+description: Interactive terminal dashboard with PGlite for exploring multi-queue monitoring.
+tags: ["tui", "dashboard", "cli", "pglite", "monitoring"]
+---
+
+A zero-setup example that spins up multiple queues with diverse job types using PGlite (embedded PostgreSQL), then launches the interactive TUI dashboard for real-time monitoring.
+
+Two variants are available:
+
+- **tui-api** — Dashboard connects via GraphQL API (remote mode)
+- **tui-direct** — Dashboard connects directly to the adapter via PGlite socket server
+
+## API Mode (tui-api)
+
+The API variant starts a GraphQL server that the dashboard connects to remotely. This is the typical setup for production monitoring where the dashboard runs on a different machine than the workers.
+
+### Setup
+
+<Command variant="exec">create-vorsteh-queue my-app --template=tui-api</Command>
+
+```bash
+cd my-app
+pnpm install
+pnpm dev          # Starts GraphQL server + workers + seeds
+```
+
+In a second terminal:
+
+```bash
+pnpm dashboard    # Connects via http://localhost:4000/graphql
+```
+
+### Architecture
+
+```
+┌─────────────┐     GraphQL     ┌─────────────────┐
+│  Dashboard  │ ──────────────▶ │  Server + Queue │
+│  (TUI CLI)  │                 │  (Workers + DB) │
+└─────────────┘                 └─────────────────┘
+```
+
+## Direct Mode (tui-direct)
+
+The direct variant uses a PGlite socket server for multi-process access. No GraphQL server needed.
+
+### Quick Start (All-in-One)
+
+For a quick demo, workers and dashboard run in a single process with in-memory PGlite:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=tui-direct
+</Command>
+
+```bash
+cd my-app
+pnpm install
+pnpm dev          # Workers + seeds + dashboard (all-in-one, in-memory)
+```
+
+### Multi-Process Setup (PGlite Socket Server)
+
+For a more realistic setup, workers and dashboard run as separate processes. A PGlite socket server provides shared database access:
+
+```bash
+# Terminal 1: Workers + PGlite socket server
+pnpm dev:prod
+
+# Terminal 2: Dashboard (connects via queue.config.ts)
+pnpm dashboard
+```
+
+### Architecture (Multi-Process)
+
+```
+┌─────────────┐     PostgreSQL      ┌─────────────────────────┐
+│  Dashboard  │     Protocol        │  Worker Process         │
+│  (TUI CLI)  │ ◀──────────────────▶│  (PGlite Socket Server) │
+└─────────────┘     port 5488       │  + Seed + Workers       │
+                                    └─────────────────────────┘
+```
+
+### queue.config.ts
+
+The direct mode uses `queue.config.ts` to connect to the PGlite socket server via standard `node-postgres`:
+
+```typescript
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { drizzle } from "drizzle-orm/node-postgres"
+
+const db = drizzle({
+  connection: "postgresql://postgres:postgres@127.0.0.1:5488/postgres",
+})
+
+export default {
+  adapter: new PostgresQueueAdapter(db),
+  queues: [emailQueue, dataQueue, notificationQueue, deploymentQueue],
+  defaultQueue: "email",
+}
+```
+
+## What both examples demonstrate
+
+- PGlite embedded PostgreSQL (zero external dependencies)
+- Multiple queues: email, data-processing, notifications, deployments
+- Diverse job types with different priorities, delays, and failure rates
+- Flow trees with parent-child job relationships
+- Multi-step workflows (step.run, step.sleep, step.waitFor)
+- Real-time TUI dashboard with queue switching, job filtering, and keyboard navigation
+- Flow tree visualization overlay (press `f` in job detail)
+
+## Dashboard commands
+
+Both examples provide per-queue dashboard shortcuts:
+
+```bash
+pnpm dashboard               # Default queue
+pnpm dashboard:email         # Email queue
+pnpm dashboard:data          # Data-processing queue
+pnpm dashboard:notifications # Notifications queue
+pnpm dashboard:deployments   # Deployments queue (flows + steps)
+```
+
+## Related documentation
+
+- [CLI Overview](/docs/cli/overview/installation)
+- [Queue](/docs/vorsteh-queue/core/queue)
+- [Flow Trees](/docs/vorsteh-queue/core/flows/flow-trees)
+- [Drizzle Adapter](/docs/vorsteh-queue/adapters/drizzle)
+- [Next.js Dashboard](/docs/examples/advanced/dashboard-nextjs)
+
+## Troubleshooting
+
+### Direct mode: "Connection refused" on port 5488
+
+Make sure the worker process is running first (`pnpm dev:prod`). It starts the PGlite socket server that the dashboard connects to.
+
+### Direct mode: "No adapter configured"
+
+The dashboard command looks for `queue.config.ts` in the current working directory. Make sure you run `pnpm dashboard` from the project root.
+
+### API mode: "Connection refused" or "Unauthorized"
+
+Make sure the server is running (`pnpm dev`) and the URL/token match. The default example uses:
+
+```bash
+--url http://localhost:4000/graphql --token dev-token
+```
+
+## Source
+
+- [tui-api on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/tui-api)
+- [tui-direct on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/tui-direct)

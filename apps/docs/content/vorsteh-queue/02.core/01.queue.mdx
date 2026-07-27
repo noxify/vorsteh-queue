@@ -1,0 +1,138 @@
+---
+title: Queue
+description: Create and manage job queues — add jobs, control processing, and monitor statistics.
+---
+
+The `Queue` class is the producer-side API. It manages adding jobs, cancellation, statistics, and flows. It does **not** process jobs — that responsibility belongs to the [Worker](/docs/vorsteh-queue/core/worker).
+
+## Creating a Queue
+
+A Queue requires an adapter (database connection) and a configuration with a name:
+
+```typescript
+import { Queue, MemoryQueueAdapter } from "@vorsteh-queue/core"
+
+const adapter = new MemoryQueueAdapter()
+const queue = new Queue(adapter, { name: "my-queue" })
+
+await queue.connect()
+```
+
+For production, replace `MemoryQueueAdapter` with a PostgreSQL adapter:
+
+```typescript
+import { drizzle } from "drizzle-orm/node-postgres"
+import { Pool } from "pg"
+import { PostgresQueueAdapter } from "@vorsteh-queue/adapter-drizzle"
+import { Queue } from "@vorsteh-queue/core"
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const db = drizzle(pool)
+const adapter = new PostgresQueueAdapter(db)
+const queue = new Queue(adapter, { name: "email-queue" })
+
+await queue.connect()
+```
+
+## Public Getters
+
+```typescript
+queue.name // The queue name ("email-queue")
+queue.adapter // The adapter instance
+```
+
+## Adding Jobs
+
+```typescript
+// Basic job
+await queue.add("send-email", { to: "user@example.com", subject: "Welcome!" })
+
+// Job with options
+await queue.add(
+  "send-email",
+  { to: "user@example.com", subject: "Urgent" },
+  {
+    priority: 1, // lower number = higher priority (default: 2)
+    delay: 5000, // delay 5 seconds before processing
+    maxAttempts: 5, // retry up to 5 times on failure
+  }
+)
+
+// Batch add (all jobs get same options)
+await queue.addJobs("send-email", [
+  { to: "a@example.com", subject: "Hello" },
+  { to: "b@example.com", subject: "Hello" },
+])
+```
+
+See [Job Types](/docs/vorsteh-queue/core/job-types) for all scheduling patterns (delayed, cron, repeating, unique, grouped).
+
+## Cancellation
+
+```typescript
+// Cancel a single job
+await queue.cancel(jobId, "No longer needed")
+
+// Cancel multiple jobs by filter
+const count = await queue.cancelAll({ name: "send-email", status: "pending" })
+```
+
+## Statistics
+
+```typescript
+const stats = await queue.getStats()
+// { pending, delayed, processing, completed, failed, cancelled, dead }
+
+// Clear jobs
+await queue.clear() // Clear all jobs
+await queue.clear("completed") // Clear only completed jobs
+```
+
+## Dead Letter Queue
+
+```typescript
+// Get dead jobs
+const deadJobs = await queue.getDeadJobs({ limit: 20 })
+
+// Redrive a single dead job back to pending
+await queue.redrive(jobId)
+
+// Redrive all dead jobs (optionally filtered by handler name)
+await queue.redriveAll({ name: "send-email" })
+```
+
+## Job Lookup
+
+```typescript
+const job = await queue.getJob(jobId)
+// Returns Job | null
+```
+
+## Signals (for step.waitFor)
+
+Send a signal to a job that is waiting via `step.waitFor`:
+
+```typescript
+await queue.signal(jobId, "manager-approved", { approved: true })
+```
+
+## Lifecycle
+
+```typescript
+await queue.connect() // Connect adapter to database
+await queue.disconnect() // Disconnect adapter
+```
+
+## Queue Configuration
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | required | Queue name for job isolation |
+| `defaultJobOptions` | `Partial<JobOptions>` | `{}` | Default options applied to all jobs |
+| `telemetry` | `Telemetry` | `noopTelemetry` | Optional telemetry instance for observability |
+| `removeOnComplete` | `boolean \| number` | `100` | Auto-remove completed jobs (true = immediate, number = keep N) |
+| `removeOnFail` | `boolean \| number` | `50` | Auto-remove failed jobs |
+
+## Project Organization
+
+For multi-queue setups, see [Project Structure](/docs/vorsteh-queue/getting-started/project-structure).

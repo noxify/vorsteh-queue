@@ -1,0 +1,38 @@
+---
+title: Rate Limiting
+description: Per-handler rate limiting to control processing throughput.
+tags: ["rate-limiting", "throttling"]
+---
+
+Demonstrates rate-limited job processing to respect external API limits or control resource usage.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=rate-limiting
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- Per-handler rate limiting configuration
+- Controlling concurrent execution
+- Respecting external API rate limits
+
+## Related documentation
+
+- [Job Types](/docs/vorsteh-queue/core/job-types)
+- [Queue](/docs/vorsteh-queue/core/queue)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/rate-limiting)

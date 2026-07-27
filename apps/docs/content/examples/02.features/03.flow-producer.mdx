@@ -1,0 +1,39 @@
+---
+title: Flow Producer
+description: Parent-child job flows for multi-step pipelines.
+tags: ["flows", "pipeline", "parent-child"]
+---
+
+Demonstrates parent-child job relationships where a parent job spawns child jobs and waits for their completion before finishing.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=flow-producer
+</Command>
+
+Then install dependencies and start the dev server:
+
+```bash
+cd my-app
+pnpm install
+pnpm dev
+```
+
+## What it demonstrates
+
+- Flow creation with parent and child jobs via `FlowProducer`
+- Parent node promotion when children complete
+- Flow tree visualization
+- Multi-step deploy pipeline pattern
+
+## Related documentation
+
+- [Flows Overview](/docs/vorsteh-queue/core/flows/overview)
+- [Flow Trees](/docs/vorsteh-queue/core/flows/flow-trees)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/flow-producer)

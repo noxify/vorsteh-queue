@@ -1,19 +1,10 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { createElement, Fragment, useEffect, useState } from "react"
-
-export const ClientOnly = ({ children }: { children: ReactNode }) => {
-  const hasMounted = useClientOnly()
-
-  if (!hasMounted) {
-    return null
-  }
-
-  return createElement(Fragment, { children })
-}
+import { useEffect, useState } from "react"
 
 /** React hook that returns true if the component has mounted client-side */
+/* oxlint-disable react-doctor/no-initialize-state, react-doctor/rendering-hydration-no-flicker -- client-only detection requires this pattern */
 export const useClientOnly = () => {
   const [hasMounted, setHasMounted] = useState(false)
 
@@ -23,4 +14,15 @@ export const useClientOnly = () => {
   }, [])
 
   return hasMounted
+}
+/* oxlint-enable react-doctor/no-initialize-state, react-doctor/rendering-hydration-no-flicker */
+
+export const ClientOnly = ({ children }: { children: ReactNode }) => {
+  const hasMounted = useClientOnly()
+
+  if (!hasMounted) {
+    return null
+  }
+
+  return children
 }

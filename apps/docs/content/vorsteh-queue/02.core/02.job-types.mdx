@@ -1,0 +1,144 @@
+---
+title: Job Types
+description: Delayed jobs, recurring jobs with cron expressions, interval-based repetition, and unique jobs.
+---
+
+Vorsteh Queue supports multiple job patterns beyond simple fire-and-forget. This page covers all the ways you can configure a job when adding it to the queue.
+
+## Methods
+
+Three methods are available for adding jobs:
+
+| Method | Description |
+| --- | --- |
+| `queue.add(name, payload, options?)` | Add a single job |
+| `queue.addJobs(name, payloads, options?)` | Add multiple jobs of the same type in a batch |
+| `queue.enqueueAndWait(name, payload, options?)` | Add a job and await its result |
+| `flowProducer.add(definition)` | Create a parent-child flow tree — see [Flows](/docs/vorsteh-queue/core/flows/overview) |
+
+## Immediate Jobs
+
+The simplest form — a job that is processed as soon as a worker picks it up:
+
+```typescript
+await queue.add("send-email", { to: "user@example.com", subject: "Welcome!" })
+```
+
+## Delayed Jobs
+
+Schedule a job to run after a specified delay:
+
+```typescript
+await queue.add(
+  "cleanup",
+  { type: "temp-files" },
+  {
+    delay: 60000, // 1 minute from now
+  }
+)
+```
+
+Or schedule for a specific date/time:
+
+```typescript
+await queue.add(
+  "reminder",
+  { userId: "123" },
+  {
+    runAt: new Date("2025-03-01T09:00:00Z"),
+  }
+)
+```
+
+## Recurring Jobs (Cron)
+
+Use standard cron expressions for recurring jobs:
+
+```typescript
+await queue.add(
+  "daily-report",
+  { date: new Date().toISOString() },
+  {
+    cron: "0 9 * * *", // Every day at 9 AM
+    timezone: "America/New_York",
+  }
+)
+```
+
+Cron expressions follow the standard 5-field format. Timezone support uses the IANA timezone database with UTC as the storage format.
+
+<Note title="Tip">
+  Need help writing cron expressions? Try
+  [natural-cron](https://github.com/satyajitnayk/natural-cron) to generate them
+  from human-readable descriptions.
+</Note>
+
+## Interval-based Repetition
+
+Repeat a job at fixed intervals:
+
+```typescript
+await queue.add(
+  "health-check",
+  { endpoint: "/api/health" },
+  {
+    repeat: {
+      every: 30000, // Every 30 seconds
+      limit: 10, // Maximum 10 executions
+    },
+  }
+)
+```
+
+## Unique Jobs
+
+Prevent duplicate jobs using a deduplication key:
+
+```typescript
+await queue.add(
+  "sync-user",
+  { userId: "123" },
+  {
+    unique: {
+      key: "sync-user-123",
+      action: "reject", // or "replace"
+    },
+  }
+)
+```
+
+## Group FIFO
+
+Ensure jobs within the same group are processed sequentially:
+
+```typescript
+await queue.add(
+  "process-order",
+  { orderId: "abc" },
+  {
+    group: "customer-42",
+  }
+)
+```
+
+## Enqueue and Wait
+
+Add a job and block until it completes, fails, or times out. Useful for request/response patterns where the caller needs the result:
+
+```typescript
+const result = await queue.enqueueAndWait<ImagePayload, ImageResult>(
+  "process-image",
+  { url: "https://example.com/img.png" },
+  { waitTimeout: 60000 }
+)
+
+console.log(result) // { thumbnail: "..." }
+```
+
+The method uses event listeners (fast, in-process) with database polling as a cross-process fallback. It throws typed errors for failures, cancellations, timeouts, and dead-letter moves.
+
+## Options
+
+<ApiReference file="core/src/types" name="JobOptions" variant="table" />
+
+All timestamps are stored as UTC internally, regardless of the timezone specified in scheduling options.

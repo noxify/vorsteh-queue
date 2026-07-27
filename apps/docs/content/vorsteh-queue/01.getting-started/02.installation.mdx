@@ -1,0 +1,79 @@
+---
+title: Installation
+description: Install Vorsteh Queue packages for your preferred ORM adapter.
+---
+
+## Quick Start with CLI
+
+<Command variant="exec">create-vorsteh-queue my-queue-app</Command>
+
+The scaffolding CLI provides interactive prompts for template selection, package manager, and dependency installation.
+
+See the [create-vorsteh-queue docs](/docs/vorsteh-queue/packages/create-vorsteh-queue) for details.
+
+## Manual Installation
+
+### Drizzle ORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
+</Command>
+
+### Prisma ORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-prisma
+</Command>
+
+### Kysely (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-kysely
+</Command>
+
+### ZenStack ORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-zenstack @zenstackhq/orm
+</Command>
+
+### TypeORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-typeorm typeorm pg
+</Command>
+
+### MikroORM (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-mikroorm @mikro-orm/core
+  @mikro-orm/postgresql
+</Command>
+
+### Sequelize (PostgreSQL)
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-sequelize sequelize pg
+</Command>
+
+## Database Setup
+
+Each adapter provides schema definitions and migration tooling:
+
+- **Drizzle** — use the included schema and run `drizzle-kit` migrations
+- **Prisma** — add the model to `schema.prisma` and run `prisma migrate`
+- **Kysely** — use the provided migration and run via `kysely-ctl`
+- **ZenStack** — add the model to `schema.zmodel` and run `zen db push`
+- **TypeORM** — use the included `QueueJobEntity` and `QueueFlowEntity` with `synchronize: true` or generate migrations
+- **MikroORM** — use the included EntitySchemas and run `mikro-orm migration:create`
+- **Sequelize** — use the included models with `sequelize.sync()` or CLI migrations
+
+Refer to the specific adapter documentation for detailed instructions.
+
+## Requirements
+
+| Requirement   | Version |
+| ------------- | ------- |
+| Node.js       | 22+     |
+| PostgreSQL    | 12+     |
+| Module system | ESM     |

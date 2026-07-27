@@ -1,143 +1,205 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { SiGithub as Github } from "@icons-pack/react-simple-icons"
+import { Space_Grotesk } from "next/font/google"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight } from "lucide-react"
+import * as React from "react"
 
-import type { TreeItem } from "~/lib/navigation"
-import { Button } from "~/components/ui/button"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "~/components/ui/collapsible"
-import { useSidebar } from "~/components/ui/sidebar"
-import { useIsMobile } from "~/hooks/use-mobile"
-import { current } from "~/lib/helpers"
-import { cn } from "~/lib/utils"
+import {
+  SidebarMenu,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarTrigger,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+} from "@/components/ui/sidebar"
+import type { NavigationGroup, TreeItem } from "@/lib/navigation"
+import { cn } from "@/lib/utils"
+
+import { VorstehQueueLogo } from "./logo"
+import PlatformModifierKey from "./platform-modifier-key"
+import { SearchCommand } from "./search-command"
+import { SidebarItem } from "./sidebar-item"
+import ThemeToggle from "./theme-toggle"
+import { buttonVariants } from "./ui/button"
+import { Item, ItemActions, ItemContent, ItemTitle } from "./ui/item"
+import { Kbd } from "./ui/kbd"
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
+
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] })
 
 export function DocsSidebar({
   className,
-  items,
-  highlightActive = true,
-}: {
-  items: TreeItem[]
-  highlightActive?: boolean
-} & React.ComponentProps<"ul">) {
+  collectionChooser,
+  favoriteItems,
+  navigationItems,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  collectionChooser?: React.ReactNode
+  favoriteItems?: TreeItem[]
+  navigationItems?: NavigationGroup[]
+}) {
   const pathname = usePathname()
-  const { toggleSidebar } = useSidebar()
+  const quickLinks = favoriteItems ?? []
+  const scrollContainerRef = React.useRef<HTMLDivElement | null>(null)
+  const navigationContainerRef = React.useRef<HTMLDivElement | null>(null)
 
-  const isMobile = useIsMobile()
+  React.useEffect(() => {
+    const scrollContainerElement = scrollContainerRef.current
+    const navigationContainerElement = navigationContainerRef.current
 
-  if (items.length === 0) return <></>
-  return (
-    <ul className={cn("grid gap-y-1", className)}>
-      {items.map((item) =>
-        (item.children ?? []).length > 0 ? (
-          <CollapsibleItem pathname={pathname} item={item} key={item.path} />
-        ) : (
-          <li key={item.path}>
-            <div className="relative flex items-center">
-              <Link
-                prefetch={true}
-                onClick={isMobile ? () => toggleSidebar() : undefined}
-                href={item.path}
-                className={cn(
-                  "flex h-8 min-w-8 flex-1 items-center p-1.5 text-sm text-muted-foreground ring-ring outline-hidden transition-all hover:text-accent-foreground focus-visible:ring-2",
-                  highlightActive && current({ pathname, item })
-                    ? "text-orange-primary"
-                    : "hover:text-orange-primary",
-                )}
-              >
-                <div className="line-clamp-1 pr-6">{item.title}</div>
-              </Link>
-            </div>
-          </li>
+    if (!scrollContainerElement || !navigationContainerElement) {
+      return
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      const activeElements = [
+        ...navigationContainerElement.querySelectorAll<HTMLElement>(
+          "[data-active]"
         ),
-      )}
-    </ul>
-  )
-}
+      ]
+      const targetElement = activeElements.at(-1)
 
-function CollapsibleItem({ pathname, item }: { pathname: string; item: TreeItem }) {
-  const isMobile = useIsMobile()
-  const isCurrent = current({ pathname, item })
-  const [open, setOpen] = useState(isCurrent)
-  const { toggleSidebar } = useSidebar()
+      if (!targetElement) {
+        return
+      }
 
-  useEffect(() => {
-    setOpen(isCurrent)
-  }, [isCurrent])
+      const containerRect = scrollContainerElement.getBoundingClientRect()
+      const targetRect = targetElement.getBoundingClientRect()
+      const isAboveViewport = targetRect.top < containerRect.top
+      const isBelowViewport = targetRect.bottom > containerRect.bottom
+
+      if (!isAboveViewport && !isBelowViewport) {
+        return
+      }
+
+      const targetTop =
+        targetRect.top - containerRect.top + scrollContainerElement.scrollTop
+      const nextScrollTop =
+        targetTop -
+        scrollContainerElement.clientHeight / 2 +
+        targetRect.height / 2
+
+      scrollContainerElement.scrollTo({ top: nextScrollTop })
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [pathname])
 
   return (
-    <Collapsible key={item.path} asChild open={open} onOpenChange={setOpen}>
-      <li className="relative">
-        <div className="relative mb-0.5 flex items-center">
-          <Link
-            prefetch={true}
-            href={item.path}
-            onClick={isMobile ? () => toggleSidebar() : undefined}
-            className={cn(
-              "flex h-8 min-w-8 flex-1 items-center gap-2 p-1.5 text-sm text-muted-foreground ring-ring outline-hidden transition-all hover:text-accent-foreground focus-visible:ring-2",
-              current({ pathname, item })
-                ? "font-bold text-orange-primary hover:text-black dark:hover:text-white"
-                : "font-bold hover:text-orange-primary",
-            )}
-          >
-            {current({ pathname, item }) && item.depth > 1 && (
-              <div
-                aria-hidden="true"
-                className="absolute top-0 bottom-0 -left-[9px] z-50 w-px bg-indigo-400"
-              ></div>
-            )}
-            <div className="line-clamp-1 pr-6">{item.title}</div>
-          </Link>
+    <Sidebar
+      variant="sidebar"
+      className={cn(
+        "group-data-[collapsible=offcanvas]:border-r-0!",
+        className
+      )}
+      {...props}
+    >
+      <SidebarHeader className="p-4 group-data-[collapsible=offcanvas]:hidden">
+        <div className="flex items-center justify-between">
+          <Link href="/" prefetch={false} className="flex items-center gap-3">
+            <VorstehQueueLogo className="size-10" />
 
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className="absolute right-1 h-6 w-6 rounded-md p-0 ring-ring transition-all focus-visible:ring-2 data-[state=open]:rotate-90"
+            <div
+              className="text-foreground leading-none font-bold"
+              style={{ fontFamily: spaceGrotesk.style.fontFamily }}
             >
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              <span className="sr-only">Toggle</span>
-            </Button>
-          </CollapsibleTrigger>
+              Vorsteh Queue
+            </div>
+          </Link>
+          <div>
+            <Tooltip>
+              <TooltipTrigger
+                render={<SidebarTrigger className="cursor-pointer" />}
+              />
+              <TooltipContent>
+                Toggle sidebar{" "}
+                <Kbd>
+                  <PlatformModifierKey />B
+                </Kbd>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
-        <CollapsibleContent className="py-0.5 pl-2">
-          <ul className="grid gap-y-1 border-l border-muted-foreground/15 pl-2">
-            {item.children?.map((subItem) => {
-              if ((subItem.children ?? []).length > 0) {
-                return (
-                  <li key={subItem.path}>
-                    <DocsSidebar items={[subItem]} />
-                  </li>
-                )
-              }
 
-              return (
-                <li key={subItem.path} className="relative">
-                  <Link
-                    prefetch={true}
-                    href={subItem.path}
-                    onClick={isMobile ? () => toggleSidebar() : undefined}
-                    className={cn(
-                      "flex h-8 min-w-8 flex-1 items-center gap-2 p-1.5 text-sm text-muted-foreground ring-ring outline-hidden transition-all hover:text-muted-foreground focus-visible:ring-2",
-                      current({ pathname, item: subItem })
-                        ? "font-bold text-orange-primary hover:text-black dark:hover:text-white"
-                        : "hover:text-orange-primary",
-                    )}
-                  >
-                    {current({ pathname, item: subItem }) && (
-                      <div
-                        aria-hidden="true"
-                        className="absolute top-0 bottom-0 -left-[9px] z-50 w-px bg-orange-primary"
-                      ></div>
-                    )}
-                    <div className="line-clamp-1">{subItem.title}</div>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </CollapsibleContent>
-      </li>
-    </Collapsible>
+        <SearchCommand>
+          <Item
+            size="xs"
+            variant="outline"
+            className="bg-background cursor-pointer"
+            render={<button type="button" />}
+          >
+            <ItemContent className="gap-0">
+              <ItemTitle>Search...</ItemTitle>
+            </ItemContent>
+            <ItemActions>
+              <Kbd>
+                <PlatformModifierKey />K
+              </Kbd>
+            </ItemActions>
+          </Item>
+        </SearchCommand>
+
+        {collectionChooser}
+      </SidebarHeader>
+
+      <SidebarContent
+        ref={scrollContainerRef}
+        className="gap-0 p-4 group-data-[collapsible=offcanvas]:hidden"
+      >
+        {quickLinks.length > 0 && (
+          <SidebarGroup className="px-0">
+            <SidebarGroupLabel>Quick Links</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {quickLinks.map((item) => (
+                  <SidebarItem key={item.url} item={item} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        <div ref={navigationContainerRef}>
+          {(navigationItems ?? []).map((group, groupIdx) => (
+            <SidebarGroup key={group.label + groupIdx} className="px-0">
+              {group.label && (
+                <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => (
+                    <SidebarItem key={item.url} item={item} />
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
+        </div>
+      </SidebarContent>
+      <SidebarFooter className="group-data-[collapsible=offcanvas]:hidden">
+        <div className="flex items-center justify-end">
+          <div>
+            <a
+              href="https://github.com/noxify/vorsteh-queue"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ size: "icon", variant: "ghost" })}
+            >
+              <Github className="size-4" />
+            </a>
+          </div>
+          <div>
+            <ThemeToggle />
+          </div>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
   )
 }

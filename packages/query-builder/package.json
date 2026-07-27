@@ -1,0 +1,136 @@
+{
+  "name": "@vorsteh-queue/query-builder",
+  "version": "0.1.0",
+  "description": "Query builder and filter utilities for Vorsteh Queue — normalizes, matches, and translates JobWhereInput for all supported ORMs",
+  "keywords": [
+    "drizzle",
+    "filter",
+    "job-queue",
+    "kysely",
+    "mikroorm",
+    "prisma",
+    "query-builder",
+    "sequelize",
+    "typeorm",
+    "typescript",
+    "vorsteh-queue",
+    "where",
+    "zenstack"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/query-builder"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
+    "./drizzle": {
+      "types": "./dist/drizzle.d.mts",
+      "source": "./src/drizzle.ts",
+      "import": "./dist/drizzle.mjs",
+      "default": "./dist/drizzle.mjs"
+    },
+    "./kysely": {
+      "types": "./dist/kysely.d.mts",
+      "source": "./src/kysely.ts",
+      "import": "./dist/kysely.mjs",
+      "default": "./dist/kysely.mjs"
+    },
+    "./prisma": {
+      "types": "./dist/prisma.d.mts",
+      "source": "./src/prisma.ts",
+      "import": "./dist/prisma.mjs",
+      "default": "./dist/prisma.mjs"
+    },
+    "./zenstack": {
+      "types": "./dist/zenstack.d.mts",
+      "source": "./src/zenstack.ts",
+      "import": "./dist/zenstack.mjs",
+      "default": "./dist/zenstack.mjs"
+    },
+    "./typeorm": {
+      "types": "./dist/typeorm.d.mts",
+      "source": "./src/typeorm.ts",
+      "import": "./dist/typeorm.mjs",
+      "default": "./dist/typeorm.mjs"
+    },
+    "./mikroorm": {
+      "types": "./dist/mikroorm.d.mts",
+      "source": "./src/mikroorm.ts",
+      "import": "./dist/mikroorm.mjs",
+      "default": "./dist/mikroorm.mjs"
+    },
+    "./sequelize": {
+      "types": "./dist/sequelize.d.mts",
+      "source": "./src/sequelize.ts",
+      "import": "./dist/sequelize.mjs",
+      "default": "./dist/sequelize.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown --log-level error",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "drizzle-orm": "1.0.0-rc.4",
+    "fast-check": "^4.9.0",
+    "kysely": "^0.29.4",
+    "tsdown": "0.22.14",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  },
+  "peerDependencies": {
+    "@mikro-orm/core": ">=6",
+    "@prisma/client": ">=5",
+    "@zenstackhq/orm": ">=3",
+    "drizzle-orm": ">=1.0.0-rc",
+    "kysely": ">=0.27",
+    "sequelize": ">=6",
+    "typeorm": ">=0.3"
+  },
+  "peerDependenciesMeta": {
+    "drizzle-orm": {
+      "optional": true
+    },
+    "kysely": {
+      "optional": true
+    },
+    "@prisma/client": {
+      "optional": true
+    },
+    "@zenstackhq/orm": {
+      "optional": true
+    },
+    "typeorm": {
+      "optional": true
+    },
+    "@mikro-orm/core": {
+      "optional": true
+    },
+    "sequelize": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "mikroorm-postgres-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vorsteh Queue example using MikroORM with PostgreSQL",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm with-env tsx src/index.ts",
+    "with-env": "dotenv -e .env --"
+  },
+  "dependencies": {
+    "@mikro-orm/core": "^6.5.0",
+    "@mikro-orm/postgresql": "^6.5.0",
+    "@vorsteh-queue/adapter-mikroorm": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*"
+  },
+  "devDependencies": {
+    "dotenv-cli": "11.0.0",
+    "tsx": "4.23.1",
+    "typescript": "6.0.3"
+  }
+}

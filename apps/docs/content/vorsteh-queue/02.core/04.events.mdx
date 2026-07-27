@@ -1,0 +1,131 @@
+---
+title: Events
+description: Listen to job lifecycle and queue control events for monitoring and debugging.
+---
+
+The event system provides real-time notifications for job state changes and queue operations. Both `Queue` (producer) and `Worker` (consumer) emit typed events you can subscribe to with `.on()`, `.once()`, and `.off()`.
+
+## Usage
+
+### Queue Events
+
+The `Queue` instance emits events when jobs are added or their state changes through the public API (e.g. cancellation).
+
+```typescript
+import { Queue, MemoryQueueAdapter } from "@vorsteh-queue/core"
+
+const adapter = new MemoryQueueAdapter()
+const queue = new Queue(adapter, { name: "my-queue" })
+
+queue.on("job:added", (job) => {
+  console.log(`[${job.name}] added with priority ${job.priority}`)
+})
+
+queue.on("job:cancelled", (job) => {
+  console.log(`[${job.id}] cancelled: ${job.cancellationReason}`)
+})
+```
+
+### Worker Events
+
+The `Worker` instance emits events during job processing — lifecycle transitions, errors, and batch operations.
+
+```typescript
+import { Worker } from "@vorsteh-queue/core"
+
+const worker = new Worker(adapter, { name: "my-queue", concurrency: 5 })
+
+worker.on("job:completed", (job) => {
+  console.log(`[${job.name}] completed in queue`)
+})
+
+worker.on("job:failed", (job) => {
+  console.error(`[${job.name}] failed:`, job.error.message)
+})
+
+worker.on("job:dead", (job) => {
+  // Job exhausted all retry attempts
+  console.error(`[${job.name}] moved to DLQ after ${job.attempts} attempts`)
+})
+
+worker.on("worker:error", (error) => {
+  // Unexpected error in polling loop
+  console.error("Unexpected worker error:", error)
+})
+```
+
+### One-Time Listeners
+
+Use `.once()` to listen for a single occurrence:
+
+```typescript
+worker.once("worker:started", () => {
+  console.log("Worker is ready")
+})
+```
+
+### Removing Listeners
+
+```typescript
+const handler = (job) => console.log(job.id)
+worker.on("job:completed", handler)
+worker.off("job:completed", handler)
+```
+
+## Available Events
+
+### Queue Events
+
+<ApiReference
+  file="core/src/types"
+  name="QueueEvents"
+  variant="table"
+  resolveTypeLinksInline={true}
+    referenceBaseUrl="/docs/api-reference/core/types"
+
+/>
+
+### Worker Events
+
+<ApiReference
+  file="core/src/types"
+  name="WorkerEvents"
+  variant="table"
+  resolveTypeLinksInline={true}
+    referenceBaseUrl="/docs/api-reference/core/types"
+
+/>
+
+### Flow Events
+
+The Worker emits flow lifecycle events when jobs participate in a flow:
+
+```typescript
+worker.on("flow:completed", ({ flowId, result }) => {
+  console.log(`Flow ${flowId} completed with:`, result)
+})
+
+worker.on("flow:failed", ({ flowId, error }) => {
+  console.error(`Flow ${flowId} failed:`, error.message)
+})
+
+worker.on("flow:node:promoted", ({ flowId, nodeId, jobId }) => {
+  console.log(`Flow ${flowId}: node ${nodeId} promoted, job ${jobId} created`)
+})
+```
+
+The `FlowProducer` also emits events:
+
+```typescript
+flowProducer.on("flow:created", ({ flowId, rootNode }) => {
+  console.log(`New flow ${flowId} created: ${rootNode.name}`)
+})
+```
+
+## Use Cases
+
+- Logging and audit trails
+- Custom metrics collection
+- Chaining dependent operations
+- Notifications on failures
+- Real-time dashboards (via the server subscription bridge)

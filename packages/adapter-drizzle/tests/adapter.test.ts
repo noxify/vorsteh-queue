@@ -1,46 +1,49 @@
 // Migration logic is powered by https://github.com/drizzle-team/drizzle-orm/discussions/1901
 
-import { createRequire } from "module"
+import { createRequire } from "node:module"
+
+import { runTests } from "@vorsteh-queue/shared-tests/tests/adapter"
+import { runFlowAdapterTests } from "@vorsteh-queue/shared-tests/tests/flow-adapter"
+import { runWhereFilterTests } from "@vorsteh-queue/shared-tests/tests/where-filter"
+import type { DatabaseConnectionProps } from "@vorsteh-queue/shared-tests/types"
+import type { AnyRelations } from "drizzle-orm"
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 
-import type { DatabaseConnectionProps } from "@vorsteh-queue/shared-tests/types"
-import { runTests } from "@vorsteh-queue/shared-tests/tests/adapter"
-
 import { PostgresQueueAdapter } from "../src"
-import * as schema from "../src/postgres-test-schema"
+import { testRelations } from "./test-relations"
+import * as schema from "./test-schema"
 
 global.require = createRequire(import.meta.url)
 
-const { generateDrizzleJson, generateMigration } = await import("drizzle-kit/api")
+const { generateDrizzleJson, generateMigration } =
+  await import("drizzle-kit/api-postgres")
 
-runTests<PostgresJsDatabase<typeof schema>>({
-  initDbClient: (props: DatabaseConnectionProps): PostgresJsDatabase<typeof schema> => {
+runTests<PostgresJsDatabase<AnyRelations>>({
+  initAdapter: (db, adapterConfig) =>
+    new PostgresQueueAdapter(db, adapterConfig),
+  initDbClient: (
+    props: DatabaseConnectionProps
+  ): PostgresJsDatabase<AnyRelations> => {
     const client = postgres(props.container.getConnectionUri(), {
       max: 10, // Connection pool size
     })
-    return drizzle(client, { schema })
-  },
-  initAdapter: (db, adapterConfig) => {
-    return new PostgresQueueAdapter(db, adapterConfig)
+    return drizzle({ client, relations: testRelations })
   },
   migrate: async (db) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const [previous, current] = await Promise.all(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        [{}, schema].map((schemaObject) => generateDrizzleJson(schemaObject)),
-      )
+      const previous = await generateDrizzleJson({})
+      const current = await generateDrizzleJson(schema)
 
       const statements = await generateMigration(previous, current)
       const migration = statements.join("\n")
 
       await db.execute(migration)
-    } catch (err) {
+    } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Migration error:", err)
-      throw err
+      console.error("Migration error:", error)
+      throw error
     }
   },
   testCases: [
@@ -48,6 +51,86 @@ runTests<PostgresJsDatabase<typeof schema>>({
       modelName: "customQueueJobs",
       tableName: "custom_queue_jobs",
       schemaName: "custom_schema",
+      useDefault: false,
+      description: "custom table and schema",
+    },
+    { useDefault: true, description: "default table and schema" },
+  ],
+})
+
+runWhereFilterTests<PostgresJsDatabase<AnyRelations>>({
+  initAdapter: (db, adapterConfig) =>
+    new PostgresQueueAdapter(db, adapterConfig),
+  initDbClient: (
+    props: DatabaseConnectionProps
+  ): PostgresJsDatabase<AnyRelations> => {
+    const client = postgres(props.container.getConnectionUri(), {
+      max: 10,
+    })
+    return drizzle({ client, relations: testRelations })
+  },
+  migrate: async (db) => {
+    try {
+      const previous = await generateDrizzleJson({})
+      const current = await generateDrizzleJson(schema)
+
+      const statements = await generateMigration(previous, current)
+      const migration = statements.join("\n")
+
+      await db.execute(migration)
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Migration error:", error)
+      throw error
+    }
+  },
+  testCases: [
+    {
+      modelName: "customQueueJobs",
+      tableName: "custom_queue_jobs",
+      schemaName: "custom_schema",
+      useDefault: false,
+      description: "custom table and schema",
+    },
+    { useDefault: true, description: "default table and schema" },
+  ],
+})
+
+runFlowAdapterTests<PostgresJsDatabase<AnyRelations>>({
+  initAdapter: (db, adapterConfig) =>
+    new PostgresQueueAdapter(db, {
+      ...adapterConfig,
+      flowModelName: adapterConfig?.schemaName ? "customQueueFlows" : undefined,
+    }),
+  initDbClient: (
+    props: DatabaseConnectionProps
+  ): PostgresJsDatabase<AnyRelations> => {
+    const client = postgres(props.container.getConnectionUri(), {
+      max: 10,
+    })
+    return drizzle({ client, relations: testRelations })
+  },
+  migrate: async (db) => {
+    try {
+      const previous = await generateDrizzleJson({})
+      const current = await generateDrizzleJson(schema)
+
+      const statements = await generateMigration(previous, current)
+      const migration = statements.join("\n")
+
+      await db.execute(migration)
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Migration error:", error)
+      throw error
+    }
+  },
+  testCases: [
+    {
+      modelName: "customQueueJobs",
+      tableName: "custom_queue_jobs",
+      schemaName: "custom_schema",
+      flowTableName: "custom_queue_flows",
       useDefault: false,
       description: "custom table and schema",
     },

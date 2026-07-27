@@ -1,0 +1,93 @@
+---
+title: Quickstart
+description: Get started with Vorsteh Queue in under 5 minutes.
+---
+
+Vorsteh Queue is a type-safe job queue engine for PostgreSQL 12+. It supports multiple ORM adapters, priority queues, delayed and recurring jobs, progress tracking, and a comprehensive event system.
+
+## Prerequisites
+
+- **Node.js 22+**
+- **PostgreSQL 12+** database
+- **ESM only**
+
+## Create a new project (recommended)
+
+The fastest way to get started is using the scaffolding CLI:
+
+<Command variant="exec">create-vorsteh-queue my-queue-app</Command>
+
+This walks you through template selection, package manager choice, and dependency installation.
+
+## Manual installation
+
+Pick the adapter that matches your ORM:
+
+### Drizzle ORM
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-drizzle
+</Command>
+
+### Prisma ORM
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-prisma
+</Command>
+
+### Kysely
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-kysely
+</Command>
+
+### ZenStack ORM
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-zenstack @zenstackhq/orm
+</Command>
+
+### TypeORM
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-typeorm typeorm pg
+</Command>
+
+### MikroORM
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-mikroorm @mikro-orm/core
+  @mikro-orm/postgresql
+</Command>
+
+### Sequelize
+
+<Command variant="install">
+  @vorsteh-queue/core @vorsteh-queue/adapter-sequelize sequelize pg
+</Command>
+
+## Minimal example
+
+```typescript
+import { Queue, MemoryQueueAdapter } from "@vorsteh-queue/core"
+
+const queue = new Queue(new MemoryQueueAdapter(), { name: "my-queue" })
+
+// Register a handler
+queue.register("send-email", async (job) => {
+  console.log(`Sending email to ${job.payload.to}`)
+  return { sent: true }
+})
+
+// Add a job
+await queue.add("send-email", { to: "user@example.com", subject: "Hello!" })
+
+// Start processing
+queue.start()
+```
+
+Replace `MemoryQueueAdapter` with a PostgreSQL adapter for production use. See the adapter docs for setup instructions.
+
+## Recommended Setup
+
+For real projects, we recommend centralizing your queue definitions in a shared file. This avoids repetition and makes configuration changes easy. See [Project Structure](/docs/vorsteh-queue/getting-started/project-structure) for the recommended approach.

@@ -1,20 +1,26 @@
 {
   "extends": "@vorsteh-queue/tsconfig/base.json",
   "compilerOptions": {
-    "lib": ["es2022", "dom", "dom.iterable"],
+    "target": "esnext",
+
+    "lib": ["dom", "dom.iterable", "ESNext"],
     "jsx": "preserve",
-    "typeRoots": ["types"],
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./src/*"]
-    },
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "module": "esnext"
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "strictNullChecks": true
   },
-  "include": [".", ".next/types/**/*.ts", "dist/types/**/*.ts", "types"],
-  "exclude": ["node_modules", "out"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "build"]
 }

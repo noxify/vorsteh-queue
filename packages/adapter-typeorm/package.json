@@ -1,0 +1,84 @@
+{
+  "name": "@vorsteh-queue/adapter-typeorm",
+  "version": "0.1.0",
+  "description": "TypeORM adapter for Vorsteh Queue with PostgreSQL support",
+  "keywords": [
+    "adapter",
+    "background-jobs",
+    "database",
+    "job-queue",
+    "orm",
+    "postgresql",
+    "queue",
+    "task-queue",
+    "typeorm",
+    "typescript",
+    "worker"
+  ],
+  "homepage": "https://vorsteh-queue.dev",
+  "bugs": "https://github.com/noxify/vorsteh-queue/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noxify/vorsteh-queue",
+    "directory": "packages/adapter-typeorm"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "source": "./src/index.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./postgres-adapter": {
+      "types": "./dist/adapter.d.mts",
+      "source": "./src/adapter.ts",
+      "default": "./dist/adapter.mjs"
+    },
+    "./entity": {
+      "types": "./dist/queue-entity.d.mts",
+      "source": "./src/queue-entity.ts",
+      "default": "./dist/queue-entity.mjs"
+    },
+    "./flow-entity": {
+      "types": "./dist/flow-entity.d.mts",
+      "source": "./src/flow-entity.ts",
+      "default": "./dist/flow-entity.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown --log-level error",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "clean:cache": "git clean -xdf .cache",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vorsteh-queue/core": "workspace:*",
+    "@vorsteh-queue/query-builder": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "@vorsteh-queue/shared-tests": "workspace:*",
+    "@vorsteh-queue/tsconfig": "workspace:*",
+    "pg": "^8.13.0",
+    "postgres": "^3.4.7",
+    "testcontainers": "12.0.4",
+    "tsdown": "0.22.14",
+    "typeorm": "^0.3.22",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  },
+  "peerDependencies": {
+    "typeorm": ">=0.3.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

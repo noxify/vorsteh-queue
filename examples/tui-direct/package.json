@@ -1,0 +1,34 @@
+{
+  "name": "tui-direct-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PGlite example demonstrating the TUI dashboard in direct adapter mode (no server)",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "dev:prod": "tsx src/index-prod.ts",
+    "dashboard": "vorsteh-queue dashboard",
+    "dashboard:email": "vorsteh-queue dashboard --queue email",
+    "dashboard:data": "vorsteh-queue dashboard --queue data-processing",
+    "dashboard:notifications": "vorsteh-queue dashboard --queue notifications",
+    "dashboard:deployments": "vorsteh-queue dashboard --queue deployments",
+    "clean": "rm -rf .vorsteh-queue"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.4",
+    "@electric-sql/pglite-socket": "^0.2.7",
+    "@vorsteh-queue/adapter-drizzle": "workspace:*",
+    "@vorsteh-queue/cli": "workspace:*",
+    "@vorsteh-queue/core": "workspace:*",
+    "drizzle-orm": "1.0.0-rc.4",
+    "ink": "^7.1.1",
+    "pg": "^8.22.0",
+    "react": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "drizzle-kit": "1.0.0-rc.4",
+    "tsx": "4.23.1",
+    "typescript": "6.0.3"
+  }
+}

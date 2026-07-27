@@ -1,0 +1,40 @@
+---
+title: PM2 Workers
+description: Multi-process workers managed by PM2 for production deployments.
+tags: ["pm2", "workers", "production"]
+---
+
+Shows how to run multiple queue worker processes managed by PM2 for horizontal scaling.
+
+## Setup
+
+First, generate the project:
+
+<Command variant="exec">
+  create-vorsteh-queue my-app --template=pm2-workers
+</Command>
+
+Then install dependencies, push the schema and start the workers:
+
+```bash
+cd my-app
+pnpm install
+pnpm db:push
+pnpm start
+```
+
+## What it demonstrates
+
+- PM2 ecosystem configuration
+- Multiple worker processes sharing a queue
+- Graceful shutdown handling
+- Production-ready process management
+
+## Related documentation
+
+- [Queue](/docs/vorsteh-queue/core/queue)
+- [Job Types](/docs/vorsteh-queue/core/job-types)
+
+## Source
+
+[View on GitHub](https://github.com/noxify/vorsteh-queue/tree/main/examples/pm2-workers)

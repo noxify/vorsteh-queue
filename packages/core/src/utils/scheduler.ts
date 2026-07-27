@@ -1,6 +1,3 @@
-/*
- * @skip-docs
- */
 import { TZDate } from "@date-fns/tz"
 import { Cron } from "croner"
 
@@ -24,7 +21,7 @@ import { Cron } from "croner"
 export const parseCron = (
   expression: string,
   timezone = "UTC",
-  baseDate: Date = new Date(),
+  baseDate: Date = new Date()
 ): Date => {
   try {
     // Simple approach: use croner without timezone complications
@@ -41,14 +38,13 @@ export const parseCron = (
       // Apply timezone offset to the result
       // This is a simplified approach for the UTC-first implementation
       const tzDate = new TZDate(nextRun, timezone)
-      return new Date(tzDate.getTime())
+      return new Date(tzDate)
     }
 
     // Always return UTC Date - no timezone info stored
     return new TZDate(nextRun.getTime(), "UTC")
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    throw new Error(`Invalid cron expression: ${expression}`)
+    throw new Error(`Invalid cron expression: ${expression}`, { cause: error })
   }
 }
 
@@ -112,12 +108,14 @@ export const calculateNextRun = (options: {
  * ```
  */
 export const toUtcDate = (date: Date, timezone = "UTC"): Date => {
-  if (timezone === "UTC") return date
+  if (timezone === "UTC") {
+    return date
+  }
 
   // Create a TZDate in the specified timezone and return as UTC
   const tzDate = new TZDate(date, timezone)
   // Return the UTC equivalent
-  return new Date(tzDate.getTime())
+  return new Date(tzDate)
 }
 
 /**
@@ -132,6 +130,6 @@ export const toUtcDate = (date: Date, timezone = "UTC"): Date => {
  * const utcDate = asUtc(new Date("2024-01-15T09:00:00"))
  * ```
  */
-export function asUtc(input: Date) {
+export function asUtc(input: Date): Date {
   return new TZDate(input, "UTC")
 }

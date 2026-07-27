@@ -1,168 +1,133 @@
-import type { BaseJob, BatchJob, JobStatus, QueueAdapter, QueueStats } from "../../types"
-
 /**
- * Base class for queue adapters providing common functionality.
- * Extend this class to create custom queue adapters for different databases.
+ * Abstract base class for queue adapters.
+ *
+ * Provides the contract that all adapters must implement and shared utilities
+ * like queue name management and ID generation.
+ *
+ * @example
+ * ```typescript
+ * class PostgresAdapter extends BaseQueueAdapter {
+ *   async addJob(job: NewJob): Promise<Job> {
+ *     // PostgreSQL-specific implementation
+ *   }
+ *   // ... implement all abstract methods
+ * }
+ * ```
  */
+
+import type { JobWhereInput } from "@vorsteh-queue/query-builder"
+
+import type {
+  CancelJobsFilter,
+  GetNextJobOptions,
+  Job,
+  JobStatus,
+  JobStatusUpdate,
+  NewJob,
+  PaginationOptions,
+  QueueAdapter,
+  QueueStats,
+  StepState,
+} from "../types"
+
 export abstract class BaseQueueAdapter implements QueueAdapter {
   protected queueName = ""
 
   /**
-   * Set the queue name. Called by the Queue class during initialization.
+   * Set the queue name for job isolation.
+   * Called by Queue/Worker during initialization.
    *
-   * @internal
+   * @param name - Queue name for filtering jobs
    */
-  setQueueName(queueName: string): void {
-    this.queueName = queueName
+  setQueueName(name: string): void {
+    this.queueName = name
   }
 
-  /** Connect to the database/storage backend */
-  abstract connect(): Promise<void>
+  // ─── Connection ────────────────────────────────────────────
 
-  /** Disconnect from the database/storage backend */
+  abstract connect(): Promise<void>
   abstract disconnect(): Promise<void>
 
-  /**
-   * Add a new job to the queue storage
-   *
-   * @param job Job data without id and createdAt
-   * @returns Promise resolving to the created job with id and createdAt
-   */
-  abstract addJob<TJobPayload, TJobResult = unknown>(
-    job: Omit<BaseJob<TJobPayload, TJobResult>, "id" | "createdAt">,
-  ): Promise<BaseJob<TJobPayload, TJobResult>>
+  // ─── Job CRUD ──────────────────────────────────────────────
 
-  /**
-   * Add multiple jobs to the queue storage in a single batch operation
-   *
-   * @param jobs Array of job data without id and createdAt
-   * @returns Promise resolving to the created jobs with id and createdAt
-   */
-  abstract addJobs<TJobPayload, TJobResult = unknown>(
-    jobs: Omit<BatchJob<TJobPayload, TJobResult>, "id" | "createdAt">[],
-  ): Promise<BatchJob<TJobPayload, TJobResult>[]>
+  abstract addJob(job: NewJob): Promise<Job>
+  abstract addJobs(jobs: readonly NewJob[]): Promise<readonly Job[]>
+  abstract getJobById(id: string): Promise<Job | null>
 
-  /**
-   * Update job status and optionally set error or result
-   *
-   * @param id Job ID to update
-   * @param status New job status
-   * @param error Optional error data for failed jobs
-   * @param result Optional result data for completed jobs
-   */
-  abstract updateJobStatus(
-    id: string,
-    status: JobStatus,
-    error?: unknown,
-    result?: unknown,
-  ): Promise<void>
+  // ─── Job Picking ───────────────────────────────────────────
 
-  /**
-   * Update job progress percentage
-   *
-   * @param id Job ID to update
-   * @param progress Progress percentage (0-100)
-   */
+  abstract getNextJob(options: GetNextJobOptions): Promise<Job | null>
+  abstract getNextJobsForHandler(
+    handlerName: string,
+    count: number,
+    groupConstraints: readonly string[]
+  ): Promise<readonly Job[]>
+
+  // ─── Status Updates ────────────────────────────────────────
+
+  abstract updateJobStatus(id: string, update: JobStatusUpdate): Promise<void>
+  abstract incrementJobAttempts(id: string): Promise<void>
   abstract updateJobProgress(id: string, progress: number): Promise<void>
 
-  /**
-   * Increment job attempt counter
-   *
-   * @param id Job ID to update
-   */
-  abstract incrementJobAttempts(id: string): Promise<void>
+  // ─── Cancellation ──────────────────────────────────────────
 
-  /**
-   * Get queue statistics by job status
-   *
-   * @returns Promise resolving to queue statistics
-   */
+  abstract cancelJob(id: string, reason?: string): Promise<boolean>
+  abstract cancelJobs(filter: CancelJobsFilter): Promise<number>
+
+  // ─── Dead-Letter Queue ─────────────────────────────────────
+
+  abstract getDeadJobs(options?: PaginationOptions): Promise<readonly Job[]>
+  abstract redriveJob(id: string): Promise<void>
+  abstract redriveJobs(filter?: { name?: string }): Promise<number>
+
+  // ─── Statistics & Queries ──────────────────────────────────
+
   abstract getQueueStats(): Promise<QueueStats>
+  abstract size(where?: JobWhereInput): Promise<number>
+  abstract getJobs(options: {
+    where?: JobWhereInput
+    limit?: number
+    offset?: number
+  }): Promise<readonly Job[]>
+  // ─── Cleanup ───────────────────────────────────────────────
 
-  /**
-   * Clear jobs from the queue
-   *
-   * @param status Optional status filter, clears all jobs if not provided
-   * @returns Promise resolving to number of jobs cleared
-   */
   abstract clearJobs(status?: JobStatus): Promise<number>
-
-  /**
-   * Clean up old jobs, keeping only the most recent N jobs
-   *
-   * @param status Job status to clean up
-   * @param keepCount Number of jobs to keep
-   * @returns Promise resolving to number of jobs cleaned up
-   */
   abstract cleanupJobs(status: JobStatus, keepCount: number): Promise<number>
 
-  /**
-   * Get the number of pending jobs in the queue
-   * @returns Promise resolving to number of pending jobs
-   */
-  abstract size(): Promise<number>
+  // ─── Unique Jobs ───────────────────────────────────────────
 
-  /**
-   * Execute a function within a database transaction
-   *
-   * @param fn Function to execute in transaction
-   * @returns Promise resolving to the function's return value
-   */
+  abstract findJobByUniqueKey(uniqueKey: string): Promise<Job | null>
+
+  // ─── Single Job Operations ─────────────────────────────────
+
+  abstract retryJob(id: string): Promise<boolean>
+  abstract runJobNow(id: string): Promise<boolean>
+  abstract deleteJob(id: string): Promise<boolean>
+
+  // ─── Transactions ──────────────────────────────────────────
+
   abstract transaction<TResult>(fn: () => Promise<TResult>): Promise<TResult>
 
-  /**
-   * Get the next job to process, considering priority and delayed jobs.
-   *
-   * @returns Promise resolving to the next job or null if none available
-   */
-  async getNextJob(): Promise<BaseJob | null> {
-    const now = new Date()
+  // ─── Steps ─────────────────────────────────────────────────
 
-    // First try to get delayed jobs that are ready
-    const delayedJob = await this.getDelayedJobReady(now)
+  abstract updateJobSteps(
+    id: string,
+    steps: readonly StepState[]
+  ): Promise<void>
+  abstract setJobSignal(
+    id: string,
+    event: string,
+    data: unknown
+  ): Promise<boolean>
 
-    if (delayedJob) {
-      await this.updateJobStatus(delayedJob.id, "pending")
-      return { ...delayedJob, status: "pending" }
-    }
-
-    // Then get pending jobs by priority
-    return this.getPendingJobByPriority()
-  }
+  // ─── Utilities ─────────────────────────────────────────────
 
   /**
-   * Get up to `count` pending jobs for a specific handler (job name), ordered by priority and creation time.
-   *
-   * @param handlerName Name of the registered handler (job name)
-   * @param count Maximum number of jobs to retrieve
-   * @returns Promise resolving to an array of batch jobs (may be fewer than count)
-   */
-  abstract getNextJobsForHandler(handlerName: string, count: number): Promise<BatchJob[]>
-
-  /**
-   * Get a delayed job that is ready to be processed
-   *
-   * @param now Current timestamp to compare against processAt
-   * @returns Promise resolving to ready delayed job or null
-   * @protected
-   */
-  protected abstract getDelayedJobReady(now: Date): Promise<BaseJob | null>
-
-  /**
-   * Get the next pending job ordered by priority and creation time
-   *
-   * @returns Promise resolving to next pending job or null
-   * @protected
-   */
-  protected abstract getPendingJobByPriority(): Promise<BaseJob | null>
-
-  /**
-   * Generate a unique job ID
+   * Generate a unique job ID (UUID v4 format).
    *
    * @returns Unique string identifier
-   * @protected
    */
-  protected generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+  protected static generateId(): string {
+    return crypto.randomUUID()
   }
 }

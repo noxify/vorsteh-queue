@@ -1,13 +1,19 @@
-// PostgreSQL adapter
+/* eslint-disable oxc/no-barrel-file */
 export {
   PostgresQueueAdapter,
   PostgresQueueAdapter as PostgresDrizzleQueueAdapter,
-} from "./postgres-adapter"
+} from "./adapter"
 
-// Schemas
-export * as postgresSchema from "./postgres-schema"
+export { queueJobs } from "./queue-schema"
 
-// Types
-export type { QueueJob as PostgresQueueJob } from "./postgres-schema"
+export type { QueueJob as PostgresQueueJob } from "./queue-schema"
 
-export { createQueueJobsTable } from "./helpers"
+export { queueFlows } from "./flow-schema"
+export type { QueueFlow, InsertQueueFlow } from "./flow-schema"
+
+export {
+  columns,
+  createQueueFlowsTable,
+  createQueueJobsTable,
+  flowColumns,
+} from "./helpers"

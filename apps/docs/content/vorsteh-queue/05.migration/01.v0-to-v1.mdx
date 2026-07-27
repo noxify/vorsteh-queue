@@ -1,0 +1,190 @@
+---
+title: Migrating to v1.0
+navTitle: v0 → v1
+description: Complete migration guide from Vorsteh Queue v0.x to v1.0.
+---
+
+This guide covers all breaking changes when upgrading from v0.x to v1.0 across all packages.
+
+## Requirements
+
+- **Node.js 22+** — minimum version raised from 20 to 22
+
+## Core (`@vorsteh-queue/core`)
+
+### Queue/Worker Split
+
+The `Queue` class is now producer-only. Job processing is handled by the new `Worker` class.
+
+**Before:**
+
+```typescript
+const queue = new Queue(adapter, { name: "my-queue" })
+queue.register("send-email", handler)
+queue.start()
+```
+
+**After:**
+
+```typescript
+import { Queue, Worker } from "@vorsteh-queue/core"
+
+const queue = new Queue(adapter, { name: "my-queue" })
+const worker = new Worker(adapter, { name: "my-queue", concurrency: 5 })
+
+worker.register("send-email", handler)
+worker.start()
+
+await queue.add("send-email", { to: "user@example.com" })
+```
+
+### Handler Signature
+
+Handlers now receive a `JobContext` as second argument with `signal` and `step` for timeout/cancellation and durable steps.
+
+**Before:**
+
+```typescript
+queue.register("job", async (job) => {
+  return { done: true }
+})
+```
+
+**After:**
+
+```typescript
+worker.register("job", async (job, { signal, step }) => {
+  // signal: AbortSignal for timeout/cancellation
+  // step: durable step execution (step.run, step.sleep, step.waitFor)
+  return { done: true }
+})
+```
+
+### New Statuses
+
+Added `cancelled` and `dead` statuses. Update any code that checks job statuses.
+
+### Removed APIs
+
+The following methods no longer exist on `Queue`:
+
+- `queue.register()` → use `worker.register()`
+- `queue.start()` / `queue.stop()` → use `worker.start()` / `worker.stop()`
+- `queue.pause()` / `queue.resume()` → use `worker.pause()` / `worker.resume()`
+- `queue.enqueue()` / `queue.dequeue()` → use `queue.add()` / removed
+
+### Job Filter Changes
+
+`getJobs` and `size` now use a `where` input instead of flat parameters.
+
+**Before:**
+
+```typescript
+await queue.getJobs({ status: "failed", name: "send-email", limit: 10 })
+await queue.size()
+```
+
+**After:**
+
+```typescript
+await queue.getJobs({
+  where: { status: "failed", name: "send-email" },
+  limit: 10,
+})
+await queue.size({ status: { eq: "failed" } })
+```
+
+## Drizzle Adapter (`@vorsteh-queue/adapter-drizzle`)
+
+### Peer Dependency
+
+Upgrade `drizzle-orm` to `>=1.0.0-rc.4` and `drizzle-kit` to `>=1.0.0-rc.4` (was `>=0.30.0`).
+
+<Note title="Drizzle ORM Upgrade">
+  For a complete list of changes in Drizzle ORM v1, see the official [Drizzle v0
+  → v1 migration guide](https://orm.drizzle.team/docs/v0-v1-changes).
+</Note>
+
+### Drizzle Client Initialization
+
+Drizzle ORM v1 requires a `relations` object instead of a `schema` object:
+
+**Before:**
+
+```typescript
+import * as schema from "./schema"
+
+const db = drizzle(pool, { schema })
+```
+
+**After:**
+
+```typescript
+import { defineRelations } from "drizzle-orm"
+import { queueFlows, queueJobs } from "@vorsteh-queue/adapter-drizzle"
+
+export { queueFlows, queueJobs }
+export const relations = defineRelations({ queueFlows, queueJobs })
+
+// In your database setup:
+import { relations } from "./schema"
+
+const db = drizzle({ client: pool, relations })
+```
+
+### Schema Migration
+
+New columns and indexes have been added. Run migrations:
+
+```bash
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+New columns: `group_key`, `unique_key`, `cancelled_at`, `cancellation_reason`, `steps`
+
+Changed columns:
+
+- `timeout`: JSONB → INT (nullable, milliseconds)
+- `progress`: nullable → non-nullable INT (default 0)
+- `repeat_count`: nullable → non-nullable (default 0)
+
+New indexes: `idx_queue_jobs_polling`, `idx_queue_jobs_delayed`, `idx_queue_jobs_active_groups`, `idx_queue_jobs_stats`
+
+## Prisma Adapter (`@vorsteh-queue/adapter-prisma`)
+
+### Peer Dependency
+
+Upgrade `@prisma/client` to `>=7.0.0` (was `>=5.0.0`).
+
+<Note title="Prisma ORM Upgrade">
+  For a complete list of changes in Prisma 7, see the official [Prisma v7
+  upgrade guide](https://www.prisma.io/docs/guides/upgrade-prisma-orm/v7).
+</Note>
+
+### Schema Migration
+
+Update your `schema.prisma` with the new model fields and run migrations:
+
+```bash
+npx prisma migrate dev
+```
+
+Same column changes as Drizzle (see above).
+
+## Kysely Adapter (`@vorsteh-queue/adapter-kysely`)
+
+Run the updated migration (same schema changes as Drizzle/Prisma above). The `createQueueJobsTable()` helper has been updated.
+
+## New Features in v1.0
+
+These are not breaking changes but notable additions:
+
+- **Job Steps** — durable multi-step execution (`step.run()`, `step.sleep()`, `step.waitFor()`)
+- **Flow Producer** — parent-child job trees with dependency tracking
+- **Group FIFO** — ordered processing per group key
+- **Unique Jobs** — deduplication via unique keys
+- **Rate Limiting** — token-bucket per handler
+- **Saga Compensation** — automatic rollback on step failure
+- **Signals** — human-in-the-loop pause/resume
+- **Event Triggers** — automatic follow-up job creation

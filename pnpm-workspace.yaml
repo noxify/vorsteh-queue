@@ -3,3 +3,16 @@ packages:
   - packages/*
   - tooling/*
   - examples/*
+allowBuilds:
+  "@prisma/client": false
+  "@prisma/engines": false
+  "@tailwindcss/oxide": false
+  cpu-features: false
+  esbuild: false
+  prisma: false
+  protobufjs: false
+  sharp: false
+  ssh2: false
+minimumReleaseAgeExclude:
+  - "@tanstack/query-core@5.101.3"
+  - "@tanstack/react-query@5.101.3"

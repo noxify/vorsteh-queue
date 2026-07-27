@@ -1,36 +1,36 @@
-import z from "zod"
-
-import { allowedIcons } from "./lib/icon"
+import { z } from "zod"
 
 export const frontmatterSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  navTitle: z.string().optional(),
-  entrypoint: z.string().optional(),
   alias: z.string().optional(),
-  toc: z.boolean().optional().default(true),
+  apiReference: z
+    .array(z.object({ name: z.string(), file: z.string() }))
+    .default([]),
+  cliCommand: z.string().optional(),
+  description: z.string().optional(),
+  entrypoint: z.string().optional(),
+  externalLink: z.url().optional(),
+  favorite: z.boolean().optional().default(false),
   ignoreSearch: z.boolean().optional().default(false),
+  navBadge: z
+    .enum(["new", "updated", "beta", "experimental", "deprecated", "pulse"])
+    .optional(),
+  navIcon: z.string().optional(),
+  navTitle: z.string().optional(),
+  separator: z.boolean().optional().default(false),
+  tags: z.array(z.string()).optional(),
+  title: z.string().optional(),
+  toc: z.boolean().optional().default(true),
 })
 
 export const headingSchema = z.array(
   z.object({
+    id: z.string(),
     level: z.number(),
     text: z.string(),
-    id: z.string(),
-  }),
+  })
 )
 
 export const docSchema = {
   frontmatter: frontmatterSchema,
   headings: headingSchema,
 }
-
-export const featuresSchema = z.object({
-  title: z.string(),
-  icon: z.enum(Object.keys(allowedIcons), {
-    error: (value) =>
-      `Icon "${String(value.input)}" is not specified. Please add it to the "icon.tsx".`,
-  }),
-  type: z.enum(["feature", "key_feature"]),
-})
