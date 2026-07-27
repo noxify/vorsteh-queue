@@ -313,7 +313,7 @@ export default async function DocsPage({
           {Content ? <Content /> : <div>No content</div>}
 
           {apiReferenceEntries.length > 0 && (
-            <div className="mt-12">
+            <div className="not-prose mt-12 flex flex-col">
               {apiReferenceEntries.map((ref) => (
                 <ApiReference key={ref.file} file={ref.file} />
               ))}
