@@ -1,0 +1,1365 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Remove `waiting-children` from `JobStatus` type and `STATE_TRANSITIONS` in `types.ts`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074890908
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074903180
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074950182
+      }
+    ],
+    "2. Remove flow fields from `Job` interface: `parentId`, `flowId`, `childrenCount`, `childrenCompleted`, `failParentOnFailure`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074890988
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074953448
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074991307
+      }
+    ],
+    "3. Remove `dependsOn` and `onDependencyFailure` from `Job` interface and `JobOptions`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891162
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074994057
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075032128
+      }
+    ],
+    "4. Remove `QueueStats[\"waiting-children\"]`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891229
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075034950
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075059557
+      }
+    ],
+    "5. Delete `packages/core/src/dependencies.ts` and remove its exports from `index.ts`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891298
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075062366
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075115518
+      }
+    ],
+    "6. Remove flow methods from `QueueAdapter` interface: `getFlowTree`, `deleteFlow`, `incrementChildrenCompleted`, `getChildrenJobs`, `getFlows`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891362
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075118800
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075163702
+      }
+    ],
+    "7. Remove `addFlow`, `getFlowTree`, `createFlowNode` from `Queue` class": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891423
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075167418
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075248612
+      }
+    ],
+    "8. Remove `promoteParentIfReady`, `failParentOnChildFailure`, and `filterByDependencies` from `Worker` class": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891498
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075251565
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075395272
+      }
+    ],
+    "9. Remove old `FlowJobDefinition`, `FlowNode`, `FlowResult` types from `types.ts`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891563
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075398348
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075447033
+      }
+    ],
+    "10. Add `flowNodeId?: string` to `Job` interface": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891629
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075449860
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075495593
+      }
+    ],
+    "11. Update `NewJob` type to reflect removed/added fields": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891690
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075498452
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075525885
+      }
+    ],
+    "12. Fix all TypeScript compilation errors in core package after removals": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891748
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075528719
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075721693
+      }
+    ],
+    "13. Create `packages/core/src/flow-types.ts` with: `FlowNodeStatus`, `FlowFailureStrategy`, `FlowNode`, `NewFlowNode`, `FlowTree`, `FlowSummary`, `FlowListOptions`, `FlowJobDefinition`, `FlowChainStep`, `FlowResult`, `FlowChainResult`, `FlowBulkThenResult`, `FlowProducerConfig`, `FlowProducerEvents`, `ChildrenFilter`, `ChildNodeValue`, `FlowJobContext`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891806
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075726092
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075827573
+      }
+    ],
+    "14. Create `FlowAdapter` interface in `packages/core/src/flow-types.ts`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891862
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075830764
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075917416
+      }
+    ],
+    "15. Update adapter props types (`PrismaAdapterProps`, `DrizzleAdapterProps`, etc.) with `flowTableName`/`flowModelName` fields": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891921
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075920549
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785075999830
+      }
+    ],
+    "16. Export new flow types from `packages/core/src/index.ts`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074891973
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076002771
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076043849
+      }
+    ],
+    "17. Create `packages/core/src/flow-producer.ts` with `FlowProducer` class extending `TypedEventEmitter<FlowProducerEvents>`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892034
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076047612
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076113057
+      }
+    ],
+    "18. Implement `FlowProducer.add(definition)` — creates flow tree, leaf jobs in transaction": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892098
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076116065
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076326370
+      }
+    ],
+    "19. Implement `FlowProducer.addChain(steps)` — transforms to nested parent-child tree": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892154
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076329554
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076510687
+      }
+    ],
+    "20. Implement `FlowProducer.addBulkThen(parallel, final)` — transforms to parent with N children": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892212
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076513835
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076592083
+      }
+    ],
+    "21. Implement `FlowProducer.getFlow(flowId)` — retrieves full tree": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892267
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076595757
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076598815
+      }
+    ],
+    "22. Implement `FlowProducer.getFlows(options)` — list with pagination/status filter": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892323
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076601767
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076604873
+      }
+    ],
+    "23. Implement flow cleanup logic (removeOnComplete configuration)": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892387
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076607858
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076698597
+      }
+    ],
+    "24. Export `FlowProducer` from `packages/core/src/index.ts`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892442
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076701979
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076742961
+      }
+    ],
+    "25. Add flow-node promotion logic to Worker: after job completes, check `flowNodeId`, update node, check parent promotability": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892497
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076746766
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076880745
+      }
+    ],
+    "26. Implement `fail-parent` cascade: when child with `fail-parent` strategy fails terminally, fail parent node recursively": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892557
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785076883922
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077023993
+      }
+    ],
+    "27. Implement `continue-parent` promotion: when child with `continue-parent` fails, promote parent immediately": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892615
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077026903
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077080196
+      }
+    ],
+    "28. Implement default strategy: promote parent when all direct children are terminal": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892671
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077084163
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077087345
+      }
+    ],
+    "29. Implement `FlowJobContext` methods in Worker's job context: `getChildrenValues`, `getFailedChildrenValues`, `getChildrenValuesBy`, `removeUnprocessedChildren`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892725
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077090761
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077235974
+      }
+    ],
+    "30. Emit flow events from Worker: `flow:completed`, `flow:failed`, `flow:node:promoted`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892798
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077239169
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077386166
+      }
+    ],
+    "31. Remove old flow methods from `MemoryQueueAdapter`: `getFlowTree`, `deleteFlow`, `incrementChildrenCompleted`, `getChildrenJobs`, `getFlows`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892855
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077390358
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077411250
+      }
+    ],
+    "32. Remove old flow fields from memory adapter's job storage/mapping": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892913
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077414466
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077446069
+      }
+    ],
+    "33. Add `flowNodeId` support to memory adapter's `addJob`/`getNextJob`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074892967
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077449284
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077478901
+      }
+    ],
+    "34. Implement `FlowAdapter` interface in `MemoryQueueAdapter` with in-memory `flow_nodes` Map": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893022
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077482478
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077642819
+      }
+    ],
+    "35. Implement all `FlowAdapter` methods: `createFlow`, `getFlowNode`, `getFlowTree`, `getFlows`, `updateFlowNode`, `incrementNodeChildrenCompleted`, `getNodeChildren`, `getChildrenResults`, `getFailedChildrenResults`, `cancelUnprocessedChildren`, `deleteFlow`, `cleanupFlows`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893076
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077646522
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077650556
+      }
+    ],
+    "36. Update `postgres-schema.ts`: remove old flow columns (`parent_id`, `flow_id`, `children_count`, `children_completed`, `fail_parent_on_failure`, `depends_on`, `on_dependency_failure`), add `flow_node_id`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893132
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077655253
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077709280
+      }
+    ],
+    "37. Create `flow-schema.ts` with `queueFlows` table definition": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893188
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077712486
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077777870
+      }
+    ],
+    "38. Update adapter class: remove old flow methods, remove old field mappings in `transformJob`/`addJob`/`addJobs`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893256
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785077782053
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785078725979
+      }
+    ],
+    "39. Implement `FlowAdapter` interface in Drizzle adapter with transactional `createFlow`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893316
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785078729344
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785078732969
+      }
+    ],
+    "40. Update adapter config to accept `flowModelName` option": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893374
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785078736226
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785078739287
+      }
+    ],
+    "41. Export new flow schema from package": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893432
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785078742445
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785078745820
+      }
+    ],
+    "42. Update `schema.prisma`: remove old flow columns, add `flowNodeId`, add `QueueFlow` model with `@@map(\"queue_flows\")`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893493
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785078750137
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079362427
+      }
+    ],
+    "43. Regenerate Prisma client": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893557
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079365945
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079369217
+      }
+    ],
+    "44. Update adapter class: remove old flow methods, remove old field mappings in `transformPrismaJob`/`addJob`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893615
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079372484
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079375915
+      }
+    ],
+    "45. Implement `FlowAdapter` interface in Prisma adapter with transactional `createFlow`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893672
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079379367
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079382659
+      }
+    ],
+    "46. Update adapter config to accept `flowModelName` and `flowTableName` options": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893729
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079386109
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079389361
+      }
+    ],
+    "47. Update table type definition: remove old flow columns, add `flow_node_id`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893787
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079393694
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079890523
+      }
+    ],
+    "48. Create `queue_flows` table type definition": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893845
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079894068
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079897981
+      }
+    ],
+    "49. Update adapter class: remove old flow methods, remove old field mappings in `transformJob`/`addJob`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893904
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079902228
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079905555
+      }
+    ],
+    "50. Implement `FlowAdapter` interface in Kysely adapter with transactional `createFlow`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074893956
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079908938
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079912308
+      }
+    ],
+    "51. Update adapter config to accept `flowTableName` option": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894008
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079915850
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079919630
+      }
+    ],
+    "52. Update ZenStack schema: remove old flow columns, add `flowNodeId`, add `QueueFlow` model": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894079
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785079929176
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080298204
+      }
+    ],
+    "53. Update adapter class: remove old flow methods, implement `FlowAdapter`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894137
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080301716
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080305133
+      }
+    ],
+    "54. Update adapter config to accept `flowModelName` and `flowTableName` options": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894213
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080308527
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080312168
+      }
+    ],
+    "55. Update entity definition: remove old flow columns, add `flowNodeId`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894271
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080316085
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080778792
+      }
+    ],
+    "56. Create `QueueFlow` entity": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894330
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080782369
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080786767
+      }
+    ],
+    "57. Update adapter class: remove old flow methods, implement `FlowAdapter`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894392
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080790192
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080793743
+      }
+    ],
+    "58. Update adapter config to accept `flowTableName` option": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894450
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080797263
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080800588
+      }
+    ],
+    "59. Update entity definition: remove old flow columns, add `flowNodeId`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894508
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785080804574
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081194822
+      }
+    ],
+    "60. Create `QueueFlow` entity": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894571
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081198322
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081201962
+      }
+    ],
+    "61. Update adapter class: remove old flow methods, implement `FlowAdapter`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894623
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081205421
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081209001
+      }
+    ],
+    "62. Update adapter config to accept `flowTableName` option": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894679
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081212457
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081215892
+      }
+    ],
+    "63. Update model definition: remove old flow columns, add `flowNodeId`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894734
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081219589
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081686662
+      }
+    ],
+    "64. Create `QueueFlow` model": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894790
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081690187
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081693780
+      }
+    ],
+    "65. Update adapter class: remove old flow methods, implement `FlowAdapter`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894847
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081697489
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081701034
+      }
+    ],
+    "66. Update adapter config to accept `flowTableName` option": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894907
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081704643
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081708334
+      }
+    ],
+    "67. Remove old flow field persistence tests from `shared-tests`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074894963
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081713124
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081841180
+      }
+    ],
+    "68. Remove old `deleteFlow` / `incrementChildrenCompleted` / `getFlowTree` tests": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895021
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081844646
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081848488
+      }
+    ],
+    "69. Add new `FlowAdapter` shared tests: `createFlow` atomicity, `getFlowTree`, `getFlows`, `updateFlowNode`, `incrementNodeChildrenCompleted`, `getNodeChildren`, `cancelUnprocessedChildren`, `deleteFlow`, `cleanupFlows`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895073
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785081853620
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082279755
+      }
+    ],
+    "70. Add flow integration tests: full lifecycle (create → children complete → parent promoted → parent completes), failure strategies, nested flows, cross-queue flows": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895131
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082289048
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082852169
+      }
+    ],
+    "71. Rewrite `packages/core/tests/flow.test.ts`: FlowProducer.add with parent/children, FlowProducer.addChain, FlowProducer.addBulkThen": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895189
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082857252
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082861347
+      }
+    ],
+    "72. Test failure strategies: default (promote on all terminal), fail-parent (cascade), continue-parent (immediate promote)": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895246
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082865043
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082868617
+      }
+    ],
+    "73. Test FlowJobContext: getChildrenValues, getFailedChildrenValues, getChildrenValuesBy, removeUnprocessedChildren": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895300
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082872710
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082876510
+      }
+    ],
+    "74. Test flow cleanup (removeOnComplete)": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895362
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082880162
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082884070
+      }
+    ],
+    "75. Test flow events emission": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895428
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082887759
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082891447
+      }
+    ],
+    "76. Remove `packages/core/tests/dependency.test.ts` (if exists)": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895503
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082896355
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082899910
+      }
+    ],
+    "77. Update changeset: replace `workflow-engine.md` with new flow-producer changeset": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895588
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082903616
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082953167
+      }
+    ],
+    "78. Run `pnpm format:fix && pnpm lint:fix && pnpm typecheck` — fix all issues": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895650
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785082957131
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785083252904
+      }
+    ],
+    "79. Run all adapter tests: `pnpm test:drizzle`, `pnpm test:prisma`, `pnpm test:kysely`, `pnpm test:zenstack`, `pnpm test:typeorm`, `pnpm test:mikroorm`, `pnpm test:sequelize`": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895712
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785083257223
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785083578354
+      }
+    ],
+    "80. Run core tests: verify all pass": [
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785074895771
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785083582690
+      },
+      {
+        "executionId": "5a389003-d128-4ac2-9a8f-f69e777b7038",
+        "chatSessionId": "sess_00924a4f-e7ec-4e8f-971d-348250ebd33b",
+        "timestamp": 1785083610850
+      }
+    ]
+  }
+}
