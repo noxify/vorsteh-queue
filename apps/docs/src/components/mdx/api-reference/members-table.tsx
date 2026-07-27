@@ -1,3 +1,4 @@
+import { Fragment } from "react"
 import { createSlug } from "renoun"
 
 import {
@@ -97,7 +98,11 @@ function MemberRowGroup({
         <TableCell className="text-muted-foreground max-w-75 font-mono text-xs break-all whitespace-normal">
           {row.typeLink ? (
             <a
-              href={`#${createSlug(row.typeLink)}`}
+              href={
+                row.typeLink.startsWith("/") || row.typeLink.includes("#")
+                  ? row.typeLink
+                  : `#${createSlug(row.typeLink)}`
+              }
               className="border-border bg-muted/60 hover:bg-muted inline-flex rounded border px-1.5 py-0.5 font-mono text-xs underline decoration-dotted underline-offset-2"
             >
               {row.type}
@@ -165,17 +170,33 @@ function MemberRowGroup({
                 <tbody>
                   {/* oxlint-disable-next-line typescript/no-non-null-assertion */}
                   {row.typeMembers!.map((m) => (
-                    <UITableRow key={m.name}>
-                      <TableCell className="text-foreground max-w-75 font-mono text-xs font-semibold break-all whitespace-normal">
-                        {m.name}
-                        {m.isOptional ? "?" : ""}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground max-w-75 font-mono text-xs break-all whitespace-normal">
-                        <code className="border-border bg-muted/60 inline-flex rounded border px-1.5 py-0.5 font-mono text-xs">
-                          {m.type}
-                        </code>
-                      </TableCell>
-                    </UITableRow>
+                    <Fragment key={m.name}>
+                      <UITableRow>
+                        <TableCell className="text-foreground max-w-75 font-mono text-xs font-semibold break-all whitespace-normal">
+                          {m.name}
+                          {m.isOptional ? "?" : ""}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground max-w-75 font-mono text-xs break-all whitespace-normal">
+                          <code className="border-border bg-muted/60 inline-flex rounded border px-1.5 py-0.5 font-mono text-xs">
+                            {m.type}
+                          </code>
+                        </TableCell>
+                      </UITableRow>
+                      {m.description && (
+                        <UITableRow>
+                          <TableCell
+                            colSpan={2}
+                            className="text-muted-foreground whitespace-normal"
+                          >
+                            <div className="ml-4">
+                              <DescriptionBlock>
+                                {m.description}
+                              </DescriptionBlock>
+                            </div>
+                          </TableCell>
+                        </UITableRow>
+                      )}
+                    </Fragment>
                   ))}
                 </tbody>
               </UITable>

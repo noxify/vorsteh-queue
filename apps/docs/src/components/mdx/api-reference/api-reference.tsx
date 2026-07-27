@@ -1,6 +1,9 @@
 // oxlint-disable react/react-compiler
 import { resolveFileExports } from "@/lib/ts-morph-analysis"
-import type { ResolvedExport } from "@/lib/ts-morph-analysis"
+import type {
+  ResolvedExport,
+  ResolvedExportMember,
+} from "@/lib/ts-morph-analysis"
 
 import {
   ReferenceSection,
@@ -25,6 +28,114 @@ interface ApiReferenceProps {
    * - "table" — flat properties table (for single interface/type)
    */
   variant?: "full" | "summary" | "table"
+  /**
+   * Whether to resolve exported type links inline as nested sub-tables
+   * instead of rendering anchor links (which may be dead when the target
+   * type is not on the same page).
+   *
+   * Ignored when `referenceBaseUrl` is set (links will point to that URL instead).
+   *
+   * @default true for variant="table" (when referenceBaseUrl is not set), false otherwise
+   */
+  resolveTypeLinksInline?: boolean
+  /**
+   * Base URL for type reference links. When set, type links point to this
+   * URL with an anchor (e.g. "/docs/api-reference/core/types#job") instead
+   * of being resolved inline or linking to a local anchor.
+   *
+   * Takes precedence over `resolveTypeLinksInline`.
+   *
+   * @example "/docs/api-reference/core/types"
+   */
+  referenceBaseUrl?: string
+}
+
+/**
+ * Resolves typeLink references in members by looking up the linked type
+ * in the full exports list and converting it to inline typeMembers.
+ */
+function inlineTypeLinks(
+  exports: ResolvedExport[],
+  allFileExports: readonly ResolvedExport[]
+): ResolvedExport[] {
+  const exportsByName = new Map(allFileExports.map((exp) => [exp.name, exp]))
+
+  function resolveMemberLinks(
+    members: ResolvedExportMember[] | undefined
+  ): ResolvedExportMember[] | undefined {
+    if (!members) {
+      return undefined
+    }
+
+    return members.map((m) => {
+      if (!m.typeLink || m.typeMembers) {
+        return m
+      }
+
+      const linkedExport = exportsByName.get(m.typeLink)
+
+      if (!linkedExport?.members || linkedExport.members.length === 0) {
+        // Cannot resolve — drop the dead link, keep plain type text
+        return { ...m, typeLink: undefined }
+      }
+
+      // Convert linked export's members into inline typeMembers
+      const inlined: ResolvedExportMember[] = linkedExport.members.map(
+        (lm) => ({
+          name: lm.name,
+          type: lm.type,
+          isOptional: lm.isOptional,
+          isReadonly: lm.isReadonly,
+          description: lm.description,
+          tags: lm.tags,
+        })
+      )
+
+      return { ...m, typeLink: undefined, typeMembers: inlined }
+    })
+  }
+
+  return exports.map((exp) => ({
+    ...exp,
+    members: resolveMemberLinks(exp.members),
+  }))
+}
+
+/**
+ * Rewrites typeLink values to point to a base URL with an anchor fragment.
+ * E.g. typeLink "Job" + baseUrl "/docs/api-reference/core/types" → "/docs/api-reference/core/types#job"
+ */
+function rebaseTypeLinks(
+  exports: ResolvedExport[],
+  baseUrl: string
+): ResolvedExport[] {
+  function rebaseMemberLinks(
+    members: ResolvedExportMember[] | undefined
+  ): ResolvedExportMember[] | undefined {
+    if (!members) {
+      return undefined
+    }
+
+    return members.map((m) => {
+      if (!m.typeLink) {
+        return m
+      }
+
+      const slug = m.typeLink
+        .replaceAll(/(?<lower>[a-z\d])(?<upper>[A-Z])/gu, "$1-$2")
+        .replaceAll(/(?<upper>[A-Z]+)(?<next>[A-Z][a-z])/gu, "$1-$2")
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9]+/gu, "-")
+        .replaceAll(/^-+|-+$/gu, "")
+
+      return { ...m, typeLink: `${baseUrl}#${slug}` }
+    })
+  }
+
+  return exports.map((exp) => ({
+    ...exp,
+    members: rebaseMemberLinks(exp.members),
+  }))
 }
 
 /**
@@ -51,10 +162,14 @@ export async function ApiReference({
   include,
   exclude,
   variant = "full",
+  resolveTypeLinksInline: resolveInlineProp,
+  referenceBaseUrl,
 }: ApiReferenceProps) {
   try {
     const filePath = resolvePackagePath(file)
-    let exports: ResolvedExport[] = await resolveFileExports(filePath)
+    const allFileExports: readonly ResolvedExport[] =
+      await resolveFileExports(filePath)
+    let exports: ResolvedExport[] = [...allFileExports]
 
     // Single export by name
     if (name) {
@@ -73,6 +188,20 @@ export async function ApiReference({
 
     if (exports.length === 0) {
       return null
+    }
+
+    // Type link resolution strategy:
+    // 1. referenceBaseUrl set → rewrite links to point to that URL
+    // 2. resolveTypeLinksInline (or default for table) → expand inline
+    // 3. Otherwise → keep local #anchor links
+    if (referenceBaseUrl) {
+      exports = rebaseTypeLinks(exports, referenceBaseUrl)
+    } else {
+      const shouldInlineTypeLinks = resolveInlineProp ?? variant === "table"
+
+      if (shouldInlineTypeLinks) {
+        exports = inlineTypeLinks(exports, allFileExports)
+      }
     }
 
     if (variant === "table") {

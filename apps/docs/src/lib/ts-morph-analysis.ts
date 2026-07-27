@@ -786,14 +786,107 @@ function resolveNamedExportFromSource(
   return undefined
 }
 
+/**
+ * Extracts property members from a TypeLiteral node.
+ * Recursively resolves nested TypeLiterals into typeMembers.
+ */
+// oxlint-disable-next-line typescript/no-explicit-any
+function extractTypeLiteralMembers(
+  // oxlint-disable-next-line typescript/no-explicit-any
+  literalNode: any
+): ResolvedExportMember[] | undefined {
+  const litMembers = literalNode
+    .getMembers?.()
+    ?.filter?.(
+      (m: { getKind?: () => number }) =>
+        m.getKind?.() === SyntaxKind.PropertySignature
+    )
+
+  if (!litMembers || litMembers.length === 0) {
+    return undefined
+  }
+
+  // oxlint-disable-next-line typescript/no-explicit-any
+  return litMembers.map((m: any) => {
+    const memberTypeNode = m.getTypeNode?.()
+    const { type, typeMembers } = resolvePropertyTypeText(memberTypeNode)
+
+    return {
+      name: m.getName(),
+      type,
+      isOptional: m.hasQuestionToken(),
+      isReadonly: m.isReadonly(),
+      description: getJsDocDescription(m),
+      tags: getJsDocTags(m),
+      typeMembers,
+    }
+  })
+}
+
+/**
+ * Resolves the display type text and optional inline members for a property's TypeNode.
+ *
+ * - If the type is a TypeLiteral `{ ... }`, extracts its members as `typeMembers`
+ *   and returns a simplified type text ("Object").
+ * - If the type is an ArrayType wrapping a TypeLiteral `{ ... }[]`, extracts its
+ *   members and returns "Object[]".
+ * - Otherwise returns the raw text (stripped of JSDoc comments for safety).
+ */
+// oxlint-disable-next-line typescript/no-explicit-any
+function resolvePropertyTypeText(typeNode: any): {
+  type: string
+  typeMembers?: ResolvedExportMember[]
+} {
+  if (!typeNode) {
+    return { type: "unknown" }
+  }
+
+  const kind = typeNode.getKind?.()
+
+  // Direct TypeLiteral: { foo: string; bar: number }
+  if (kind === SyntaxKind.TypeLiteral) {
+    const resolved = extractTypeLiteralMembers(typeNode)
+
+    if (resolved) {
+      return { type: "Object", typeMembers: resolved }
+    }
+  }
+
+  // ArrayType wrapping a TypeLiteral: { foo: string }[]
+  if (kind === SyntaxKind.ArrayType) {
+    const elementType = typeNode.getElementTypeNode?.()
+
+    if (elementType?.getKind?.() === SyntaxKind.TypeLiteral) {
+      const resolved = extractTypeLiteralMembers(elementType)
+
+      if (resolved) {
+        return { type: "Object[]", typeMembers: resolved }
+      }
+    }
+  }
+
+  // Fallback: strip JSDoc comments from the raw text
+  const rawText = typeNode.getText().trim() || "unknown"
+  const cleaned = rawText
+    .replaceAll(/\/\*\*[\s\S]*?\*\//gu, "")
+    .replaceAll(/\s+/gu, " ")
+    .trim()
+
+  return { type: cleaned || rawText }
+}
+
 // oxlint-disable-next-line typescript/no-explicit-any
 function resolveInterfaceExport(decl: any, filePath: string): ResolvedExport {
   const sourceFile = decl.getSourceFile()
   const members: ResolvedExportMember[] = decl.getProperties().map(
     // oxlint-disable-next-line typescript/no-explicit-any
     (prop: any) => {
-      const type = prop.getTypeNode()?.getText().trim() || "unknown"
-      const typeInfo = resolveParamTypeInfo(type, sourceFile)
+      const typeNode = prop.getTypeNode()
+      const { type, typeMembers: inlineMembers } =
+        resolvePropertyTypeText(typeNode)
+      const typeInfo = inlineMembers
+        ? { typeMembers: inlineMembers }
+        : resolveParamTypeInfo(type, sourceFile)
 
       return {
         name: prop.getName(),
@@ -833,8 +926,12 @@ function resolveTypeAliasExport(decl: any, filePath: string): ResolvedExport {
       .filter(Node.isPropertySignature)
       // oxlint-disable-next-line typescript/no-explicit-any
       .map((prop: any) => {
-        const type = prop.getTypeNode()?.getText().trim() || "unknown"
-        const typeInfo = resolveParamTypeInfo(type, sourceFile)
+        const propTypeNode = prop.getTypeNode()
+        const { type, typeMembers: inlineMembers } =
+          resolvePropertyTypeText(propTypeNode)
+        const typeInfo = inlineMembers
+          ? { typeMembers: inlineMembers }
+          : resolveParamTypeInfo(type, sourceFile)
 
         return {
           name: prop.getName(),
