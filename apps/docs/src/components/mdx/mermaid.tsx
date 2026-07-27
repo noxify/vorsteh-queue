@@ -1,6 +1,6 @@
 "use client"
 
-import { renderMermaidSVG, THEMES } from "agentic-mermaid"
+import { renderMermaidSVG } from "agentic-mermaid"
 import { useTheme } from "better-themes/rsc"
 import React from "react"
 
@@ -100,8 +100,8 @@ export function MermaidDiagram({
     try {
       const mermaidTheme =
         resolvedTheme === "dark"
-          ? THEMES["github-dark"]
-          : THEMES["github-light"]
+          ? { style: ["crisp", "github-dark"] }
+          : { style: ["crisp", "github-light"] }
 
       return {
         error: null,
