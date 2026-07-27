@@ -68,12 +68,12 @@
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/sdk-metrics": "2.9.0",
-    "@opentelemetry/sdk-trace-base": "2.9.0",
+    "@opentelemetry/sdk-metrics": "2.10.0",
+    "@opentelemetry/sdk-trace-base": "2.10.0",
     "@types/node": "24.13.3",
     "@vorsteh-queue/tsconfig": "workspace:*",
     "fast-check": "^4.9.0",
-    "tsdown": "0.22.9",
+    "tsdown": "0.22.14",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
